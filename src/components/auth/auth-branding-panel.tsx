@@ -1,6 +1,4 @@
-import { Zap } from "lucide-react";
-
-import { APP_NAME } from "@/lib/constants";
+import Image from "next/image";
 
 const AVATAR_GRADIENTS = [
   "linear-gradient(135deg,#e8a800,#b37d00)",
@@ -46,20 +44,14 @@ export function AuthBrandingPanel() {
       </div>
 
       {/* Logo */}
-      <div className="relative flex items-center gap-3">
-        <div
-          className="flex size-12 items-center justify-center rounded-2xl"
-          style={{
-            background: "linear-gradient(135deg, #245C6B, #1C293B)",
-            boxShadow: "0 8px 24px rgba(36,92,107,0.5)",
-          }}
-        >
-          <Zap size={22} className="text-white" fill="currentColor" />
-        </div>
-        <span className="font-display text-2xl font-bold text-white">
-          {APP_NAME}
-        </span>
-      </div>
+      <Image
+        src="/logo-light.png"
+        alt="discordia"
+        width={1010}
+        height={269}
+        priority
+        className="relative h-auto w-56"
+      />
 
       {/* Claim */}
       <div className="relative max-w-sm">

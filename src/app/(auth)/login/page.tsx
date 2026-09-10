@@ -1,10 +1,9 @@
-import { Zap } from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import { Suspense } from "react";
 
 import { GoogleButton } from "@/components/auth/google-button";
 import { LoginForm } from "@/components/auth/login-form";
-import { APP_NAME } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Iniciar sesion",
@@ -14,17 +13,14 @@ export default function LoginPage() {
   return (
     <>
       {/* Logo (solo mobile; en desktop lo muestra AuthBrandingPanel) */}
-      <div className="mb-8 flex items-center justify-center gap-2 lg:hidden">
-        <div
-          className="flex size-10 items-center justify-center rounded-xl"
-          style={{ background: "linear-gradient(135deg, #245C6B, #1C293B)" }}
-        >
-          <Zap size={18} className="text-white" fill="currentColor" />
-        </div>
-        <span className="font-display text-content text-xl font-bold">
-          {APP_NAME}
-        </span>
-      </div>
+      <Image
+        src="/logo-light.png"
+        alt="discordia"
+        width={1010}
+        height={269}
+        priority
+        className="mb-8 h-auto w-48 lg:hidden"
+      />
 
       <h1 className="font-display text-content mb-1 text-2xl font-bold">
         Bienvenido de nuevo!
