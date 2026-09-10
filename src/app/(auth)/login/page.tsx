@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
+import Link from "next/link";
 import { Suspense } from "react";
 
+import { AuthModeToggle } from "@/components/auth/auth-mode-toggle";
 import { GoogleButton } from "@/components/auth/google-button";
 import { LoginForm } from "@/components/auth/login-form";
+import { ROUTES } from "@/lib/constants";
 
 export const metadata: Metadata = {
   title: "Iniciar sesion",
@@ -21,6 +24,8 @@ export default function LoginPage() {
         priority
         className="mb-8 h-auto w-48 lg:hidden"
       />
+
+      <AuthModeToggle />
 
       <h1 className="font-display text-content mb-1 text-2xl font-bold">
         Bienvenido de nuevo!
@@ -45,13 +50,12 @@ export default function LoginPage() {
 
       <p className="text-content-subtle mt-6 text-center text-sm">
         No tenes cuenta?{" "}
-        <button
-          type="button"
-          title="Disponible proximamente"
-          className="text-sky/70 cursor-not-allowed font-medium"
+        <Link
+          href={ROUTES.register}
+          className="text-sky font-medium hover:underline"
         >
           Registrate gratis
-        </button>
+        </Link>
       </p>
     </>
   );
