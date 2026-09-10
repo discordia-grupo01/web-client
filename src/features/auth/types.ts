@@ -28,8 +28,14 @@ export interface Session {
 }
 
 /**
- * Resultado que el BFF devuelve al cliente. Nunca incluye el token:
- * ese queda solo en la cookie httpOnly.
+ * Resultado que el BFF devuelve al cliente para las acciones de auth. Nunca
+ * incluye el token: ese queda solo en la cookie httpOnly.
  */
-export type LoginActionResult =
+export type AuthActionResult =
   { ok: true; user: User } | { ok: false; message: string };
+
+/** Resultado de `POST /api/auth/login`. */
+export type LoginActionResult = AuthActionResult;
+
+/** Resultado de `POST /api/auth/register`. */
+export type RegisterActionResult = AuthActionResult;
