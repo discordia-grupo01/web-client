@@ -87,9 +87,18 @@ function BrandingMockupCard() {
             borderBottom: "1px solid rgba(168,198,223,0.08)",
           }}
         >
-          <div className="size-2 rounded-full" style={{ background: "#e05252" }} />
-          <div className="size-2 rounded-full" style={{ background: "#F0B232" }} />
-          <div className="size-2 rounded-full" style={{ background: "#38A169" }} />
+          <div
+            className="size-2 rounded-full"
+            style={{ background: "#e05252" }}
+          />
+          <div
+            className="size-2 rounded-full"
+            style={{ background: "#F0B232" }}
+          />
+          <div
+            className="size-2 rounded-full"
+            style={{ background: "#38A169" }}
+          />
           <div
             className="mx-3 h-3 flex-1 rounded-full"
             style={{ background: "rgba(168,198,223,0.08)" }}
