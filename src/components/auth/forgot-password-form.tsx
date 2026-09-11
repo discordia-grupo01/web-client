@@ -54,7 +54,7 @@ export function ForgotPasswordForm() {
         <p className="text-content-muted mb-2 text-sm leading-relaxed">
           Si <strong className="text-content">{email.trim()}</strong> esta
           registrado en Discordia, recibiras un enlace para restablecer tu
-          contrasena en los proximos minutos.
+          contraseña en los proximos minutos.
         </p>
         <p className="text-content-subtle mb-8 text-xs">
           Recuerda revisar tu carpeta de spam por si acaso.
@@ -64,7 +64,7 @@ export function ForgotPasswordForm() {
           href={ROUTES.login}
           className="text-content-subtle text-sm hover:underline"
         >
-          Volver al inicio de sesion
+          Volver al inicio de sesión
         </Link>
       </div>
     );
@@ -81,11 +81,11 @@ export function ForgotPasswordForm() {
       </Link>
 
       <h1 className="font-display text-content mb-1 text-2xl font-bold">
-        Recuperar contrasena
+        Recuperar contraseña
       </h1>
       <p className="text-content-muted mb-7 text-sm">
         Ingresa tu correo y te enviaremos un enlace para restablecer tu
-        contrasena.
+        contraseña.
       </p>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">

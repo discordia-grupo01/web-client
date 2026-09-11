@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { ResetPasswordForm } from "@/components/auth/reset-password-form";
 
 export const metadata: Metadata = {
-  title: "Restablecer contrasena",
+  title: "Restablecer contraseña",
 };
 
 export default function ResetPasswordPage() {

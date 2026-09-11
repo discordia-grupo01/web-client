@@ -67,7 +67,7 @@ export async function POST(
           {
             ok: false,
             message:
-              "Revisa los datos: la contrasena necesita 8+ caracteres con mayuscula, minuscula y numero.",
+              "Revisa los datos: la contraseña necesita 8+ caracteres con mayuscula, minuscula y numero.",
           },
           { status: 400 },
         );
@@ -78,7 +78,7 @@ export async function POST(
           {
             ok: false,
             message:
-              "No pudimos actualizar tu contrasena en este momento. Intenta de nuevo mas tarde.",
+              "No pudimos actualizar tu contraseña en este momento. Intenta de nuevo mas tarde.",
           },
           { status: 502 },
         );

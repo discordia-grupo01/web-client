@@ -70,7 +70,7 @@ export function LoginForm() {
       />
 
       <PasswordField
-        label="Contrasena"
+        label="Contraseña"
         name="password"
         autoComplete="current-password"
         placeholder="••••••••"
