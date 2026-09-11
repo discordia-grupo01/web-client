@@ -1,18 +1,17 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
 
 import { AuthModeToggle } from "@/components/auth/auth-mode-toggle";
 import { GoogleButton } from "@/components/auth/google-button";
-import { LoginForm } from "@/components/auth/login-form";
+import { RegisterForm } from "@/components/auth/register-form";
 import { ROUTES } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesion",
+  title: "Crear cuenta",
 };
 
-export default function LoginPage() {
+export default function RegisterPage() {
   return (
     <>
       {/* Logo (solo mobile; en desktop lo muestra AuthBrandingPanel) */}
@@ -28,15 +27,13 @@ export default function LoginPage() {
       <AuthModeToggle />
 
       <h1 className="font-display text-content mb-1 text-2xl font-bold">
-        Bienvenido de nuevo!
+        Crea tu cuenta
       </h1>
       <p className="text-content-muted mb-7 text-sm">
-        Ingresa tus credenciales para acceder.
+        Es gratis y siempre lo sera.
       </p>
 
-      <Suspense fallback={<LoginFormSkeleton />}>
-        <LoginForm />
-      </Suspense>
+      <RegisterForm />
 
       <div className="my-5 flex items-center gap-3">
         <span className="bg-line h-px flex-1" />
@@ -49,24 +46,20 @@ export default function LoginPage() {
       <GoogleButton />
 
       <p className="text-content-subtle mt-6 text-center text-sm">
-        No tenes cuenta?{" "}
+        Ya tenes cuenta?{" "}
         <Link
-          href={ROUTES.register}
+          href={ROUTES.login}
           className="text-sky font-medium hover:underline"
         >
-          Registrate gratis
+          Inicia sesion
         </Link>
       </p>
-    </>
-  );
-}
 
-function LoginFormSkeleton() {
-  return (
-    <div className="space-y-4" aria-hidden="true">
-      <div className="bg-surface-input h-[68px] rounded-xl" />
-      <div className="bg-surface-input h-[68px] rounded-xl" />
-      <div className="bg-surface-input h-11 rounded-xl" />
-    </div>
+      <p className="text-content-subtle mt-4 text-center text-[11px] leading-relaxed opacity-70">
+        Al registrarte aceptas nuestros{" "}
+        <span className="text-content-muted">Terminos de Servicio</span> y{" "}
+        <span className="text-content-muted">Politica de Privacidad</span>.
+      </p>
+    </>
   );
 }
