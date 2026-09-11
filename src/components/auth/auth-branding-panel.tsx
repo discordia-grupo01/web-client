@@ -75,9 +75,8 @@ function BrandingMockupCard() {
       <div
         className="w-full max-w-sm overflow-hidden rounded-2xl shadow-2xl"
         style={{
-          background: "rgba(28, 41, 59, 0.7)",
+          background: "rgba(28, 41, 59, 0.92)",
           border: "1px solid rgba(168,198,223,0.15)",
-          backdropFilter: "blur(20px)",
           transform: "perspective(800px) rotateY(-6deg) rotateX(2deg)",
         }}
       >
