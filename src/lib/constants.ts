@@ -9,6 +9,8 @@ export const SESSION_COOKIE = "discordia_session";
 export const ROUTES = {
   login: "/login",
   register: "/register",
+  forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
   /** Landing despues de iniciar sesion (por ahora un placeholder). */
   home: "/home",
 } as const;

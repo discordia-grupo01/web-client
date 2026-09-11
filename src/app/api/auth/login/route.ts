@@ -42,7 +42,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "El correo electronico o la contrasena son incorrectos.",
+          message: "El correo electronico o la contraseña son incorrectos.",
         },
         { status: 401 },
       );
