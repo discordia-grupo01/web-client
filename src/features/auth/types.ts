@@ -39,3 +39,18 @@ export type LoginActionResult = AuthActionResult;
 
 /** Resultado de `POST /api/auth/register`. */
 export type RegisterActionResult = AuthActionResult;
+
+/**
+ * Resultado de `POST /api/auth/forgot-password`. Nunca lleva datos de usuario:
+ * el backend responde igual exista o no el correo, para no permitir enumerar
+ * cuentas registradas.
+ */
+export type ForgotPasswordActionResult =
+  { ok: true } | { ok: false; message: string };
+
+/**
+ * Resultado de `POST /api/auth/reset-password`. A diferencia de login/register
+ * no crea sesion: el backend no devuelve token al cambiar la contrasena.
+ */
+export type ResetPasswordActionResult =
+  { ok: true } | { ok: false; message: string };

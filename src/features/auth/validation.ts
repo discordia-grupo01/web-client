@@ -60,6 +60,20 @@ export interface RegisterErrors {
   password?: string;
 }
 
+/** Misma regla que exige el backend para register y reset. */
+function passwordStrengthError(password: string): string | undefined {
+  if (password === "") return "Ingresa una contrasena";
+  if (
+    password.length < PASSWORD_MIN ||
+    !HAS_UPPERCASE.test(password) ||
+    !HAS_LOWERCASE.test(password) ||
+    !HAS_DIGIT.test(password)
+  ) {
+    return "Usa 8+ caracteres con una mayuscula, una minuscula y un numero";
+  }
+  return undefined;
+}
+
 export function validateRegister(values: RegisterValues): RegisterErrors {
   const errors: RegisterErrors = {};
 
@@ -79,22 +93,63 @@ export function validateRegister(values: RegisterValues): RegisterErrors {
     errors.email = "El correo electronico no es valido";
   }
 
-  const { password } = values;
-  if (password === "") {
-    errors.password = "Ingresa una contrasena";
-  } else if (
-    password.length < PASSWORD_MIN ||
-    !HAS_UPPERCASE.test(password) ||
-    !HAS_LOWERCASE.test(password) ||
-    !HAS_DIGIT.test(password)
-  ) {
-    errors.password =
-      "Usa 8+ caracteres con una mayuscula, una minuscula y un numero";
+  errors.password = passwordStrengthError(values.password);
+
+  return errors;
+}
+
+export interface ForgotPasswordValues {
+  email: string;
+}
+
+export interface ForgotPasswordErrors {
+  email?: string;
+}
+
+export function validateForgotPassword(
+  values: ForgotPasswordValues,
+): ForgotPasswordErrors {
+  const errors: ForgotPasswordErrors = {};
+
+  const email = values.email.trim();
+  if (email === "") {
+    errors.email = "Ingresa tu correo electronico";
+  } else if (!EMAIL_REGEX.test(email)) {
+    errors.email = "El correo electronico no es valido";
   }
 
   return errors;
 }
 
-export function hasErrors(errors: LoginErrors | RegisterErrors): boolean {
+export interface ResetPasswordValues {
+  newPassword: string;
+  confirmPassword: string;
+}
+
+export interface ResetPasswordErrors {
+  newPassword?: string;
+  confirmPassword?: string;
+}
+
+export function validateResetPassword(
+  values: ResetPasswordValues,
+): ResetPasswordErrors {
+  const errors: ResetPasswordErrors = {};
+
+  errors.newPassword = passwordStrengthError(values.newPassword);
+
+  if (values.confirmPassword === "") {
+    errors.confirmPassword = "Confirma tu contrasena";
+  } else if (values.confirmPassword !== values.newPassword) {
+    errors.confirmPassword = "Las contrasenas no coinciden";
+  }
+
+  return errors;
+}
+
+export function hasErrors(
+  errors:
+    LoginErrors | RegisterErrors | ForgotPasswordErrors | ResetPasswordErrors,
+): boolean {
   return Object.values(errors).some((value) => value !== undefined);
 }
