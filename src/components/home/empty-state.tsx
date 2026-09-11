@@ -1,15 +1,6 @@
 "use client";
 
-import {
-  Compass,
-  Hash,
-  Link2,
-  Plus,
-  Server,
-  Users,
-  Volume2,
-  Zap,
-} from "lucide-react";
+import { Hash, Link2, Plus, Users, Volume2, Zap } from "lucide-react";
 import type { ReactNode } from "react";
 
 interface ActionCardProps {
@@ -18,17 +9,15 @@ interface ActionCardProps {
   description: string;
   cta: string;
   accent?: boolean;
-  disabled?: boolean;
   onClick: () => void;
 }
 
-function ActionCard({ icon, title, description, cta, accent, disabled, onClick }: ActionCardProps) {
+function ActionCard({ icon, title, description, cta, accent, onClick }: ActionCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      disabled={disabled}
-      className={`group flex w-full items-start gap-4 rounded-2xl border p-5 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50 ${
+      className={`group flex w-full items-start gap-4 rounded-2xl border p-5 text-left transition-all ${
         accent
           ? "bg-accent/[0.12] border-accent/40 hover:border-accent/70 hover:bg-accent/[0.18]"
           : "bg-surface-input border-line hover:border-line-strong hover:bg-white/[0.03]"
@@ -44,13 +33,8 @@ function ActionCard({ icon, title, description, cta, accent, disabled, onClick }
       <div className="min-w-0 flex-1">
         <p className="font-display text-content mb-0.5 text-sm font-bold">{title}</p>
         <p className="text-content-muted text-xs leading-relaxed">{description}</p>
-        <p
-          className={`font-display mt-2 text-xs font-semibold ${
-            disabled ? "text-content-subtle" : accent ? "text-sky" : "text-info"
-          }`}
-        >
-          {cta}
-          {disabled ? null : " →"}
+        <p className={`font-display mt-2 text-xs font-semibold ${accent ? "text-sky" : "text-info"}`}>
+          {cta} →
         </p>
       </div>
     </button>
@@ -65,9 +49,9 @@ const FEATURE_PILLS = [
 ];
 
 const FLOATING_SERVERS = [
-  { label: "🎮", angle: -40, r: 74, gradient: "linear-gradient(135deg,#245C6B,#1C293B)", delay: "0s" },
-  { label: "🎨", angle: 12, r: 84, gradient: "linear-gradient(135deg,#6b95bd,#2d5a7a)", delay: "0.4s" },
-  { label: "🏆", angle: 55, r: 72, gradient: "linear-gradient(135deg,#38A169,#1e5c3a)", delay: "0.8s" },
+  { label: "🎮", angle: -40, r: 80, gradient: "linear-gradient(135deg,#245C6B,#1C293B)", delay: "0s" },
+  { label: "🎨", angle: 12, r: 90, gradient: "linear-gradient(135deg,#6b95bd,#2d5a7a)", delay: "0.4s" },
+  { label: "🏆", angle: 55, r: 78, gradient: "linear-gradient(135deg,#38A169,#1e5c3a)", delay: "0.8s" },
 ];
 
 interface EmptyStateProps {
@@ -79,10 +63,10 @@ interface EmptyStateProps {
 /** Estado del home cuando el usuario todavía no es miembro de ningún servidor. */
 export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateProps) {
   return (
-    <div className="flex flex-1 flex-col items-center justify-center gap-8 overflow-y-auto px-6 py-12">
-      <div className="w-full max-w-lg space-y-8">
+    <div className="flex flex-1 flex-col items-center overflow-y-auto px-6 py-12">
+      <div className="m-auto flex w-full max-w-lg flex-col gap-8">
         {/* Hero illustration */}
-        <div className="relative mx-auto flex h-28 w-28 items-center justify-center">
+        <div className="relative mx-auto mt-6 mb-6 flex h-28 w-28 items-center justify-center">
           <div
             className="pointer-events-none absolute inset-0 scale-[1.7] rounded-full"
             style={{
@@ -121,7 +105,22 @@ export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateP
               boxShadow: "0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(168,198,223,0.08)",
             }}
           >
-            <Server size={44} className="text-accent" strokeWidth={1.4} />
+            <svg
+              width={54}
+              height={54}
+              viewBox="0 0 24 24"
+              fill="none"
+              strokeWidth={1.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden="true"
+            >
+              <rect x={2} y={3} width={20} height={14} rx={2} ry={2} stroke="rgba(168,198,223,0.25)" />
+              <line x1={8} y1={21} x2={16} y2={21} stroke="rgba(168,198,223,0.2)" />
+              <line x1={12} y1={17} x2={12} y2={21} stroke="rgba(168,198,223,0.2)" />
+              <path d="M9 9 L12 6 L15 9" stroke="#245C6B" strokeWidth={1.8} />
+              <path d="M12 6 L12 14" stroke="#245C6B" strokeWidth={1.8} />
+            </svg>
           </div>
         </div>
 
@@ -152,14 +151,6 @@ export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateP
             description="¿Tenés un código de invitación? Pegalo acá y entrás al instante."
             cta="Ingresar código"
             onClick={onJoinClick}
-          />
-          <ActionCard
-            icon={<Compass size={20} />}
-            title="Explorar servidores públicos"
-            description="Todavía no existe un directorio de comunidades públicas en Discordia."
-            cta="Próximamente"
-            disabled
-            onClick={() => {}}
           />
         </div>
 

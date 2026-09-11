@@ -73,10 +73,7 @@ export function HomeShell({ initialServers }: HomeShellProps) {
                 type="button"
                 title={server.name}
                 onClick={() => setSelectedServerId(server.id)}
-                className={cn(
-                  "overflow-hidden transition-all",
-                  active ? "rounded-2xl" : "rounded-full hover:rounded-2xl",
-                )}
+                className="overflow-hidden rounded-2xl"
               >
                 <ServerAvatar
                   name={server.name}
