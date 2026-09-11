@@ -1,6 +1,7 @@
 "use client";
 
 import { ArrowRight, Lock, Mail } from "lucide-react";
+import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
@@ -24,6 +25,7 @@ export function LoginForm() {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const resetSuccess = searchParams.get("reset") === "success";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -49,8 +51,14 @@ export function LoginForm() {
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
+      {resetSuccess ? (
+        <p className="border-success/30 bg-success/10 text-success rounded-lg border px-3 py-2 text-xs">
+          Contraseña actualizada. Ingresa con tu contraseña nueva.
+        </p>
+      ) : null}
+
       <TextField
-        label="Correo electronico"
+        label="Correo electrónico"
         name="email"
         type="email"
         autoComplete="email"
@@ -73,13 +81,12 @@ export function LoginForm() {
       />
 
       <div className="flex justify-end">
-        <button
-          type="button"
-          title="Disponible proximamente"
-          className="text-info/70 cursor-not-allowed text-xs"
+        <Link
+          href={ROUTES.forgotPassword}
+          className="text-info text-xs transition-colors hover:underline"
         >
-          Olvidaste tu contrasena?
-        </button>
+          ¿Olvidaste tu contraseña?
+        </Link>
       </div>
 
       {formError ? (
@@ -92,7 +99,7 @@ export function LoginForm() {
       ) : null}
 
       <Button type="submit" isLoading={isSubmitting} className="mt-2">
-        <span>Iniciar Sesion</span>
+        <span>Iniciar Sesión</span>
         <ArrowRight size={16} />
       </Button>
     </form>
