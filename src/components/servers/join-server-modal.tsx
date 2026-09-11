@@ -75,7 +75,12 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
         <div className="flex-1 overflow-y-auto">
           {joined ? (
             <div className="flex flex-col items-center gap-6 px-6 py-8 text-center">
-              <ServerAvatar name={joined.server.name} size={64} className="rounded-2xl" />
+              <ServerAvatar
+                name={joined.server.name}
+                src={`/api/servers/${joined.server.id}/icon`}
+                size={64}
+                className="rounded-2xl"
+              />
               <div className="flex flex-col items-center gap-2">
                 <div className="bg-success/15 text-success flex size-12 items-center justify-center rounded-2xl">
                   <Check size={26} />

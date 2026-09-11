@@ -1,6 +1,7 @@
 import type {
   CreateServerActionResult,
   JoinServerActionResult,
+  LeaveServerActionResult,
   ServerSummary,
 } from "./types";
 
@@ -37,6 +38,18 @@ export async function joinServerRequest(code: string): Promise<JoinServerActionR
       method: "POST",
     });
     return (await response.json()) as JoinServerActionResult;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function leaveServerRequest(serverId: string): Promise<LeaveServerActionResult> {
+  try {
+    const response = await fetch(`/api/servers/${serverId}/leave`, { method: "DELETE" });
+    return (await response.json()) as LeaveServerActionResult;
   } catch {
     return {
       ok: false,
