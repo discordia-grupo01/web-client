@@ -92,8 +92,9 @@ export function LeaveServerModal({
                 </h2>
                 <p className="text-content-muted text-sm leading-relaxed">
                   Sos el propietario de{" "}
-                  <strong className="text-content">{serverName}</strong>.
-                  Transferí la propiedad a otro miembro antes de salir.
+                  <strong className="text-content">{serverName}</strong>. Para
+                  salir, primero tenés que transferir la propiedad a otro
+                  miembro del servidor.
                 </p>
               </div>
               <button
