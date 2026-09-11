@@ -9,10 +9,11 @@ import type { ServerSummary, ServersApiErrorBody } from "./types";
  * Capa de servicios contra el servicio `servers` (via el gateway Kong).
  *
  * Endpoints reales (ver servers/internal/handler):
- *   GET  /v1/servers                 -> 200 [Server] | 401
- *   GET  /v1/servers/:id             -> 200 Server | 400 | 404
- *   POST /v1/servers                  -> 201 Server | 400 | 401 | 409 (nombre repetido)
- *   POST /v1/invites/:code/join       -> 200|201 { server_id, already_member } | 403 | 404
+ *   GET    /v1/servers                          -> 200 [Server] | 401
+ *   GET    /v1/servers/:id                      -> 200 Server | 400 | 404
+ *   POST   /v1/servers                           -> 201 Server | 400 | 401 | 409 (nombre repetido)
+ *   POST   /v1/invites/:code/join                -> 200|201 { server_id, already_member } | 403 | 404
+ *   DELETE /v1/servers/:id/members/:userId       -> 204 | 401 | 403 | 404 | 409 (owner)
  *
  * Todavia NO existen: editar/borrar servidor, ABMC de canales/categorias,
  * listar miembros, preview de una invitacion sin unirse. Ver la referencia
@@ -34,6 +35,22 @@ export function getServer(
 ): Promise<ApiResult<ServerSummary>> {
   return apiRequest<ServerSummary>(`/v1/servers/${serverId}`, {
     method: "GET",
+    token,
+  });
+}
+
+/**
+ * Solo self-leave: el backend rechaza con 403 si `userId` no es el del
+ * caller (no hay endpoint de "kick" en esta ruta), y con 409 si el caller
+ * es el owner del servidor (tiene que transferir la propiedad o borrarlo).
+ */
+export function leaveServer(
+  token: string,
+  serverId: string,
+  userId: string,
+): Promise<ApiResult<void>> {
+  return apiRequest<void>(`/v1/servers/${serverId}/members/${userId}`, {
+    method: "DELETE",
     token,
   });
 }
