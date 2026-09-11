@@ -1,0 +1,46 @@
+import { NextResponse } from "next/server";
+
+import { getSession } from "@/features/auth/session";
+import { leaveServer } from "@/features/servers/service";
+import type { LeaveServerActionResult } from "@/features/servers/types";
+
+const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const OWNER_BLOCKED_MESSAGE =
+  "Sos el propietario de este servidor. Transferí la propiedad a otro miembro antes de salir.";
+
+/**
+ * BFF de `DELETE /v1/servers/:id/members/:userId`. Siempre pega con el id
+ * del usuario de la sesion: es self-leave, no hay endpoint de "kick" aca.
+ */
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { serverId: string } },
+): Promise<NextResponse<LeaveServerActionResult>> {
+  const session = getSession();
+  if (!session) {
+    return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+  }
+
+  const result = await leaveServer(session.token, params.serverId, String(session.user.id));
+
+  if (!result.ok) {
+    const reason =
+      typeof result.details?.reason === "string" ? result.details.reason : undefined;
+
+    if (reason === "owner_must_transfer_or_delete") {
+      return NextResponse.json(
+        { ok: false, message: OWNER_BLOCKED_MESSAGE, isOwnerBlocked: true },
+        { status: 409 },
+      );
+    }
+    if (result.status === 401) {
+      return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+    }
+    return NextResponse.json(
+      { ok: false, message: "Algo salio mal. Intenta de nuevo." },
+      { status: result.status >= 400 && result.status < 500 ? result.status : 502 },
+    );
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
+}

@@ -8,12 +8,7 @@ interface ServerAvatarProps {
   className?: string;
 }
 
-/**
- * Avatar de un servidor. El front decide si mostrar el ícono real o el
- * degradado con la inicial -- no confía en si el backend generó un ícono
- * random para servidores sin ícono propio (ver features/servers/types.ts,
- * `hasCustomIcon`).
- */
+
 export function ServerAvatar({ name, src, size = 48, className }: ServerAvatarProps) {
   if (src) {
     return (
