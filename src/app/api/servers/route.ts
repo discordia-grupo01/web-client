@@ -25,13 +25,19 @@ const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
 export async function GET(): Promise<NextResponse> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, message: SESSION_EXPIRED },
+      { status: 401 },
+    );
   }
 
   const result = await listMyServers(session.token);
   if (!result.ok) {
     return NextResponse.json(
-      { ok: false, message: "No pudimos cargar tus servidores. Intenta de nuevo." },
+      {
+        ok: false,
+        message: "No pudimos cargar tus servidores. Intenta de nuevo.",
+      },
       { status: result.status || 502 },
     );
   }
@@ -48,7 +54,10 @@ export async function POST(
 ): Promise<NextResponse<CreateServerActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, message: SESSION_EXPIRED },
+      { status: 401 },
+    );
   }
 
   let formData: FormData;
@@ -65,9 +74,13 @@ export async function POST(
 
   if (!result.ok) {
     const field =
-      typeof result.details?.field === "string" ? result.details.field : undefined;
+      typeof result.details?.field === "string"
+        ? result.details.field
+        : undefined;
     const reason =
-      typeof result.details?.reason === "string" ? result.details.reason : undefined;
+      typeof result.details?.reason === "string"
+        ? result.details.reason
+        : undefined;
     const friendly = reason ? REASON_MESSAGES[reason] : undefined;
 
     if ((field === "name" || field === "icon") && friendly) {
@@ -78,7 +91,10 @@ export async function POST(
     }
 
     if (result.status === 401) {
-      return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+      return NextResponse.json(
+        { ok: false, message: SESSION_EXPIRED },
+        { status: 401 },
+      );
     }
 
     return NextResponse.json(

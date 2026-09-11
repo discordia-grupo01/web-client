@@ -50,5 +50,4 @@ export type JoinServerActionResult =
  * caso `isOwnerBlocked` es `true` y `message` ya viene con la copia final.
  */
 export type LeaveServerActionResult =
-  | { ok: true }
-  | { ok: false; message: string; isOwnerBlocked?: boolean };
+  { ok: true } | { ok: false; message: string; isOwnerBlocked?: boolean };

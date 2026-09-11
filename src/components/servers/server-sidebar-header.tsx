@@ -14,7 +14,10 @@ interface ServerSidebarHeaderProps {
 }
 
 /** Header del panel de canales: ícono + nombre + acción de abandonar. */
-export function ServerSidebarHeader({ server, onLeft }: ServerSidebarHeaderProps) {
+export function ServerSidebarHeader({
+  server,
+  onLeft,
+}: ServerSidebarHeaderProps) {
   const { user } = useAuth();
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const isOwner = user !== null && String(user.id) === server.owner_id;

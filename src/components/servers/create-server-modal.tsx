@@ -1,7 +1,22 @@
 "use client";
 
-import { AlertCircle, Camera, Check, Hash, Pencil, Volume2, X } from "lucide-react";
-import { useCallback, useRef, useState, type ChangeEvent, type DragEvent, type FormEvent } from "react";
+import {
+  AlertCircle,
+  Camera,
+  Check,
+  Hash,
+  Pencil,
+  Volume2,
+  X,
+} from "lucide-react";
+import {
+  useCallback,
+  useRef,
+  useState,
+  type ChangeEvent,
+  type DragEvent,
+  type FormEvent,
+} from "react";
 
 import { Button } from "@/components/ui/button";
 import { createServerRequest } from "@/features/servers/client";
@@ -17,16 +32,25 @@ interface CreateServerModalProps {
   onCreated: (server: ServerSummary) => void;
 }
 
-function ServerIconPreview({ name, size = 96 }: { name: string; size?: number }) {
+function ServerIconPreview({
+  name,
+  size = 96,
+}: {
+  name: string;
+  size?: number;
+}) {
   const initial = name.trim().charAt(0).toUpperCase() || null;
 
   return (
     <div
-      className="from-accent flex shrink-0 items-center justify-center rounded-full border-2 border-dashed border-line-strong bg-gradient-to-br to-[#1a4050]"
+      className="from-accent border-line-strong flex shrink-0 items-center justify-center rounded-full border-2 border-dashed bg-gradient-to-br to-[#1a4050]"
       style={{ width: size, height: size }}
     >
       {initial ? (
-        <span className="font-display font-bold text-white" style={{ fontSize: size * 0.42 }}>
+        <span
+          className="font-display font-bold text-white"
+          style={{ fontSize: size * 0.42 }}
+        >
           {initial}
         </span>
       ) : (
@@ -46,7 +70,10 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps) {
+export function CreateServerModal({
+  onClose,
+  onCreated,
+}: CreateServerModalProps) {
   const [step, setStep] = useState<"form" | "success">("form");
   const [created, setCreated] = useState<ServerSummary | null>(null);
   const [name, setName] = useState("");
@@ -141,14 +168,18 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
       }}
     >
       <div
-        className="relative flex w-full flex-col overflow-hidden rounded-[20px] border border-line-strong shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
-        style={{ maxWidth: 460, maxHeight: "95dvh", background: "var(--bg-modal)" }}
+        className="border-line-strong relative flex w-full flex-col overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
+        style={{
+          maxWidth: 460,
+          maxHeight: "95dvh",
+          background: "var(--bg-modal)",
+        }}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border border-line transition-transform hover:scale-110"
+          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
         >
           <X size={14} />
         </button>
@@ -156,11 +187,15 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
         <div className="flex-1 overflow-y-auto">
           {step === "success" && created ? (
             <div className="flex flex-col items-center gap-6 px-6 py-8 text-center">
-              <div className="bg-surface w-full overflow-hidden rounded-2xl border border-line-strong">
-                <div className="bg-surface-sunken flex items-center gap-3 border-b border-line px-4 py-3">
+              <div className="bg-surface border-line-strong w-full overflow-hidden rounded-2xl border">
+                <div className="bg-surface-sunken border-line flex items-center gap-3 border-b px-4 py-3">
                   {iconPreview ? (
                     // eslint-disable-next-line @next/next/no-img-element
-                    <img src={iconPreview} alt="" className="size-9 shrink-0 rounded-full object-cover" />
+                    <img
+                      src={iconPreview}
+                      alt=""
+                      className="size-9 shrink-0 rounded-full object-cover"
+                    />
                   ) : (
                     <ServerIconPreview name={created.name} size={36} />
                   )}
@@ -179,7 +214,9 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
                       ) : (
                         <Volume2 size={15} className="text-content-subtle" />
                       )}
-                      <span className="text-content-muted text-sm">{channel.name}</span>
+                      <span className="text-content-muted text-sm">
+                        {channel.name}
+                      </span>
                     </div>
                   ))}
                 </div>
@@ -189,10 +226,12 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
                 <div className="bg-success/15 text-success flex size-12 items-center justify-center rounded-2xl">
                   <Check size={26} />
                 </div>
-                <p className="font-display text-content text-base font-bold">¡Servidor creado!</p>
+                <p className="font-display text-content text-base font-bold">
+                  ¡Servidor creado!
+                </p>
                 <p className="text-content-muted max-w-[260px] text-sm leading-relaxed">
-                  <strong className="text-content">{created.name}</strong> ya está listo. Encontrás
-                  tus canales en la barra lateral.
+                  <strong className="text-content">{created.name}</strong> ya
+                  está listo. Encontrás tus canales en la barra lateral.
                 </p>
               </div>
 
@@ -240,11 +279,18 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
                           alt="Ícono del servidor"
                           className={cn(
                             "size-24 rounded-full border-2 object-cover transition-colors",
-                            isDragging ? "border-accent-strong" : "border-line-strong",
+                            isDragging
+                              ? "border-accent-strong"
+                              : "border-line-strong",
                           )}
                         />
                       ) : (
-                        <div className={cn("rounded-full", isDragging && "ring-2 ring-accent-strong")}>
+                        <div
+                          className={cn(
+                            "rounded-full",
+                            isDragging && "ring-accent-strong ring-2",
+                          )}
+                        >
                           <ServerIconPreview name={name} />
                         </div>
                       )}
@@ -257,7 +303,11 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
                       >
                         <Camera size={20} className="text-white" />
                         <span className="text-[10px] font-semibold text-white">
-                          {isDragging ? "Soltar" : iconPreview ? "Cambiar" : "Subir"}
+                          {isDragging
+                            ? "Soltar"
+                            : iconPreview
+                              ? "Cambiar"
+                              : "Subir"}
                         </span>
                       </div>
                     </div>
@@ -297,7 +347,8 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
 
                   {iconFile && !iconError ? (
                     <p className="text-content-subtle text-xs">
-                      {iconFile.name} · {(iconFile.size / (1024 * 1024)).toFixed(1)} MB
+                      {iconFile.name} ·{" "}
+                      {(iconFile.size / (1024 * 1024)).toFixed(1)} MB
                     </p>
                   ) : null}
 
@@ -357,10 +408,20 @@ export function CreateServerModal({ onClose, onCreated }: CreateServerModalProps
               </div>
 
               <div className="border-line flex items-center justify-end gap-3 border-t px-7 py-5">
-                <Button type="button" variant="secondary" onClick={onClose} className="w-auto">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={onClose}
+                  className="w-auto"
+                >
                   Cancelar
                 </Button>
-                <Button type="submit" disabled={!canSubmit} isLoading={isSubmitting} className="w-auto">
+                <Button
+                  type="submit"
+                  disabled={!canSubmit}
+                  isLoading={isSubmitting}
+                  className="w-auto"
+                >
                   Crear servidor
                 </Button>
               </div>

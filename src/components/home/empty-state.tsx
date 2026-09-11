@@ -12,7 +12,14 @@ interface ActionCardProps {
   onClick: () => void;
 }
 
-function ActionCard({ icon, title, description, cta, accent, onClick }: ActionCardProps) {
+function ActionCard({
+  icon,
+  title,
+  description,
+  cta,
+  accent,
+  onClick,
+}: ActionCardProps) {
   return (
     <button
       type="button"
@@ -25,15 +32,23 @@ function ActionCard({ icon, title, description, cta, accent, onClick }: ActionCa
     >
       <div
         className={`mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-xl ${
-          accent ? "bg-accent/30 text-sky" : "bg-white/[0.06] text-content-subtle"
+          accent
+            ? "bg-accent/30 text-sky"
+            : "text-content-subtle bg-white/[0.06]"
         }`}
       >
         {icon}
       </div>
       <div className="min-w-0 flex-1">
-        <p className="font-display text-content mb-0.5 text-sm font-bold">{title}</p>
-        <p className="text-content-muted text-xs leading-relaxed">{description}</p>
-        <p className={`font-display mt-2 text-xs font-semibold ${accent ? "text-sky" : "text-info"}`}>
+        <p className="font-display text-content mb-0.5 text-sm font-bold">
+          {title}
+        </p>
+        <p className="text-content-muted text-xs leading-relaxed">
+          {description}
+        </p>
+        <p
+          className={`font-display mt-2 text-xs font-semibold ${accent ? "text-sky" : "text-info"}`}
+        >
           {cta} →
         </p>
       </div>
@@ -49,9 +64,27 @@ const FEATURE_PILLS = [
 ];
 
 const FLOATING_SERVERS = [
-  { label: "🎮", angle: -40, r: 80, gradient: "linear-gradient(135deg,#245C6B,#1C293B)", delay: "0s" },
-  { label: "🎨", angle: 12, r: 90, gradient: "linear-gradient(135deg,#6b95bd,#2d5a7a)", delay: "0.4s" },
-  { label: "🏆", angle: 55, r: 78, gradient: "linear-gradient(135deg,#38A169,#1e5c3a)", delay: "0.8s" },
+  {
+    label: "🎮",
+    angle: -40,
+    r: 80,
+    gradient: "linear-gradient(135deg,#245C6B,#1C293B)",
+    delay: "0s",
+  },
+  {
+    label: "🎨",
+    angle: 12,
+    r: 90,
+    gradient: "linear-gradient(135deg,#6b95bd,#2d5a7a)",
+    delay: "0.4s",
+  },
+  {
+    label: "🏆",
+    angle: 55,
+    r: 78,
+    gradient: "linear-gradient(135deg,#38A169,#1e5c3a)",
+    delay: "0.8s",
+  },
 ];
 
 interface EmptyStateProps {
@@ -61,7 +94,11 @@ interface EmptyStateProps {
 }
 
 /** Estado del home cuando el usuario todavía no es miembro de ningún servidor. */
-export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateProps) {
+export function EmptyState({
+  userName,
+  onCreateClick,
+  onJoinClick,
+}: EmptyStateProps) {
   return (
     <div className="flex flex-1 flex-col items-center overflow-y-auto px-6 py-12">
       <div className="m-auto flex w-full max-w-lg flex-col gap-8">
@@ -70,7 +107,8 @@ export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateP
           <div
             className="pointer-events-none absolute inset-0 scale-[1.7] rounded-full"
             style={{
-              background: "radial-gradient(circle, rgba(36,92,107,0.32) 0%, transparent 70%)",
+              background:
+                "radial-gradient(circle, rgba(36,92,107,0.32) 0%, transparent 70%)",
               filter: "blur(36px)",
             }}
           />
@@ -102,7 +140,8 @@ export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateP
             style={{
               background: "linear-gradient(135deg, #162535 0%, #1C293B 100%)",
               border: "1px solid rgba(168,198,223,0.18)",
-              boxShadow: "0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(168,198,223,0.08)",
+              boxShadow:
+                "0 24px 64px rgba(0,0,0,0.5), inset 0 1px 0 rgba(168,198,223,0.08)",
             }}
           >
             <svg
@@ -115,9 +154,29 @@ export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateP
               strokeLinejoin="round"
               aria-hidden="true"
             >
-              <rect x={2} y={3} width={20} height={14} rx={2} ry={2} stroke="rgba(168,198,223,0.25)" />
-              <line x1={8} y1={21} x2={16} y2={21} stroke="rgba(168,198,223,0.2)" />
-              <line x1={12} y1={17} x2={12} y2={21} stroke="rgba(168,198,223,0.2)" />
+              <rect
+                x={2}
+                y={3}
+                width={20}
+                height={14}
+                rx={2}
+                ry={2}
+                stroke="rgba(168,198,223,0.25)"
+              />
+              <line
+                x1={8}
+                y1={21}
+                x2={16}
+                y2={21}
+                stroke="rgba(168,198,223,0.2)"
+              />
+              <line
+                x1={12}
+                y1={17}
+                x2={12}
+                y2={21}
+                stroke="rgba(168,198,223,0.2)"
+              />
               <path d="M9 9 L12 6 L15 9" stroke="#245C6B" strokeWidth={1.8} />
               <path d="M12 6 L12 14" stroke="#245C6B" strokeWidth={1.8} />
             </svg>
@@ -127,7 +186,9 @@ export function EmptyState({ userName, onCreateClick, onJoinClick }: EmptyStateP
         {/* Copy */}
         <div className="text-center">
           <h1 className="font-display text-content text-2xl font-bold text-balance">
-            {userName ? `Hola, ${userName}. Tu espacio está esperándote` : "Tu espacio está esperándote"}
+            {userName
+              ? `Hola, ${userName}. Tu espacio está esperándote`
+              : "Tu espacio está esperándote"}
           </h1>
           <p className="text-content-muted mx-auto mt-2 max-w-sm text-sm leading-relaxed">
             Todavía no pertenecés a ningún servidor. Creá el tuyo en segundos o

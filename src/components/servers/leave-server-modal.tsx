@@ -52,7 +52,7 @@ export function LeaveServerModal({
       }}
     >
       <div
-        className="relative flex w-full flex-col overflow-hidden rounded-[20px] border border-line-strong shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
+        className="border-line-strong relative flex w-full flex-col overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
         style={{ maxWidth: 420, background: "var(--bg-modal)" }}
       >
         {!isLoading ? (
@@ -60,7 +60,7 @@ export function LeaveServerModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="bg-surface-input text-content-subtle absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border border-line transition-transform hover:scale-110"
+            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
           >
             <X size={13} />
           </button>
@@ -91,7 +91,8 @@ export function LeaveServerModal({
                   No podés abandonar tu servidor
                 </h2>
                 <p className="text-content-muted text-sm leading-relaxed">
-                  Sos el propietario de <strong className="text-content">{serverName}</strong>.
+                  Sos el propietario de{" "}
+                  <strong className="text-content">{serverName}</strong>.
                   Transferí la propiedad a otro miembro antes de salir.
                 </p>
               </div>
@@ -110,8 +111,8 @@ export function LeaveServerModal({
                   ¿Abandonar {serverName}?
                 </h2>
                 <p className="text-content-muted text-sm leading-relaxed">
-                  Vas a perder acceso a todos sus canales de texto y voz. Para volver a entrar vas
-                  a necesitar una nueva invitación.
+                  Vas a perder acceso a todos sus canales de texto y voz. Para
+                  volver a entrar vas a necesitar una nueva invitación.
                 </p>
               </div>
 

@@ -22,11 +22,14 @@ export function HomeShell({ initialServers }: HomeShellProps) {
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
-  const selectedServer = servers.find((server) => server.id === selectedServerId) ?? null;
+  const selectedServer =
+    servers.find((server) => server.id === selectedServerId) ?? null;
 
   function addAndSelect(server: ServerSummary) {
     setServers((prev) => {
-      const withoutDuplicate = prev.filter((existing) => existing.id !== server.id);
+      const withoutDuplicate = prev.filter(
+        (existing) => existing.id !== server.id,
+      );
       return [...withoutDuplicate, server];
     });
     setSelectedServerId(server.id);
@@ -40,7 +43,10 @@ export function HomeShell({ initialServers }: HomeShellProps) {
   }
 
   return (
-    <div className="flex h-dvh w-full overflow-hidden" style={{ background: "var(--bg-chat)" }}>
+    <div
+      className="flex h-dvh w-full overflow-hidden"
+      style={{ background: "var(--bg-chat)" }}
+    >
       {/* Server rail */}
       <div
         className="flex w-[72px] shrink-0 flex-col items-center gap-2 overflow-y-auto py-3"
@@ -129,11 +135,17 @@ export function HomeShell({ initialServers }: HomeShellProps) {
       )}
 
       {isCreateModalOpen ? (
-        <CreateServerModal onClose={() => setIsCreateModalOpen(false)} onCreated={addAndSelect} />
+        <CreateServerModal
+          onClose={() => setIsCreateModalOpen(false)}
+          onCreated={addAndSelect}
+        />
       ) : null}
 
       {isJoinModalOpen ? (
-        <JoinServerModal onClose={() => setIsJoinModalOpen(false)} onJoined={addAndSelect} />
+        <JoinServerModal
+          onClose={() => setIsJoinModalOpen(false)}
+          onJoined={addAndSelect}
+        />
       ) : null}
     </div>
   );

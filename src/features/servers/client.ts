@@ -11,8 +11,7 @@ import type {
  */
 
 type ListServersResult =
-  | { ok: true; servers: ServerSummary[] }
-  | { ok: false; message: string };
+  { ok: true; servers: ServerSummary[] } | { ok: false; message: string };
 
 export async function listServersRequest(): Promise<ListServersResult> {
   try {
@@ -32,11 +31,16 @@ export function normalizeInviteCode(raw: string): string {
   return match ? match[1] : raw.trim();
 }
 
-export async function joinServerRequest(code: string): Promise<JoinServerActionResult> {
+export async function joinServerRequest(
+  code: string,
+): Promise<JoinServerActionResult> {
   try {
-    const response = await fetch(`/api/invites/${encodeURIComponent(code)}/join`, {
-      method: "POST",
-    });
+    const response = await fetch(
+      `/api/invites/${encodeURIComponent(code)}/join`,
+      {
+        method: "POST",
+      },
+    );
     return (await response.json()) as JoinServerActionResult;
   } catch {
     return {
@@ -46,9 +50,13 @@ export async function joinServerRequest(code: string): Promise<JoinServerActionR
   }
 }
 
-export async function leaveServerRequest(serverId: string): Promise<LeaveServerActionResult> {
+export async function leaveServerRequest(
+  serverId: string,
+): Promise<LeaveServerActionResult> {
   try {
-    const response = await fetch(`/api/servers/${serverId}/leave`, { method: "DELETE" });
+    const response = await fetch(`/api/servers/${serverId}/leave`, {
+      method: "DELETE",
+    });
     return (await response.json()) as LeaveServerActionResult;
   } catch {
     return {

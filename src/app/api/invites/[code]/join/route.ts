@@ -17,14 +17,19 @@ export async function POST(
 ): Promise<NextResponse<JoinServerActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, message: SESSION_EXPIRED },
+      { status: 401 },
+    );
   }
 
   const joinResult = await joinServerByCode(session.token, params.code);
 
   if (!joinResult.ok) {
     const reason =
-      typeof joinResult.details?.reason === "string" ? joinResult.details.reason : undefined;
+      typeof joinResult.details?.reason === "string"
+        ? joinResult.details.reason
+        : undefined;
     const friendly = reason ? REASON_MESSAGES[reason] : undefined;
 
     if (friendly) {
@@ -34,24 +39,43 @@ export async function POST(
       );
     }
     if (joinResult.status === 401) {
-      return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+      return NextResponse.json(
+        { ok: false, message: SESSION_EXPIRED },
+        { status: 401 },
+      );
     }
     return NextResponse.json(
       { ok: false, message: "Algo salio mal. Intenta de nuevo." },
-      { status: joinResult.status >= 400 && joinResult.status < 500 ? joinResult.status : 502 },
+      {
+        status:
+          joinResult.status >= 400 && joinResult.status < 500
+            ? joinResult.status
+            : 502,
+      },
     );
   }
 
-  const serverResult = await getServer(session.token, joinResult.data.server_id);
+  const serverResult = await getServer(
+    session.token,
+    joinResult.data.server_id,
+  );
   if (!serverResult.ok) {
     return NextResponse.json(
-      { ok: false, message: "Te uniste, pero no pudimos cargar el servidor. Recarga la pagina." },
+      {
+        ok: false,
+        message:
+          "Te uniste, pero no pudimos cargar el servidor. Recarga la pagina.",
+      },
       { status: 502 },
     );
   }
 
   return NextResponse.json(
-    { ok: true, server: serverResult.data, alreadyMember: joinResult.data.already_member },
+    {
+      ok: true,
+      server: serverResult.data,
+      alreadyMember: joinResult.data.already_member,
+    },
     { status: 200 },
   );
 }

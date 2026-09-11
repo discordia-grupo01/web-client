@@ -18,14 +18,23 @@ export async function DELETE(
 ): Promise<NextResponse<LeaveServerActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+    return NextResponse.json(
+      { ok: false, message: SESSION_EXPIRED },
+      { status: 401 },
+    );
   }
 
-  const result = await leaveServer(session.token, params.serverId, String(session.user.id));
+  const result = await leaveServer(
+    session.token,
+    params.serverId,
+    String(session.user.id),
+  );
 
   if (!result.ok) {
     const reason =
-      typeof result.details?.reason === "string" ? result.details.reason : undefined;
+      typeof result.details?.reason === "string"
+        ? result.details.reason
+        : undefined;
 
     if (reason === "owner_must_transfer_or_delete") {
       return NextResponse.json(
@@ -34,11 +43,17 @@ export async function DELETE(
       );
     }
     if (result.status === 401) {
-      return NextResponse.json({ ok: false, message: SESSION_EXPIRED }, { status: 401 });
+      return NextResponse.json(
+        { ok: false, message: SESSION_EXPIRED },
+        { status: 401 },
+      );
     }
     return NextResponse.json(
       { ok: false, message: "Algo salio mal. Intenta de nuevo." },
-      { status: result.status >= 400 && result.status < 500 ? result.status : 502 },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
     );
   }
 
