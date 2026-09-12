@@ -29,7 +29,7 @@ describe("<LoginForm />", () => {
     const user = userEvent.setup();
     render(<LoginForm />);
 
-    await user.click(screen.getByRole("button", { name: /iniciar sesion/i }));
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     expect(await screen.findByText(/ingresa tu correo/i)).toBeInTheDocument();
     expect(screen.getByText(/ingresa tu contrasena/i)).toBeInTheDocument();
@@ -45,11 +45,11 @@ describe("<LoginForm />", () => {
     render(<LoginForm />);
 
     await user.type(
-      screen.getByLabelText("Correo electronico"),
+      screen.getByLabelText("Correo electrónico"),
       "ada@example.com",
     );
-    await user.type(screen.getByLabelText("Contrasena"), "secret123");
-    await user.click(screen.getByRole("button", { name: /iniciar sesion/i }));
+    await user.type(screen.getByLabelText("Contraseña"), "secret123");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     await waitFor(() => {
       expect(loginRequestMock).toHaveBeenCalledWith({
@@ -69,11 +69,11 @@ describe("<LoginForm />", () => {
     render(<LoginForm />);
 
     await user.type(
-      screen.getByLabelText("Correo electronico"),
+      screen.getByLabelText("Correo electrónico"),
       "ada@example.com",
     );
-    await user.type(screen.getByLabelText("Contrasena"), "wrong");
-    await user.click(screen.getByRole("button", { name: /iniciar sesion/i }));
+    await user.type(screen.getByLabelText("Contraseña"), "wrong");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/incorrectos/i);
     expect(replace).not.toHaveBeenCalled();

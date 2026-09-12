@@ -8,6 +8,9 @@ export const SESSION_COOKIE = "discordia_session";
 /** Rutas de la app. Centralizadas para no hardcodear strings sueltos. */
 export const ROUTES = {
   login: "/login",
+  register: "/register",
+  forgotPassword: "/forgot-password",
+  resetPassword: "/reset-password",
   /** Landing despues de iniciar sesion (por ahora un placeholder). */
   home: "/home",
 } as const;

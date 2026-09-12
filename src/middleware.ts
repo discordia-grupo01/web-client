@@ -6,7 +6,12 @@ import { ROUTES, SESSION_COOKIE } from "@/lib/constants";
 const PROTECTED_PREFIXES = [ROUTES.home];
 
 /** Rutas solo para invitados: si ya hay sesion, se redirige a la home. */
-const GUEST_ONLY = [ROUTES.login];
+const GUEST_ONLY = [
+  ROUTES.login,
+  ROUTES.register,
+  ROUTES.forgotPassword,
+  ROUTES.resetPassword,
+];
 
 /**
  * Guardia de rutas. Solo mira la PRESENCIA de la cookie de sesion (es rapido y

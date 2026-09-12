@@ -1,42 +1,44 @@
 "use client";
 
-import { ArrowRight, Lock, Mail } from "lucide-react";
-import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { ArrowRight, AtSign, Lock, Mail } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
-import { loginRequest } from "@/features/auth/client";
+import { registerRequest } from "@/features/auth/client";
 import {
   hasErrors,
-  validateLogin,
-  type LoginErrors,
+  validateRegister,
+  type RegisterErrors,
 } from "@/features/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
-export function LoginForm() {
+export function RegisterForm() {
   const router = useRouter();
-  const searchParams = useSearchParams();
 
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState<LoginErrors>({});
+  const [errors, setErrors] = useState<RegisterErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const resetSuccess = searchParams.get("reset") === "success";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setFormError(null);
 
-    const nextErrors = validateLogin({ email, password });
+    const nextErrors = validateRegister({ name, email, password });
     setErrors(nextErrors);
     if (hasErrors(nextErrors)) return;
 
     setIsSubmitting(true);
-    const result = await loginRequest({ email: email.trim(), password });
+    const result = await registerRequest({
+      name: name.trim(),
+      email: email.trim(),
+      password,
+    });
     setIsSubmitting(false);
 
     if (!result.ok) {
@@ -44,21 +46,27 @@ export function LoginForm() {
       return;
     }
 
-    const next = searchParams.get("next");
-    router.replace(next && next.startsWith("/") ? next : ROUTES.home);
+    // El registro deja la sesion iniciada: vamos directo a la home.
+    router.replace(ROUTES.home);
     router.refresh();
   }
 
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
-      {resetSuccess ? (
-        <p className="border-success/30 bg-success/10 text-success rounded-lg border px-3 py-2 text-xs">
-          Contraseña actualizada. Ingresa con tu contraseña nueva.
-        </p>
-      ) : null}
+      <TextField
+        label="Nombre de usuario"
+        name="name"
+        type="text"
+        autoComplete="username"
+        placeholder="tucoolusername"
+        icon={<AtSign size={16} />}
+        value={name}
+        onChange={(event) => setName(event.target.value)}
+        error={errors.name}
+      />
 
       <TextField
-        label="Correo electrónico"
+        label="Correo electronico"
         name="email"
         type="email"
         autoComplete="email"
@@ -70,24 +78,15 @@ export function LoginForm() {
       />
 
       <PasswordField
-        label="Contraseña"
+        label="Contrasena"
         name="password"
-        autoComplete="current-password"
+        autoComplete="new-password"
         placeholder="••••••••"
         icon={<Lock size={16} />}
         value={password}
         onChange={(event) => setPassword(event.target.value)}
         error={errors.password}
       />
-
-      <div className="flex justify-end">
-        <Link
-          href={ROUTES.forgotPassword}
-          className="text-info text-xs transition-colors hover:underline"
-        >
-          ¿Olvidaste tu contraseña?
-        </Link>
-      </div>
 
       {formError ? (
         <p
@@ -99,7 +98,7 @@ export function LoginForm() {
       ) : null}
 
       <Button type="submit" isLoading={isSubmitting} className="mt-2">
-        <span>Iniciar Sesión</span>
+        <span>Crear Cuenta</span>
         <ArrowRight size={16} />
       </Button>
     </form>
