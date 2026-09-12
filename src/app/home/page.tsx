@@ -1,38 +1,24 @@
 import { redirect } from "next/navigation";
 
-import { LogoutButton } from "@/components/auth/logout-button";
+import { HomeShell } from "@/components/home/home-shell";
 import { getSession } from "@/features/auth/session";
+import { listMyServers } from "@/features/servers/service";
 import { ROUTES } from "@/lib/constants";
 
 /**
- * Home de la app (protegida). Placeholder hasta que se sumen las pantallas
- * reales (chat, voz, perfil). El middleware ya bloquea el acceso sin cookie;
- * aca revalidamos la sesion completa (JWT no expirado) como defensa en profundidad.
+ * Home de la app (protegida). El middleware ya bloquea el acceso sin cookie;
+ * aca revalidamos la sesion completa (JWT no expirado) como defensa en
+ * profundidad, y de paso pedimos los servidores del usuario para no arrancar
+ * el home con un estado vacio si ya tiene alguno creado.
  */
-export default function HomePage() {
+export default async function HomePage() {
   const session = getSession();
   if (!session) {
     redirect(ROUTES.login);
   }
 
-  return (
-    <main className="mx-auto flex min-h-dvh max-w-2xl flex-col justify-center gap-6 px-6 py-12">
-      <div>
-        <p className="font-display text-content-subtle text-sm font-semibold tracking-wider uppercase">
-          Sesion iniciada
-        </p>
-        <h1 className="font-display text-content mt-1 text-3xl font-bold">
-          Hola, {session.user.name}
-        </h1>
-        <p className="text-content-muted mt-2 text-sm">{session.user.email}</p>
-      </div>
+  const result = await listMyServers(session.token);
+  const initialServers = result.ok ? result.data : [];
 
-      <p className="text-content-muted text-sm leading-relaxed">
-        Esta es la home protegida. Las pantallas de chat, voz y perfil se montan
-        sobre esta base.
-      </p>
-
-      <LogoutButton />
-    </main>
-  );
+  return <HomeShell initialServers={initialServers} />;
 }
