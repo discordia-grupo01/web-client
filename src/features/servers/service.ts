@@ -52,10 +52,13 @@ export function joinServerByCode(
   token: string,
   code: string,
 ): Promise<ApiResult<JoinResult>> {
-  return apiRequest<JoinResult>(`/v1/invites/${encodeURIComponent(code)}/join`, {
-    method: "POST",
-    token,
-  });
+  return apiRequest<JoinResult>(
+    `/v1/invites/${encodeURIComponent(code)}/join`,
+    {
+      method: "POST",
+      token,
+    },
+  );
 }
 
 interface ServersServiceSuccess<T> {
@@ -70,8 +73,7 @@ interface ServersServiceFailure {
   details?: Record<string, unknown>;
 }
 export type ServersServiceResult<T> =
-  | ServersServiceSuccess<T>
-  | ServersServiceFailure;
+  ServersServiceSuccess<T> | ServersServiceFailure;
 
 /**
  * `POST /v1/servers` es multipart/form-data (name + icon opcional). Usamos

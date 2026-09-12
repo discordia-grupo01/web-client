@@ -32,7 +32,10 @@ function ChannelRow({
           : "text-content-muted hover:bg-surface-hover",
       )}
     >
-      <Icon size={16} className={active ? "text-accent" : "text-content-subtle"} />
+      <Icon
+        size={16}
+        className={active ? "text-accent" : "text-content-subtle"}
+      />
       <span className="truncate">{channel.name}</span>
     </button>
   );
@@ -44,12 +47,18 @@ function ChannelRow({
  * mensajes, asi que no fingimos mensajes reales, solo la estructura.
  */
 export function ServerView({ server }: ServerViewProps) {
-  const textChannels = server.channels.filter((channel) => channel.kind === "text");
-  const voiceChannels = server.channels.filter((channel) => channel.kind === "voice");
+  const textChannels = server.channels.filter(
+    (channel) => channel.kind === "text",
+  );
+  const voiceChannels = server.channels.filter(
+    (channel) => channel.kind === "voice",
+  );
   const [activeChannelId, setActiveChannelId] = useState(
     () => textChannels[0]?.id ?? server.channels[0]?.id ?? "",
   );
-  const activeChannel = server.channels.find((channel) => channel.id === activeChannelId);
+  const activeChannel = server.channels.find(
+    (channel) => channel.id === activeChannelId,
+  );
 
   return (
     <div className="flex flex-1 overflow-hidden">
@@ -110,7 +119,10 @@ export function ServerView({ server }: ServerViewProps) {
       </div>
 
       {/* Content area */}
-      <div className="flex flex-1 flex-col overflow-hidden" style={{ background: "var(--bg-chat)" }}>
+      <div
+        className="flex flex-1 flex-col overflow-hidden"
+        style={{ background: "var(--bg-chat)" }}
+      >
         {activeChannel ? (
           <>
             <div className="border-line flex h-12 shrink-0 items-center gap-2 border-b px-4">

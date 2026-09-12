@@ -14,7 +14,12 @@ interface ServerAvatarProps {
  * random para servidores sin ícono propio (ver features/servers/types.ts,
  * `hasCustomIcon`).
  */
-export function ServerAvatar({ name, src, size = 48, className }: ServerAvatarProps) {
+export function ServerAvatar({
+  name,
+  src,
+  size = 48,
+  className,
+}: ServerAvatarProps) {
   if (src) {
     return (
       // eslint-disable-next-line @next/next/no-img-element
@@ -32,7 +37,7 @@ export function ServerAvatar({ name, src, size = 48, className }: ServerAvatarPr
   return (
     <div
       className={cn(
-        "from-accent flex shrink-0 items-center justify-center bg-gradient-to-br to-[#1a4050] font-display font-bold text-white select-none",
+        "from-accent font-display flex shrink-0 items-center justify-center bg-gradient-to-br to-[#1a4050] font-bold text-white select-none",
         className,
       )}
       style={{ width: size, height: size, fontSize: size * 0.42 }}

@@ -5,7 +5,10 @@ import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ServerAvatar } from "@/components/servers/server-avatar";
-import { joinServerRequest, normalizeInviteCode } from "@/features/servers/client";
+import {
+  joinServerRequest,
+  normalizeInviteCode,
+} from "@/features/servers/client";
 import type { ServerSummary } from "@/features/servers/types";
 
 interface JoinServerModalProps {
@@ -23,9 +26,10 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
   const [fieldError, setFieldError] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [joined, setJoined] = useState<{ server: ServerSummary; alreadyMember: boolean } | null>(
-    null,
-  );
+  const [joined, setJoined] = useState<{
+    server: ServerSummary;
+    alreadyMember: boolean;
+  } | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -60,14 +64,18 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
       }}
     >
       <div
-        className="relative flex w-full flex-col overflow-hidden rounded-[20px] border border-line-strong shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
-        style={{ maxWidth: 440, maxHeight: "95dvh", background: "var(--bg-modal)" }}
+        className="border-line-strong relative flex w-full flex-col overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
+        style={{
+          maxWidth: 440,
+          maxHeight: "95dvh",
+          background: "var(--bg-modal)",
+        }}
       >
         <button
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border border-line transition-transform hover:scale-110"
+          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
         >
           <X size={13} />
         </button>
@@ -75,13 +83,19 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
         <div className="flex-1 overflow-y-auto">
           {joined ? (
             <div className="flex flex-col items-center gap-6 px-6 py-8 text-center">
-              <ServerAvatar name={joined.server.name} size={64} className="rounded-2xl" />
+              <ServerAvatar
+                name={joined.server.name}
+                size={64}
+                className="rounded-2xl"
+              />
               <div className="flex flex-col items-center gap-2">
                 <div className="bg-success/15 text-success flex size-12 items-center justify-center rounded-2xl">
                   <Check size={26} />
                 </div>
                 <p className="font-display text-content text-base font-bold">
-                  {joined.alreadyMember ? "Ya sos miembro" : "¡Listo, te uniste!"}
+                  {joined.alreadyMember
+                    ? "Ya sos miembro"
+                    : "¡Listo, te uniste!"}
                 </p>
                 <p className="text-content-muted max-w-[260px] text-sm leading-relaxed">
                   <strong className="text-content">{joined.server.name}</strong>
@@ -158,12 +172,19 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
 
                 <p className="text-content-subtle text-xs">
                   Los enlaces de invitación tienen este formato:{" "}
-                  <span className="text-content-muted font-mono">discordia.gg/xY7z2Q</span>
+                  <span className="text-content-muted font-mono">
+                    discordia.gg/xY7z2Q
+                  </span>
                 </p>
               </div>
 
               <div className="border-line flex items-center justify-end gap-3 border-t px-7 py-5">
-                <Button type="button" variant="secondary" onClick={onClose} className="w-auto">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={onClose}
+                  className="w-auto"
+                >
                   Cancelar
                 </Button>
                 <Button
