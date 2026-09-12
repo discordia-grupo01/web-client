@@ -61,7 +61,7 @@ function isSession(value: unknown): value is Session {
     typeof candidate.token === "string" &&
     typeof user === "object" &&
     user !== null &&
-    typeof user.id === "number" &&
+    typeof user.id === "string" &&
     typeof user.email === "string" &&
     typeof user.name === "string"
   );
