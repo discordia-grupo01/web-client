@@ -1,4 +1,4 @@
-import axios from "axios";
+import { api } from "@/lib/browser-api-client";
 
 import type {
   ForgotPasswordActionResult,
@@ -16,11 +16,6 @@ import type {
  * Llamadas del navegador hacia el BFF (`/api/auth/*`, mismo origen).
  * Nunca pega directo a identify-service.
  */
-const api = axios.create({
-  baseURL: "/api",
-  headers: { "Content-Type": "application/json" },
-  validateStatus: () => true,
-});
 
 export async function loginRequest(
   credentials: LoginValues,

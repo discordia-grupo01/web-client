@@ -38,10 +38,11 @@ discordia-web/
 │   │   └── <feature>/           types, validacion, service (server), client (browser), hooks
 │   ├── hooks/                   hooks de React reutilizables entre features
 │   └── lib/
-│       ├── api-client.ts        cliente HTTP hacia el backend (server-only)
-│       ├── constants.ts         constantes de la app (APP_NAME, rutas, ...)
-│       ├── env.ts               lectura centralizada de variables de entorno
-│       └── cn.ts                helper para componer clases de Tailwind
+│       ├── api-client.ts         cliente HTTP hacia el backend (server-only)
+│       ├── browser-api-client.ts cliente HTTP compartido para navegador (BFF, `/api/*`)
+│       ├── constants.ts          constantes de la app (APP_NAME, rutas, ...)
+│       ├── env.ts                lectura centralizada de variables de entorno
+│       └── cn.ts                 helper para componer clases de Tailwind
 ├── public/                      assets estaticos
 ├── .github/
 │   └── workflows/

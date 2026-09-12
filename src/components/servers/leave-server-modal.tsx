@@ -16,7 +16,7 @@ interface LeaveServerModalProps {
 /**
  * Solo self-leave (ver `features/servers/service.ts`): el owner no puede
  * abandonar su propio servidor, el backend lo rechaza con 409. Si lo sabemos
- * de antemano (`isOwner`) saltamos directo a ese estado, como en el Figma.
+ * de antemano (`isOwner`) saltamos directo a ese estado.
  */
 export function LeaveServerModal({
   serverId,

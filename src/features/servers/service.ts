@@ -78,6 +78,45 @@ export function joinServerByCode(
   );
 }
 
+interface ServerIconSuccess {
+  ok: true;
+  status: number;
+  body: ReadableStream<Uint8Array>;
+  contentType: string;
+}
+interface ServerIconFailure {
+  ok: false;
+  status: number;
+}
+export type ServerIconResult = ServerIconSuccess | ServerIconFailure;
+
+/**
+ * `GET /v1/servers/:id/icon` exige JWT (via el plugin jwt de Kong), y un
+ * `<img src="...">` del navegador no puede mandar el header Authorization
+ * -- por eso esto vive del lado server y usa fetch nativo en vez de
+ * `apiRequest` (pensada para JSON): devolvemos el binario tal cual, sin
+ * parsear.
+ */
+export async function getServerIcon(
+  token: string,
+  serverId: string,
+): Promise<ServerIconResult> {
+  const response = await fetch(`${env.apiUrl}/v1/servers/${serverId}/icon`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+
+  if (!response.ok || !response.body) {
+    return { ok: false, status: response.status || 502 };
+  }
+
+  return {
+    ok: true,
+    status: response.status,
+    body: response.body,
+    contentType: response.headers.get("content-type") ?? "image/png",
+  };
+}
+
 interface ServersServiceSuccess<T> {
   ok: true;
   status: number;
