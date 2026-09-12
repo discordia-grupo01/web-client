@@ -16,11 +16,6 @@ interface JoinServerModalProps {
   onJoined: (server: ServerSummary) => void;
 }
 
-/**
- * A diferencia del prototipo de Figma (verificar -> preview -> confirmar),
- * esto es un solo paso: el backend no tiene un endpoint de preview de una
- * invitacion, solo `POST /v1/invites/:code/join`, que ya une directamente.
- */
 export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
   const [code, setCode] = useState("");
   const [fieldError, setFieldError] = useState("");
