@@ -50,7 +50,7 @@ describe("<RegisterForm />", () => {
   it("con datos validos: llama al backend y redirige a la home", async () => {
     registerRequestMock.mockResolvedValue({
       ok: true,
-      user: { id: 1, name: "ada", email: "ada@example.com", created_at: "" },
+      user: { id: "1", name: "ada", email: "ada@example.com", created_at: "" },
     });
     render(<RegisterForm />);
 

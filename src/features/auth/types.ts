@@ -1,6 +1,6 @@
 /** Usuario tal como lo devuelve identify-service. */
 export interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
   created_at: string;
