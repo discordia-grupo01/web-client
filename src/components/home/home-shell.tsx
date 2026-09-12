@@ -9,7 +9,7 @@ import { JoinServerModal } from "@/components/servers/join-server-modal";
 import { ServerAvatar } from "@/components/servers/server-avatar";
 import { ServerView } from "@/components/servers/server-view";
 import { useAuth } from "@/features/auth/auth-context";
-import type { ServerListItem, ServerSummary } from "@/features/servers/types";
+import type { ServerSummary } from "@/features/servers/types";
 import { cn } from "@/lib/cn";
 
 interface HomeShellProps {
@@ -18,28 +18,28 @@ interface HomeShellProps {
 
 export function HomeShell({ initialServers }: HomeShellProps) {
   const { user, logout, isLoggingOut } = useAuth();
-  // Los servers que ya existian al cargar la pagina no tienen forma de saber
-  // si su icono es uno que el usuario eligio o el default que genera el back
-  // -- arrancan en `hasCustomIcon: false` (ver features/servers/types.ts).
-  const [servers, setServers] = useState<ServerListItem[]>(() =>
-    initialServers.map((server) => ({ ...server, hasCustomIcon: false })),
-  );
+  const [servers, setServers] = useState<ServerSummary[]>(initialServers);
   const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
 
-  function addAndSelect(server: ServerSummary, hasCustomIcon: boolean) {
+  function addAndSelect(server: ServerSummary) {
     setServers((prev) => {
       const withoutDuplicate = prev.filter(
         (existing) => existing.id !== server.id,
       );
-      return [...withoutDuplicate, { ...server, hasCustomIcon }];
+      return [...withoutDuplicate, server];
     });
     setSelectedServerId(server.id);
     setIsCreateModalOpen(false);
     setIsJoinModalOpen(false);
+  }
+
+  function removeServer(serverId: string) {
+    setServers((prev) => prev.filter((server) => server.id !== serverId));
+    setSelectedServerId((prev) => (prev === serverId ? null : prev));
   }
 
   return (
@@ -83,11 +83,7 @@ export function HomeShell({ initialServers }: HomeShellProps) {
               >
                 <ServerAvatar
                   name={server.name}
-                  src={
-                    server.hasCustomIcon
-                      ? `/api/servers/${server.id}/icon`
-                      : null
-                  }
+                  src={`/api/servers/${server.id}/icon`}
                   size={48}
                 />
               </button>
@@ -116,7 +112,11 @@ export function HomeShell({ initialServers }: HomeShellProps) {
 
       {/* Main panel */}
       {selectedServer ? (
-        <ServerView key={selectedServer.id} server={selectedServer} />
+        <ServerView
+          key={selectedServer.id}
+          server={selectedServer}
+          onLeft={() => removeServer(selectedServer.id)}
+        />
       ) : servers.length > 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
           <p className="font-display text-content-subtle text-sm font-semibold tracking-wider uppercase">
@@ -125,9 +125,6 @@ export function HomeShell({ initialServers }: HomeShellProps) {
           <h1 className="font-display text-content text-2xl font-bold">
             Elegí un servidor de la barra lateral
           </h1>
-          <p className="text-content-muted max-w-sm text-sm leading-relaxed">
-            O sumá uno nuevo con el botón de abajo.
-          </p>
         </div>
       ) : (
         <EmptyState
@@ -147,7 +144,7 @@ export function HomeShell({ initialServers }: HomeShellProps) {
       {isJoinModalOpen ? (
         <JoinServerModal
           onClose={() => setIsJoinModalOpen(false)}
-          onJoined={(server) => addAndSelect(server, false)}
+          onJoined={addAndSelect}
         />
       ) : null}
     </div>

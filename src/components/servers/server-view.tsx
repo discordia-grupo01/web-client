@@ -3,12 +3,13 @@
 import { Hash, Volume2 } from "lucide-react";
 import { useState } from "react";
 
-import { ServerAvatar } from "@/components/servers/server-avatar";
-import type { Channel, ServerListItem } from "@/features/servers/types";
+import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
+import type { Channel, ServerSummary } from "@/features/servers/types";
 import { cn } from "@/lib/cn";
 
 interface ServerViewProps {
-  server: ServerListItem;
+  server: ServerSummary;
+  onLeft: () => void;
 }
 
 function ChannelRow({
@@ -46,7 +47,7 @@ function ChannelRow({
  * por defecto) y un placeholder de "chat" -- todavia no hay servicio de
  * mensajes, asi que no fingimos mensajes reales, solo la estructura.
  */
-export function ServerView({ server }: ServerViewProps) {
+export function ServerView({ server, onLeft }: ServerViewProps) {
   const textChannels = server.channels.filter(
     (channel) => channel.kind === "text",
   );
@@ -67,17 +68,7 @@ export function ServerView({ server }: ServerViewProps) {
         className="flex w-60 shrink-0 flex-col overflow-hidden"
         style={{ background: "var(--bg-channels)" }}
       >
-        <div className="border-line flex h-12 shrink-0 items-center gap-2 border-b px-4">
-          <ServerAvatar
-            name={server.name}
-            src={server.hasCustomIcon ? `/api/servers/${server.id}/icon` : null}
-            size={24}
-            className="rounded-full"
-          />
-          <span className="font-display text-content truncate text-sm font-semibold">
-            {server.name}
-          </span>
-        </div>
+        <ServerSidebarHeader server={server} onLeft={onLeft} />
 
         <div className="flex-1 space-y-4 overflow-y-auto px-2 py-3">
           {textChannels.length > 0 ? (

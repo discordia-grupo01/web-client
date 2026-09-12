@@ -29,8 +29,7 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 interface CreateServerModalProps {
   onClose: () => void;
-  /** `hasCustomIcon` es cierto solo si el usuario adjunto un archivo en este form. */
-  onCreated: (server: ServerSummary, hasCustomIcon: boolean) => void;
+  onCreated: (server: ServerSummary) => void;
 }
 
 function ServerIconPreview({
@@ -236,10 +235,7 @@ export function CreateServerModal({
                 </p>
               </div>
 
-              <Button
-                type="button"
-                onClick={() => onCreated(created, iconFile !== null)}
-              >
+              <Button type="button" onClick={() => onCreated(created)}>
                 Ir al servidor
               </Button>
             </div>

@@ -1,6 +1,9 @@
+import { api } from "@/lib/browser-api-client";
+
 import type {
   CreateServerActionResult,
   JoinServerActionResult,
+  LeaveServerActionResult,
   ServerSummary,
 } from "./types";
 
@@ -14,8 +17,8 @@ type ListServersResult =
 
 export async function listServersRequest(): Promise<ListServersResult> {
   try {
-    const response = await fetch("/api/servers");
-    return (await response.json()) as ListServersResult;
+    const { data } = await api.get<ListServersResult>("/servers");
+    return data;
   } catch {
     return {
       ok: false,
@@ -34,13 +37,26 @@ export async function joinServerRequest(
   code: string,
 ): Promise<JoinServerActionResult> {
   try {
-    const response = await fetch(
-      `/api/invites/${encodeURIComponent(code)}/join`,
-      {
-        method: "POST",
-      },
+    const { data } = await api.post<JoinServerActionResult>(
+      `/invites/${encodeURIComponent(code)}/join`,
     );
-    return (await response.json()) as JoinServerActionResult;
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function leaveServerRequest(
+  serverId: string,
+): Promise<LeaveServerActionResult> {
+  try {
+    const { data } = await api.delete<LeaveServerActionResult>(
+      `/servers/${serverId}/leave`,
+    );
+    return data;
   } catch {
     return {
       ok: false,
@@ -50,18 +66,20 @@ export async function joinServerRequest(
 }
 
 /**
- * `formData` va tal cual (multipart/form-data): no se usa axios/JSON aca
- * porque el navegador tiene que armar el boundary del archivo el mismo.
+ * `formData` va tal cual (multipart/form-data): le sacamos el
+ * `Content-Type: application/json` que trae la instancia por default para
+ * que el navegador arme solo el boundary del multipart.
  */
 export async function createServerRequest(
   formData: FormData,
 ): Promise<CreateServerActionResult> {
   try {
-    const response = await fetch("/api/servers", {
-      method: "POST",
-      body: formData,
-    });
-    return (await response.json()) as CreateServerActionResult;
+    const { data } = await api.post<CreateServerActionResult>(
+      "/servers",
+      formData,
+      { headers: { "Content-Type": undefined } },
+    );
+    return data;
   } catch {
     return {
       ok: false,

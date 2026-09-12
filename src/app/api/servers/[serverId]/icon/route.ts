@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/features/auth/session";
-import { env } from "@/lib/env";
+import { getServerIcon } from "@/features/servers/service";
 
 /**
  * BFF de `GET /v1/servers/:serverId/icon`. Ese endpoint exige JWT (via el
@@ -18,19 +18,16 @@ export async function GET(
     return new NextResponse(null, { status: 401 });
   }
 
-  const response = await fetch(
-    `${env.apiUrl}/v1/servers/${params.serverId}/icon`,
-    { headers: { Authorization: `Bearer ${session.token}` } },
-  );
+  const result = await getServerIcon(session.token, params.serverId);
 
-  if (!response.ok || !response.body) {
-    return new NextResponse(null, { status: response.status || 502 });
+  if (!result.ok) {
+    return new NextResponse(null, { status: result.status });
   }
 
-  return new NextResponse(response.body, {
+  return new NextResponse(result.body, {
     status: 200,
     headers: {
-      "Content-Type": response.headers.get("content-type") ?? "image/png",
+      "Content-Type": result.contentType,
       "Cache-Control": "private, max-age=300",
     },
   });

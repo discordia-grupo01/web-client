@@ -5,11 +5,6 @@ import { createSession } from "@/features/auth/session";
 import type { LoginActionResult } from "@/features/auth/types";
 import { hasErrors, validateLogin } from "@/features/auth/validation";
 
-/**
- * BFF de login. El navegador pega aca (mismo origen); este handler llama a
- * identify-service y, si todo va bien, guarda el JWT en una cookie httpOnly.
- * El token nunca vuelve al navegador.
- */
 export async function POST(
   request: Request,
 ): Promise<NextResponse<LoginActionResult>> {

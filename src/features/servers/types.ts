@@ -45,14 +45,9 @@ export type JoinServerActionResult =
   | { ok: false; message: string; fieldErrors?: JoinServerFieldErrors };
 
 /**
- * `ServerSummary` tal como lo maneja el front en memoria: agrega si el
- * usuario subió un ícono propio. El backend no distingue esto en su
- * respuesta (siempre manda un `icon_url`, incluso el generado por default),
- * asi que esta info solo existe del lado del front, en el momento de crear
- * el servidor -- por eso un server cargado por `GET /v1/servers` (de una
- * sesion anterior) arranca en `false`: no hay forma de saber si su icono es
- * uno que el usuario eligio o el default generado por el back.
+ * Resultado de `DELETE /api/servers/:id/leave`. El backend bloquea esto para
+ * el owner (409, `details.reason: "owner_must_transfer_or_delete"`): en ese
+ * caso `isOwnerBlocked` es `true` y `message` ya viene con la copia final.
  */
-export interface ServerListItem extends ServerSummary {
-  hasCustomIcon: boolean;
-}
+export type LeaveServerActionResult =
+  { ok: true } | { ok: false; message: string; isOwnerBlocked?: boolean };
