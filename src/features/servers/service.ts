@@ -4,6 +4,7 @@ import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
 
 import type {
+  Channel,
   Invitation,
   Member,
   ServerSummary,
@@ -17,6 +18,7 @@ import type {
  *   GET    /v1/servers                          -> 200 [Server] | 401
  *   GET    /v1/servers/:id                      -> 200 Server | 400 | 404
  *   POST   /v1/servers                           -> 201 Server | 400 | 401 | 409 (nombre repetido)
+ *   POST   /v1/servers/:id/channels               -> 201 Channel | 400 | 401 | 403 | 404
  *   GET    /v1/servers/:id/members               -> 200 { members, total, limit, offset } | 401
  *   POST   /v1/servers/:id/invites                -> 201 Invitation | 400 | 401 | 403 | 404
  *   GET    /v1/servers/:id/invites                -> 200 [Invitation] | 401 | 403 | 404
@@ -24,11 +26,11 @@ import type {
  *   POST   /v1/invites/:code/join                -> 200|201 { server_id, already_member } | 403 | 404
  *   DELETE /v1/servers/:id/members/:userId       -> 204 | 401 | 403 | 404 | 409 (owner)
  *
- * Todavia NO existen: editar/borrar servidor, ABMC de canales/categorias,
- * preview de una invitacion sin unirse. resolver user_id -> nombre ya no
- * vive aca: es `getPublicProfile` en `features/auth/service.ts`, contra
- * identify-service. Ver la referencia de la API para el resto de endpoints
- * (roles, transferencia de ownership).
+ * Todavia NO existen: editar/borrar servidor, editar/borrar/reordenar
+ * canales, ABMC de categorias, preview de una invitacion sin unirse.
+ * resolver user_id -> nombre ya no vive aca: es `getPublicProfile` en
+ * `features/auth/service.ts`, contra identify-service. Ver la referencia de
+ * la API para el resto de endpoints (roles, transferencia de ownership).
  */
 
 export function listMyServers(
@@ -37,6 +39,28 @@ export function listMyServers(
   return apiRequest<ServerSummary[]>("/v1/servers", {
     method: "GET",
     token,
+  });
+}
+
+interface CreateChannelInput {
+  name: string;
+  kind: "text" | "voice";
+  categoryId?: string;
+}
+
+export function createChannel(
+  token: string,
+  serverId: string,
+  input: CreateChannelInput,
+): Promise<ApiResult<Channel>> {
+  return apiRequest<Channel>(`/v1/servers/${serverId}/channels`, {
+    method: "POST",
+    token,
+    data: {
+      name: input.name,
+      kind: input.kind,
+      ...(input.categoryId ? { category_id: input.categoryId } : {}),
+    },
   });
 }
 

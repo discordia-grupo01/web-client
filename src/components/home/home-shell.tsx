@@ -61,6 +61,12 @@ export function HomeShell({
     setSelectedServerId((prev) => (prev === serverId ? null : prev));
   }
 
+  function updateServer(server: ServerSummary) {
+    setServers((prev) =>
+      prev.map((existing) => (existing.id === server.id ? server : existing)),
+    );
+  }
+
   return (
     <div
       className="flex h-dvh w-full overflow-hidden"
@@ -135,6 +141,7 @@ export function HomeShell({
           key={selectedServer.id}
           server={selectedServer}
           onLeft={() => removeServer(selectedServer.id)}
+          onServerUpdate={updateServer}
         />
       ) : servers.length > 0 ? (
         <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">

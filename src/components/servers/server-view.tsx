@@ -1,16 +1,19 @@
 "use client";
 
-import { Hash, Volume2 } from "lucide-react";
+import { Hash, Plus, Volume2 } from "lucide-react";
 import { useState } from "react";
 
+import { CreateChannelModal } from "@/components/servers/create-channel-modal";
 import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
+import { useAuth } from "@/features/auth/auth-context";
 import type { Channel, ServerSummary } from "@/features/servers/types";
 import { cn } from "@/lib/cn";
 
 interface ServerViewProps {
   server: ServerSummary;
   onLeft: () => void;
+  onServerUpdate: (server: ServerSummary) => void;
 }
 
 function ChannelRow({
@@ -48,7 +51,14 @@ function ChannelRow({
  * por defecto) y un placeholder de "chat" -- todavia no hay servicio de
  * mensajes, asi que no fingimos mensajes reales, solo la estructura.
  */
-export function ServerView({ server, onLeft }: ServerViewProps) {
+export function ServerView({
+  server,
+  onLeft,
+  onServerUpdate,
+}: ServerViewProps) {
+  const { user } = useAuth();
+  const isOwner = user !== null && String(user.id) === server.owner_id;
+  const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const textChannels = server.channels.filter(
     (channel) => channel.kind === "text",
   );
@@ -62,6 +72,12 @@ export function ServerView({ server, onLeft }: ServerViewProps) {
     (channel) => channel.id === activeChannelId,
   );
 
+  function handleChannelCreated(channel: Channel) {
+    setIsCreateChannelOpen(false);
+    setActiveChannelId(channel.id);
+    onServerUpdate({ ...server, channels: [...server.channels, channel] });
+  }
+
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* Channel sidebar */}
@@ -70,6 +86,17 @@ export function ServerView({ server, onLeft }: ServerViewProps) {
         style={{ background: "var(--bg-channels)" }}
       >
         <ServerSidebarHeader server={server} onLeft={onLeft} />
+
+        {isOwner ? (
+          <button
+            type="button"
+            onClick={() => setIsCreateChannelOpen(true)}
+            className="text-content-subtle hover:text-content hover:bg-surface-hover flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-colors"
+          >
+            <Plus size={14} />
+            Crear canal
+          </button>
+        ) : null}
 
         <div className="flex-1 space-y-4 overflow-y-auto px-2 py-3">
           {textChannels.length > 0 ? (
@@ -165,6 +192,15 @@ export function ServerView({ server, onLeft }: ServerViewProps) {
       </div>
 
       <MembersSidebar serverId={server.id} />
+
+      {isCreateChannelOpen ? (
+        <CreateChannelModal
+          serverId={server.id}
+          categories={server.categories}
+          onClose={() => setIsCreateChannelOpen(false)}
+          onCreated={handleChannelCreated}
+        />
+      ) : null}
     </div>
   );
 }

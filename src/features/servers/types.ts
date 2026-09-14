@@ -4,6 +4,16 @@ export interface Channel {
   name: string;
   kind: "text" | "voice";
   position: number;
+  category_id: string | null;
+  topic: string | null;
+}
+
+/** Categoria tal como viene embebida en la respuesta de un servidor. */
+export interface Category {
+  id: string;
+  server_id: string;
+  name: string;
+  position: number;
 }
 
 /** Servidor tal como lo devuelve el servicio `servers` (via el gateway). */
@@ -14,6 +24,7 @@ export interface ServerSummary {
   owner_id: string;
   created_at: string;
   channels: Channel[];
+  categories: Category[];
 }
 
 /** Forma de error de `servers`: `{ error: { code, message, details? } }`. */
@@ -29,6 +40,17 @@ export interface CreateServerFieldErrors {
   name?: string;
   icon?: string;
 }
+
+export interface CreateChannelFieldErrors {
+  name?: string;
+  kind?: string;
+  category_id?: string;
+}
+
+/** Resultado de `POST /api/servers/:id/channels`. */
+export type CreateChannelActionResult =
+  | { ok: true; channel: Channel }
+  | { ok: false; message: string; fieldErrors?: CreateChannelFieldErrors };
 
 /** Resultado de `POST /api/servers`. Nunca incluye el token. */
 export type CreateServerActionResult =

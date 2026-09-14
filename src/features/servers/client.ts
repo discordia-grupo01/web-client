@@ -1,6 +1,7 @@
 import { api } from "@/lib/browser-api-client";
 
 import type {
+  CreateChannelActionResult,
   CreateInviteActionResult,
   CreateServerActionResult,
   JoinServerActionResult,
@@ -154,6 +155,24 @@ export async function createServerRequest(
     return {
       ok: false,
       message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function createChannelRequest(
+  serverId: string,
+  input: { name: string; kind: "text" | "voice"; categoryId?: string },
+): Promise<CreateChannelActionResult> {
+  try {
+    const { data } = await api.post<CreateChannelActionResult>(
+      `/servers/${serverId}/channels`,
+      input,
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos crear el canal. Intenta de nuevo.",
     };
   }
 }
