@@ -61,6 +61,10 @@ export type UpdateChannelActionResult =
   | { ok: true; channel: Channel }
   | { ok: false; message: string; fieldErrors?: UpdateChannelFieldErrors };
 
+/** Resultado de `DELETE /api/channels/:id`. */
+export type DeleteChannelActionResult =
+  { ok: true } | { ok: false; message: string };
+
 /** Resultado de `POST /api/servers`. Nunca incluye el token. */
 export type CreateServerActionResult =
   | { ok: true; server: ServerSummary }

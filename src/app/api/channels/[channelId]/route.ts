@@ -1,8 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/features/auth/session";
-import { updateChannel } from "@/features/servers/service";
-import type { UpdateChannelActionResult } from "@/features/servers/types";
+import { deleteChannel, updateChannel } from "@/features/servers/service";
+import type {
+  DeleteChannelActionResult,
+  UpdateChannelActionResult,
+} from "@/features/servers/types";
 
 const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
 
@@ -71,4 +74,40 @@ export async function PATCH(
   }
 
   return NextResponse.json({ ok: true, channel: result.data }, { status: 200 });
+}
+
+/**
+ * BFF de `DELETE /v1/channels/:id`. Sin body.
+ */
+export async function DELETE(
+  _request: Request,
+  { params }: { params: { channelId: string } },
+): Promise<NextResponse<DeleteChannelActionResult>> {
+  const session = getSession();
+  if (!session) {
+    return NextResponse.json(
+      { ok: false, message: SESSION_EXPIRED },
+      { status: 401 },
+    );
+  }
+
+  const result = await deleteChannel(session.token, params.channelId);
+
+  if (!result.ok) {
+    if (result.status === 401) {
+      return NextResponse.json(
+        { ok: false, message: SESSION_EXPIRED },
+        { status: 401 },
+      );
+    }
+    return NextResponse.json(
+      { ok: false, message: "No pudimos eliminar el canal. Intenta de nuevo." },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
+    );
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
 }

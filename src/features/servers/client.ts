@@ -4,6 +4,7 @@ import type {
   CreateChannelActionResult,
   CreateInviteActionResult,
   CreateServerActionResult,
+  DeleteChannelActionResult,
   JoinServerActionResult,
   LeaveServerActionResult,
   ListInvitationsActionResult,
@@ -192,6 +193,22 @@ export async function updateChannelRequest(
     return {
       ok: false,
       message: "No pudimos editar el canal. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function deleteChannelRequest(
+  channelId: string,
+): Promise<DeleteChannelActionResult> {
+  try {
+    const { data } = await api.delete<DeleteChannelActionResult>(
+      `/channels/${channelId}`,
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos eliminar el canal. Intenta de nuevo.",
     };
   }
 }

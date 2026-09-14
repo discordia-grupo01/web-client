@@ -1,9 +1,17 @@
 "use client";
 
-import { Hash, MoreVertical, Pencil, Plus, Volume2 } from "lucide-react";
+import {
+  Hash,
+  MoreVertical,
+  Pencil,
+  Plus,
+  Trash2,
+  Volume2,
+} from "lucide-react";
 import { useState } from "react";
 
 import { CreateChannelModal } from "@/components/servers/create-channel-modal";
+import { DeleteChannelModal } from "@/components/servers/delete-channel-modal";
 import { EditChannelModal } from "@/components/servers/edit-channel-modal";
 import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
@@ -23,12 +31,14 @@ function ChannelRow({
   isOwner,
   onClick,
   onEdit,
+  onDelete,
 }: {
   channel: Channel;
   active: boolean;
   isOwner: boolean;
   onClick: () => void;
   onEdit: () => void;
+  onDelete: () => void;
 }) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -83,6 +93,17 @@ function ChannelRow({
                   <Pencil size={14} />
                   Editar Canal
                 </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onDelete();
+                  }}
+                  className="text-danger hover:bg-danger/10 flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                >
+                  <Trash2 size={14} />
+                  Eliminar Canal
+                </button>
               </div>
             </>
           ) : null}
@@ -106,6 +127,7 @@ export function ServerView({
   const isOwner = user !== null && String(user.id) === server.owner_id;
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
+  const [deletingChannel, setDeletingChannel] = useState<Channel | null>(null);
   const textChannels = server.channels.filter(
     (channel) => channel.kind === "text",
   );
@@ -133,6 +155,18 @@ export function ServerView({
         existing.id === channel.id ? channel : existing,
       ),
     });
+  }
+
+  function handleChannelDeleted() {
+    if (!deletingChannel) return;
+    const remaining = server.channels.filter(
+      (existing) => existing.id !== deletingChannel.id,
+    );
+    setDeletingChannel(null);
+    if (activeChannelId === deletingChannel.id) {
+      setActiveChannelId(remaining[0]?.id ?? "");
+    }
+    onServerUpdate({ ...server, channels: remaining });
   }
 
   return (
@@ -170,6 +204,7 @@ export function ServerView({
                     isOwner={isOwner}
                     onClick={() => setActiveChannelId(channel.id)}
                     onEdit={() => setEditingChannel(channel)}
+                    onDelete={() => setDeletingChannel(channel)}
                   />
                 ))}
               </div>
@@ -190,6 +225,7 @@ export function ServerView({
                     isOwner={isOwner}
                     onClick={() => setActiveChannelId(channel.id)}
                     onEdit={() => setEditingChannel(channel)}
+                    onDelete={() => setDeletingChannel(channel)}
                   />
                 ))}
               </div>
@@ -268,6 +304,14 @@ export function ServerView({
           channel={editingChannel}
           onClose={() => setEditingChannel(null)}
           onUpdated={handleChannelUpdated}
+        />
+      ) : null}
+
+      {deletingChannel ? (
+        <DeleteChannelModal
+          channel={deletingChannel}
+          onClose={() => setDeletingChannel(null)}
+          onDeleted={handleChannelDeleted}
         />
       ) : null}
     </div>
