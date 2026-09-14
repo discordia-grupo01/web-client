@@ -51,3 +51,57 @@ export type JoinServerActionResult =
  */
 export type LeaveServerActionResult =
   { ok: true } | { ok: false; message: string; isOwnerBlocked?: boolean };
+
+/**
+ * Miembro tal como lo devuelve `GET /v1/servers/:id/members`. El backend solo
+ * conoce el `user_id`; el nombre se resuelve aparte contra identify-service
+ * (`getPublicProfileRequest`, ver `features/auth/client.ts`), uno por
+ * miembro -- no hay un endpoint batch todavia.
+ */
+export interface Member {
+  user_id: string;
+  is_owner: boolean;
+  joined_at: string;
+}
+
+/** Resultado de `GET /api/servers/:id/members`. */
+export type ListMembersActionResult =
+  | { ok: true; members: Member[]; total: number }
+  | { ok: false; message: string };
+
+/** Invitación tal como la devuelve `servers` (create o get). */
+export interface Invitation {
+  code: string;
+  url: string;
+  server_id: string;
+  created_by: string;
+  max_uses: number | null;
+  uses: number;
+  expires_at: string | null;
+  revoked_at: string | null;
+  created_at: string;
+}
+
+export interface CreateInviteFieldErrors {
+  max_uses?: string;
+}
+
+/** Resultado de `POST /api/servers/:id/invites`. */
+export type CreateInviteActionResult =
+  | { ok: true; invitation: Invitation }
+  | { ok: false; message: string; fieldErrors?: CreateInviteFieldErrors };
+
+/** Resultado de `DELETE /api/invites/:code`. Idempotente del lado del back. */
+export type RevokeInviteActionResult =
+  | { ok: true }
+  | { ok: false; message: string };
+
+/**
+ * Resultado de `GET /api/servers/:id/invites`. Trae TODAS las invitaciones
+ * del server (activas, revocadas o vencidas), más nuevas primero. El back no
+ * filtra por estado ni limita a una activa por server -- el front calcula el
+ * estado de cada una (ver `inviteStatus` en invite-modal.tsx).
+ */
+export type ListInvitationsActionResult =
+  | { ok: true; invitations: Invitation[] }
+  | { ok: false; message: string };
