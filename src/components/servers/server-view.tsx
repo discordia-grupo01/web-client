@@ -1,9 +1,10 @@
 "use client";
 
-import { Hash, Plus, Volume2 } from "lucide-react";
+import { Hash, MoreVertical, Pencil, Plus, Volume2 } from "lucide-react";
 import { useState } from "react";
 
 import { CreateChannelModal } from "@/components/servers/create-channel-modal";
+import { EditChannelModal } from "@/components/servers/edit-channel-modal";
 import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
 import { useAuth } from "@/features/auth/auth-context";
@@ -19,30 +20,75 @@ interface ServerViewProps {
 function ChannelRow({
   channel,
   active,
+  isOwner,
   onClick,
+  onEdit,
 }: {
   channel: Channel;
   active: boolean;
+  isOwner: boolean;
   onClick: () => void;
+  onEdit: () => void;
 }) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+
   return (
-    <button
-      type="button"
-      onClick={onClick}
-      className={cn(
-        "flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-        active
-          ? "text-content bg-accent/20"
-          : "text-content-muted hover:bg-surface-hover",
-      )}
-    >
-      <Icon
-        size={16}
-        className={active ? "text-accent" : "text-content-subtle"}
-      />
-      <span className="truncate">{channel.name}</span>
-    </button>
+    <div className="group relative flex items-center">
+      <button
+        type="button"
+        onClick={onClick}
+        className={cn(
+          "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+          active
+            ? "text-content bg-accent/20"
+            : "text-content-muted hover:bg-surface-hover",
+        )}
+      >
+        <Icon
+          size={16}
+          className={active ? "text-accent" : "text-content-subtle"}
+        />
+        <span className="truncate">{channel.name}</span>
+      </button>
+
+      {isOwner ? (
+        <>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((prev) => !prev)}
+            aria-label="Opciones del canal"
+            className="text-content-subtle hover:text-content absolute right-1 flex size-6 shrink-0 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+          >
+            <MoreVertical size={14} />
+          </button>
+
+          {isMenuOpen ? (
+            <>
+              <button
+                type="button"
+                aria-label="Cerrar menu"
+                onClick={() => setIsMenuOpen(false)}
+                className="fixed inset-0 z-40 cursor-default"
+              />
+              <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onEdit();
+                  }}
+                  className="text-content hover:bg-surface-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                >
+                  <Pencil size={14} />
+                  Editar Canal
+                </button>
+              </div>
+            </>
+          ) : null}
+        </>
+      ) : null}
+    </div>
   );
 }
 
@@ -59,6 +105,7 @@ export function ServerView({
   const { user } = useAuth();
   const isOwner = user !== null && String(user.id) === server.owner_id;
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
+  const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   const textChannels = server.channels.filter(
     (channel) => channel.kind === "text",
   );
@@ -76,6 +123,16 @@ export function ServerView({
     setIsCreateChannelOpen(false);
     setActiveChannelId(channel.id);
     onServerUpdate({ ...server, channels: [...server.channels, channel] });
+  }
+
+  function handleChannelUpdated(channel: Channel) {
+    setEditingChannel(null);
+    onServerUpdate({
+      ...server,
+      channels: server.channels.map((existing) =>
+        existing.id === channel.id ? channel : existing,
+      ),
+    });
   }
 
   return (
@@ -110,7 +167,9 @@ export function ServerView({
                     key={channel.id}
                     channel={channel}
                     active={channel.id === activeChannelId}
+                    isOwner={isOwner}
                     onClick={() => setActiveChannelId(channel.id)}
+                    onEdit={() => setEditingChannel(channel)}
                   />
                 ))}
               </div>
@@ -128,7 +187,9 @@ export function ServerView({
                     key={channel.id}
                     channel={channel}
                     active={channel.id === activeChannelId}
+                    isOwner={isOwner}
                     onClick={() => setActiveChannelId(channel.id)}
+                    onEdit={() => setEditingChannel(channel)}
                   />
                 ))}
               </div>
@@ -199,6 +260,14 @@ export function ServerView({
           categories={server.categories}
           onClose={() => setIsCreateChannelOpen(false)}
           onCreated={handleChannelCreated}
+        />
+      ) : null}
+
+      {editingChannel ? (
+        <EditChannelModal
+          channel={editingChannel}
+          onClose={() => setEditingChannel(null)}
+          onUpdated={handleChannelUpdated}
         />
       ) : null}
     </div>

@@ -52,6 +52,15 @@ export type CreateChannelActionResult =
   | { ok: true; channel: Channel }
   | { ok: false; message: string; fieldErrors?: CreateChannelFieldErrors };
 
+export interface UpdateChannelFieldErrors {
+  name?: string;
+}
+
+/** Resultado de `PATCH /api/channels/:id`. */
+export type UpdateChannelActionResult =
+  | { ok: true; channel: Channel }
+  | { ok: false; message: string; fieldErrors?: UpdateChannelFieldErrors };
+
 /** Resultado de `POST /api/servers`. Nunca incluye el token. */
 export type CreateServerActionResult =
   | { ok: true; server: ServerSummary }

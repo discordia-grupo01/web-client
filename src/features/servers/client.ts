@@ -10,6 +10,7 @@ import type {
   ListMembersActionResult,
   RevokeInviteActionResult,
   ServerSummary,
+  UpdateChannelActionResult,
 } from "./types";
 
 /**
@@ -173,6 +174,24 @@ export async function createChannelRequest(
     return {
       ok: false,
       message: "No pudimos crear el canal. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function updateChannelRequest(
+  channelId: string,
+  input: { name: string },
+): Promise<UpdateChannelActionResult> {
+  try {
+    const { data } = await api.patch<UpdateChannelActionResult>(
+      `/channels/${channelId}`,
+      input,
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos editar el canal. Intenta de nuevo.",
     };
   }
 }
