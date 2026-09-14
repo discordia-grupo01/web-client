@@ -16,12 +16,23 @@ function MemberRow({ member, name }: { member: Member; name?: string }) {
   const displayName = name ?? member.user_id;
   return (
     <div className="hover:bg-surface-hover flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors">
-      <ServerAvatar name={displayName} size={28} className="shrink-0 rounded-full" />
-      <span className="text-content-muted min-w-0 flex-1 truncate text-sm" title={member.user_id}>
+      <ServerAvatar
+        name={displayName}
+        size={28}
+        className="shrink-0 rounded-full"
+      />
+      <span
+        className="text-content-muted min-w-0 flex-1 truncate text-sm"
+        title={member.user_id}
+      >
         {displayName}
       </span>
       {member.is_owner ? (
-        <Crown size={13} className="text-highlight shrink-0" aria-label="Propietario" />
+        <Crown
+          size={13}
+          className="text-highlight shrink-0"
+          aria-label="Propietario"
+        />
       ) : null}
     </div>
   );
@@ -44,7 +55,11 @@ function MemberGroup({
       </p>
       <div className="space-y-0.5">
         {members.map((member) => (
-          <MemberRow key={member.user_id} member={member} name={names[member.user_id]} />
+          <MemberRow
+            key={member.user_id}
+            member={member}
+            name={names[member.user_id]}
+          />
         ))}
       </div>
     </div>
@@ -84,7 +99,10 @@ export function MembersSidebar({ serverId }: MembersSidebarProps) {
       for (const member of result.members) {
         getPublicProfileRequest(member.user_id).then((profile) => {
           if (cancelled || !profile.ok) return;
-          setNames((prev) => ({ ...prev, [member.user_id]: profile.user.name }));
+          setNames((prev) => ({
+            ...prev,
+            [member.user_id]: profile.user.name,
+          }));
         });
       }
     });

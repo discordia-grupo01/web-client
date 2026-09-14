@@ -33,7 +33,10 @@ export async function GET(
     }
     return NextResponse.json(
       { ok: false, message: "No pudimos cargar el perfil." },
-      { status: result.status >= 400 && result.status < 500 ? result.status : 502 },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
     );
   }
 

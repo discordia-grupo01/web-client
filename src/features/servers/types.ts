@@ -93,8 +93,7 @@ export type CreateInviteActionResult =
 
 /** Resultado de `DELETE /api/invites/:code`. Idempotente del lado del back. */
 export type RevokeInviteActionResult =
-  | { ok: true }
-  | { ok: false; message: string };
+  { ok: true } | { ok: false; message: string };
 
 /**
  * Resultado de `GET /api/servers/:id/invites`. Trae TODAS las invitaciones
@@ -103,5 +102,4 @@ export type RevokeInviteActionResult =
  * estado de cada una (ver `inviteStatus` en invite-modal.tsx).
  */
 export type ListInvitationsActionResult =
-  | { ok: true; invitations: Invitation[] }
-  | { ok: false; message: string };
+  { ok: true; invitations: Invitation[] } | { ok: false; message: string };

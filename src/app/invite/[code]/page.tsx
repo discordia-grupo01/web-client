@@ -46,7 +46,9 @@ export default async function InvitePage({
   }
 
   const reason =
-    typeof result.details?.reason === "string" ? result.details.reason : undefined;
+    typeof result.details?.reason === "string"
+      ? result.details.reason
+      : undefined;
   const copy = (reason ? REASON_COPY[reason] : undefined) ?? {
     title: "No pudimos procesar la invitación",
     body: "Intenta de nuevo en un momento.",
@@ -54,7 +56,10 @@ export default async function InvitePage({
   const Icon = reason === "user_banned" ? ShieldOff : AlertCircle;
 
   return (
-    <div className="flex min-h-dvh items-center justify-center p-4" style={{ background: "var(--bg-chat)" }}>
+    <div
+      className="flex min-h-dvh items-center justify-center p-4"
+      style={{ background: "var(--bg-chat)" }}
+    >
       <div
         className="border-line-strong flex w-full flex-col items-center gap-5 rounded-[20px] border px-7 py-9 text-center shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
         style={{ maxWidth: 420, background: "var(--bg-modal)" }}
@@ -66,7 +71,9 @@ export default async function InvitePage({
           <h1 className="font-display text-content mb-2 text-xl font-bold">
             {copy.title}
           </h1>
-          <p className="text-content-muted text-sm leading-relaxed">{copy.body}</p>
+          <p className="text-content-muted text-sm leading-relaxed">
+            {copy.body}
+          </p>
         </div>
         <Link
           href={ROUTES.home}

@@ -1,7 +1,10 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/features/auth/session";
-import { generateInvitation, listInvitations } from "@/features/servers/service";
+import {
+  generateInvitation,
+  listInvitations,
+} from "@/features/servers/service";
 import type {
   CreateInviteActionResult,
   ListInvitationsActionResult,
@@ -12,7 +15,8 @@ const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
 const REASON_MESSAGES: Record<string, string> = {
   max_uses_invalid: "El límite de usos debe ser un número mayor a 0.",
   server_not_found: "El servidor no existe.",
-  invite_permission_denied: "Tenés que ser miembro de este servidor para invitar gente.",
+  invite_permission_denied:
+    "Tenés que ser miembro de este servidor para invitar gente.",
 };
 
 /**
@@ -40,12 +44,21 @@ export async function GET(
       );
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos cargar las invitaciones. Intenta de nuevo." },
-      { status: result.status >= 400 && result.status < 500 ? result.status : 502 },
+      {
+        ok: false,
+        message: "No pudimos cargar las invitaciones. Intenta de nuevo.",
+      },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
     );
   }
 
-  return NextResponse.json({ ok: true, invitations: result.data }, { status: 200 });
+  return NextResponse.json(
+    { ok: true, invitations: result.data },
+    { status: 200 },
+  );
 }
 
 /**
@@ -72,13 +85,21 @@ export async function POST(
     // Body vacio es valido (sin limite de usos).
   }
 
-  const result = await generateInvitation(session.token, params.serverId, maxUses);
+  const result = await generateInvitation(
+    session.token,
+    params.serverId,
+    maxUses,
+  );
 
   if (!result.ok) {
     const field =
-      typeof result.details?.field === "string" ? result.details.field : undefined;
+      typeof result.details?.field === "string"
+        ? result.details.field
+        : undefined;
     const reason =
-      typeof result.details?.reason === "string" ? result.details.reason : undefined;
+      typeof result.details?.reason === "string"
+        ? result.details.reason
+        : undefined;
     const friendly = reason ? REASON_MESSAGES[reason] : undefined;
 
     if (field === "max_uses" && friendly) {
@@ -95,7 +116,10 @@ export async function POST(
     }
     return NextResponse.json(
       { ok: false, message: friendly ?? "Algo salio mal. Intenta de nuevo." },
-      { status: result.status >= 400 && result.status < 500 ? result.status : 502 },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
     );
   }
 

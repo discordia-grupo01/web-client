@@ -74,5 +74,4 @@ export interface PublicUser {
 
 /** Resultado de `GET /api/users/:id`. */
 export type GetPublicProfileActionResult =
-  | { ok: true; user: PublicUser }
-  | { ok: false; message: string };
+  { ok: true; user: PublicUser } | { ok: false; message: string };

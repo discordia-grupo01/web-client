@@ -32,7 +32,10 @@ export async function DELETE(
     }
     return NextResponse.json(
       { ok: false, message: "Algo salio mal. Intenta de nuevo." },
-      { status: result.status >= 400 && result.status < 500 ? result.status : 502 },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
     );
   }
 

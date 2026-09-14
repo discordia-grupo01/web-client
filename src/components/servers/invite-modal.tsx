@@ -30,16 +30,24 @@ interface InviteModalProps {
 
 type InviteStatus = "active" | "revoked" | "expired" | "exhausted";
 
-const STATUS_COPY: Record<InviteStatus, { label: string; className: string }> = {
-  active: { label: "Activa", className: "bg-success/15 text-success" },
-  revoked: { label: "Revocada", className: "bg-danger/15 text-danger" },
-  expired: { label: "Vencida", className: "bg-surface-input text-content-subtle" },
-  exhausted: { label: "Agotada", className: "bg-surface-input text-content-subtle" },
-};
+const STATUS_COPY: Record<InviteStatus, { label: string; className: string }> =
+  {
+    active: { label: "Activa", className: "bg-success/15 text-success" },
+    revoked: { label: "Revocada", className: "bg-danger/15 text-danger" },
+    expired: {
+      label: "Vencida",
+      className: "bg-surface-input text-content-subtle",
+    },
+    exhausted: {
+      label: "Agotada",
+      className: "bg-surface-input text-content-subtle",
+    },
+  };
 
 function inviteStatus(inv: Invitation): InviteStatus {
   if (inv.revoked_at) return "revoked";
-  if (inv.expires_at && new Date(inv.expires_at).getTime() <= Date.now()) return "expired";
+  if (inv.expires_at && new Date(inv.expires_at).getTime() <= Date.now())
+    return "expired";
   if (inv.max_uses !== null && inv.uses >= inv.max_uses) return "exhausted";
   return "active";
 }
@@ -164,7 +172,11 @@ function InvitationRow({
  * invitaciones activas a la vez (no hay "la" invitacion actual), asi que
  * mostramos todo el historial en vez de fingir que hay una sola.
  */
-export function InviteModal({ serverId, serverName, onClose }: InviteModalProps) {
+export function InviteModal({
+  serverId,
+  serverName,
+  onClose,
+}: InviteModalProps) {
   const [invitations, setInvitations] = useState<Invitation[] | null>(null);
   const [maxUsesInput, setMaxUsesInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
@@ -211,7 +223,9 @@ export function InviteModal({ serverId, serverName, onClose }: InviteModalProps)
     setInvitations(
       (prev) =>
         prev?.map((inv) =>
-          inv.code === code ? { ...inv, revoked_at: new Date().toISOString() } : inv,
+          inv.code === code
+            ? { ...inv, revoked_at: new Date().toISOString() }
+            : inv,
         ) ?? null,
     );
   }
@@ -225,7 +239,11 @@ export function InviteModal({ serverId, serverName, onClose }: InviteModalProps)
     >
       <div
         className="border-line-strong relative flex w-full flex-col overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
-        style={{ maxWidth: 460, maxHeight: "90dvh", background: "var(--bg-modal)" }}
+        style={{
+          maxWidth: 460,
+          maxHeight: "90dvh",
+          background: "var(--bg-modal)",
+        }}
       >
         <button
           type="button"
@@ -301,7 +319,11 @@ export function InviteModal({ serverId, serverName, onClose }: InviteModalProps)
           ) : (
             <div className="space-y-2.5">
               {invitations.map((inv) => (
-                <InvitationRow key={inv.code} invitation={inv} onRevoked={handleRevoked} />
+                <InvitationRow
+                  key={inv.code}
+                  invitation={inv}
+                  onRevoked={handleRevoked}
+                />
               ))}
             </div>
           )}

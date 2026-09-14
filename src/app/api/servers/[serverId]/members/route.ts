@@ -35,7 +35,10 @@ export async function GET(
         ok: false,
         message: "No pudimos cargar los miembros. Intenta de nuevo.",
       },
-      { status: result.status >= 400 && result.status < 500 ? result.status : 502 },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
     );
   }
 
