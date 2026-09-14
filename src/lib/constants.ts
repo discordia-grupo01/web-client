@@ -13,4 +13,5 @@ export const ROUTES = {
   resetPassword: "/reset-password",
   /** Landing despues de iniciar sesion (por ahora un placeholder). */
   home: "/home",
+  invite: "/invite",
 } as const;

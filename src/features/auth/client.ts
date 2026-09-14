@@ -2,6 +2,7 @@ import { api } from "@/lib/browser-api-client";
 
 import type {
   ForgotPasswordActionResult,
+  GetPublicProfileActionResult,
   LoginActionResult,
   RegisterActionResult,
   ResetPasswordActionResult,
@@ -72,6 +73,22 @@ export async function forgotPasswordRequest(
     return {
       ok: false,
       message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function getPublicProfileRequest(
+  userId: string,
+): Promise<GetPublicProfileActionResult> {
+  try {
+    const { data } = await api.get<GetPublicProfileActionResult>(
+      `/users/${userId}`,
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos cargar el perfil.",
     };
   }
 }

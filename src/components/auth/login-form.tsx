@@ -26,6 +26,7 @@ export function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const resetSuccess = searchParams.get("reset") === "success";
+  const justRegistered = searchParams.get("registered") === "1";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -54,6 +55,10 @@ export function LoginForm() {
       {resetSuccess ? (
         <p className="border-success/30 bg-success/10 text-success rounded-lg border px-3 py-2 text-xs">
           Contraseña actualizada. Ingresa con tu contraseña nueva.
+        </p>
+      ) : justRegistered ? (
+        <p className="border-success/30 bg-success/10 text-success rounded-lg border px-3 py-2 text-xs">
+          ¡Cuenta creada con éxito! Ingresa tus datos para continuar.
         </p>
       ) : null}
 

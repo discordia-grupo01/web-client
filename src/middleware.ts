@@ -3,7 +3,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ROUTES, SESSION_COOKIE } from "@/lib/constants";
 
 /** Rutas que exigen sesion. Al crecer la app se agregan prefijos aca. */
-const PROTECTED_PREFIXES = [ROUTES.home];
+const PROTECTED_PREFIXES = [ROUTES.home, ROUTES.invite];
 
 /** Rutas solo para invitados: si ya hay sesion, se redirige a la home. */
 const GUEST_ONLY = [

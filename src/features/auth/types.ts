@@ -37,8 +37,16 @@ export type AuthActionResult =
 /** Resultado de `POST /api/auth/login`. */
 export type LoginActionResult = AuthActionResult;
 
-/** Resultado de `POST /api/auth/register`. */
-export type RegisterActionResult = AuthActionResult;
+/**
+ * Resultado de `POST /api/auth/register`. A diferencia de login, `POST
+ * /v1/users` ya NO devuelve un token (ver identify-service commit
+ * "Register does not generate jwt token anymore"): registrarse no deja al
+ * usuario con sesion iniciada, hay que loguearse aparte. Por eso este
+ * resultado no lleva `user` ni crea cookie -- el BFF ya no llama a
+ * `createSession` en este endpoint.
+ */
+export type RegisterActionResult =
+  { ok: true } | { ok: false; message: string };
 
 /**
  * Resultado de `POST /api/auth/forgot-password`. Nunca lleva datos de usuario:
@@ -54,3 +62,16 @@ export type ForgotPasswordActionResult =
  */
 export type ResetPasswordActionResult =
   { ok: true } | { ok: false; message: string };
+export interface PublicUser {
+  id: string;
+  name: string;
+  avatar_url: string;
+  status_text: string;
+  status_emoji: string;
+  created_at: string;
+  mutual_server_ids: string[];
+}
+
+/** Resultado de `GET /api/users/:id`. */
+export type GetPublicProfileActionResult =
+  { ok: true; user: PublicUser } | { ok: false; message: string };

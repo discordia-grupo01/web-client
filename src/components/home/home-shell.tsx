@@ -1,7 +1,8 @@
 "use client";
 
 import { Home as HomeIcon, Plus } from "lucide-react";
-import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/home/empty-state";
 import { CreateServerModal } from "@/components/servers/create-server-modal";
@@ -11,19 +12,37 @@ import { ServerView } from "@/components/servers/server-view";
 import { useAuth } from "@/features/auth/auth-context";
 import type { ServerSummary } from "@/features/servers/types";
 import { cn } from "@/lib/cn";
+import { ROUTES } from "@/lib/constants";
 
 interface HomeShellProps {
   initialServers: ServerSummary[];
+  initialSelectedServerId?: string | null;
 }
 
-export function HomeShell({ initialServers }: HomeShellProps) {
+export function HomeShell({
+  initialServers,
+  initialSelectedServerId = null,
+}: HomeShellProps) {
+  const router = useRouter();
   const { user, logout, isLoggingOut } = useAuth();
   const [servers, setServers] = useState<ServerSummary[]>(initialServers);
-  const [selectedServerId, setSelectedServerId] = useState<string | null>(null);
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(
+    initialSelectedServerId,
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
+
+  // `?server=...` solo sirve para el estado inicial (arriba, al volver de
+  // aceptar una invitacion); lo sacamos de la URL para que un refresh no
+  // vuelva a "reseleccionar" el mismo server por las dudas.
+  useEffect(() => {
+    if (initialSelectedServerId !== null) {
+      router.replace(ROUTES.home);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   function addAndSelect(server: ServerSummary) {
     setServers((prev) => {

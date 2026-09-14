@@ -3,7 +3,12 @@ import "server-only";
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
 
-import type { ServerSummary, ServersApiErrorBody } from "./types";
+import type {
+  Invitation,
+  Member,
+  ServerSummary,
+  ServersApiErrorBody,
+} from "./types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong).
@@ -12,12 +17,18 @@ import type { ServerSummary, ServersApiErrorBody } from "./types";
  *   GET    /v1/servers                          -> 200 [Server] | 401
  *   GET    /v1/servers/:id                      -> 200 Server | 400 | 404
  *   POST   /v1/servers                           -> 201 Server | 400 | 401 | 409 (nombre repetido)
+ *   GET    /v1/servers/:id/members               -> 200 { members, total, limit, offset } | 401
+ *   POST   /v1/servers/:id/invites                -> 201 Invitation | 400 | 401 | 403 | 404
+ *   GET    /v1/servers/:id/invites                -> 200 [Invitation] | 401 | 403 | 404
+ *   DELETE /v1/invites/:code                       -> 204 (idempotente) | 401 | 403
  *   POST   /v1/invites/:code/join                -> 200|201 { server_id, already_member } | 403 | 404
  *   DELETE /v1/servers/:id/members/:userId       -> 204 | 401 | 403 | 404 | 409 (owner)
  *
  * Todavia NO existen: editar/borrar servidor, ABMC de canales/categorias,
- * listar miembros, preview de una invitacion sin unirse. Ver la referencia
- * de la API para el resto de endpoints (roles, transferencia de ownership).
+ * preview de una invitacion sin unirse. resolver user_id -> nombre ya no
+ * vive aca: es `getPublicProfile` en `features/auth/service.ts`, contra
+ * identify-service. Ver la referencia de la API para el resto de endpoints
+ * (roles, transferencia de ownership).
  */
 
 export function listMyServers(
@@ -50,6 +61,63 @@ export function leaveServer(
   userId: string,
 ): Promise<ApiResult<void>> {
   return apiRequest<void>(`/v1/servers/${serverId}/members/${userId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+interface MemberListResult {
+  members: Member[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+
+/** Trae hasta 100 miembros (el maximo que acepta el back) en una sola pagina. */
+export function listMembers(
+  token: string,
+  serverId: string,
+): Promise<ApiResult<MemberListResult>> {
+  return apiRequest<MemberListResult>(
+    `/v1/servers/${serverId}/members?limit=100`,
+    { method: "GET", token },
+  );
+}
+
+/**
+ * Cualquier miembro del server puede generar/revocar invitaciones (no es
+ * owner-only): el back solo chequea membresia, ver
+ * internal/service/invitation/service.go.
+ */
+export function generateInvitation(
+  token: string,
+  serverId: string,
+  maxUses?: number,
+): Promise<ApiResult<Invitation>> {
+  return apiRequest<Invitation>(`/v1/servers/${serverId}/invites`, {
+    method: "POST",
+    token,
+    data: maxUses !== undefined ? { max_uses: maxUses } : {},
+  });
+}
+
+/** Cualquier miembro puede ver todas las invitaciones del server (mismo chequeo que generar/revocar). */
+export function listInvitations(
+  token: string,
+  serverId: string,
+): Promise<ApiResult<Invitation[]>> {
+  return apiRequest<Invitation[]>(`/v1/servers/${serverId}/invites`, {
+    method: "GET",
+    token,
+  });
+}
+
+/** Idempotente: revocar un codigo ya revocado igual devuelve 204. */
+export function revokeInvitation(
+  token: string,
+  code: string,
+): Promise<ApiResult<void>> {
+  return apiRequest<void>(`/v1/invites/${encodeURIComponent(code)}`, {
     method: "DELETE",
     token,
   });

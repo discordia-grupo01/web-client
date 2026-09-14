@@ -153,7 +153,7 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
                         setFieldError("");
                         setGlobalError("");
                       }}
-                      placeholder="discordia.gg/xY7z2Q"
+                      placeholder="ej: /invite/xY7z2Q"
                       autoFocus
                       className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
                     />
@@ -169,7 +169,7 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
                 <p className="text-content-subtle text-xs">
                   Los enlaces de invitación tienen este formato:{" "}
                   <span className="text-content-muted font-mono">
-                    discordia.gg/xY7z2Q
+                    /invite/xY7z2Q
                   </span>
                 </p>
               </div>

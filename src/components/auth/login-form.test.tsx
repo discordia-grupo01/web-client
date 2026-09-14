@@ -8,10 +8,11 @@ import { LoginForm } from "./login-form";
 
 const replace = vi.fn();
 const refresh = vi.fn();
+let searchParams = new URLSearchParams();
 
 vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, refresh }),
-  useSearchParams: () => new URLSearchParams(),
+  useSearchParams: () => searchParams,
 }));
 
 vi.mock("@/features/auth/client", () => ({
@@ -22,6 +23,7 @@ const loginRequestMock = vi.mocked(loginRequest);
 
 beforeEach(() => {
   vi.clearAllMocks();
+  searchParams = new URLSearchParams();
 });
 
 describe("<LoginForm />", () => {
@@ -77,5 +79,12 @@ describe("<LoginForm />", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/incorrectos/i);
     expect(replace).not.toHaveBeenCalled();
+  });
+
+  it("muestra el aviso de cuenta creada cuando viene de registrarse", () => {
+    searchParams = new URLSearchParams("registered=1");
+    render(<LoginForm />);
+
+    expect(screen.getByText(/cuenta creada con éxito/i)).toBeInTheDocument();
   });
 });

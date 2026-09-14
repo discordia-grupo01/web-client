@@ -46,9 +46,10 @@ export function RegisterForm() {
       return;
     }
 
-    // El registro deja la sesion iniciada: vamos directo a la home.
-    router.replace(ROUTES.home);
-    router.refresh();
+    // El registro YA NO deja la sesion iniciada (identify-service dejo de
+    // devolver un token al registrarse): mandamos al login con un aviso,
+    // si no no hay ninguna senal de que el registro funciono.
+    router.replace(`${ROUTES.login}?registered=1`);
   }
 
   return (
