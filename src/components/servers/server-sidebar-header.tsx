@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronDown, LogOut } from "lucide-react";
+import { ChevronDown, LogOut, UserPlus } from "lucide-react";
 import { useState } from "react";
 
+import { InviteModal } from "@/components/servers/invite-modal";
 import { LeaveServerModal } from "@/components/servers/leave-server-modal";
 import { ServerAvatar } from "@/components/servers/server-avatar";
 import { useAuth } from "@/features/auth/auth-context";
@@ -16,8 +17,10 @@ interface ServerSidebarHeaderProps {
 
 /**
  * Header del panel de canales: nombre + menu desplegable. Por ahora el menu
- * solo tiene "Abandonar servidor" -- no agregamos notificaciones/buscar/
- * configuracion porque no existen todavia del lado del back.
+ * tiene "Invitar miembros" (cualquier miembro puede, no solo el owner -- ver
+ * `features/servers/service.ts`) y "Abandonar servidor". No agregamos
+ * notificaciones/buscar/configuracion porque no existen todavia del lado
+ * del back.
  */
 export function ServerSidebarHeader({
   server,
@@ -25,6 +28,7 @@ export function ServerSidebarHeader({
 }: ServerSidebarHeaderProps) {
   const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
   const isOwner = user !== null && String(user.id) === server.owner_id;
 
@@ -66,6 +70,17 @@ export function ServerSidebarHeader({
               type="button"
               onClick={() => {
                 setIsMenuOpen(false);
+                setIsInviteModalOpen(true);
+              }}
+              className="text-content hover:bg-surface-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+            >
+              <UserPlus size={14} />
+              Invitar miembros
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
                 setIsLeaveModalOpen(true);
               }}
               className="text-danger hover:bg-danger/10 flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
@@ -75,6 +90,14 @@ export function ServerSidebarHeader({
             </button>
           </div>
         </>
+      ) : null}
+
+      {isInviteModalOpen ? (
+        <InviteModal
+          serverId={server.id}
+          serverName={server.name}
+          onClose={() => setIsInviteModalOpen(false)}
+        />
       ) : null}
 
       {isLeaveModalOpen ? (
