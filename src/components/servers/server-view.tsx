@@ -3,6 +3,7 @@
 import { Hash, Volume2 } from "lucide-react";
 import { useState } from "react";
 
+import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
 import type { Channel, ServerSummary } from "@/features/servers/types";
 import { cn } from "@/lib/cn";
@@ -162,6 +163,8 @@ export function ServerView({ server, onLeft }: ServerViewProps) {
           </>
         ) : null}
       </div>
+
+      <MembersSidebar serverId={server.id} />
     </div>
   );
 }
