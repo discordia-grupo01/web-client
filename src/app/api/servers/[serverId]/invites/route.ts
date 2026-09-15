@@ -10,7 +10,7 @@ import type {
   ListInvitationsActionResult,
 } from "@/features/servers/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 const REASON_MESSAGES: Record<string, string> = {
   max_uses_invalid: "El límite de usos debe ser un número mayor a 0.",

@@ -4,7 +4,7 @@ import { getSession } from "@/features/auth/session";
 import { revokeInvitation } from "@/features/servers/service";
 import type { RevokeInviteActionResult } from "@/features/servers/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `DELETE /v1/invites/:code`. Idempotente del lado del back: revocar

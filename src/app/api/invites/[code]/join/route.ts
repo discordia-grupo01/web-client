@@ -4,7 +4,7 @@ import { getSession } from "@/features/auth/session";
 import { getServer, joinServerByCode } from "@/features/servers/service";
 import type { JoinServerActionResult } from "@/features/servers/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 const REASON_MESSAGES: Record<string, string> = {
   invitation_invalid: "Este enlace de invitación no es válido o expiró.",

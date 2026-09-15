@@ -16,7 +16,7 @@ const REASON_MESSAGES: Record<string, string> = {
   icon_unreadable: "No pudimos leer ese archivo. Probá con otro.",
 };
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `GET /v1/servers`. El navegador pega aca (mismo origen); reenvia el

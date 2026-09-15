@@ -4,7 +4,7 @@ import { getSession } from "@/features/auth/session";
 import { reorderChannels } from "@/features/servers/service";
 import type { ReorderChannelsActionResult } from "@/features/servers/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `PATCH /v1/servers/:id/channels/reorder`. Body JSON:

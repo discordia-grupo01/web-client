@@ -4,7 +4,7 @@ import { getPublicProfile } from "@/features/auth/service";
 import { getSession } from "@/features/auth/session";
 import type { GetPublicProfileActionResult } from "@/features/auth/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `GET /v1/users/:id` (identify-service, via Kong). Resuelve el

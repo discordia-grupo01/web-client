@@ -4,7 +4,7 @@ import { getSession } from "@/features/auth/session";
 import { leaveServer } from "@/features/servers/service";
 import type { LeaveServerActionResult } from "@/features/servers/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 const OWNER_BLOCKED_MESSAGE =
   "Sos el propietario de este servidor. Transferí la propiedad a otro miembro antes de salir.";
 

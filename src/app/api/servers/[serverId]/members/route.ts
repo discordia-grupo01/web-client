@@ -4,7 +4,7 @@ import { getSession } from "@/features/auth/session";
 import { listMembers } from "@/features/servers/service";
 import type { ListMembersActionResult } from "@/features/servers/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `GET /v1/servers/:id/members`. El navegador pega aca (mismo

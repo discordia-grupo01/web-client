@@ -4,7 +4,7 @@ import { getSession } from "@/features/auth/session";
 import { createCategory } from "@/features/servers/service";
 import type { CreateCategoryActionResult } from "@/features/servers/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 const REASON_MESSAGES: Record<string, string> = {
   name_required: "Ingresá un nombre para la categoría.",
