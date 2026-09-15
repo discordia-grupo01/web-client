@@ -11,6 +11,7 @@ import type {
   ListInvitationsActionResult,
   ListMembersActionResult,
   MoveChannelActionResult,
+  ReorderChannelsActionResult,
   RevokeInviteActionResult,
   ServerSummary,
   UpdateCategoryActionResult,
@@ -267,6 +268,26 @@ export async function updateCategoryRequest(
     return {
       ok: false,
       message: "No pudimos editar la categoría. Intenta de nuevo.",
+    };
+  }
+}
+
+/** `categoryId: null` reordena el balde "sin categoría". */
+export async function reorderChannelsRequest(
+  serverId: string,
+  categoryId: string | null,
+  channelIds: string[],
+): Promise<ReorderChannelsActionResult> {
+  try {
+    const { data } = await api.patch<ReorderChannelsActionResult>(
+      `/servers/${serverId}/channels/reorder`,
+      { categoryId, channelIds },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos reordenar los canales. Intenta de nuevo.",
     };
   }
 }

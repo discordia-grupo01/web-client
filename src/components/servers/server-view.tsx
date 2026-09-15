@@ -1,16 +1,23 @@
 "use client";
 
 import {
+  closestCenter,
   DndContext,
   DragOverlay,
   PointerSensor,
-  useDraggable,
   useDroppable,
   useSensor,
   useSensors,
   type DragEndEvent,
   type DragStartEvent,
 } from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   ChevronDown,
   ChevronRight,
@@ -32,7 +39,10 @@ import { EditChannelModal } from "@/components/servers/edit-channel-modal";
 import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
 import { useAuth } from "@/features/auth/auth-context";
-import { moveChannelToCategoryRequest } from "@/features/servers/client";
+import {
+  moveChannelToCategoryRequest,
+  reorderChannelsRequest,
+} from "@/features/servers/client";
 import type {
   Category,
   Channel,
@@ -145,7 +155,7 @@ function ChannelRow({
   );
 }
 
-function DraggableChannelRow(props: {
+function SortableChannelRow(props: {
   channel: Channel;
   active: boolean;
   isOwner: boolean;
@@ -154,8 +164,14 @@ function DraggableChannelRow(props: {
   onDelete: () => void;
 }) {
   const { channel, isOwner } = props;
-  const { attributes, listeners, setNodeRef, transform, isDragging } =
-    useDraggable({ id: channel.id, disabled: !isOwner });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: channel.id, disabled: !isOwner });
 
   if (!isOwner) return <ChannelRow {...props} />;
 
@@ -165,9 +181,8 @@ function DraggableChannelRow(props: {
       {...listeners}
       {...attributes}
       style={{
-        transform: transform
-          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
-          : undefined,
+        transform: CSS.Transform.toString(transform),
+        transition,
         opacity: isDragging ? 0.35 : 1,
       }}
       className="touch-none"
@@ -179,9 +194,11 @@ function DraggableChannelRow(props: {
 
 function CategoryDropZone({
   bucket,
+  items,
   children,
 }: {
   bucket: string;
+  items: string[];
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: bucket });
@@ -194,7 +211,9 @@ function CategoryDropZone({
         isOver ? "bg-accent/10 ring-accent-strong/40 ring-1" : "",
       )}
     >
-      {children}
+      <SortableContext items={items} strategy={verticalListSortingStrategy}>
+        {children}
+      </SortableContext>
     </div>
   );
 }
@@ -410,6 +429,15 @@ export function ServerView({
       : UNCATEGORIZED_BUCKET;
   }
 
+  /** Todos los canales que hoy estan en ese bucket, ordenados por posicion. */
+  function channelsInBucket(bucket: string): Channel[] {
+    if (bucket === UNCATEGORIZED_BUCKET) return uncategorized;
+    const categoryId = bucketCategoryId(bucket);
+    return server.channels
+      .filter((channel) => channel.category_id === categoryId)
+      .sort((a, b) => a.position - b.position);
+  }
+
   /** Resuelve a que bucket corresponde un id de `over` (un canal o un contenedor vacio). */
   function resolveOverBucket(overId: string): string | undefined {
     if (overId === UNCATEGORIZED_BUCKET || overId.startsWith("cat:")) {
@@ -435,14 +463,48 @@ export function ServerView({
 
     const activeBucket = bucketOfChannel(channel);
     const overBucket = resolveOverBucket(String(over.id));
-    if (!overBucket || overBucket === activeBucket) return;
+    if (!overBucket) return;
 
-    const targetCategoryId = bucketCategoryId(overBucket);
-    if (targetCategoryId === channel.category_id) return;
+    if (overBucket !== activeBucket) {
+      const targetCategoryId = bucketCategoryId(overBucket);
+      if (targetCategoryId === channel.category_id) return;
 
-    const result = await moveChannelToCategoryRequest(
-      channel.id,
-      targetCategoryId,
+      const result = await moveChannelToCategoryRequest(
+        channel.id,
+        targetCategoryId,
+      );
+      if (!result.ok) {
+        setDragError(result.message);
+        return;
+      }
+
+      onServerUpdate({
+        ...server,
+        channels: server.channels.map((existing) =>
+          existing.id === channel.id ? result.channel : existing,
+        ),
+      });
+      return;
+    }
+
+    // Mismo bucket: reordenar.
+    const overId = String(over.id);
+    if (overId === channel.id) return;
+
+    const bucketChannels = channelsInBucket(activeBucket);
+    const oldIndex = bucketChannels.findIndex((c) => c.id === channel.id);
+    const overIndex = bucketChannels.findIndex((c) => c.id === overId);
+    const newIndex = overIndex === -1 ? bucketChannels.length - 1 : overIndex;
+    if (oldIndex === -1 || oldIndex === newIndex) return;
+
+    const reordered = arrayMove(bucketChannels, oldIndex, newIndex);
+    const categoryId = bucketCategoryId(activeBucket);
+    const channelIds = reordered.map((c) => c.id);
+
+    const result = await reorderChannelsRequest(
+      server.id,
+      categoryId,
+      channelIds,
     );
     if (!result.ok) {
       setDragError(result.message);
@@ -451,15 +513,16 @@ export function ServerView({
 
     onServerUpdate({
       ...server,
-      channels: server.channels.map((existing) =>
-        existing.id === channel.id ? result.channel : existing,
-      ),
+      channels: server.channels.map((existing) => {
+        const position = channelIds.indexOf(existing.id);
+        return position === -1 ? existing : { ...existing, position };
+      }),
     });
   }
 
   function renderChannelList(channels: Channel[]) {
     return channels.map((channel) => (
-      <DraggableChannelRow
+      <SortableChannelRow
         key={channel.id}
         channel={channel}
         active={channel.id === activeChannelId}
@@ -513,6 +576,7 @@ export function ServerView({
 
         <DndContext
           sensors={sensors}
+          collisionDetection={closestCenter}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
         >
@@ -526,7 +590,10 @@ export function ServerView({
                   isOwner={false}
                 />
                 {!collapsedIds.has("none") ? (
-                  <CategoryDropZone bucket={UNCATEGORIZED_BUCKET}>
+                  <CategoryDropZone
+                    bucket={UNCATEGORIZED_BUCKET}
+                    items={uncategorized.map((channel) => channel.id)}
+                  >
                     {renderChannelList(uncategorized)}
                   </CategoryDropZone>
                 ) : null}
@@ -553,7 +620,10 @@ export function ServerView({
                     onEdit={() => setEditingCategory(category)}
                   />
                   {!collapsed ? (
-                    <CategoryDropZone bucket={categoryBucket(category.id)}>
+                    <CategoryDropZone
+                      bucket={categoryBucket(category.id)}
+                      items={channels.map((channel) => channel.id)}
+                    >
                       {renderChannelList(channels)}
                     </CategoryDropZone>
                   ) : null}

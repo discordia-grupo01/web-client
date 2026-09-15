@@ -83,6 +83,14 @@ export type UpdateCategoryActionResult =
   | { ok: true; category: Category }
   | { ok: false; message: string; fieldErrors?: CategoryFieldErrors };
 
+/**
+ * Resultado de `PATCH /api/servers/:id/channels/reorder`. El back exige que
+ * `channelIds` sea exactamente el set de canales que ya está en esa
+ * categoría (o en "sin categoría" si es `null`), ni más ni menos.
+ */
+export type ReorderChannelsActionResult =
+  { ok: true } | { ok: false; message: string };
+
 /** Resultado de `POST /api/servers`. Nunca incluye el token. */
 export type CreateServerActionResult =
   | { ok: true; server: ServerSummary }
