@@ -17,7 +17,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: "Petición inválida." },
       { status: 400 },
     );
   }
@@ -27,7 +27,7 @@ export async function POST(
 
   if (hasErrors(validateForgotPassword({ email }))) {
     return NextResponse.json(
-      { ok: false, message: "Ingresa un correo electronico valido." },
+      { ok: false, message: "Ingresa un correo electrónico válido." },
       { status: 400 },
     );
   }
@@ -41,14 +41,14 @@ export async function POST(
           {
             ok: false,
             message:
-              "Alcanzaste el limite de solicitudes. Intenta de nuevo mas tarde.",
+              "Alcanzaste el límite de solicitudes. Intenta de nuevo más tarde.",
           },
           { status: 429 },
         );
 
       case "INVALID_INPUT":
         return NextResponse.json(
-          { ok: false, message: "Ingresa un correo electronico valido." },
+          { ok: false, message: "Ingresa un correo electrónico válido." },
           { status: 400 },
         );
 
@@ -58,7 +58,7 @@ export async function POST(
           {
             ok: false,
             message:
-              "No pudimos procesar la solicitud. Intenta de nuevo mas tarde.",
+              "No pudimos procesar la solicitud. Intenta de nuevo más tarde.",
           },
           { status: 502 },
         );

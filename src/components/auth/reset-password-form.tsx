@@ -31,10 +31,10 @@ export function ResetPasswordForm() {
     return (
       <div className="text-center">
         <h1 className="font-display text-content mb-2 text-2xl font-bold">
-          Enlace invalido
+          Enlace inválido
         </h1>
         <p className="text-content-muted mb-6 text-sm leading-relaxed">
-          Este enlace de recuperacion no es valido o ya expiro. Solicita uno
+          Este enlace de recuperación no es válido o ya expiró. Solicita uno
           nuevo para continuar.
         </p>
         <Link
@@ -78,15 +78,15 @@ export function ResetPasswordForm() {
   return (
     <>
       <h1 className="font-display text-content mb-1 text-2xl font-bold">
-        Nueva contrasena
+        Nueva contraseña
       </h1>
       <p className="text-content-muted mb-7 text-sm">
-        Elige una contrasena segura para tu cuenta. Minimo 8 caracteres.
+        Elige una contraseña segura para tu cuenta. Mínimo 8 caracteres.
       </p>
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <PasswordField
-          label="Nueva contrasena"
+          label="Nueva contraseña"
           name="newPassword"
           autoComplete="new-password"
           placeholder="••••••••"
@@ -97,7 +97,7 @@ export function ResetPasswordForm() {
         />
 
         <PasswordField
-          label="Confirmar contrasena"
+          label="Confirmar contraseña"
           name="confirmPassword"
           autoComplete="new-password"
           placeholder="••••••••"
@@ -117,7 +117,7 @@ export function ResetPasswordForm() {
         ) : null}
 
         <Button type="submit" isLoading={isSubmitting} className="mt-2">
-          <span>Actualizar contrasena</span>
+          <span>Actualizar contraseña</span>
           <ArrowRight size={16} />
         </Button>
       </form>

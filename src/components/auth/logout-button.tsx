@@ -17,7 +17,7 @@ export function LogoutButton() {
       className="w-auto"
     >
       <LogOut size={16} />
-      <span>Cerrar sesion</span>
+      <span>Cerrar sesión</span>
     </Button>
   );
 }

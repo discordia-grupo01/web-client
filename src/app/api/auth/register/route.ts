@@ -18,7 +18,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: "Petición inválida." },
       { status: 400 },
     );
   }
@@ -47,7 +47,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Ya existe una cuenta con ese correo electronico.",
+          message: "Ya existe una cuenta con ese correo electrónico.",
         },
         { status: 409 },
       );
@@ -59,7 +59,7 @@ export async function POST(
         {
           ok: false,
           message:
-            "Revisa los datos: la contraseña necesita 8+ caracteres con mayuscula, minuscula y numero.",
+            "Revisa los datos: la contraseña necesita 8+ caracteres con mayúscula, minúscula y número.",
         },
         { status: 400 },
       );
@@ -70,7 +70,7 @@ export async function POST(
       {
         ok: false,
         message:
-          "No pudimos crear tu cuenta en este momento. Intenta de nuevo mas tarde.",
+          "No pudimos crear tu cuenta en este momento. Intenta de nuevo más tarde.",
       },
       { status: 502 },
     );

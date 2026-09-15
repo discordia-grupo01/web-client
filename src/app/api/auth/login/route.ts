@@ -13,7 +13,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: "Petición inválida." },
       { status: 400 },
     );
   }
@@ -37,7 +37,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "El correo electronico o la contraseña son incorrectos.",
+          message: "El correo electrónico o la contraseña son incorrectos.",
         },
         { status: 401 },
       );
@@ -56,7 +56,7 @@ export async function POST(
       {
         ok: false,
         message:
-          "No pudimos iniciar sesion en este momento. Intenta de nuevo mas tarde.",
+          "No pudimos iniciar sesión en este momento. Intenta de nuevo más tarde.",
       },
       { status: 502 },
     );

@@ -26,13 +26,13 @@ export function validateLogin(values: LoginValues): LoginErrors {
 
   const email = values.email.trim();
   if (email === "") {
-    errors.email = "Ingresa tu correo electronico";
+    errors.email = "Ingresa tu correo electrónico";
   } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = "El correo electronico no es valido";
+    errors.email = "El correo electrónico no es válido";
   }
 
   if (values.password === "") {
-    errors.password = "Ingresa tu contrasena";
+    errors.password = "Ingresa tu contraseña";
   }
 
   return errors;
@@ -62,14 +62,14 @@ export interface RegisterErrors {
 
 /** Misma regla que exige el backend para register y reset. */
 function passwordStrengthError(password: string): string | undefined {
-  if (password === "") return "Ingresa una contrasena";
+  if (password === "") return "Ingresa una contraseña";
   if (
     password.length < PASSWORD_MIN ||
     !HAS_UPPERCASE.test(password) ||
     !HAS_LOWERCASE.test(password) ||
     !HAS_DIGIT.test(password)
   ) {
-    return "Usa 8+ caracteres con una mayuscula, una minuscula y un numero";
+    return "Usa 8+ caracteres con una mayúscula, una minúscula y un número";
   }
   return undefined;
 }
@@ -88,9 +88,9 @@ export function validateRegister(values: RegisterValues): RegisterErrors {
 
   const email = values.email.trim();
   if (email === "") {
-    errors.email = "Ingresa tu correo electronico";
+    errors.email = "Ingresa tu correo electrónico";
   } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = "El correo electronico no es valido";
+    errors.email = "El correo electrónico no es válido";
   }
 
   errors.password = passwordStrengthError(values.password);
@@ -113,9 +113,9 @@ export function validateForgotPassword(
 
   const email = values.email.trim();
   if (email === "") {
-    errors.email = "Ingresa tu correo electronico";
+    errors.email = "Ingresa tu correo electrónico";
   } else if (!EMAIL_REGEX.test(email)) {
-    errors.email = "El correo electronico no es valido";
+    errors.email = "El correo electrónico no es válido";
   }
 
   return errors;
@@ -139,9 +139,9 @@ export function validateResetPassword(
   errors.newPassword = passwordStrengthError(values.newPassword);
 
   if (values.confirmPassword === "") {
-    errors.confirmPassword = "Confirma tu contrasena";
+    errors.confirmPassword = "Confirma tu contraseña";
   } else if (values.confirmPassword !== values.newPassword) {
-    errors.confirmPassword = "Las contrasenas no coinciden";
+    errors.confirmPassword = "Las contraseñas no coinciden";
   }
 
   return errors;

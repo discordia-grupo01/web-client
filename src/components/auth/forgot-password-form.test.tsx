@@ -24,7 +24,7 @@ describe("<ForgotPasswordForm />", () => {
     await user.click(screen.getByRole("button", { name: /enviar enlace/i }));
 
     expect(
-      await screen.findByText("Ingresa tu correo electronico"),
+      await screen.findByText("Ingresa tu correo electrónico"),
     ).toBeInTheDocument();
     expect(forgotPasswordRequestMock).not.toHaveBeenCalled();
   });
@@ -35,7 +35,7 @@ describe("<ForgotPasswordForm />", () => {
     render(<ForgotPasswordForm />);
 
     await user.type(
-      screen.getByLabelText("Correo electronico"),
+      screen.getByLabelText("Correo electrónico"),
       "ada@example.com",
     );
     await user.click(screen.getByRole("button", { name: /enviar enlace/i }));
@@ -50,19 +50,19 @@ describe("<ForgotPasswordForm />", () => {
     forgotPasswordRequestMock.mockResolvedValue({
       ok: false,
       message:
-        "Alcanzaste el limite de solicitudes. Intenta de nuevo mas tarde.",
+        "Alcanzaste el límite de solicitudes. Intenta de nuevo más tarde.",
     });
     const user = userEvent.setup();
     render(<ForgotPasswordForm />);
 
     await user.type(
-      screen.getByLabelText("Correo electronico"),
+      screen.getByLabelText("Correo electrónico"),
       "ada@example.com",
     );
     await user.click(screen.getByRole("button", { name: /enviar enlace/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
-      /limite de solicitudes/i,
+      /límite de solicitudes/i,
     );
   });
 });

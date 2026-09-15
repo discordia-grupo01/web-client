@@ -7,7 +7,7 @@ import type {
   UpdateOwnProfileActionResult,
 } from "@/features/auth/types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `GET /v1/me/profile`. Perfil propio del usuario autenticado (no el
@@ -64,7 +64,7 @@ export async function PATCH(
     formData = await request.formData();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: "Petición inválida." },
       { status: 400 },
     );
   }
