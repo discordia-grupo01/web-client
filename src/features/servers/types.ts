@@ -65,6 +65,24 @@ export type UpdateChannelActionResult =
 export type DeleteChannelActionResult =
   { ok: true } | { ok: false; message: string };
 
+/** Resultado de `PATCH /api/channels/:id/category`. */
+export type MoveChannelActionResult =
+  { ok: true; channel: Channel } | { ok: false; message: string };
+
+export interface CategoryFieldErrors {
+  name?: string;
+}
+
+/** Resultado de `POST /api/servers/:id/categories`. */
+export type CreateCategoryActionResult =
+  | { ok: true; category: Category }
+  | { ok: false; message: string; fieldErrors?: CategoryFieldErrors };
+
+/** Resultado de `PATCH /api/categories/:id`. */
+export type UpdateCategoryActionResult =
+  | { ok: true; category: Category }
+  | { ok: false; message: string; fieldErrors?: CategoryFieldErrors };
+
 /** Resultado de `POST /api/servers`. Nunca incluye el token. */
 export type CreateServerActionResult =
   | { ok: true; server: ServerSummary }

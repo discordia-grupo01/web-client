@@ -1,6 +1,7 @@
 import { api } from "@/lib/browser-api-client";
 
 import type {
+  CreateCategoryActionResult,
   CreateChannelActionResult,
   CreateInviteActionResult,
   CreateServerActionResult,
@@ -9,8 +10,10 @@ import type {
   LeaveServerActionResult,
   ListInvitationsActionResult,
   ListMembersActionResult,
+  MoveChannelActionResult,
   RevokeInviteActionResult,
   ServerSummary,
+  UpdateCategoryActionResult,
   UpdateChannelActionResult,
 } from "./types";
 
@@ -209,6 +212,61 @@ export async function deleteChannelRequest(
     return {
       ok: false,
       message: "No pudimos eliminar el canal. Intenta de nuevo.",
+    };
+  }
+}
+
+/** `categoryId: null` mueve el canal a "sin categoría". */
+export async function moveChannelToCategoryRequest(
+  channelId: string,
+  categoryId: string | null,
+): Promise<MoveChannelActionResult> {
+  try {
+    const { data } = await api.patch<MoveChannelActionResult>(
+      `/channels/${channelId}/category`,
+      { categoryId },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos mover el canal. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function createCategoryRequest(
+  serverId: string,
+  name: string,
+): Promise<CreateCategoryActionResult> {
+  try {
+    const { data } = await api.post<CreateCategoryActionResult>(
+      `/servers/${serverId}/categories`,
+      { name },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos crear la categoría. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function updateCategoryRequest(
+  categoryId: string,
+  name: string,
+): Promise<UpdateCategoryActionResult> {
+  try {
+    const { data } = await api.patch<UpdateCategoryActionResult>(
+      `/categories/${categoryId}`,
+      { name },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos editar la categoría. Intenta de nuevo.",
     };
   }
 }

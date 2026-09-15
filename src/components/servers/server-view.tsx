@@ -1,6 +1,20 @@
 "use client";
 
 import {
+  DndContext,
+  DragOverlay,
+  PointerSensor,
+  useDraggable,
+  useDroppable,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+  type DragStartEvent,
+} from "@dnd-kit/core";
+import {
+  ChevronDown,
+  ChevronRight,
+  FolderPlus,
   Hash,
   MoreVertical,
   Pencil,
@@ -8,16 +22,34 @@ import {
   Trash2,
   Volume2,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
+import { CreateCategoryModal } from "@/components/servers/create-category-modal";
 import { CreateChannelModal } from "@/components/servers/create-channel-modal";
 import { DeleteChannelModal } from "@/components/servers/delete-channel-modal";
+import { EditCategoryModal } from "@/components/servers/edit-category-modal";
 import { EditChannelModal } from "@/components/servers/edit-channel-modal";
 import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
 import { useAuth } from "@/features/auth/auth-context";
-import type { Channel, ServerSummary } from "@/features/servers/types";
+import { moveChannelToCategoryRequest } from "@/features/servers/client";
+import type {
+  Category,
+  Channel,
+  ServerSummary,
+} from "@/features/servers/types";
 import { cn } from "@/lib/cn";
+
+/** Id del "bucket" de canales sin categoria (`category_id: null`). */
+const UNCATEGORIZED_BUCKET = "none";
+
+function categoryBucket(categoryId: string): string {
+  return `cat:${categoryId}`;
+}
+
+function bucketCategoryId(bucket: string): string | null {
+  return bucket.startsWith("cat:") ? bucket.slice(4) : null;
+}
 
 interface ServerViewProps {
   server: ServerSummary;
@@ -113,10 +145,174 @@ function ChannelRow({
   );
 }
 
+function DraggableChannelRow(props: {
+  channel: Channel;
+  active: boolean;
+  isOwner: boolean;
+  onClick: () => void;
+  onEdit: () => void;
+  onDelete: () => void;
+}) {
+  const { channel, isOwner } = props;
+  const { attributes, listeners, setNodeRef, transform, isDragging } =
+    useDraggable({ id: channel.id, disabled: !isOwner });
+
+  if (!isOwner) return <ChannelRow {...props} />;
+
+  return (
+    <div
+      ref={setNodeRef}
+      {...listeners}
+      {...attributes}
+      style={{
+        transform: transform
+          ? `translate3d(${transform.x}px, ${transform.y}px, 0)`
+          : undefined,
+        opacity: isDragging ? 0.35 : 1,
+      }}
+      className="touch-none"
+    >
+      <ChannelRow {...props} />
+    </div>
+  );
+}
+
+function CategoryDropZone({
+  bucket,
+  children,
+}: {
+  bucket: string;
+  children: ReactNode;
+}) {
+  const { setNodeRef, isOver } = useDroppable({ id: bucket });
+
+  return (
+    <div
+      ref={setNodeRef}
+      className={cn(
+        "space-y-0.5 rounded-md px-0.5 py-0.5 transition-colors",
+        isOver ? "bg-accent/10 ring-accent-strong/40 ring-1" : "",
+      )}
+    >
+      {children}
+    </div>
+  );
+}
+
+function CategorySectionHeader({
+  label,
+  isCollapsed,
+  onToggle,
+  isOwner,
+  onAddChannel,
+  onEdit,
+  onDelete,
+}: {
+  label: string;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  isOwner: boolean;
+  onAddChannel?: () => void;
+  onEdit?: () => void;
+  onDelete?: () => void;
+}) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const Chevron = isCollapsed ? ChevronRight : ChevronDown;
+  const hasMenu = isOwner && (onEdit || onDelete);
+
+  return (
+    <div className="group relative flex items-center gap-0.5 px-1">
+      <button
+        type="button"
+        onClick={onToggle}
+        className="text-content-subtle hover:text-content flex flex-1 items-center gap-1 py-1 text-[11px] font-semibold tracking-wider uppercase transition-colors"
+      >
+        <Chevron size={12} />
+        <span className="truncate">{label}</span>
+      </button>
+
+      {isOwner && onAddChannel ? (
+        <button
+          type="button"
+          onClick={onAddChannel}
+          aria-label="Añadir canal"
+          className="text-content-subtle hover:text-content flex size-5 shrink-0 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <Plus size={14} />
+        </button>
+      ) : null}
+
+      {hasMenu ? (
+        <button
+          type="button"
+          onClick={() => setIsMenuOpen((prev) => !prev)}
+          aria-label="Opciones de la categoría"
+          className="text-content-subtle hover:text-content flex size-5 shrink-0 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <MoreVertical size={13} />
+        </button>
+      ) : null}
+
+      {isMenuOpen ? (
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar menu"
+            onClick={() => setIsMenuOpen(false)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-48 overflow-hidden rounded-xl border shadow-2xl">
+            {onAddChannel ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onAddChannel();
+                }}
+                className="text-content hover:bg-surface-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+              >
+                <Plus size={14} />
+                Añadir Canal
+              </button>
+            ) : null}
+            {onEdit ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onEdit();
+                }}
+                className="text-content hover:bg-surface-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+              >
+                <Pencil size={14} />
+                Editar Categoría
+              </button>
+            ) : null}
+            {onDelete ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onDelete();
+                }}
+                className="text-danger hover:bg-danger/10 flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+              >
+                <Trash2 size={14} />
+                Eliminar Categoría
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
+    </div>
+  );
+}
+
 /**
- * Vista de un servidor ya creado: header + canales reales (los 2 que vienen
- * por defecto) y un placeholder de "chat" -- todavia no hay servicio de
- * mensajes, asi que no fingimos mensajes reales, solo la estructura.
+ * Vista de un servidor ya creado: header + canales reales agrupados por
+ * categoria (con "sin categoria" como balde por default) y un placeholder de
+ * "chat" -- todavia no hay servicio de mensajes, asi que no fingimos mensajes
+ * reales, solo la estructura.
  */
 export function ServerView({
   server,
@@ -126,23 +322,46 @@ export function ServerView({
   const { user } = useAuth();
   const isOwner = user !== null && String(user.id) === server.owner_id;
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
+  const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
+    useState<string | null>(null);
+  const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
   const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
   const [deletingChannel, setDeletingChannel] = useState<Channel | null>(null);
-  const textChannels = server.channels.filter(
-    (channel) => channel.kind === "text",
+  const [editingCategory, setEditingCategory] = useState<Category | null>(null);
+  const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
+  const [draggingChannel, setDraggingChannel] = useState<Channel | null>(null);
+  const [dragError, setDragError] = useState("");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
-  const voiceChannels = server.channels.filter(
-    (channel) => channel.kind === "voice",
-  );
+
   const [activeChannelId, setActiveChannelId] = useState(
-    () => textChannels[0]?.id ?? server.channels[0]?.id ?? "",
+    () => server.channels[0]?.id ?? "",
   );
   const activeChannel = server.channels.find(
     (channel) => channel.id === activeChannelId,
   );
 
+  const sortedCategories = [...server.categories].sort(
+    (a, b) => a.position - b.position,
+  );
+  const uncategorized = server.channels
+    .filter((channel) => channel.category_id === null)
+    .sort((a, b) => a.position - b.position);
+
+  function toggleCollapsed(id: string) {
+    setCollapsedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
   function handleChannelCreated(channel: Channel) {
     setIsCreateChannelOpen(false);
+    setCreateChannelDefaultCategoryId(null);
     setActiveChannelId(channel.id);
     onServerUpdate({ ...server, channels: [...server.channels, channel] });
   }
@@ -169,6 +388,89 @@ export function ServerView({
     onServerUpdate({ ...server, channels: remaining });
   }
 
+  function handleCategoryCreated(category: Category) {
+    setIsCreateCategoryOpen(false);
+    onServerUpdate({ ...server, categories: [...server.categories, category] });
+  }
+
+  function handleCategoryUpdated(category: Category) {
+    setEditingCategory(null);
+    onServerUpdate({
+      ...server,
+      categories: server.categories.map((existing) =>
+        existing.id === category.id ? category : existing,
+      ),
+    });
+  }
+
+  /** A que bucket pertenece hoy un canal. */
+  function bucketOfChannel(channel: Channel): string {
+    return channel.category_id
+      ? categoryBucket(channel.category_id)
+      : UNCATEGORIZED_BUCKET;
+  }
+
+  /** Resuelve a que bucket corresponde un id de `over` (un canal o un contenedor vacio). */
+  function resolveOverBucket(overId: string): string | undefined {
+    if (overId === UNCATEGORIZED_BUCKET || overId.startsWith("cat:")) {
+      return overId;
+    }
+    const overChannel = server.channels.find((c) => c.id === overId);
+    return overChannel ? bucketOfChannel(overChannel) : undefined;
+  }
+
+  function handleDragStart(event: DragStartEvent) {
+    setDragError("");
+    const channel = server.channels.find((c) => c.id === event.active.id);
+    setDraggingChannel(channel ?? null);
+  }
+
+  async function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    setDraggingChannel(null);
+    if (!over) return;
+
+    const channel = server.channels.find((c) => c.id === active.id);
+    if (!channel) return;
+
+    const activeBucket = bucketOfChannel(channel);
+    const overBucket = resolveOverBucket(String(over.id));
+    if (!overBucket || overBucket === activeBucket) return;
+
+    const targetCategoryId = bucketCategoryId(overBucket);
+    if (targetCategoryId === channel.category_id) return;
+
+    const result = await moveChannelToCategoryRequest(
+      channel.id,
+      targetCategoryId,
+    );
+    if (!result.ok) {
+      setDragError(result.message);
+      return;
+    }
+
+    onServerUpdate({
+      ...server,
+      channels: server.channels.map((existing) =>
+        existing.id === channel.id ? result.channel : existing,
+      ),
+    });
+  }
+
+  function renderChannelList(channels: Channel[]) {
+    return channels.map((channel) => (
+      <DraggableChannelRow
+        key={channel.id}
+        channel={channel}
+        active={channel.id === activeChannelId}
+        isOwner={isOwner}
+        onClick={() => setActiveChannelId(channel.id)}
+        onEdit={() => setEditingChannel(channel)}
+        onDelete={() => setDeletingChannel(channel)}
+      />
+    ));
+  }
+
   return (
     <div className="flex flex-1 overflow-hidden">
       {/* Channel sidebar */}
@@ -179,59 +481,100 @@ export function ServerView({
         <ServerSidebarHeader server={server} onLeft={onLeft} />
 
         {isOwner ? (
-          <button
-            type="button"
-            onClick={() => setIsCreateChannelOpen(true)}
-            className="text-content-subtle hover:text-content hover:bg-surface-hover flex items-center gap-1.5 px-4 py-2 text-xs font-semibold transition-colors"
-          >
-            <Plus size={14} />
-            Crear canal
-          </button>
+          <div className="flex items-center gap-1 px-2 py-2">
+            <button
+              type="button"
+              onClick={() => {
+                setCreateChannelDefaultCategoryId(null);
+                setIsCreateChannelOpen(true);
+              }}
+              className="text-content-subtle hover:text-content hover:bg-surface-hover flex flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors"
+            >
+              <Plus size={14} />
+              Crear canal
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsCreateCategoryOpen(true)}
+              aria-label="Crear categoría"
+              title="Crear categoría"
+              className="text-content-subtle hover:text-content hover:bg-surface-hover flex size-7 shrink-0 items-center justify-center rounded-md transition-colors"
+            >
+              <FolderPlus size={15} />
+            </button>
+          </div>
         ) : null}
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-2 py-3">
-          {textChannels.length > 0 ? (
-            <div>
-              <p className="text-content-subtle mb-1 px-2 text-[11px] font-semibold tracking-wider uppercase">
-                Canales de texto
-              </p>
-              <div className="space-y-0.5">
-                {textChannels.map((channel) => (
-                  <ChannelRow
-                    key={channel.id}
-                    channel={channel}
-                    active={channel.id === activeChannelId}
-                    isOwner={isOwner}
-                    onClick={() => setActiveChannelId(channel.id)}
-                    onEdit={() => setEditingChannel(channel)}
-                    onDelete={() => setDeletingChannel(channel)}
-                  />
-                ))}
-              </div>
-            </div>
-          ) : null}
+        {dragError ? (
+          <div className="text-danger mx-2 mb-1 rounded-md bg-black/20 px-2 py-1.5 text-xs">
+            {dragError}
+          </div>
+        ) : null}
 
-          {voiceChannels.length > 0 ? (
-            <div>
-              <p className="text-content-subtle mb-1 px-2 text-[11px] font-semibold tracking-wider uppercase">
-                Canales de voz
-              </p>
-              <div className="space-y-0.5">
-                {voiceChannels.map((channel) => (
-                  <ChannelRow
-                    key={channel.id}
-                    channel={channel}
-                    active={channel.id === activeChannelId}
-                    isOwner={isOwner}
-                    onClick={() => setActiveChannelId(channel.id)}
-                    onEdit={() => setEditingChannel(channel)}
-                    onDelete={() => setDeletingChannel(channel)}
-                  />
-                ))}
+        <DndContext
+          sensors={sensors}
+          onDragStart={handleDragStart}
+          onDragEnd={handleDragEnd}
+        >
+          <div className="flex-1 space-y-3 overflow-y-auto px-2 py-1">
+            {uncategorized.length > 0 ? (
+              <div>
+                <CategorySectionHeader
+                  label="Sin categoría"
+                  isCollapsed={collapsedIds.has("none")}
+                  onToggle={() => toggleCollapsed("none")}
+                  isOwner={false}
+                />
+                {!collapsedIds.has("none") ? (
+                  <CategoryDropZone bucket={UNCATEGORIZED_BUCKET}>
+                    {renderChannelList(uncategorized)}
+                  </CategoryDropZone>
+                ) : null}
               </div>
-            </div>
-          ) : null}
-        </div>
+            ) : null}
+
+            {sortedCategories.map((category) => {
+              const channels = server.channels
+                .filter((channel) => channel.category_id === category.id)
+                .sort((a, b) => a.position - b.position);
+              const collapsed = collapsedIds.has(category.id);
+
+              return (
+                <div key={category.id}>
+                  <CategorySectionHeader
+                    label={category.name}
+                    isCollapsed={collapsed}
+                    onToggle={() => toggleCollapsed(category.id)}
+                    isOwner={isOwner}
+                    onAddChannel={() => {
+                      setCreateChannelDefaultCategoryId(category.id);
+                      setIsCreateChannelOpen(true);
+                    }}
+                    onEdit={() => setEditingCategory(category)}
+                  />
+                  {!collapsed ? (
+                    <CategoryDropZone bucket={categoryBucket(category.id)}>
+                      {renderChannelList(channels)}
+                    </CategoryDropZone>
+                  ) : null}
+                </div>
+              );
+            })}
+          </div>
+
+          <DragOverlay>
+            {draggingChannel ? (
+              <div className="bg-surface-raised border-line-strong text-content flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm shadow-2xl">
+                {draggingChannel.kind === "text" ? (
+                  <Hash size={16} className="text-content-subtle" />
+                ) : (
+                  <Volume2 size={16} className="text-content-subtle" />
+                )}
+                <span className="truncate">{draggingChannel.name}</span>
+              </div>
+            ) : null}
+          </DragOverlay>
+        </DndContext>
       </div>
 
       {/* Content area */}
@@ -294,7 +637,11 @@ export function ServerView({
         <CreateChannelModal
           serverId={server.id}
           categories={server.categories}
-          onClose={() => setIsCreateChannelOpen(false)}
+          defaultCategoryId={createChannelDefaultCategoryId}
+          onClose={() => {
+            setIsCreateChannelOpen(false);
+            setCreateChannelDefaultCategoryId(null);
+          }}
           onCreated={handleChannelCreated}
         />
       ) : null}
@@ -312,6 +659,22 @@ export function ServerView({
           channel={deletingChannel}
           onClose={() => setDeletingChannel(null)}
           onDeleted={handleChannelDeleted}
+        />
+      ) : null}
+
+      {isCreateCategoryOpen ? (
+        <CreateCategoryModal
+          serverId={server.id}
+          onClose={() => setIsCreateCategoryOpen(false)}
+          onCreated={handleCategoryCreated}
+        />
+      ) : null}
+
+      {editingCategory ? (
+        <EditCategoryModal
+          category={editingCategory}
+          onClose={() => setEditingCategory(null)}
+          onUpdated={handleCategoryUpdated}
         />
       ) : null}
     </div>
