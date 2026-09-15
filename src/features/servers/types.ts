@@ -4,6 +4,16 @@ export interface Channel {
   name: string;
   kind: "text" | "voice";
   position: number;
+  category_id: string | null;
+  topic: string | null;
+}
+
+/** Categoria tal como viene embebida en la respuesta de un servidor. */
+export interface Category {
+  id: string;
+  server_id: string;
+  name: string;
+  position: number;
 }
 
 /** Servidor tal como lo devuelve el servicio `servers` (via el gateway). */
@@ -14,6 +24,7 @@ export interface ServerSummary {
   owner_id: string;
   created_at: string;
   channels: Channel[];
+  categories: Category[];
 }
 
 /** Forma de error de `servers`: `{ error: { code, message, details? } }`. */
@@ -29,6 +40,56 @@ export interface CreateServerFieldErrors {
   name?: string;
   icon?: string;
 }
+
+export interface CreateChannelFieldErrors {
+  name?: string;
+  kind?: string;
+  category_id?: string;
+}
+
+/** Resultado de `POST /api/servers/:id/channels`. */
+export type CreateChannelActionResult =
+  | { ok: true; channel: Channel }
+  | { ok: false; message: string; fieldErrors?: CreateChannelFieldErrors };
+
+export interface UpdateChannelFieldErrors {
+  name?: string;
+}
+
+/** Resultado de `PATCH /api/channels/:id`. */
+export type UpdateChannelActionResult =
+  | { ok: true; channel: Channel }
+  | { ok: false; message: string; fieldErrors?: UpdateChannelFieldErrors };
+
+/** Resultado de `DELETE /api/channels/:id`. */
+export type DeleteChannelActionResult =
+  { ok: true } | { ok: false; message: string };
+
+/** Resultado de `PATCH /api/channels/:id/category`. */
+export type MoveChannelActionResult =
+  { ok: true; channel: Channel } | { ok: false; message: string };
+
+export interface CategoryFieldErrors {
+  name?: string;
+}
+
+/** Resultado de `POST /api/servers/:id/categories`. */
+export type CreateCategoryActionResult =
+  | { ok: true; category: Category }
+  | { ok: false; message: string; fieldErrors?: CategoryFieldErrors };
+
+/** Resultado de `PATCH /api/categories/:id`. */
+export type UpdateCategoryActionResult =
+  | { ok: true; category: Category }
+  | { ok: false; message: string; fieldErrors?: CategoryFieldErrors };
+
+/**
+ * Resultado de `PATCH /api/servers/:id/channels/reorder`. El back exige que
+ * `channelIds` sea exactamente el set de canales que ya está en esa
+ * categoría (o en "sin categoría" si es `null`), ni más ni menos.
+ */
+export type ReorderChannelsActionResult =
+  { ok: true } | { ok: false; message: string };
 
 /** Resultado de `POST /api/servers`. Nunca incluye el token. */
 export type CreateServerActionResult =

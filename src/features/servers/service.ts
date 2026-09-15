@@ -4,6 +4,8 @@ import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
 
 import type {
+  Category,
+  Channel,
   Invitation,
   Member,
   ServerSummary,
@@ -17,6 +19,13 @@ import type {
  *   GET    /v1/servers                          -> 200 [Server] | 401
  *   GET    /v1/servers/:id                      -> 200 Server | 400 | 404
  *   POST   /v1/servers                           -> 201 Server | 400 | 401 | 409 (nombre repetido)
+ *   POST   /v1/servers/:id/channels               -> 201 Channel | 400 | 401 | 403 | 404
+ *   PATCH  /v1/channels/:id                       -> 200 Channel | 400 | 401 | 403 | 404
+ *   DELETE /v1/channels/:id                       -> 204 | 401 | 403 | 404
+ *   PATCH  /v1/channels/:id/category               -> 200 Channel | 400 | 401 | 403 | 404
+ *   POST   /v1/servers/:id/categories              -> 201 Category | 400 | 401 | 403 | 404
+ *   PATCH  /v1/categories/:id                     -> 200 Category | 400 | 401 | 403 | 404
+ *   PATCH  /v1/servers/:id/channels/reorder        -> 200 | 400 | 401 | 403 | 404
  *   GET    /v1/servers/:id/members               -> 200 { members, total, limit, offset } | 401
  *   POST   /v1/servers/:id/invites                -> 201 Invitation | 400 | 401 | 403 | 404
  *   GET    /v1/servers/:id/invites                -> 200 [Invitation] | 401 | 403 | 404
@@ -24,9 +33,9 @@ import type {
  *   POST   /v1/invites/:code/join                -> 200|201 { server_id, already_member } | 403 | 404
  *   DELETE /v1/servers/:id/members/:userId       -> 204 | 401 | 403 | 404 | 409 (owner)
  *
- * Todavia NO existen: editar/borrar servidor, ABMC de canales/categorias,
- * preview de una invitacion sin unirse. resolver user_id -> nombre ya no
- * vive aca: es `getPublicProfile` en `features/auth/service.ts`, contra
+ * Todavia NO existen: editar/borrar servidor,
+ * preview de una invitacion sin unirse. resolver user_id -> nombre ya no vive
+ * aca: es `getPublicProfile` en `features/auth/service.ts`, contra
  * identify-service. Ver la referencia de la API para el resto de endpoints
  * (roles, transferencia de ownership).
  */
@@ -37,6 +46,110 @@ export function listMyServers(
   return apiRequest<ServerSummary[]>("/v1/servers", {
     method: "GET",
     token,
+  });
+}
+
+interface CreateChannelInput {
+  name: string;
+  kind: "text" | "voice";
+  categoryId?: string;
+}
+
+export function createChannel(
+  token: string,
+  serverId: string,
+  input: CreateChannelInput,
+): Promise<ApiResult<Channel>> {
+  return apiRequest<Channel>(`/v1/servers/${serverId}/channels`, {
+    method: "POST",
+    token,
+    data: {
+      name: input.name,
+      kind: input.kind,
+      ...(input.categoryId ? { category_id: input.categoryId } : {}),
+    },
+  });
+}
+
+interface UpdateChannelInput {
+  name: string;
+}
+
+export function updateChannel(
+  token: string,
+  channelId: string,
+  input: UpdateChannelInput,
+): Promise<ApiResult<Channel>> {
+  return apiRequest<Channel>(`/v1/channels/${channelId}`, {
+    method: "PATCH",
+    token,
+    data: input,
+  });
+}
+
+export function deleteChannel(
+  token: string,
+  channelId: string,
+): Promise<ApiResult<void>> {
+  return apiRequest<void>(`/v1/channels/${channelId}`, {
+    method: "DELETE",
+    token,
+  });
+}
+
+/** `categoryId: null` mueve el canal a "sin categoria". */
+export function moveChannelToCategory(
+  token: string,
+  channelId: string,
+  categoryId: string | null,
+): Promise<ApiResult<Channel>> {
+  return apiRequest<Channel>(`/v1/channels/${channelId}/category`, {
+    method: "PATCH",
+    token,
+    data: { category_id: categoryId },
+  });
+}
+
+export function createCategory(
+  token: string,
+  serverId: string,
+  name: string,
+): Promise<ApiResult<Category>> {
+  return apiRequest<Category>(`/v1/servers/${serverId}/categories`, {
+    method: "POST",
+    token,
+    data: { name },
+  });
+}
+
+export function updateCategory(
+  token: string,
+  categoryId: string,
+  name: string,
+): Promise<ApiResult<Category>> {
+  return apiRequest<Category>(`/v1/categories/${categoryId}`, {
+    method: "PATCH",
+    token,
+    data: { name },
+  });
+}
+
+/**
+ * `categoryId: null` reordena el balde "sin categoria" de ese servidor.
+ * `channelIds` tiene que ser exactamente el set de canales que el back tiene
+ * hoy en esa categoria (mismo largo, mismos ids): el back lo valida y
+ * devuelve 400 `reorder_invalid` si no matchea.
+ */
+export function reorderChannels(
+  token: string,
+  serverId: string,
+  categoryId: string | null,
+  channelIds: string[],
+): Promise<ApiResult<void>> {
+  return apiRequest<void>(`/v1/servers/${serverId}/channels/reorder`, {
+    method: "PATCH",
+    token,
+    data: { category_id: categoryId, channel_ids: channelIds },
   });
 }
 
