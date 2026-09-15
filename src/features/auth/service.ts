@@ -135,7 +135,8 @@ export async function updateOwnProfile(
     return {
       ok: false,
       status: 0,
-      message: "No pudimos conectar con el servidor. Intenta de nuevo en un momento.",
+      message:
+        "No pudimos conectar con el servidor. Intenta de nuevo en un momento.",
     };
   }
 }

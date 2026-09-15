@@ -51,7 +51,8 @@ export function OwnProfileModal({
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const avatarSrc = imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
+  const avatarSrc =
+    imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
 
   /**
    * `PATCH /v1/me/profile` siempre pide name/description en el multipart --
@@ -158,7 +159,11 @@ export function OwnProfileModal({
     >
       <div
         className="border-line-strong relative flex w-full flex-col overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
-        style={{ maxWidth: 400, maxHeight: "95dvh", background: "var(--bg-modal)" }}
+        style={{
+          maxWidth: 400,
+          maxHeight: "95dvh",
+          background: "var(--bg-modal)",
+        }}
       >
         {/*
           Portada + avatar viven en un bloque `shrink-0` sin overflow propio:
@@ -168,7 +173,10 @@ export function OwnProfileModal({
           el contenido debajo del avatar scrollea.
         */}
         <div className="relative shrink-0">
-          <div className="relative h-[100px]" style={{ background: BANNER_GRADIENT }}>
+          <div
+            className="relative h-[100px]"
+            style={{ background: BANNER_GRADIENT }}
+          >
             <div
               className="absolute inset-0 opacity-30"
               style={{
@@ -216,7 +224,9 @@ export function OwnProfileModal({
                 ) : (
                   <>
                     <Camera size={18} className="text-white" />
-                    <span className="text-[9px] font-semibold text-white">Cambiar</span>
+                    <span className="text-[9px] font-semibold text-white">
+                      Cambiar
+                    </span>
                   </>
                 )}
               </span>
@@ -228,7 +238,9 @@ export function OwnProfileModal({
               className="hidden"
               onChange={handleFileInput}
             />
-            {imageError ? <p className="text-danger mt-1 text-xs">{imageError}</p> : null}
+            {imageError ? (
+              <p className="text-danger mt-1 text-xs">{imageError}</p>
+            ) : null}
           </div>
         </div>
 
@@ -256,7 +268,7 @@ export function OwnProfileModal({
                   }}
                   maxLength={MAX_NAME}
                   autoFocus
-                  className="bg-surface-input border-line text-content min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-lg font-bold outline-none focus:border-accent"
+                  className="bg-surface-input border-line text-content focus:border-accent min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-lg font-bold outline-none"
                 />
                 <button
                   type="button"
@@ -301,9 +313,13 @@ export function OwnProfileModal({
 
             {profile.status_text || profile.status_emoji ? (
               <div className="bg-surface-input mb-3 flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs">
-                {profile.status_emoji ? <span>{profile.status_emoji}</span> : null}
+                {profile.status_emoji ? (
+                  <span>{profile.status_emoji}</span>
+                ) : null}
                 {profile.status_text ? (
-                  <span className="text-content-muted">{profile.status_text}</span>
+                  <span className="text-content-muted">
+                    {profile.status_text}
+                  </span>
                 ) : null}
               </div>
             ) : null}
@@ -339,12 +355,14 @@ export function OwnProfileModal({
                   <textarea
                     value={descriptionDraft}
                     onChange={(event) =>
-                      setDescriptionDraft(event.target.value.slice(0, MAX_DESCRIPTION))
+                      setDescriptionDraft(
+                        event.target.value.slice(0, MAX_DESCRIPTION),
+                      )
                     }
                     rows={3}
                     autoFocus
                     placeholder="Contá algo sobre vos..."
-                    className="bg-surface-input border-line text-content placeholder:text-content-subtle w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none focus:border-accent"
+                    className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
                   />
                   <div className="flex items-center justify-end gap-2">
                     <Button
@@ -368,7 +386,8 @@ export function OwnProfileModal({
                 </div>
               ) : (
                 <p className="text-content-muted text-sm leading-relaxed">
-                  {profile.description || "Todavía no agregaste una descripción."}
+                  {profile.description ||
+                    "Todavía no agregaste una descripción."}
                 </p>
               )}
             </div>
