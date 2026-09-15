@@ -1,8 +1,11 @@
-/** Usuario tal como lo devuelve identify-service. */
 export interface User {
   id: string;
   name: string;
   email: string;
+  description: string;
+  avatar_url: string;
+  status_text: string;
+  status_emoji: string;
   created_at: string;
 }
 
@@ -75,3 +78,15 @@ export interface PublicUser {
 /** Resultado de `GET /api/users/:id`. */
 export type GetPublicProfileActionResult =
   { ok: true; user: PublicUser } | { ok: false; message: string };
+
+/** Resultado de `GET /api/profile` (perfil propio, `GET /v1/me/profile`). */
+export type GetOwnProfileActionResult =
+  { ok: true; user: User } | { ok: false; message: string };
+
+/**
+ * Resultado de `PATCH /api/profile` (edicion de perfil propio,
+ * `PATCH /v1/me/profile`).
+ */
+export type UpdateOwnProfileActionResult =
+  | { ok: true; user: User }
+  | { ok: false; message: string; fieldErrors?: Record<string, string> };
