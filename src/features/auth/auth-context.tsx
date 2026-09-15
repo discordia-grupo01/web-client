@@ -1,6 +1,5 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import {
   createContext,
   useCallback,
@@ -36,17 +35,15 @@ export function AuthProvider({
   initialUser: User | null;
   children: ReactNode;
 }) {
-  const router = useRouter();
   const [user] = useState(initialUser);
   const [isLoggingOut, startLogout] = useTransition();
 
   const logout = useCallback(() => {
     startLogout(async () => {
       await logoutRequest();
-      router.replace(ROUTES.login);
-      router.refresh();
+      window.location.href = ROUTES.login;
     });
-  }, [router]);
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({
