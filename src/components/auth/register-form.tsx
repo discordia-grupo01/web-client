@@ -67,7 +67,7 @@ export function RegisterForm() {
       />
 
       <TextField
-        label="Correo electronico"
+        label="Correo electrónico"
         name="email"
         type="email"
         autoComplete="email"
@@ -79,7 +79,7 @@ export function RegisterForm() {
       />
 
       <PasswordField
-        label="Contrasena"
+        label="Contraseña"
         name="password"
         autoComplete="new-password"
         placeholder="••••••••"

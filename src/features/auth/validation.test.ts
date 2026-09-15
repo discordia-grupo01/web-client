@@ -27,13 +27,13 @@ describe("validateLogin", () => {
 
   it("marca email con formato invalido", () => {
     const errors = validateLogin({ email: "no-es-email", password: "x" });
-    expect(errors.email).toBe("El correo electronico no es valido");
+    expect(errors.email).toBe("El correo electrónico no es válido");
   });
 
   it("marca email y password vacios", () => {
     const errors = validateLogin({ email: "", password: "" });
-    expect(errors.email).toBe("Ingresa tu correo electronico");
-    expect(errors.password).toBe("Ingresa tu contrasena");
+    expect(errors.email).toBe("Ingresa tu correo electrónico");
+    expect(errors.password).toBe("Ingresa tu contraseña");
     expect(hasErrors(errors)).toBe(true);
   });
 });
@@ -60,7 +60,7 @@ describe("validateRegister", () => {
 
   it("marca email con formato invalido", () => {
     expect(validateRegister({ ...valid, email: "no-es-email" }).email).toBe(
-      "El correo electronico no es valido",
+      "El correo electrónico no es válido",
     );
   });
 
@@ -89,13 +89,13 @@ describe("validateForgotPassword", () => {
 
   it("marca email vacio", () => {
     expect(validateForgotPassword({ email: "" }).email).toBe(
-      "Ingresa tu correo electronico",
+      "Ingresa tu correo electrónico",
     );
   });
 
   it("marca email con formato invalido", () => {
     expect(validateForgotPassword({ email: "no-es-email" }).email).toBe(
-      "El correo electronico no es valido",
+      "El correo electrónico no es válido",
     );
   });
 });
@@ -116,13 +116,13 @@ describe("validateResetPassword", () => {
   it("marca confirmacion vacia", () => {
     expect(
       validateResetPassword({ ...valid, confirmPassword: "" }).confirmPassword,
-    ).toBe("Confirma tu contrasena");
+    ).toBe("Confirma tu contraseña");
   });
 
   it("marca cuando las contrasenas no coinciden", () => {
     expect(
       validateResetPassword({ ...valid, confirmPassword: "Otra123" })
         .confirmPassword,
-    ).toBe("Las contrasenas no coinciden");
+    ).toBe("Las contraseñas no coinciden");
   });
 });

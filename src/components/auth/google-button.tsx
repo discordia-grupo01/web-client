@@ -11,7 +11,7 @@ export function GoogleButton() {
       type="button"
       variant="secondary"
       disabled
-      title="Disponible proximamente"
+      title="Disponible próximamente"
     >
       <GoogleIcon size={18} />
       <span>Continuar con Google</span>

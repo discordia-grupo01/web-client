@@ -9,7 +9,7 @@ import { LoginForm } from "@/components/auth/login-form";
 import { ROUTES } from "@/lib/constants";
 
 export const metadata: Metadata = {
-  title: "Iniciar sesion",
+  title: "Iniciar sesión",
 };
 
 export default function LoginPage() {
@@ -28,7 +28,7 @@ export default function LoginPage() {
       <AuthModeToggle />
 
       <h1 className="font-display text-content mb-1 text-2xl font-bold">
-        Bienvenido de nuevo!
+        ¡Bienvenido de nuevo!
       </h1>
       <p className="text-content-muted mb-7 text-sm">
         Ingresa tus credenciales para acceder.
@@ -41,7 +41,7 @@ export default function LoginPage() {
       <div className="my-5 flex items-center gap-3">
         <span className="bg-line h-px flex-1" />
         <span className="text-content-subtle text-xs font-medium">
-          o continua con
+          o continuá con
         </span>
         <span className="bg-line h-px flex-1" />
       </div>
@@ -49,7 +49,7 @@ export default function LoginPage() {
       <GoogleButton />
 
       <p className="text-content-subtle mt-6 text-center text-sm">
-        No tenes cuenta?{" "}
+        ¿No tenés cuenta?{" "}
         <Link
           href={ROUTES.register}
           className="text-sky font-medium hover:underline"

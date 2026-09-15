@@ -10,12 +10,26 @@ import type { Member } from "@/features/servers/types";
 
 interface MembersSidebarProps {
   serverId: string;
+  /** Id del usuario autenticado, para distinguir "yo" en la lista. */
+  currentUserId: string | null;
+  /** Click en mi propia fila: abre el perfil propio (editable), no el público. */
+  onOpenOwnProfile: () => void;
 }
 
-function MemberRow({ member, name }: { member: Member; name?: string }) {
+function MemberRow({
+  member,
+  name,
+  isOwn,
+  onOpenOwnProfile,
+}: {
+  member: Member;
+  name?: string;
+  isOwn: boolean;
+  onOpenOwnProfile: () => void;
+}) {
   const displayName = name ?? member.user_id;
-  return (
-    <div className="hover:bg-surface-hover flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors">
+  const content = (
+    <>
       <ServerAvatar
         name={displayName}
         size={28}
@@ -26,6 +40,7 @@ function MemberRow({ member, name }: { member: Member; name?: string }) {
         title={member.user_id}
       >
         {displayName}
+        {isOwn ? " (vos)" : ""}
       </span>
       {member.is_owner ? (
         <Crown
@@ -34,6 +49,24 @@ function MemberRow({ member, name }: { member: Member; name?: string }) {
           aria-label="Propietario"
         />
       ) : null}
+    </>
+  );
+
+  if (isOwn) {
+    return (
+      <button
+        type="button"
+        onClick={onOpenOwnProfile}
+        className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2 rounded-md px-1.5 py-1.5 text-left transition-colors"
+      >
+        {content}
+      </button>
+    );
+  }
+
+  return (
+    <div className="hover:bg-surface-hover flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors">
+      {content}
     </div>
   );
 }
@@ -42,10 +75,14 @@ function MemberGroup({
   label,
   members,
   names,
+  currentUserId,
+  onOpenOwnProfile,
 }: {
   label: string;
   members: Member[];
   names: Record<string, string>;
+  currentUserId: string | null;
+  onOpenOwnProfile: () => void;
 }) {
   if (members.length === 0) return null;
   return (
@@ -59,6 +96,8 @@ function MemberGroup({
             key={member.user_id}
             member={member}
             name={names[member.user_id]}
+            isOwn={member.user_id === currentUserId}
+            onOpenOwnProfile={onOpenOwnProfile}
           />
         ))}
       </div>
@@ -74,7 +113,11 @@ function MemberGroup({
  * red puntual) se muestra el `user_id` crudo como respaldo en vez de romper
  * toda la lista.
  */
-export function MembersSidebar({ serverId }: MembersSidebarProps) {
+export function MembersSidebar({
+  serverId,
+  currentUserId,
+  onOpenOwnProfile,
+}: MembersSidebarProps) {
   const [members, setMembers] = useState<Member[] | null>(null);
   const [names, setNames] = useState<Record<string, string>>({});
   const [total, setTotal] = useState(0);
@@ -130,8 +173,20 @@ export function MembersSidebar({ serverId }: MembersSidebarProps) {
         <p className="text-danger px-1.5 text-xs">{errorMessage}</p>
       ) : (
         <div className="space-y-4">
-          <MemberGroup label="Propietario" members={owners} names={names} />
-          <MemberGroup label="Miembros" members={regulars} names={names} />
+          <MemberGroup
+            label="Propietario"
+            members={owners}
+            names={names}
+            currentUserId={currentUserId}
+            onOpenOwnProfile={onOpenOwnProfile}
+          />
+          <MemberGroup
+            label="Miembros"
+            members={regulars}
+            names={names}
+            currentUserId={currentUserId}
+            onOpenOwnProfile={onOpenOwnProfile}
+          />
         </div>
       )}
     </div>

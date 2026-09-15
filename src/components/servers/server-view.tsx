@@ -29,8 +29,10 @@ import {
   Trash2,
   Volume2,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
+import { OwnProfileModal } from "@/components/profile/own-profile-modal";
+import { UserPanel } from "@/components/profile/user-panel";
 import { CreateCategoryModal } from "@/components/servers/create-category-modal";
 import { CreateChannelModal } from "@/components/servers/create-channel-modal";
 import { DeleteChannelModal } from "@/components/servers/delete-channel-modal";
@@ -39,6 +41,8 @@ import { EditChannelModal } from "@/components/servers/edit-channel-modal";
 import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
 import { useAuth } from "@/features/auth/auth-context";
+import { getOwnProfileRequest } from "@/features/auth/client";
+import type { User } from "@/features/auth/types";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
@@ -340,6 +344,8 @@ export function ServerView({
 }: ServerViewProps) {
   const { user } = useAuth();
   const isOwner = user !== null && String(user.id) === server.owner_id;
+  const [ownProfile, setOwnProfile] = useState<User | null>(null);
+  const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
     useState<string | null>(null);
@@ -354,6 +360,16 @@ export function ServerView({
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
   );
+
+  useEffect(() => {
+    let cancelled = false;
+    getOwnProfileRequest().then((result) => {
+      if (!cancelled && result.ok) setOwnProfile(result.user);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   const [activeChannelId, setActiveChannelId] = useState(
     () => server.channels[0]?.id ?? "",
@@ -645,6 +661,13 @@ export function ServerView({
             ) : null}
           </DragOverlay>
         </DndContext>
+
+        {ownProfile ? (
+          <UserPanel
+            user={ownProfile}
+            onClick={() => setIsOwnProfileOpen(true)}
+          />
+        ) : null}
       </div>
 
       {/* Content area */}
@@ -701,7 +724,11 @@ export function ServerView({
         ) : null}
       </div>
 
-      <MembersSidebar serverId={server.id} />
+      <MembersSidebar
+        serverId={server.id}
+        currentUserId={ownProfile?.id ?? user?.id ?? null}
+        onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+      />
 
       {isCreateChannelOpen ? (
         <CreateChannelModal
@@ -745,6 +772,14 @@ export function ServerView({
           category={editingCategory}
           onClose={() => setEditingCategory(null)}
           onUpdated={handleCategoryUpdated}
+        />
+      ) : null}
+
+      {isOwnProfileOpen && ownProfile ? (
+        <OwnProfileModal
+          profile={ownProfile}
+          onClose={() => setIsOwnProfileOpen(false)}
+          onUpdated={setOwnProfile}
         />
       ) : null}
     </div>

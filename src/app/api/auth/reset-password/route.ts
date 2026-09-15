@@ -17,7 +17,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: "Petición inválida." },
       { status: 400 },
     );
   }
@@ -34,7 +34,7 @@ export async function POST(
       {
         ok: false,
         message:
-          "El enlace de recuperacion no es valido o expiro. Solicita uno nuevo.",
+          "El enlace de recuperación no es válido o expiró. Solicita uno nuevo.",
       },
       { status: 400 },
     );
@@ -67,7 +67,7 @@ export async function POST(
           {
             ok: false,
             message:
-              "Revisa los datos: la contraseña necesita 8+ caracteres con mayuscula, minuscula y numero.",
+              "Revisa los datos: la contraseña necesita 8+ caracteres con mayúscula, minúscula y número.",
           },
           { status: 400 },
         );
@@ -78,7 +78,7 @@ export async function POST(
           {
             ok: false,
             message:
-              "No pudimos actualizar tu contraseña en este momento. Intenta de nuevo mas tarde.",
+              "No pudimos actualizar tu contraseña en este momento. Intenta de nuevo más tarde.",
           },
           { status: 502 },
         );

@@ -27,10 +27,10 @@ async function fillForm() {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Nombre de usuario"), "ada");
   await user.type(
-    screen.getByLabelText("Correo electronico"),
+    screen.getByLabelText("Correo electrónico"),
     "ada@example.com",
   );
-  await user.type(screen.getByLabelText("Contrasena"), "Secret123");
+  await user.type(screen.getByLabelText("Contraseña"), "Secret123");
   return user;
 }
 
@@ -67,7 +67,7 @@ describe("<RegisterForm />", () => {
   it("muestra el mensaje de error que devuelve el backend", async () => {
     registerRequestMock.mockResolvedValue({
       ok: false,
-      message: "Ya existe una cuenta con ese correo electronico.",
+      message: "Ya existe una cuenta con ese correo electrónico.",
     });
     render(<RegisterForm />);
 

@@ -34,14 +34,23 @@ describe("<LoginForm />", () => {
     await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     expect(await screen.findByText(/ingresa tu correo/i)).toBeInTheDocument();
-    expect(screen.getByText(/ingresa tu contrasena/i)).toBeInTheDocument();
+    expect(screen.getByText(/ingresa tu contraseña/i)).toBeInTheDocument();
     expect(loginRequestMock).not.toHaveBeenCalled();
   });
 
   it("con credenciales validas: llama al backend y redirige", async () => {
     loginRequestMock.mockResolvedValue({
       ok: true,
-      user: { id: "1", name: "Ada", email: "ada@example.com", created_at: "" },
+      user: {
+        id: "1",
+        name: "Ada",
+        email: "ada@example.com",
+        description: "",
+        avatar_url: "",
+        status_text: "",
+        status_emoji: "",
+        created_at: "",
+      },
     });
     const user = userEvent.setup();
     render(<LoginForm />);
@@ -65,7 +74,7 @@ describe("<LoginForm />", () => {
   it("muestra el mensaje de error que devuelve el backend", async () => {
     loginRequestMock.mockResolvedValue({
       ok: false,
-      message: "El correo electronico o la contrasena son incorrectos.",
+      message: "El correo electrónico o la contraseña son incorrectos.",
     });
     const user = userEvent.setup();
     render(<LoginForm />);
