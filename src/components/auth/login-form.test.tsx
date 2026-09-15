@@ -41,7 +41,16 @@ describe("<LoginForm />", () => {
   it("con credenciales validas: llama al backend y redirige", async () => {
     loginRequestMock.mockResolvedValue({
       ok: true,
-      user: { id: "1", name: "Ada", email: "ada@example.com", created_at: "" },
+      user: {
+        id: "1",
+        name: "Ada",
+        email: "ada@example.com",
+        description: "",
+        avatar_url: "",
+        status_text: "",
+        status_emoji: "",
+        created_at: "",
+      },
     });
     const user = userEvent.setup();
     render(<LoginForm />);
