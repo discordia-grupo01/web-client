@@ -41,8 +41,6 @@ export function AuthProvider({
   const logout = useCallback(() => {
     startLogout(async () => {
       await logoutRequest();
-      // Navegacion dura: ver el comentario en login-form.tsx sobre la carrera
-      // conocida de router.replace + router.refresh en el App Router.
       window.location.href = ROUTES.login;
     });
   }, []);

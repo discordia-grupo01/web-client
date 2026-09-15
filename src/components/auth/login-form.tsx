@@ -44,12 +44,6 @@ export function LoginForm() {
       return;
     }
 
-    // Navegacion dura (no router.replace + router.refresh): ese combo tiene
-    // una carrera conocida en el App Router de Next donde el refresh a veces
-    // termina aplicandose sobre la ruta vieja, y el layout raiz se queda con
-    // el `user` de antes de loguearse (cookie de sesion vieja) hasta que el
-    // usuario recarga la pagina a mano. Un reload completo garantiza que
-    // RootLayout vuelva a leer la cookie ya seteada por loginRequest.
     const next = searchParams.get("next");
     window.location.href = next && next.startsWith("/") ? next : ROUTES.home;
   }
