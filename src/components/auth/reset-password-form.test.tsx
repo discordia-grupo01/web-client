@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPasswordRequest } from "@/features/auth/client";
+import { resetPasswordRequest } from "@/services/auth/client";
 
 import { ResetPasswordForm } from "./reset-password-form";
 
@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
 }));
 
-vi.mock("@/features/auth/client", () => ({
+vi.mock("@/services/auth/client", () => ({
   resetPasswordRequest: vi.fn(),
 }));
 

@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { moveChannelToCategory } from "@/features/servers/service";
-import type { MoveChannelActionResult } from "@/features/servers/types";
-
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getSession } from "@/services/auth/session";
+import { moveChannelToCategory } from "@/services/channels/service";
+import type { MoveChannelActionResult } from "@/types/channel.types";
 
 const REASON_MESSAGES: Record<string, string> = {
   name_taken: "Ya existe un canal con ese nombre en esa categoría.",
@@ -20,10 +19,7 @@ export async function PATCH(
 ): Promise<NextResponse<MoveChannelActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -38,10 +34,7 @@ export async function PATCH(
 
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     const reason =
       typeof result.details?.reason === "string"

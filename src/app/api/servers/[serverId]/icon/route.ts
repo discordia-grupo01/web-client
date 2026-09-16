@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { getServerIcon } from "@/features/servers/service";
+import { getSession } from "@/services/auth/session";
+import { getServerIcon } from "@/services/servers/service";
 
 /**
  * BFF de `GET /v1/servers/:serverId/icon`. Ese endpoint exige JWT (via el

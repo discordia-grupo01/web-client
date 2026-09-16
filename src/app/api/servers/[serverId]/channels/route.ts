@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { createChannel } from "@/features/servers/service";
-import type { CreateChannelActionResult } from "@/features/servers/types";
-
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getSession } from "@/services/auth/session";
+import { createChannel } from "@/services/channels/service";
+import type { CreateChannelActionResult } from "@/types/channel.types";
 
 const REASON_MESSAGES: Record<string, string> = {
   name_required: "Ingresá un nombre para el canal.",
@@ -25,10 +24,7 @@ export async function POST(
 ): Promise<NextResponse<CreateChannelActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -61,10 +57,7 @@ export async function POST(
       );
     }
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       {

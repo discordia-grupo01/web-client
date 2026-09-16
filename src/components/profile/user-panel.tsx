@@ -1,7 +1,7 @@
 "use client";
 
-import { ServerAvatar } from "@/components/servers/server-avatar";
-import type { User } from "@/features/auth/types";
+import { ServerAvatar } from "@/components/ui/server-avatar";
+import type { User } from "@/types/auth.types";
 
 interface UserPanelProps {
   user: User;

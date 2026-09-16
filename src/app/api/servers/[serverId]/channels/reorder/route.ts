@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { reorderChannels } from "@/features/servers/service";
-import type { ReorderChannelsActionResult } from "@/features/servers/types";
-
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getSession } from "@/services/auth/session";
+import { reorderChannels } from "@/services/channels/service";
+import type { ReorderChannelsActionResult } from "@/types/channel.types";
 
 /**
  * BFF de `PATCH /v1/servers/:id/channels/reorder`. Body JSON:
@@ -18,10 +17,7 @@ export async function PATCH(
 ): Promise<NextResponse<ReorderChannelsActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -42,10 +38,7 @@ export async function PATCH(
 
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       {

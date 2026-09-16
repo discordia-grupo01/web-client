@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { revokeInvitation } from "@/features/servers/service";
-import type { RevokeInviteActionResult } from "@/features/servers/types";
-
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getSession } from "@/services/auth/session";
+import { revokeInvitation } from "@/services/invites/service";
+import type { RevokeInviteActionResult } from "@/types/invite.types";
 
 /**
  * BFF de `DELETE /v1/invites/:code`. Idempotente del lado del back: revocar
@@ -16,19 +15,13 @@ export async function DELETE(
 ): Promise<NextResponse<RevokeInviteActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await revokeInvitation(session.token, params.code);
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: "Algo salio mal. Intenta de nuevo." },

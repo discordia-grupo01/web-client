@@ -21,7 +21,6 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   ChevronDown,
   ChevronRight,
-  FolderPlus,
   Hash,
   MoreVertical,
   Pencil,
@@ -33,26 +32,25 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { OwnProfileModal } from "@/components/profile/own-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
-import { CreateCategoryModal } from "@/components/servers/create-category-modal";
-import { CreateChannelModal } from "@/components/servers/create-channel-modal";
-import { DeleteChannelModal } from "@/components/servers/delete-channel-modal";
-import { EditCategoryModal } from "@/components/servers/edit-category-modal";
-import { EditChannelModal } from "@/components/servers/edit-channel-modal";
-import { MembersSidebar } from "@/components/servers/members-sidebar";
-import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
-import { useAuth } from "@/features/auth/auth-context";
-import { getOwnProfileRequest } from "@/features/auth/client";
-import type { User } from "@/features/auth/types";
+import { CreateCategoryModal } from "@/components/categories/create-category-modal";
+import { EditCategoryModal } from "@/components/categories/edit-category-modal";
+import { CreateChannelModal } from "@/components/channels/create-channel-modal";
+import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
+import { EditChannelModal } from "@/components/channels/edit-channel-modal";
+import { MembersSidebar } from "@/components/members/members-sidebar";
+import { useAuth } from "@/services/auth/auth-context";
+import type { User } from "@/types/auth.types";
+import { getOwnProfileRequest } from "@/services/profile/client";
+import type { Category } from "@/types/category.types";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
-} from "@/features/servers/client";
-import type {
-  Category,
-  Channel,
-  ServerSummary,
-} from "@/features/servers/types";
+} from "@/services/channels/client";
+import type { Channel } from "@/types/channel.types";
+import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
+
+import { ServerSidebarHeader } from "./server-sidebar-header";
 
 /** Id del "bucket" de canales sin categoria (`category_id: null`). */
 const UNCATEGORIZED_BUCKET = "none";
@@ -95,7 +93,7 @@ function ChannelRow({
         type="button"
         onClick={onClick}
         className={cn(
-          "flex min-w-0 flex-1 items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+          "flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
           active
             ? "text-content bg-accent/20"
             : "text-content-muted hover:bg-surface-hover",
@@ -114,7 +112,7 @@ function ChannelRow({
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label="Opciones del canal"
-            className="text-content-subtle hover:text-content absolute right-1 flex size-6 shrink-0 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+            className="text-content-subtle hover:text-content absolute right-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
           >
             <MoreVertical size={14} />
           </button>
@@ -134,7 +132,7 @@ function ChannelRow({
                     setIsMenuOpen(false);
                     onEdit();
                   }}
-                  className="text-content hover:bg-surface-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                  className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
                 >
                   <Pencil size={14} />
                   Editar Canal
@@ -145,7 +143,7 @@ function ChannelRow({
                     setIsMenuOpen(false);
                     onDelete();
                   }}
-                  className="text-danger hover:bg-danger/10 flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                  className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
                 >
                   <Trash2 size={14} />
                   Eliminar Canal
@@ -241,36 +239,25 @@ function CategorySectionHeader({
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const Chevron = isCollapsed ? ChevronRight : ChevronDown;
-  const hasMenu = isOwner && (onEdit || onDelete);
+  const hasMenu = isOwner && (onAddChannel || onEdit || onDelete);
 
   return (
     <div className="group relative flex items-center gap-0.5 px-1">
       <button
         type="button"
         onClick={onToggle}
-        className="text-content-subtle hover:text-content flex flex-1 items-center gap-1 py-1 text-[11px] font-semibold tracking-wider uppercase transition-colors"
+        className="text-content-subtle hover:text-content flex flex-1 cursor-pointer items-center gap-1 py-1 text-[11px] font-semibold tracking-wider uppercase transition-colors"
       >
         <Chevron size={12} />
         <span className="truncate">{label}</span>
       </button>
-
-      {isOwner && onAddChannel ? (
-        <button
-          type="button"
-          onClick={onAddChannel}
-          aria-label="Añadir canal"
-          className="text-content-subtle hover:text-content flex size-5 shrink-0 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          <Plus size={14} />
-        </button>
-      ) : null}
 
       {hasMenu ? (
         <button
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-label="Opciones de la categoría"
-          className="text-content-subtle hover:text-content flex size-5 shrink-0 items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+          className="text-content-subtle hover:text-content flex size-5 shrink-0 cursor-pointer items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
         >
           <MoreVertical size={13} />
         </button>
@@ -292,7 +279,7 @@ function CategorySectionHeader({
                   setIsMenuOpen(false);
                   onAddChannel();
                 }}
-                className="text-content hover:bg-surface-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
               >
                 <Plus size={14} />
                 Añadir Canal
@@ -305,7 +292,7 @@ function CategorySectionHeader({
                   setIsMenuOpen(false);
                   onEdit();
                 }}
-                className="text-content hover:bg-surface-hover flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
               >
                 <Pencil size={14} />
                 Editar Categoría
@@ -318,7 +305,7 @@ function CategorySectionHeader({
                   setIsMenuOpen(false);
                   onDelete();
                 }}
-                className="text-danger hover:bg-danger/10 flex w-full items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
               >
                 <Trash2 size={14} />
                 Eliminar Categoría
@@ -557,32 +544,15 @@ export function ServerView({
         className="flex w-60 shrink-0 flex-col overflow-hidden"
         style={{ background: "var(--bg-channels)" }}
       >
-        <ServerSidebarHeader server={server} onLeft={onLeft} />
-
-        {isOwner ? (
-          <div className="flex items-center gap-1 px-2 py-2">
-            <button
-              type="button"
-              onClick={() => {
-                setCreateChannelDefaultCategoryId(null);
-                setIsCreateChannelOpen(true);
-              }}
-              className="text-content-subtle hover:text-content hover:bg-surface-hover flex flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-xs font-semibold transition-colors"
-            >
-              <Plus size={14} />
-              Crear canal
-            </button>
-            <button
-              type="button"
-              onClick={() => setIsCreateCategoryOpen(true)}
-              aria-label="Crear categoría"
-              title="Crear categoría"
-              className="text-content-subtle hover:text-content hover:bg-surface-hover flex size-7 shrink-0 items-center justify-center rounded-md transition-colors"
-            >
-              <FolderPlus size={15} />
-            </button>
-          </div>
-        ) : null}
+        <ServerSidebarHeader
+          server={server}
+          onLeft={onLeft}
+          onCreateChannel={() => {
+            setCreateChannelDefaultCategoryId(null);
+            setIsCreateChannelOpen(true);
+          }}
+          onCreateCategory={() => setIsCreateCategoryOpen(true)}
+        />
 
         {dragError ? (
           <div className="text-danger mx-2 mb-1 rounded-md bg-black/20 px-2 py-1.5 text-xs">
@@ -727,6 +697,7 @@ export function ServerView({
       <MembersSidebar
         serverId={server.id}
         currentUserId={ownProfile?.id ?? user?.id ?? null}
+        isOwner={isOwner}
         onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
       />
 

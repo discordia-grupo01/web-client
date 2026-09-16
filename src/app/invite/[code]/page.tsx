@@ -3,8 +3,8 @@ import Link from "next/link";
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
-import { getSession } from "@/features/auth/session";
-import { joinServerByCode } from "@/features/servers/service";
+import { getSession } from "@/services/auth/session";
+import { joinServerByCode } from "@/services/invites/service";
 import { ROUTES } from "@/lib/constants";
 
 export const metadata: Metadata = {

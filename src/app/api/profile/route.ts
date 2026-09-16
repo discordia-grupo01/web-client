@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 
-import { getOwnProfile, updateOwnProfile } from "@/features/auth/service";
-import { createSession, getSession } from "@/features/auth/session";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { createSession, getSession } from "@/services/auth/session";
+import { getOwnProfile, updateOwnProfile } from "@/services/profile/service";
 import type {
   GetOwnProfileActionResult,
   UpdateOwnProfileActionResult,
-} from "@/features/auth/types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
+} from "@/types/profile.types";
 
 /**
  * BFF de `GET /v1/me/profile`. Perfil propio del usuario autenticado (no el
@@ -16,19 +15,13 @@ const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 export async function GET(): Promise<NextResponse<GetOwnProfileActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await getOwnProfile(session.token);
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: "No pudimos cargar tu perfil." },
@@ -53,10 +46,7 @@ export async function PATCH(
 ): Promise<NextResponse<UpdateOwnProfileActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   let formData: FormData;
@@ -73,10 +63,7 @@ export async function PATCH(
 
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: result.message },

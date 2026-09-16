@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { resetPassword } from "@/features/auth/service";
-import type { ResetPasswordActionResult } from "@/features/auth/types";
-import { hasErrors, validateResetPassword } from "@/features/auth/validation";
+import { resetPassword } from "@/services/auth/service";
+import type { ResetPasswordActionResult } from "@/types/auth.types";
+import { hasErrors, validateResetPassword } from "@/services/auth/validation";
 
 /**
  * BFF para definir la nueva contrasena. A diferencia de login/register no crea

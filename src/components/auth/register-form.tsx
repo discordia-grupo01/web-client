@@ -7,12 +7,12 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
-import { registerRequest } from "@/features/auth/client";
+import { registerRequest } from "@/services/auth/client";
 import {
   hasErrors,
   validateRegister,
   type RegisterErrors,
-} from "@/features/auth/validation";
+} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function RegisterForm() {

@@ -3,10 +3,10 @@
 import { AlertCircle, Calendar, Camera, Check, Pencil, X } from "lucide-react";
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
-import { ServerAvatar } from "@/components/servers/server-avatar";
 import { Button } from "@/components/ui/button";
-import { updateOwnProfileRequest } from "@/features/auth/client";
-import type { User } from "@/features/auth/types";
+import { ServerAvatar } from "@/components/ui/server-avatar";
+import type { User } from "@/types/auth.types";
+import { updateOwnProfileRequest } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { loginRequest } from "@/features/auth/client";
+import { loginRequest } from "@/services/auth/client";
 
 import { LoginForm } from "./login-form";
 
@@ -12,7 +12,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
 }));
 
-vi.mock("@/features/auth/client", () => ({
+vi.mock("@/services/auth/client", () => ({
   loginRequest: vi.fn(),
 }));
 

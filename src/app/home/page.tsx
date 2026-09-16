@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { HomeShell } from "@/components/home/home-shell";
-import { getSession } from "@/features/auth/session";
-import { listMyServers } from "@/features/servers/service";
+import { getSession } from "@/services/auth/session";
+import { listMyServers } from "@/services/servers/service";
 import { ROUTES } from "@/lib/constants";
 
 /**

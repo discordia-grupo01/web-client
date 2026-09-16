@@ -7,12 +7,12 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
-import { resetPasswordRequest } from "@/features/auth/client";
+import { resetPasswordRequest } from "@/services/auth/client";
 import {
   hasErrors,
   validateResetPassword,
   type ResetPasswordErrors,
-} from "@/features/auth/validation";
+} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function ResetPasswordForm() {

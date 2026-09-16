@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { register } from "@/features/auth/service";
-import type { RegisterActionResult } from "@/features/auth/types";
-import { hasErrors, validateRegister } from "@/features/auth/validation";
+import { register } from "@/services/auth/service";
+import type { RegisterActionResult } from "@/types/auth.types";
+import { hasErrors, validateRegister } from "@/services/auth/validation";
 
 /**
  * BFF de registro. El navegador pega aca (mismo origen); este handler llama a

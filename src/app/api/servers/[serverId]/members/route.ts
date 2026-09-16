@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { listMembers } from "@/features/servers/service";
-import type { ListMembersActionResult } from "@/features/servers/types";
-
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getSession } from "@/services/auth/session";
+import { listMembers } from "@/services/members/service";
+import type { ListMembersActionResult } from "@/types/member.types";
 
 /**
  * BFF de `GET /v1/servers/:id/members`. El navegador pega aca (mismo
@@ -16,19 +15,13 @@ export async function GET(
 ): Promise<NextResponse<ListMembersActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await listMembers(session.token, params.serverId);
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       {

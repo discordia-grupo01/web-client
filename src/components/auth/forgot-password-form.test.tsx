@@ -2,11 +2,11 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { forgotPasswordRequest } from "@/features/auth/client";
+import { forgotPasswordRequest } from "@/services/auth/client";
 
 import { ForgotPasswordForm } from "./forgot-password-form";
 
-vi.mock("@/features/auth/client", () => ({
+vi.mock("@/services/auth/client", () => ({
   forgotPasswordRequest: vi.fn(),
 }));
 

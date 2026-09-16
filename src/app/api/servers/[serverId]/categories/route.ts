@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { createCategory } from "@/features/servers/service";
-import type { CreateCategoryActionResult } from "@/features/servers/types";
-
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getSession } from "@/services/auth/session";
+import { createCategory } from "@/services/categories/service";
+import type { CreateCategoryActionResult } from "@/types/category.types";
 
 const REASON_MESSAGES: Record<string, string> = {
   name_required: "Ingresá un nombre para la categoría.",
@@ -21,10 +20,7 @@ export async function POST(
 ): Promise<NextResponse<CreateCategoryActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -50,10 +46,7 @@ export async function POST(
       );
     }
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       {
