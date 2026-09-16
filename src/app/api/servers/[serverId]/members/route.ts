@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { listMembers } from "@/features/members/service";
-import type { ListMembersActionResult } from "@/features/members/types";
+import { getSession } from "@/services/auth/session";
+import { listMembers } from "@/services/members/service";
+import type { ListMembersActionResult } from "@/services/members/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

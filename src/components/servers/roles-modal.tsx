@@ -16,7 +16,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { ColorPanel } from "@/components/servers/color-panel";
 import { ServerAvatar } from "@/components/servers/server-avatar";
-import { getPublicProfileRequest } from "@/features/auth/client";
+import { getPublicProfileRequest } from "@/services/auth/client";
 import {
   assignRoleRequest,
   createRoleRequest,
@@ -27,12 +27,12 @@ import {
   removeRoleRequest,
   setDefaultRoleRequest,
   updateRoleRequest,
-} from "@/features/servers/client";
+} from "@/services/servers/client";
 import {
   ROLE_PERMISSIONS,
   type Role,
   type RolePermission,
-} from "@/features/servers/types";
+} from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;
@@ -318,7 +318,7 @@ type RightView = "edit" | "members" | "create";
  * Panel maestro-detalle de roles: lista a la izquierda, edicion/creacion a la
  * derecha, tab de miembros por rol. Owner-only del lado del back
  * (RequireManageRoles). El back no expone en ningun lado cual es el rol por
- * defecto actual (ver nota en features/servers/service.ts) -- `defaultRoleId`
+ * defecto actual (ver nota en services/servers/service.ts) -- `defaultRoleId`
  * arranca en null y solo se conoce dentro de esta sesion si alguien lo fija
  * desde aca.
  */

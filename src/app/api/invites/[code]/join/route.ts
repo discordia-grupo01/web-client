@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { joinServerByCode } from "@/features/invites/service";
-import type { JoinServerActionResult } from "@/features/invites/types";
-import { getServer } from "@/features/servers/service";
+import { getSession } from "@/services/auth/session";
+import { joinServerByCode } from "@/services/invites/service";
+import type { JoinServerActionResult } from "@/services/invites/types";
+import { getServer } from "@/services/servers/service";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

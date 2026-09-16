@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { reorderChannels } from "@/features/channels/service";
-import type { ReorderChannelsActionResult } from "@/features/channels/types";
+import { getSession } from "@/services/auth/session";
+import { reorderChannels } from "@/services/channels/service";
+import type { ReorderChannelsActionResult } from "@/services/channels/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

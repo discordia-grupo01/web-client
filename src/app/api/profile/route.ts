@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { getOwnProfile, updateOwnProfile } from "@/features/auth/service";
-import { createSession, getSession } from "@/features/auth/session";
+import { getOwnProfile, updateOwnProfile } from "@/services/auth/service";
+import { createSession, getSession } from "@/services/auth/session";
 import type {
   GetOwnProfileActionResult,
   UpdateOwnProfileActionResult,
-} from "@/features/auth/types";
+} from "@/services/auth/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

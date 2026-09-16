@@ -40,18 +40,18 @@ import { EditCategoryModal } from "@/components/servers/edit-category-modal";
 import { EditChannelModal } from "@/components/servers/edit-channel-modal";
 import { MembersSidebar } from "@/components/servers/members-sidebar";
 import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
-import { useAuth } from "@/features/auth/auth-context";
-import { getOwnProfileRequest } from "@/features/auth/client";
-import type { User } from "@/features/auth/types";
+import { useAuth } from "@/services/auth/auth-context";
+import { getOwnProfileRequest } from "@/services/auth/client";
+import type { User } from "@/services/auth/types";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
-} from "@/features/servers/client";
+} from "@/services/servers/client";
 import type {
   Category,
   Channel,
   ServerSummary,
-} from "@/features/servers/types";
+} from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
 /** Id del "bucket" de canales sin categoria (`category_id: null`). */

@@ -8,8 +8,8 @@ import { ServerAvatar } from "@/components/servers/server-avatar";
 import {
   joinServerRequest,
   normalizeInviteCode,
-} from "@/features/servers/client";
-import type { ServerSummary } from "@/features/servers/types";
+} from "@/services/servers/client";
+import type { ServerSummary } from "@/services/servers/types";
 
 interface JoinServerModalProps {
   onClose: () => void;

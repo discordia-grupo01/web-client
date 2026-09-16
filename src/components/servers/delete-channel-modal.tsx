@@ -3,8 +3,8 @@
 import { AlertCircle, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
-import { deleteChannelRequest } from "@/features/servers/client";
-import type { Channel } from "@/features/servers/types";
+import { deleteChannelRequest } from "@/services/servers/client";
+import type { Channel } from "@/services/servers/types";
 
 interface DeleteChannelModalProps {
   channel: Channel;

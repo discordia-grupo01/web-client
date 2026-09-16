@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
-import { recoverPassword } from "@/features/auth/service";
-import type { ForgotPasswordActionResult } from "@/features/auth/types";
-import { hasErrors, validateForgotPassword } from "@/features/auth/validation";
+import { recoverPassword } from "@/services/auth/service";
+import type { ForgotPasswordActionResult } from "@/services/auth/types";
+import { hasErrors, validateForgotPassword } from "@/services/auth/validation";
 
 /**
  * BFF de recuperacion de contrasena. El backend responde 202 exista o no el

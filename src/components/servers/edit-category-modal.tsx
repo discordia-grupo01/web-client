@@ -4,8 +4,8 @@ import { AlertCircle, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { updateCategoryRequest } from "@/features/servers/client";
-import type { Category } from "@/features/servers/types";
+import { updateCategoryRequest } from "@/services/servers/client";
+import type { Category } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

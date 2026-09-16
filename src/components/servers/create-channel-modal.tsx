@@ -4,8 +4,8 @@ import { AlertCircle, Hash, Volume2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { createChannelRequest } from "@/features/servers/client";
-import type { Category, Channel } from "@/features/servers/types";
+import { createChannelRequest } from "@/services/servers/client";
+import type { Category, Channel } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

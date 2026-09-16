@@ -8,12 +8,12 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
-import { loginRequest } from "@/features/auth/client";
+import { loginRequest } from "@/services/auth/client";
 import {
   hasErrors,
   validateLogin,
   type LoginErrors,
-} from "@/features/auth/validation";
+} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function LoginForm() {

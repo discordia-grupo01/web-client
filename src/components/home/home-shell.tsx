@@ -9,8 +9,8 @@ import { CreateServerModal } from "@/components/servers/create-server-modal";
 import { JoinServerModal } from "@/components/servers/join-server-modal";
 import { ServerAvatar } from "@/components/servers/server-avatar";
 import { ServerView } from "@/components/servers/server-view";
-import { useAuth } from "@/features/auth/auth-context";
-import type { ServerSummary } from "@/features/servers/types";
+import { useAuth } from "@/services/auth/auth-context";
+import type { ServerSummary } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 

@@ -10,7 +10,7 @@ import type {
  * Llamadas del navegador hacia el BFF (`/api/servers`, mismo origen): alta,
  * listado y salida del servidor en si. Canales, categorias, roles,
  * invitaciones y miembros tienen cada uno su propio
- * `features/<dominio>/client.ts`.
+ * `services/<dominio>/client.ts`.
  */
 
 type ListServersResult =

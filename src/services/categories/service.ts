@@ -6,7 +6,7 @@ import type { Category } from "./types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong) para
- * categorias. Ver `features/servers/service.ts` para el resto de los
+ * categorias. Ver `services/servers/service.ts` para el resto de los
  * endpoints de `servers` y las notas generales sobre el back.
  *
  * Endpoints reales (ver servers/internal/handler):

@@ -110,7 +110,7 @@ export async function getOwnProfileRequest(): Promise<GetOwnProfileActionResult>
 /**
  * `formData` va tal cual (multipart/form-data): le sacamos el
  * `Content-Type: application/json` que trae la instancia por default, igual
- * que `createServerRequest` en features/servers/client.ts.
+ * que `createServerRequest` en services/servers/client.ts.
  */
 export async function updateOwnProfileRequest(
   formData: FormData,

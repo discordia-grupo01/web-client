@@ -19,8 +19,8 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/button";
-import { createServerRequest } from "@/features/servers/client";
-import type { ServerSummary } from "@/features/servers/types";
+import { createServerRequest } from "@/services/servers/client";
+import type { ServerSummary } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

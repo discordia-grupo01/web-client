@@ -102,7 +102,7 @@ export type ProfileUpdateResult = ProfileUpdateSuccess | ProfileUpdateFailure;
 /**
  * `PATCH /v1/me/profile` es multipart/form-data (name/description/image,
  * todos opcionales). Fetch nativo en vez de la instancia axios de
- * lib/api-client.ts, igual que `createServer` en features/servers/service.ts:
+ * lib/api-client.ts, igual que `createServer` en services/servers/service.ts:
  * asi Node arma el boundary del FormData sin ambiguedad.
  */
 export async function updateOwnProfile(

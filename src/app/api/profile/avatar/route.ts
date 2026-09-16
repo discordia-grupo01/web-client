@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getOwnProfile, getProfileImage } from "@/features/auth/service";
-import { getSession } from "@/features/auth/session";
+import { getOwnProfile, getProfileImage } from "@/services/auth/service";
+import { getSession } from "@/services/auth/session";
 
 /**
  * BFF de la foto de perfil propia. `avatar_url` es una ruta servida sin auth

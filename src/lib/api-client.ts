@@ -2,7 +2,7 @@ import "server-only";
 
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
-import type { ApiErrorBody } from "@/features/auth/types";
+import type { ApiErrorBody } from "@/services/auth/types";
 
 import { env } from "./env";
 

@@ -6,12 +6,12 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
-import { forgotPasswordRequest } from "@/features/auth/client";
+import { forgotPasswordRequest } from "@/services/auth/client";
 import {
   hasErrors,
   validateForgotPassword,
   type ForgotPasswordErrors,
-} from "@/features/auth/validation";
+} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function ForgotPasswordForm() {

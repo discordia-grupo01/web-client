@@ -1,7 +1,7 @@
 import axios from "axios";
 
 /**
- * Instancia de axios compartida por todos los `features/<x>/client.ts`.
+ * Instancia de axios compartida por todos los `services/<x>/client.ts`.
  * Pega contra este mismo sitio (`/api/*`, mismo origen): la cookie httpOnly
  * viaja sola, nunca hay token que manejar de este lado.
  */

@@ -1,14 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
+import { getSession } from "@/services/auth/session";
 import {
   generateInvitation,
   listInvitations,
-} from "@/features/invites/service";
+} from "@/services/invites/service";
 import type {
   CreateInviteActionResult,
   ListInvitationsActionResult,
-} from "@/features/invites/types";
+} from "@/services/invites/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

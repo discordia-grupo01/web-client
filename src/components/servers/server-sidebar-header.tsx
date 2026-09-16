@@ -7,8 +7,8 @@ import { InviteModal } from "@/components/servers/invite-modal";
 import { LeaveServerModal } from "@/components/servers/leave-server-modal";
 import { RolesModal } from "@/components/servers/roles-modal";
 import { ServerAvatar } from "@/components/servers/server-avatar";
-import { useAuth } from "@/features/auth/auth-context";
-import type { ServerSummary } from "@/features/servers/types";
+import { useAuth } from "@/services/auth/auth-context";
+import type { ServerSummary } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
 interface ServerSidebarHeaderProps {
@@ -19,7 +19,7 @@ interface ServerSidebarHeaderProps {
 /**
  * Header del panel de canales: nombre + menu desplegable. El menu tiene
  * "Invitar miembros" (cualquier miembro puede, no solo el owner -- ver
- * `features/servers/service.ts`), "Gestionar roles" (esa si es owner-only:
+ * `services/servers/service.ts`), "Gestionar roles" (esa si es owner-only:
  * `RequireManageRoles` del back hoy es literalmente "es el owner") y
  * "Abandonar servidor". No agregamos notificaciones/buscar/configuracion
  * porque no existen todavia del lado del back.

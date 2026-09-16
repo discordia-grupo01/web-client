@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { assignRole, listMemberRoles } from "@/features/roles/service";
+import { getSession } from "@/services/auth/session";
+import { assignRole, listMemberRoles } from "@/services/roles/service";
 import type {
   AssignRoleActionResult,
   ListMemberRolesActionResult,
-} from "@/features/roles/types";
+} from "@/services/roles/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

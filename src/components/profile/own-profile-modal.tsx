@@ -5,8 +5,8 @@ import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
 import { ServerAvatar } from "@/components/servers/server-avatar";
 import { Button } from "@/components/ui/button";
-import { updateOwnProfileRequest } from "@/features/auth/client";
-import type { User } from "@/features/auth/types";
+import { updateOwnProfileRequest } from "@/services/auth/client";
+import type { User } from "@/services/auth/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

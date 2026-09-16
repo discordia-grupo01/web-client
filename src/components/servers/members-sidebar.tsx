@@ -4,9 +4,9 @@ import { Crown, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ServerAvatar } from "@/components/servers/server-avatar";
-import { getPublicProfileRequest } from "@/features/auth/client";
-import { listMembersRequest } from "@/features/servers/client";
-import type { Member } from "@/features/servers/types";
+import { getPublicProfileRequest } from "@/services/auth/client";
+import { listMembersRequest } from "@/services/servers/client";
+import type { Member } from "@/services/servers/types";
 
 import { MemberRolesModal } from "./member-roles-modal";
 

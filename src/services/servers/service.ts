@@ -9,7 +9,7 @@ import type { ServerSummary, ServersApiErrorBody } from "./types";
  * Capa de servicios contra el servicio `servers` (via el gateway Kong):
  * operaciones core sobre el servidor en si (listar, crear, obtener, salir,
  * icono). Canales, categorias, roles, invitaciones y miembros tienen cada
- * uno su propio `features/<dominio>/service.ts` -- son sub-recursos del
+ * uno su propio `services/<dominio>/service.ts` -- son sub-recursos del
  * mismo servicio de backend, pero se separaron por dominio de UI/negocio en
  * el front para no amontonar todo en un solo archivo.
  *

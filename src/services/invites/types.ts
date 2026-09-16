@@ -1,4 +1,4 @@
-import type { ServerSummary } from "@/features/servers/types";
+import type { ServerSummary } from "@/services/servers/types";
 
 /** Invitación tal como la devuelve `servers` (create o get). */
 export interface Invitation {

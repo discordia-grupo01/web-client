@@ -9,8 +9,8 @@ import {
   listMemberRolesRequest,
   listRolesRequest,
   removeRoleRequest,
-} from "@/features/servers/client";
-import type { Role } from "@/features/servers/types";
+} from "@/services/servers/client";
+import type { Role } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
 interface MemberRolesModalProps {

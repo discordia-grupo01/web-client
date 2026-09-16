@@ -3,7 +3,7 @@
 import { AlertCircle, LogOut, Shield, X } from "lucide-react";
 import { useState } from "react";
 
-import { leaveServerRequest } from "@/features/servers/client";
+import { leaveServerRequest } from "@/services/servers/client";
 
 interface LeaveServerModalProps {
   serverId: string;
@@ -14,7 +14,7 @@ interface LeaveServerModalProps {
 }
 
 /**
- * Solo self-leave (ver `features/servers/service.ts`): el owner no puede
+ * Solo self-leave (ver `services/servers/service.ts`): el owner no puede
  * abandonar su propio servidor, el backend lo rechaza con 409. Si lo sabemos
  * de antemano (`isOwner`) saltamos directo a ese estado.
  */
