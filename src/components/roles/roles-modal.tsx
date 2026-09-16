@@ -15,7 +15,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { ServerAvatar } from "@/components/ui/server-avatar";
-import { getPublicProfileRequest } from "@/services/auth/client";
+import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
 import {
   assignRoleRequest,

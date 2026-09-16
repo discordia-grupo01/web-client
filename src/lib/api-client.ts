@@ -2,9 +2,16 @@ import "server-only";
 
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
 
-import type { ApiErrorBody } from "@/services/auth/types";
-
 import { env } from "./env";
+
+/** Forma de error del backend: `{ error: { code, message, details? } }`. */
+interface ApiErrorBody {
+  error: {
+    code: string;
+    message: string;
+    details?: Record<string, unknown>;
+  };
+}
 
 interface ApiSuccess<T> {
   ok: true;

@@ -57,7 +57,6 @@ discordia-web/
 └── .env.example                 estructura de variables de entorno (sin valores sensibles)
 ```
 
-
 ## Convenciones de Next (App Router)
 
 - **Rutas por carpeta.** Un `page.tsx` dentro de `src/app/x/` crea la ruta `/x`. No hay router que configurar.

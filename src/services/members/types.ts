@@ -1,7 +1,7 @@
 /**
  * Miembro tal como lo devuelve `GET /v1/servers/:id/members`. El backend solo
  * conoce el `user_id`; el nombre se resuelve aparte contra identify-service
- * (`getPublicProfileRequest`, ver `services/auth/client.ts`), uno por
+ * (`getPublicProfileRequest`, ver `services/profile/client.ts`), uno por
  * miembro -- no hay un endpoint batch todavia.
  */
 export interface Member {

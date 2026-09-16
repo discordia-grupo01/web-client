@@ -40,8 +40,8 @@ import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
 import { MembersSidebar } from "@/components/members/members-sidebar";
 import { useAuth } from "@/services/auth/auth-context";
-import { getOwnProfileRequest } from "@/services/auth/client";
 import type { User } from "@/services/auth/types";
+import { getOwnProfileRequest } from "@/services/profile/client";
 import type { Category } from "@/services/categories/types";
 import {
   moveChannelToCategoryRequest,
