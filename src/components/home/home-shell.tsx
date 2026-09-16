@@ -82,7 +82,7 @@ export function HomeShell({
           onClick={() => setSelectedServerId(null)}
           aria-label="Inicio"
           className={cn(
-            "flex size-12 items-center justify-center rounded-2xl transition-all",
+            "flex size-12 cursor-pointer items-center justify-center rounded-2xl transition-all",
             selectedServerId === null
               ? "bg-accent text-white"
               : "bg-surface-input text-content-muted hover:bg-accent/30",
@@ -104,7 +104,7 @@ export function HomeShell({
                 type="button"
                 title={server.name}
                 onClick={() => setSelectedServerId(server.id)}
-                className="overflow-hidden rounded-2xl"
+                className="cursor-pointer overflow-hidden rounded-2xl"
               >
                 <ServerAvatar
                   name={server.name}
@@ -120,7 +120,7 @@ export function HomeShell({
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
           aria-label="Crear servidor"
-          className="bg-surface-input text-success hover:bg-success/15 flex size-12 items-center justify-center rounded-full transition-all hover:rounded-2xl"
+          className="bg-surface-input text-success hover:bg-success/15 flex size-12 cursor-pointer items-center justify-center rounded-full transition-all hover:rounded-2xl"
         >
           <Plus size={22} />
         </button>
@@ -129,7 +129,7 @@ export function HomeShell({
           type="button"
           onClick={logout}
           disabled={isLoggingOut}
-          className="text-content-subtle hover:text-danger mt-auto text-[10px] font-semibold tracking-wider uppercase disabled:opacity-50"
+          className="text-content-subtle hover:text-danger mt-auto cursor-pointer text-[10px] font-semibold tracking-wider uppercase disabled:cursor-not-allowed disabled:opacity-50"
         >
           Salir
         </button>

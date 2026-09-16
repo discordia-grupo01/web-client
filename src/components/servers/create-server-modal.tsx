@@ -179,7 +179,7 @@ export function CreateServerModal({
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
+          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
         >
           <X size={14} />
         </button>
@@ -317,7 +317,7 @@ export function CreateServerModal({
                         type="button"
                         onClick={removeIcon}
                         aria-label="Quitar imagen"
-                        className="bg-danger absolute -top-1 -right-1 flex size-6 items-center justify-center rounded-full border-2 transition-transform hover:scale-110"
+                        className="bg-danger absolute -top-1 -right-1 flex size-6 cursor-pointer items-center justify-center rounded-full border-2 transition-transform hover:scale-110"
                         style={{ borderColor: "var(--bg-modal)" }}
                       >
                         <X size={10} className="text-white" />
@@ -329,7 +329,7 @@ export function CreateServerModal({
                     <button
                       type="button"
                       onClick={() => fileInputRef.current?.click()}
-                      className="bg-surface-input border-line text-content-muted flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all hover:brightness-110"
+                      className="bg-surface-input border-line text-content-muted flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all hover:brightness-110"
                     >
                       <Pencil size={11} />
                       {iconFile ? "Cambiar imagen" : "Subir imagen"}
@@ -338,7 +338,7 @@ export function CreateServerModal({
                       <button
                         type="button"
                         onClick={removeIcon}
-                        className="text-danger rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
+                        className="text-danger cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-opacity hover:opacity-80"
                       >
                         Quitar
                       </button>

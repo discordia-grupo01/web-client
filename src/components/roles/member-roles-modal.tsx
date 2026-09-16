@@ -119,7 +119,7 @@ export function MemberRolesModal({
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
+          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
         >
           <X size={13} />
         </button>
@@ -214,7 +214,7 @@ export function MemberRolesModal({
           <button
             type="button"
             onClick={onClose}
-            className="bg-surface-input border-line text-content-muted flex-1 rounded-xl border py-2.5 text-sm font-semibold transition-all hover:brightness-110"
+            className="bg-surface-input border-line text-content-muted flex-1 cursor-pointer rounded-xl border py-2.5 text-sm font-semibold transition-all hover:brightness-110"
           >
             Cancelar
           </button>
@@ -222,7 +222,7 @@ export function MemberRolesModal({
             type="button"
             onClick={handleSave}
             disabled={!hasChanges || isSaving}
-            className="from-accent flex-1 rounded-xl bg-gradient-to-br to-[#1a4050] py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.97] disabled:opacity-40 disabled:shadow-none"
+            className="from-accent flex-1 cursor-pointer rounded-xl bg-gradient-to-br to-[#1a4050] py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             style={{
               boxShadow: hasChanges ? "0 6px 20px rgba(36,92,107,0.4)" : "none",
             }}

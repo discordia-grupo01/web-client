@@ -51,7 +51,7 @@ export function DeleteChannelModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
+            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
           >
             <X size={13} />
           </button>
@@ -84,7 +84,7 @@ export function DeleteChannelModal({
               type="button"
               onClick={onClose}
               disabled={isLoading}
-              className="bg-surface-input border-line text-content-muted flex-1 rounded-xl border py-3 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+              className="bg-surface-input border-line text-content-muted flex-1 cursor-pointer rounded-xl border py-3 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
             >
               Cancelar
             </button>
@@ -92,7 +92,7 @@ export function DeleteChannelModal({
               type="button"
               onClick={handleDelete}
               disabled={isLoading}
-              className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#c0392b] to-[#922b21] py-3 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(192,57,43,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:shadow-none"
+              className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#c0392b] to-[#922b21] py-3 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(192,57,43,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none"
             >
               {isLoading ? (
                 <>

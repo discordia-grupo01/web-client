@@ -93,7 +93,7 @@ export function CreateChannelModal({
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
+          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
         >
           <X size={14} />
         </button>
@@ -125,7 +125,7 @@ export function CreateChannelModal({
                   type="button"
                   onClick={() => setKind("text")}
                   className={cn(
-                    "border-line rounded-xl border px-3 py-3 text-left transition-colors",
+                    "border-line cursor-pointer rounded-xl border px-3 py-3 text-left transition-colors",
                     kind === "text"
                       ? "border-accent-strong bg-accent/10"
                       : "hover:bg-surface-hover",
@@ -145,7 +145,7 @@ export function CreateChannelModal({
                   type="button"
                   onClick={() => setKind("voice")}
                   className={cn(
-                    "border-line rounded-xl border px-3 py-3 text-left transition-colors",
+                    "border-line cursor-pointer rounded-xl border px-3 py-3 text-left transition-colors",
                     kind === "voice"
                       ? "border-accent-strong bg-accent/10"
                       : "hover:bg-surface-hover",

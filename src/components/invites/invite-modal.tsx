@@ -136,7 +136,7 @@ function InvitationRow({
         <button
           type="button"
           onClick={handleCopy}
-          className="text-content-muted hover:text-content flex items-center gap-1.5 text-xs font-semibold"
+          className="text-content-muted hover:text-content flex cursor-pointer items-center gap-1.5 text-xs font-semibold"
         >
           {copied ? (
             <>
@@ -155,7 +155,7 @@ function InvitationRow({
             type="button"
             onClick={handleRevoke}
             disabled={isRevoking}
-            className="text-danger flex items-center gap-1.5 text-xs font-semibold disabled:opacity-50"
+            className="text-danger flex cursor-pointer items-center gap-1.5 text-xs font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Trash2 size={13} />
             {isRevoking ? "Revocando..." : "Revocar"}
@@ -249,7 +249,7 @@ export function InviteModal({
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
+          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
         >
           <X size={13} />
         </button>
