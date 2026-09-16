@@ -6,12 +6,9 @@ import { loginRequest } from "@/features/auth/client";
 
 import { LoginForm } from "./login-form";
 
-const replace = vi.fn();
-const refresh = vi.fn();
 let searchParams = new URLSearchParams();
 
 vi.mock("next/navigation", () => ({
-  useRouter: () => ({ replace, refresh }),
   useSearchParams: () => searchParams,
 }));
 
@@ -24,6 +21,13 @@ const loginRequestMock = vi.mocked(loginRequest);
 beforeEach(() => {
   vi.clearAllMocks();
   searchParams = new URLSearchParams();
+  // LoginForm hace una navegacion dura tras un login exitoso (ver el
+  // comentario en login-form.tsx); jsdom no implementa la navegacion real, asi
+  // que reemplazamos `location` por un objeto simple para poder espiar `href`.
+  Object.defineProperty(window, "location", {
+    value: { href: "" },
+    writable: true,
+  });
 });
 
 describe("<LoginForm />", () => {
@@ -68,7 +72,7 @@ describe("<LoginForm />", () => {
         password: "secret123",
       });
     });
-    expect(replace).toHaveBeenCalledWith("/home");
+    expect(window.location.href).toBe("/home");
   });
 
   it("muestra el mensaje de error que devuelve el backend", async () => {
@@ -87,7 +91,7 @@ describe("<LoginForm />", () => {
     await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/incorrectos/i);
-    expect(replace).not.toHaveBeenCalled();
+    expect(window.location.href).toBe("");
   });
 
   it("muestra el aviso de cuenta creada cuando viene de registrarse", () => {

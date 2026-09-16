@@ -2,7 +2,7 @@
 
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
@@ -17,7 +17,6 @@ import {
 import { ROUTES } from "@/lib/constants";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
@@ -46,8 +45,7 @@ export function LoginForm() {
     }
 
     const next = searchParams.get("next");
-    router.replace(next && next.startsWith("/") ? next : ROUTES.home);
-    router.refresh();
+    window.location.href = next && next.startsWith("/") ? next : ROUTES.home;
   }
 
   return (
