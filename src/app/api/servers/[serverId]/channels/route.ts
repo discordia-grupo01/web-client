@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/features/auth/session";
-import { createChannel } from "@/features/servers/service";
-import type { CreateChannelActionResult } from "@/features/servers/types";
+import { createChannel } from "@/features/channels/service";
+import type { CreateChannelActionResult } from "@/features/channels/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

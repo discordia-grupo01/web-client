@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 
 import { getSession } from "@/features/auth/session";
-import { joinServerByCode } from "@/features/servers/service";
+import { joinServerByCode } from "@/features/invites/service";
 import { ROUTES } from "@/lib/constants";
 
 export const metadata: Metadata = {

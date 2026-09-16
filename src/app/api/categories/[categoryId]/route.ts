@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/features/auth/session";
-import { updateCategory } from "@/features/servers/service";
-import type { UpdateCategoryActionResult } from "@/features/servers/types";
+import { updateCategory } from "@/features/categories/service";
+import type { UpdateCategoryActionResult } from "@/features/categories/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/features/auth/session";
-import { removeRole } from "@/features/servers/service";
-import type { RemoveRoleActionResult } from "@/features/servers/types";
+import { removeRole } from "@/features/roles/service";
+import type { RemoveRoleActionResult } from "@/features/roles/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

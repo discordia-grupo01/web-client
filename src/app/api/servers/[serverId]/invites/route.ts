@@ -4,11 +4,11 @@ import { getSession } from "@/features/auth/session";
 import {
   generateInvitation,
   listInvitations,
-} from "@/features/servers/service";
+} from "@/features/invites/service";
 import type {
   CreateInviteActionResult,
   ListInvitationsActionResult,
-} from "@/features/servers/types";
+} from "@/features/invites/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

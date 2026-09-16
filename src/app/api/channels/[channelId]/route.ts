@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
 
 import { getSession } from "@/features/auth/session";
-import { deleteChannel, updateChannel } from "@/features/servers/service";
+import { deleteChannel, updateChannel } from "@/features/channels/service";
 import type {
   DeleteChannelActionResult,
   UpdateChannelActionResult,
-} from "@/features/servers/types";
+} from "@/features/channels/types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
