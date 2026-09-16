@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import { assignRole, listMemberRoles } from "@/services/roles/service";
 import type {
   AssignRoleActionResult,
   ListMemberRolesActionResult,
 } from "@/types/role.types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `GET /v1/servers/:id/members/:userId/roles`.
@@ -18,10 +17,7 @@ export async function GET(
 ): Promise<NextResponse<ListMemberRolesActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await listMemberRoles(
@@ -31,10 +27,7 @@ export async function GET(
   );
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       {
@@ -62,10 +55,7 @@ export async function POST(
 ): Promise<NextResponse<AssignRoleActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -80,10 +70,7 @@ export async function POST(
 
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     if (result.status === 403) {
       return NextResponse.json(

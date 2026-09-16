@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import { getPublicProfile } from "@/services/profile/service";
 import type { GetPublicProfileActionResult } from "@/types/profile.types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `GET /v1/users/:id` (identify-service, via Kong). Resuelve el
@@ -17,19 +16,13 @@ export async function GET(
 ): Promise<NextResponse<GetPublicProfileActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await getPublicProfile(session.token, params.id);
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: "No pudimos cargar el perfil." },

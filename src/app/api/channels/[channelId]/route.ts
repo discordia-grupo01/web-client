@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import { deleteChannel, updateChannel } from "@/services/channels/service";
 import type {
   DeleteChannelActionResult,
   UpdateChannelActionResult,
 } from "@/types/channel.types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 const REASON_MESSAGES: Record<string, string> = {
   name_required: "Ingresá un nombre para el canal.",
@@ -25,10 +24,7 @@ export async function PATCH(
 ): Promise<NextResponse<UpdateChannelActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -56,10 +52,7 @@ export async function PATCH(
       );
     }
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       {
@@ -85,20 +78,14 @@ export async function DELETE(
 ): Promise<NextResponse<DeleteChannelActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await deleteChannel(session.token, params.channelId);
 
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: "No pudimos eliminar el canal. Intenta de nuevo." },

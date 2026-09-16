@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import { removeRole } from "@/services/roles/service";
 import type { RemoveRoleActionResult } from "@/types/role.types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `DELETE /v1/servers/:id/members/:userId/roles/:roleId`. A
@@ -17,10 +16,7 @@ export async function DELETE(
 ): Promise<NextResponse<RemoveRoleActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await removeRole(
@@ -32,10 +28,7 @@ export async function DELETE(
 
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     if (result.status === 403) {
       return NextResponse.json(

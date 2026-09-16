@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import { createServer, listMyServers } from "@/services/servers/service";
 import type { CreateServerActionResult } from "@/types/server.types";
@@ -16,8 +17,6 @@ const REASON_MESSAGES: Record<string, string> = {
   icon_unreadable: "No pudimos leer ese archivo. Probá con otro.",
 };
 
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
-
 /**
  * BFF de `GET /v1/servers`. El navegador pega aca (mismo origen); reenvia el
  * JWT de la cookie httpOnly, nunca lo expone.
@@ -25,10 +24,7 @@ const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 export async function GET(): Promise<NextResponse> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await listMyServers(session.token);
@@ -54,10 +50,7 @@ export async function POST(
 ): Promise<NextResponse<CreateServerActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   let formData: FormData;
@@ -91,10 +84,7 @@ export async function POST(
     }
 
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
 
     return NextResponse.json(

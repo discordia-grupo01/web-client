@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import {
   generateInvitation,
@@ -9,8 +10,6 @@ import type {
   CreateInviteActionResult,
   ListInvitationsActionResult,
 } from "@/types/invite.types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 const REASON_MESSAGES: Record<string, string> = {
   max_uses_invalid: "El límite de usos debe ser un número mayor a 0.",
@@ -29,19 +28,13 @@ export async function GET(
 ): Promise<NextResponse<ListInvitationsActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await listInvitations(session.token, params.serverId);
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       {
@@ -71,10 +64,7 @@ export async function POST(
 ): Promise<NextResponse<CreateInviteActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   let maxUses: number | undefined;
@@ -109,10 +99,7 @@ export async function POST(
       );
     }
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: friendly ?? "Algo salio mal. Intenta de nuevo." },

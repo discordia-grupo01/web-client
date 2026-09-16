@@ -1,13 +1,12 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import { createRole, listRoles } from "@/services/roles/service";
 import type {
   CreateRoleActionResult,
   ListRolesActionResult,
 } from "@/types/role.types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 const REASON_MESSAGES: Record<string, string> = {
   name_required: "Ingresá un nombre para el rol.",
@@ -24,19 +23,13 @@ export async function GET(
 ): Promise<NextResponse<ListRolesActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await listRoles(session.token, params.serverId);
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: "No pudimos cargar los roles. Intenta de nuevo." },
@@ -61,10 +54,7 @@ export async function POST(
 ): Promise<NextResponse<CreateRoleActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -94,10 +84,7 @@ export async function POST(
       );
     }
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     if (result.status === 403) {
       return NextResponse.json(

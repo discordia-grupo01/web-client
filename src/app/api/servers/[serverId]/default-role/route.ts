@@ -1,10 +1,9 @@
 import { NextResponse } from "next/server";
 
+import { unauthorizedResponse } from "@/lib/api-route";
 import { getSession } from "@/services/auth/session";
 import { setDefaultRole } from "@/services/roles/service";
 import type { SetDefaultRoleActionResult } from "@/types/role.types";
-
-const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 
 /**
  * BFF de `PUT /v1/servers/:id/default-role`. Body JSON: `{ roleId }`.
@@ -19,10 +18,7 @@ export async function PUT(
 ): Promise<NextResponse<SetDefaultRoleActionResult>> {
   const session = getSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const body = await request.json().catch(() => null);
@@ -32,10 +28,7 @@ export async function PUT(
 
   if (!result.ok) {
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     if (result.status === 403) {
       return NextResponse.json(
