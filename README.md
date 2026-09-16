@@ -33,9 +33,9 @@ discordia-web/
 │   ├── middleware.ts            guardia de rutas (corre antes de cada request)
 │   ├── components/
 │   │   ├── ui/                  piezas genericas reutilizables (Button, TextField, ...)
-│   │   └── <feature>/           componentes propios de una feature
-│   ├── services/                codigo agrupado por dominio (auth, chat, voz, ...)
-│   │   └── <feature>/           types, validacion, service (server), client (browser), hooks
+│   │   └── <feature>/           componentes propios de una feature de UI
+│   ├── services/                codigo agrupado por dominio del backend (auth, servers, channels, ...)
+│   │   └── <dominio>/           types, validacion, service (server), client (browser), hooks
 │   ├── hooks/                   hooks de React reutilizables entre features
 │   └── lib/
 │       ├── api-client.ts         cliente HTTP hacia el backend (server-only)
@@ -57,9 +57,6 @@ discordia-web/
 └── .env.example                 estructura de variables de entorno (sin valores sensibles)
 ```
 
-`components/` y `services/` crecen con cada feature: una carpeta bajo `services/`,
-sus rutas bajo `app/` y sus componentes bajo `components/<feature>/`. Hoy la unica
-feature es `auth` (el login); los tests van al lado de cada archivo (`*.test.ts`).
 
 ## Convenciones de Next (App Router)
 

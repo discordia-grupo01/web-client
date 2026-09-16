@@ -1,21 +1,19 @@
 "use client";
 
-import { AlertCircle, Hash, Volume2, X } from "lucide-react";
+import { AlertCircle, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { createChannelRequest } from "@/services/servers/client";
-import type { Category, Channel } from "@/services/servers/types";
+import { updateCategoryRequest } from "@/services/categories/client";
+import type { Category } from "@/services/categories/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;
 
-interface CreateChannelModalProps {
-  serverId: string;
-  categories: Category[];
-  defaultCategoryId?: string | null;
+interface EditCategoryModalProps {
+  category: Category;
   onClose: () => void;
-  onCreated: (channel: Channel) => void;
+  onUpdated: (category: Category) => void;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -28,16 +26,12 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export function CreateChannelModal({
-  serverId,
-  categories,
-  defaultCategoryId = null,
+export function EditCategoryModal({
+  category,
   onClose,
-  onCreated,
-}: CreateChannelModalProps) {
-  const [kind, setKind] = useState<"text" | "voice">("text");
-  const [name, setName] = useState("");
-  const [categoryId, setCategoryId] = useState(defaultCategoryId ?? "");
+  onUpdated,
+}: EditCategoryModalProps) {
+  const [name, setName] = useState(category.name);
   const [nameError, setNameError] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -52,16 +46,12 @@ export function CreateChannelModal({
     setGlobalError("");
 
     if (!trimmed) {
-      setNameError("Ingresá un nombre para el canal.");
+      setNameError("Ingresá un nombre para la categoría.");
       return;
     }
 
     setIsSubmitting(true);
-    const result = await createChannelRequest(serverId, {
-      name: trimmed,
-      kind,
-      categoryId: categoryId || undefined,
-    });
+    const result = await updateCategoryRequest(category.id, trimmed);
     setIsSubmitting(false);
 
     if (!result.ok) {
@@ -70,7 +60,7 @@ export function CreateChannelModal({
       return;
     }
 
-    onCreated(result.channel);
+    onUpdated(result.category);
   }
 
   return (
@@ -100,11 +90,9 @@ export function CreateChannelModal({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="px-7 pt-8 pb-2">
             <h2 className="font-display text-content mb-1 text-xl font-bold">
-              Crear Canal
+              Editar Categoría
             </h2>
-            <p className="text-content-muted text-sm leading-relaxed">
-              Agrega un canal de texto o voz al servidor.
-            </p>
+            <p className="text-content-subtle text-sm">{category.name}</p>
           </div>
 
           <div className="space-y-5 px-7 py-6">
@@ -116,59 +104,11 @@ export function CreateChannelModal({
             ) : null}
 
             <div>
-              <label className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase">
-                Tipo de canal
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setKind("text")}
-                  className={cn(
-                    "border-line rounded-xl border px-3 py-3 text-left transition-colors",
-                    kind === "text"
-                      ? "border-accent-strong bg-accent/10"
-                      : "hover:bg-surface-hover",
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <Hash size={16} className="text-content-subtle" />
-                    <span className="text-content text-sm font-semibold">
-                      Texto
-                    </span>
-                  </div>
-                  <p className="text-content-subtle mt-0.5 text-xs">
-                    Para mensajes y links
-                  </p>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setKind("voice")}
-                  className={cn(
-                    "border-line rounded-xl border px-3 py-3 text-left transition-colors",
-                    kind === "voice"
-                      ? "border-accent-strong bg-accent/10"
-                      : "hover:bg-surface-hover",
-                  )}
-                >
-                  <div className="flex items-center gap-2">
-                    <Volume2 size={16} className="text-content-subtle" />
-                    <span className="text-content text-sm font-semibold">
-                      Voz
-                    </span>
-                  </div>
-                  <p className="text-content-subtle mt-0.5 text-xs">
-                    Para charlar en tiempo real
-                  </p>
-                </button>
-              </div>
-            </div>
-
-            <div>
               <label
-                htmlFor="channel-name"
+                htmlFor="edit-category-name"
                 className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
               >
-                Nombre del canal
+                Nombre de la categoría
               </label>
               <div
                 className={cn(
@@ -176,9 +116,8 @@ export function CreateChannelModal({
                   nameError ? "border-danger" : "border-line",
                 )}
               >
-                <span className="text-content-subtle">#</span>
                 <input
-                  id="channel-name"
+                  id="edit-category-name"
                   type="text"
                   value={name}
                   onChange={(event) => {
@@ -186,35 +125,12 @@ export function CreateChannelModal({
                     setNameError("");
                     setGlobalError("");
                   }}
-                  placeholder="mi-nuevo-canal"
                   maxLength={MAX_NAME + 10}
                   autoFocus
                   className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
                 />
               </div>
               <FieldError message={nameError} />
-            </div>
-
-            <div>
-              <label
-                htmlFor="channel-category"
-                className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
-              >
-                Categoría
-              </label>
-              <select
-                id="channel-category"
-                value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
-                className="bg-surface-input border-line text-content w-full rounded-xl border px-4 py-3 text-sm outline-none"
-              >
-                <option value="">Sin categoría</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
             </div>
           </div>
 
@@ -233,7 +149,7 @@ export function CreateChannelModal({
               isLoading={isSubmitting}
               className="w-auto"
             >
-              Crear Canal
+              Guardar cambios
             </Button>
           </div>
         </form>

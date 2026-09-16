@@ -4,16 +4,16 @@ import { AlertCircle, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { updateCategoryRequest } from "@/services/servers/client";
-import type { Category } from "@/services/servers/types";
+import { createCategoryRequest } from "@/services/categories/client";
+import type { Category } from "@/services/categories/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;
 
-interface EditCategoryModalProps {
-  category: Category;
+interface CreateCategoryModalProps {
+  serverId: string;
   onClose: () => void;
-  onUpdated: (category: Category) => void;
+  onCreated: (category: Category) => void;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -26,12 +26,12 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export function EditCategoryModal({
-  category,
+export function CreateCategoryModal({
+  serverId,
   onClose,
-  onUpdated,
-}: EditCategoryModalProps) {
-  const [name, setName] = useState(category.name);
+  onCreated,
+}: CreateCategoryModalProps) {
+  const [name, setName] = useState("");
   const [nameError, setNameError] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -51,7 +51,7 @@ export function EditCategoryModal({
     }
 
     setIsSubmitting(true);
-    const result = await updateCategoryRequest(category.id, trimmed);
+    const result = await createCategoryRequest(serverId, trimmed);
     setIsSubmitting(false);
 
     if (!result.ok) {
@@ -60,7 +60,7 @@ export function EditCategoryModal({
       return;
     }
 
-    onUpdated(result.category);
+    onCreated(result.category);
   }
 
   return (
@@ -90,9 +90,11 @@ export function EditCategoryModal({
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="px-7 pt-8 pb-2">
             <h2 className="font-display text-content mb-1 text-xl font-bold">
-              Editar Categoría
+              Crear Categoría
             </h2>
-            <p className="text-content-subtle text-sm">{category.name}</p>
+            <p className="text-content-muted text-sm leading-relaxed">
+              Agrupa canales relacionados bajo un mismo título.
+            </p>
           </div>
 
           <div className="space-y-5 px-7 py-6">
@@ -105,7 +107,7 @@ export function EditCategoryModal({
 
             <div>
               <label
-                htmlFor="edit-category-name"
+                htmlFor="category-name"
                 className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
               >
                 Nombre de la categoría
@@ -117,7 +119,7 @@ export function EditCategoryModal({
                 )}
               >
                 <input
-                  id="edit-category-name"
+                  id="category-name"
                   type="text"
                   value={name}
                   onChange={(event) => {
@@ -125,6 +127,7 @@ export function EditCategoryModal({
                     setNameError("");
                     setGlobalError("");
                   }}
+                  placeholder="NUEVA CATEGORÍA"
                   maxLength={MAX_NAME + 10}
                   autoFocus
                   className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
@@ -149,7 +152,7 @@ export function EditCategoryModal({
               isLoading={isSubmitting}
               className="w-auto"
             >
-              Guardar cambios
+              Crear Categoría
             </Button>
           </div>
         </form>

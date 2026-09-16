@@ -1,19 +1,19 @@
 "use client";
 
-import { AlertCircle, X } from "lucide-react";
+import { AlertCircle, Hash, Volume2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { createCategoryRequest } from "@/services/servers/client";
-import type { Category } from "@/services/servers/types";
+import { updateChannelRequest } from "@/services/channels/client";
+import type { Channel } from "@/services/channels/types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;
 
-interface CreateCategoryModalProps {
-  serverId: string;
+interface EditChannelModalProps {
+  channel: Channel;
   onClose: () => void;
-  onCreated: (category: Category) => void;
+  onUpdated: (channel: Channel) => void;
 }
 
 function FieldError({ message }: { message?: string }) {
@@ -26,12 +26,12 @@ function FieldError({ message }: { message?: string }) {
   );
 }
 
-export function CreateCategoryModal({
-  serverId,
+export function EditChannelModal({
+  channel,
   onClose,
-  onCreated,
-}: CreateCategoryModalProps) {
-  const [name, setName] = useState("");
+  onUpdated,
+}: EditChannelModalProps) {
+  const [name, setName] = useState(channel.name);
   const [nameError, setNameError] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -39,6 +39,7 @@ export function CreateCategoryModal({
   const trimmed = name.trim();
   const canSubmit =
     trimmed.length > 0 && trimmed.length <= MAX_NAME && !isSubmitting;
+  const Icon = channel.kind === "text" ? Hash : Volume2;
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,12 +47,12 @@ export function CreateCategoryModal({
     setGlobalError("");
 
     if (!trimmed) {
-      setNameError("Ingresá un nombre para la categoría.");
+      setNameError("Ingresá un nombre para el canal.");
       return;
     }
 
     setIsSubmitting(true);
-    const result = await createCategoryRequest(serverId, trimmed);
+    const result = await updateChannelRequest(channel.id, { name: trimmed });
     setIsSubmitting(false);
 
     if (!result.ok) {
@@ -60,7 +61,7 @@ export function CreateCategoryModal({
       return;
     }
 
-    onCreated(result.category);
+    onUpdated(result.channel);
   }
 
   return (
@@ -88,13 +89,14 @@ export function CreateCategoryModal({
         </button>
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-          <div className="px-7 pt-8 pb-2">
-            <h2 className="font-display text-content mb-1 text-xl font-bold">
-              Crear Categoría
-            </h2>
-            <p className="text-content-muted text-sm leading-relaxed">
-              Agrupa canales relacionados bajo un mismo título.
-            </p>
+          <div className="flex items-center gap-2 px-7 pt-8 pb-2">
+            <Icon size={18} className="text-content-subtle" />
+            <div>
+              <h2 className="font-display text-content text-xl font-bold">
+                Editar Canal
+              </h2>
+              <p className="text-content-subtle text-sm">#{channel.name}</p>
+            </div>
           </div>
 
           <div className="space-y-5 px-7 py-6">
@@ -107,10 +109,10 @@ export function CreateCategoryModal({
 
             <div>
               <label
-                htmlFor="category-name"
+                htmlFor="edit-channel-name"
                 className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
               >
-                Nombre de la categoría
+                Nombre del canal
               </label>
               <div
                 className={cn(
@@ -118,8 +120,9 @@ export function CreateCategoryModal({
                   nameError ? "border-danger" : "border-line",
                 )}
               >
+                <span className="text-content-subtle">#</span>
                 <input
-                  id="category-name"
+                  id="edit-channel-name"
                   type="text"
                   value={name}
                   onChange={(event) => {
@@ -127,7 +130,6 @@ export function CreateCategoryModal({
                     setNameError("");
                     setGlobalError("");
                   }}
-                  placeholder="NUEVA CATEGORÍA"
                   maxLength={MAX_NAME + 10}
                   autoFocus
                   className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
@@ -152,7 +154,7 @@ export function CreateCategoryModal({
               isLoading={isSubmitting}
               className="w-auto"
             >
-              Crear Categoría
+              Guardar cambios
             </Button>
           </div>
         </form>

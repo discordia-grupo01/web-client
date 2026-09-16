@@ -3,12 +3,11 @@
 import { Crown, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { ServerAvatar } from "@/components/servers/server-avatar";
+import { ServerAvatar } from "@/components/ui/server-avatar";
+import { MemberRolesModal } from "@/components/roles/member-roles-modal";
 import { getPublicProfileRequest } from "@/services/auth/client";
-import { listMembersRequest } from "@/services/servers/client";
-import type { Member } from "@/services/servers/types";
-
-import { MemberRolesModal } from "./member-roles-modal";
+import { listMembersRequest } from "@/services/members/client";
+import type { Member } from "@/services/members/types";
 
 interface MembersSidebarProps {
   serverId: string;

@@ -5,10 +5,10 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/home/empty-state";
+import { JoinServerModal } from "@/components/invites/join-server-modal";
 import { CreateServerModal } from "@/components/servers/create-server-modal";
-import { JoinServerModal } from "@/components/servers/join-server-modal";
-import { ServerAvatar } from "@/components/servers/server-avatar";
 import { ServerView } from "@/components/servers/server-view";
+import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
 import type { ServerSummary } from "@/services/servers/types";
 import { cn } from "@/lib/cn";

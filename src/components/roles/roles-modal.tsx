@@ -14,26 +14,27 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { ColorPanel } from "@/components/servers/color-panel";
-import { ServerAvatar } from "@/components/servers/server-avatar";
+import { ServerAvatar } from "@/components/ui/server-avatar";
 import { getPublicProfileRequest } from "@/services/auth/client";
+import { listMembersRequest } from "@/services/members/client";
 import {
   assignRoleRequest,
   createRoleRequest,
   deleteRoleRequest,
   listMemberRolesRequest,
-  listMembersRequest,
   listRolesRequest,
   removeRoleRequest,
   setDefaultRoleRequest,
   updateRoleRequest,
-} from "@/services/servers/client";
+} from "@/services/roles/client";
 import {
   ROLE_PERMISSIONS,
   type Role,
   type RolePermission,
-} from "@/services/servers/types";
+} from "@/services/roles/types";
 import { cn } from "@/lib/cn";
+
+import { ColorPanel } from "./color-panel";
 
 const MAX_NAME = 100;
 

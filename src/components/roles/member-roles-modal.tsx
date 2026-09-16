@@ -3,14 +3,14 @@
 import { AlertCircle, Check, Users, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { ServerAvatar } from "@/components/servers/server-avatar";
+import { ServerAvatar } from "@/components/ui/server-avatar";
 import {
   assignRoleRequest,
   listMemberRolesRequest,
   listRolesRequest,
   removeRoleRequest,
-} from "@/services/servers/client";
-import type { Role } from "@/services/servers/types";
+} from "@/services/roles/client";
+import type { Role } from "@/services/roles/types";
 import { cn } from "@/lib/cn";
 
 interface MemberRolesModalProps {

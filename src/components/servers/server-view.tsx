@@ -33,26 +33,25 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { OwnProfileModal } from "@/components/profile/own-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
-import { CreateCategoryModal } from "@/components/servers/create-category-modal";
-import { CreateChannelModal } from "@/components/servers/create-channel-modal";
-import { DeleteChannelModal } from "@/components/servers/delete-channel-modal";
-import { EditCategoryModal } from "@/components/servers/edit-category-modal";
-import { EditChannelModal } from "@/components/servers/edit-channel-modal";
-import { MembersSidebar } from "@/components/servers/members-sidebar";
-import { ServerSidebarHeader } from "@/components/servers/server-sidebar-header";
+import { CreateCategoryModal } from "@/components/categories/create-category-modal";
+import { EditCategoryModal } from "@/components/categories/edit-category-modal";
+import { CreateChannelModal } from "@/components/channels/create-channel-modal";
+import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
+import { EditChannelModal } from "@/components/channels/edit-channel-modal";
+import { MembersSidebar } from "@/components/members/members-sidebar";
 import { useAuth } from "@/services/auth/auth-context";
 import { getOwnProfileRequest } from "@/services/auth/client";
 import type { User } from "@/services/auth/types";
+import type { Category } from "@/services/categories/types";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
-} from "@/services/servers/client";
-import type {
-  Category,
-  Channel,
-  ServerSummary,
-} from "@/services/servers/types";
+} from "@/services/channels/client";
+import type { Channel } from "@/services/channels/types";
+import type { ServerSummary } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
+
+import { ServerSidebarHeader } from "./server-sidebar-header";
 
 /** Id del "bucket" de canales sin categoria (`category_id: null`). */
 const UNCATEGORIZED_BUCKET = "none";

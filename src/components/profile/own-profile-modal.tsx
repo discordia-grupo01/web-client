@@ -3,8 +3,8 @@
 import { AlertCircle, Calendar, Camera, Check, Pencil, X } from "lucide-react";
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
-import { ServerAvatar } from "@/components/servers/server-avatar";
 import { Button } from "@/components/ui/button";
+import { ServerAvatar } from "@/components/ui/server-avatar";
 import { updateOwnProfileRequest } from "@/services/auth/client";
 import type { User } from "@/services/auth/types";
 import { cn } from "@/lib/cn";

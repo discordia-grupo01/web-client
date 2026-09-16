@@ -4,11 +4,11 @@ import { AlertCircle, ArrowRight, Check, Link2, X } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { ServerAvatar } from "@/components/servers/server-avatar";
+import { ServerAvatar } from "@/components/ui/server-avatar";
 import {
   joinServerRequest,
   normalizeInviteCode,
-} from "@/services/servers/client";
+} from "@/services/invites/client";
 import type { ServerSummary } from "@/services/servers/types";
 
 interface JoinServerModalProps {

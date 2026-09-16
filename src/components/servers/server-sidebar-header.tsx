@@ -3,11 +3,12 @@
 import { ChevronDown, LogOut, Shield, UserPlus } from "lucide-react";
 import { useState } from "react";
 
-import { InviteModal } from "@/components/servers/invite-modal";
-import { LeaveServerModal } from "@/components/servers/leave-server-modal";
-import { RolesModal } from "@/components/servers/roles-modal";
-import { ServerAvatar } from "@/components/servers/server-avatar";
+import { InviteModal } from "@/components/invites/invite-modal";
+import { RolesModal } from "@/components/roles/roles-modal";
+import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
+
+import { LeaveServerModal } from "./leave-server-modal";
 import type { ServerSummary } from "@/services/servers/types";
 import { cn } from "@/lib/cn";
 
