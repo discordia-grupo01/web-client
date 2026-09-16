@@ -4,7 +4,7 @@ import type {
   CreateServerActionResult,
   LeaveServerActionResult,
   ServerSummary,
-} from "./types";
+} from "@/types/server.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/servers`, mismo origen): alta,

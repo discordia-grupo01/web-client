@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { resetPassword } from "@/services/auth/service";
-import type { ResetPasswordActionResult } from "@/services/auth/types";
+import type { ResetPasswordActionResult } from "@/types/auth.types";
 import { hasErrors, validateResetPassword } from "@/services/auth/validation";
 
 /**

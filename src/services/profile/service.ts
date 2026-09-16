@@ -2,9 +2,9 @@ import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
-import type { User } from "@/services/auth/types";
+import type { User } from "@/types/auth.types";
 
-import type { ApiErrorBody, PublicUser } from "./types";
+import type { ApiErrorBody, PublicUser } from "@/types/profile.types";
 
 /**
  * Capa de servicios contra identify-service: perfil de usuario (propio o

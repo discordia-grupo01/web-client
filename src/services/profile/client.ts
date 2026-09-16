@@ -4,7 +4,7 @@ import type {
   GetOwnProfileActionResult,
   GetPublicProfileActionResult,
   UpdateOwnProfileActionResult,
-} from "./types";
+} from "@/types/profile.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/profile`, `/api/users/:id`,

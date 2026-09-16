@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/services/auth/session";
 import { revokeInvitation } from "@/services/invites/service";
-import type { RevokeInviteActionResult } from "@/services/invites/types";
+import type { RevokeInviteActionResult } from "@/types/invite.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

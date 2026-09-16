@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { login } from "@/services/auth/service";
 import { createSession } from "@/services/auth/session";
-import type { LoginActionResult } from "@/services/auth/types";
+import type { LoginActionResult } from "@/types/auth.types";
 import { hasErrors, validateLogin } from "@/services/auth/validation";
 
 export async function POST(

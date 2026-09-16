@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/services/auth/session";
 import { createChannel } from "@/services/channels/service";
-import type { CreateChannelActionResult } from "@/services/channels/types";
+import type { CreateChannelActionResult } from "@/types/channel.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

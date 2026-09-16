@@ -5,7 +5,7 @@ import { deleteChannel, updateChannel } from "@/services/channels/service";
 import type {
   DeleteChannelActionResult,
   UpdateChannelActionResult,
-} from "@/services/channels/types";
+} from "@/types/channel.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

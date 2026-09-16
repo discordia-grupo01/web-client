@@ -3,7 +3,7 @@ import "server-only";
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
 
-import type { ServerSummary, ServersApiErrorBody } from "./types";
+import type { ServerSummary, ServersApiErrorBody } from "@/types/server.types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong):

@@ -8,7 +8,7 @@ import {
 import type {
   CreateInviteActionResult,
   ListInvitationsActionResult,
-} from "@/services/invites/types";
+} from "@/types/invite.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

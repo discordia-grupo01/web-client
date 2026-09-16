@@ -3,7 +3,7 @@ import { api } from "@/lib/browser-api-client";
 import type {
   CreateCategoryActionResult,
   UpdateCategoryActionResult,
-} from "./types";
+} from "@/types/category.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/categories`, `/api/servers/:id/categories`,

@@ -5,7 +5,7 @@ import { getOwnProfile, updateOwnProfile } from "@/services/profile/service";
 import type {
   GetOwnProfileActionResult,
   UpdateOwnProfileActionResult,
-} from "@/services/profile/types";
+} from "@/types/profile.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

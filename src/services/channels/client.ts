@@ -6,7 +6,7 @@ import type {
   MoveChannelActionResult,
   ReorderChannelsActionResult,
   UpdateChannelActionResult,
-} from "./types";
+} from "@/types/channel.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/channels`, `/api/servers/:id/channels`,

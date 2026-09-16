@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/services/auth/session";
 import { createServer, listMyServers } from "@/services/servers/service";
-import type { CreateServerActionResult } from "@/services/servers/types";
+import type { CreateServerActionResult } from "@/types/server.types";
 
 /** Traduce `details.reason` del back a un mensaje de campo en español. */
 const REASON_MESSAGES: Record<string, string> = {

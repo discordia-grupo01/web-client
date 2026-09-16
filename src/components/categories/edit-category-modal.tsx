@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { updateCategoryRequest } from "@/services/categories/client";
-import type { Category } from "@/services/categories/types";
+import type { Category } from "@/types/category.types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

@@ -9,7 +9,7 @@ import {
   joinServerRequest,
   normalizeInviteCode,
 } from "@/services/invites/client";
-import type { ServerSummary } from "@/services/servers/types";
+import type { ServerSummary } from "@/types/server.types";
 
 interface JoinServerModalProps {
   onClose: () => void;

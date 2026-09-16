@@ -35,7 +35,8 @@ discordia-web/
 │   │   ├── ui/                  piezas genericas reutilizables (Button, TextField, ...)
 │   │   └── <feature>/           componentes propios de una feature de UI
 │   ├── services/                codigo agrupado por dominio del backend (auth, servers, channels, ...)
-│   │   └── <dominio>/           types, validacion, service (server), client (browser), hooks
+│   │   └── <dominio>/           validacion, service (server), client (browser), hooks
+│   ├── types/                   tipos por dominio: <dominio>.types.ts (Channel, Role, User, ...)
 │   ├── hooks/                   hooks de React reutilizables entre features
 │   └── lib/
 │       ├── api-client.ts         cliente HTTP hacia el backend (server-only)
@@ -56,6 +57,14 @@ discordia-web/
 ├── Dockerfile                   build multi-stage para la imagen de produccion
 └── .env.example                 estructura de variables de entorno (sin valores sensibles)
 ```
+
+Los tipos de cada dominio (`Channel`, `Role`, `User`, los `*ActionResult` de cada
+endpoint, etc.) viven en `types/<dominio>.types.ts`, no dentro de
+`services/<dominio>/`: así se pueden importar sin arrastrar `service.ts`/`client.ts`
+(uno es server-only, el otro pega contra el BFF) y quedan todos los tipos del
+proyecto en un solo lugar. Un tipo que un dominio necesita de otro (ej.
+`ServerSummary` referenciando `Channel`) se importa entre archivos de `types/`
+con ruta relativa (`./channel.types`), no cruzando a `services/`.
 
 ## Convenciones de Next (App Router)
 

@@ -2,7 +2,7 @@ import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 
-import type { AuthResponse, User } from "./types";
+import type { AuthResponse, User } from "@/types/auth.types";
 
 /**
  * Capa de servicios contra identify-service: registro, login, logout y

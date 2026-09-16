@@ -19,7 +19,7 @@ import {
   listInvitationsRequest,
   revokeInviteRequest,
 } from "@/services/invites/client";
-import type { Invitation } from "@/services/invites/types";
+import type { Invitation } from "@/types/invite.types";
 import { cn } from "@/lib/cn";
 
 interface InviteModalProps {

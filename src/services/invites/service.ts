@@ -2,7 +2,7 @@ import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 
-import type { Invitation } from "./types";
+import type { Invitation } from "@/types/invite.types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong) para

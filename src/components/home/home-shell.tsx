@@ -10,7 +10,7 @@ import { CreateServerModal } from "@/components/servers/create-server-modal";
 import { ServerView } from "@/components/servers/server-view";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
-import type { ServerSummary } from "@/services/servers/types";
+import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 

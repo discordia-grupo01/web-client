@@ -5,7 +5,7 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { updateChannelRequest } from "@/services/channels/client";
-import type { Channel } from "@/services/channels/types";
+import type { Channel } from "@/types/channel.types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

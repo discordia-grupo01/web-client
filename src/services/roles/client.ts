@@ -10,7 +10,7 @@ import type {
   RolePermission,
   SetDefaultRoleActionResult,
   UpdateRoleActionResult,
-} from "./types";
+} from "@/types/role.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/roles`, `/api/servers/:id/roles`,

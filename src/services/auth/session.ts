@@ -5,7 +5,7 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "@/lib/constants";
 import { isProduction } from "@/lib/env";
 
-import type { Session, User } from "./types";
+import type { Session, User } from "@/types/auth.types";
 
 const DEFAULT_MAX_AGE_SECONDS = 72 * 60 * 60; // el JWT del backend dura 72h
 

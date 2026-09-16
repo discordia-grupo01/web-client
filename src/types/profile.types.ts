@@ -1,4 +1,4 @@
-import type { User } from "@/services/auth/types";
+import type { User } from "./auth.types";
 
 /** Forma de error del backend: `{ error: { code, message, details? } }`. */
 export interface ApiErrorBody {

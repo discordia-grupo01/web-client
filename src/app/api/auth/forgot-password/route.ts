@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { recoverPassword } from "@/services/auth/service";
-import type { ForgotPasswordActionResult } from "@/services/auth/types";
+import type { ForgotPasswordActionResult } from "@/types/auth.types";
 import { hasErrors, validateForgotPassword } from "@/services/auth/validation";
 
 /**

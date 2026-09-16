@@ -13,7 +13,7 @@ import {
 import { ROUTES } from "@/lib/constants";
 
 import { logoutRequest } from "./client";
-import type { User } from "./types";
+import type { User } from "@/types/auth.types";
 
 interface AuthContextValue {
   user: User | null;

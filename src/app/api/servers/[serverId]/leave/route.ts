@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/services/auth/session";
 import { leaveServer } from "@/services/servers/service";
-import type { LeaveServerActionResult } from "@/services/servers/types";
+import type { LeaveServerActionResult } from "@/types/server.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 const OWNER_BLOCKED_MESSAGE =

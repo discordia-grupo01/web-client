@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { register } from "@/services/auth/service";
-import type { RegisterActionResult } from "@/services/auth/types";
+import type { RegisterActionResult } from "@/types/auth.types";
 import { hasErrors, validateRegister } from "@/services/auth/validation";
 
 /**

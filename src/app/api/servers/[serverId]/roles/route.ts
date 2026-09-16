@@ -5,7 +5,7 @@ import { createRole, listRoles } from "@/services/roles/service";
 import type {
   CreateRoleActionResult,
   ListRolesActionResult,
-} from "@/services/roles/types";
+} from "@/types/role.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

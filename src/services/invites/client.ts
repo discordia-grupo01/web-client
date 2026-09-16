@@ -5,7 +5,7 @@ import type {
   JoinServerActionResult,
   ListInvitationsActionResult,
   RevokeInviteActionResult,
-} from "./types";
+} from "@/types/invite.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/invites`, `/api/servers/:id/invites`,

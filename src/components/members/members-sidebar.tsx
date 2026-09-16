@@ -7,7 +7,7 @@ import { ServerAvatar } from "@/components/ui/server-avatar";
 import { MemberRolesModal } from "@/components/roles/member-roles-modal";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
-import type { Member } from "@/services/members/types";
+import type { Member } from "@/types/member.types";
 
 interface MembersSidebarProps {
   serverId: string;

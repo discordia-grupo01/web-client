@@ -1,6 +1,6 @@
 import { api } from "@/lib/browser-api-client";
 
-import type { ListMembersActionResult } from "./types";
+import type { ListMembersActionResult } from "@/types/member.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/servers/:id/members`, mismo

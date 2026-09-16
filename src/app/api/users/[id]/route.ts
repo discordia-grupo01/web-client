@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/services/auth/session";
 import { getPublicProfile } from "@/services/profile/service";
-import type { GetPublicProfileActionResult } from "@/services/profile/types";
+import type { GetPublicProfileActionResult } from "@/types/profile.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

@@ -5,7 +5,7 @@ import type {
   LoginActionResult,
   RegisterActionResult,
   ResetPasswordActionResult,
-} from "./types";
+} from "@/types/auth.types";
 import type {
   ForgotPasswordValues,
   LoginValues,

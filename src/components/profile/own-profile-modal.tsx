@@ -5,7 +5,7 @@ import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ServerAvatar } from "@/components/ui/server-avatar";
-import type { User } from "@/services/auth/types";
+import type { User } from "@/types/auth.types";
 import { updateOwnProfileRequest } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
 

@@ -6,7 +6,7 @@ import type {
   DeleteRoleActionResult,
   RolePermission,
   UpdateRoleActionResult,
-} from "@/services/roles/types";
+} from "@/types/role.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

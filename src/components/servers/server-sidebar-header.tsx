@@ -9,7 +9,7 @@ import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
 
 import { LeaveServerModal } from "./leave-server-modal";
-import type { ServerSummary } from "@/services/servers/types";
+import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 
 interface ServerSidebarHeaderProps {

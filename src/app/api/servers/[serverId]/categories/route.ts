@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 
 import { getSession } from "@/services/auth/session";
 import { createCategory } from "@/services/categories/service";
-import type { CreateCategoryActionResult } from "@/services/categories/types";
+import type { CreateCategoryActionResult } from "@/types/category.types";
 
 const SESSION_EXPIRED = "Tu sesión expiró. Volvé a iniciar sesión.";
 

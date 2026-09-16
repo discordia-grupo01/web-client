@@ -2,7 +2,7 @@ import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 
-import type { Role, RolePermission } from "./types";
+import type { Role, RolePermission } from "@/types/role.types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong) para

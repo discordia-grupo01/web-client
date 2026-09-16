@@ -1,5 +1,5 @@
-import type { Category } from "@/services/categories/types";
-import type { Channel } from "@/services/channels/types";
+import type { Category } from "./category.types";
+import type { Channel } from "./channel.types";
 
 /** Servidor tal como lo devuelve el servicio `servers` (via el gateway). */
 export interface ServerSummary {

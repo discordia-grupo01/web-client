@@ -31,7 +31,7 @@ import {
   ROLE_PERMISSIONS,
   type Role,
   type RolePermission,
-} from "@/services/roles/types";
+} from "@/types/role.types";
 import { cn } from "@/lib/cn";
 
 import { ColorPanel } from "./color-panel";
