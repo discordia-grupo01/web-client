@@ -10,6 +10,7 @@ import {
   Shield,
   Star,
   Trash2,
+  X,
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
@@ -111,10 +112,12 @@ function ColorPicker({
   const [custom, setCustom] = useState(
     COLOR_PALETTE.includes(value) ? "" : value,
   );
-  const [showCustom, setShowCustom] = useState(!COLOR_PALETTE.includes(value));
+  // El panel expandido (cuadro de saturacion + tono + hex) solo se abre si
+  // se presiona el swatch de "+" explicitamente -- nunca solo.
+  const [showCustom, setShowCustom] = useState(false);
 
   return (
-    <div>
+    <div className="relative">
       <div className="grid grid-cols-8 gap-2">
         {COLOR_PALETTE.map((swatch) => (
           <button
@@ -144,53 +147,72 @@ function ColorPicker({
           title="Elegir color personalizado"
           className="border-line-strong text-content-subtle relative flex aspect-square w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-transform hover:scale-110"
           style={{
-            background:
-              showCustom && isValidHex(custom) ? custom : "transparent",
+            background: isValidHex(custom) ? custom : "transparent",
           }}
         >
-          {showCustom && isValidHex(custom) ? (
-            <Pencil size={12} />
-          ) : (
-            <Plus size={14} />
-          )}
+          {isValidHex(custom) ? <Pencil size={12} /> : <Plus size={14} />}
         </button>
       </div>
 
       {showCustom ? (
-        <div className="mt-3 space-y-3">
-          <ColorPanel
-            hex={isValidHex(custom) ? custom : "#000000"}
-            onChange={(next) => {
-              setCustom(next);
-              onChange(next);
-            }}
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar selector de color"
+            onClick={() => setShowCustom(false)}
+            className="fixed inset-0 z-[60] cursor-default"
           />
-          <div className="flex items-center gap-2">
-            <div
-              className="border-line size-8 shrink-0 rounded-lg border"
-              style={{
-                background: isValidHex(custom) ? custom : "var(--bg-input)",
-              }}
-            />
-            <div className="bg-surface-input border-line flex flex-1 items-center rounded-xl border px-3 py-2">
-              <input
-                type="text"
-                value={custom}
-                onChange={(event) => {
-                  const next = event.target.value;
-                  setCustom(next);
-                  if (isValidHex(next)) onChange(next);
-                }}
-                placeholder="#3d9bb5"
-                maxLength={7}
-                className="text-content min-w-0 flex-1 border-none bg-transparent font-mono text-sm outline-none"
-              />
+          <div className="bg-surface-raised border-line-strong absolute top-full left-0 z-[70] mt-2 w-full rounded-xl border p-4 shadow-2xl">
+            <div className="mb-3 flex items-center justify-between">
+              <span className="text-content-subtle text-xs font-bold tracking-wider uppercase">
+                Color personalizado
+              </span>
+              <button
+                type="button"
+                onClick={() => setShowCustom(false)}
+                aria-label="Cerrar"
+                className="text-content-subtle hover:text-content cursor-pointer"
+              >
+                <X size={14} />
+              </button>
             </div>
-            {isValidHex(custom) ? (
-              <Check size={14} className="text-success shrink-0" />
-            ) : null}
+
+            <div className="space-y-3">
+              <ColorPanel
+                hex={isValidHex(custom) ? custom : "#000000"}
+                onChange={(next) => {
+                  setCustom(next);
+                  onChange(next);
+                }}
+              />
+              <div className="flex items-center gap-2">
+                <div
+                  className="border-line size-8 shrink-0 rounded-lg border"
+                  style={{
+                    background: isValidHex(custom) ? custom : "var(--bg-input)",
+                  }}
+                />
+                <div className="bg-surface-input border-line flex flex-1 items-center rounded-xl border px-3 py-2">
+                  <input
+                    type="text"
+                    value={custom}
+                    onChange={(event) => {
+                      const next = event.target.value;
+                      setCustom(next);
+                      if (isValidHex(next)) onChange(next);
+                    }}
+                    placeholder="#3d9bb5"
+                    maxLength={7}
+                    className="text-content min-w-0 flex-1 border-none bg-transparent font-mono text-sm outline-none"
+                  />
+                </div>
+                {isValidHex(custom) ? (
+                  <Check size={14} className="text-success shrink-0" />
+                ) : null}
+              </div>
+            </div>
           </div>
-        </div>
+        </>
       ) : null}
     </div>
   );

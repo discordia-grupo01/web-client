@@ -727,6 +727,7 @@ export function ServerView({
       <MembersSidebar
         serverId={server.id}
         currentUserId={ownProfile?.id ?? user?.id ?? null}
+        isOwner={isOwner}
         onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
       />
 

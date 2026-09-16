@@ -1,6 +1,6 @@
 "use client";
 
-import { Crown } from "lucide-react";
+import { Crown, Shield } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ServerAvatar } from "@/components/servers/server-avatar";
@@ -8,10 +8,14 @@ import { getPublicProfileRequest } from "@/features/auth/client";
 import { listMembersRequest } from "@/features/servers/client";
 import type { Member } from "@/features/servers/types";
 
+import { MemberRolesModal } from "./member-roles-modal";
+
 interface MembersSidebarProps {
   serverId: string;
   /** Id del usuario autenticado, para distinguir "yo" en la lista. */
   currentUserId: string | null;
+  /** Solo el owner puede gestionar los roles de otros miembros. */
+  isOwner: boolean;
   /** Click en mi propia fila: abre el perfil propio (editable), no el público. */
   onOpenOwnProfile: () => void;
 }
@@ -20,12 +24,16 @@ function MemberRow({
   member,
   name,
   isOwn,
+  canManageRoles,
   onOpenOwnProfile,
+  onManageRoles,
 }: {
   member: Member;
   name?: string;
   isOwn: boolean;
+  canManageRoles: boolean;
   onOpenOwnProfile: () => void;
+  onManageRoles: () => void;
 }) {
   const displayName = name ?? member.user_id;
   const content = (
@@ -64,6 +72,23 @@ function MemberRow({
     );
   }
 
+  if (canManageRoles) {
+    return (
+      <div className="group hover:bg-surface-hover flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors">
+        {content}
+        <button
+          type="button"
+          onClick={onManageRoles}
+          aria-label={`Gestionar roles de ${displayName}`}
+          title="Gestionar roles"
+          className="text-content-subtle hover:text-content flex size-6 shrink-0 cursor-pointer items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+        >
+          <Shield size={13} />
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="hover:bg-surface-hover flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors">
       {content}
@@ -76,13 +101,17 @@ function MemberGroup({
   members,
   names,
   currentUserId,
+  canManageRoles,
   onOpenOwnProfile,
+  onManageRoles,
 }: {
   label: string;
   members: Member[];
   names: Record<string, string>;
   currentUserId: string | null;
+  canManageRoles: boolean;
   onOpenOwnProfile: () => void;
+  onManageRoles: (member: Member) => void;
 }) {
   if (members.length === 0) return null;
   return (
@@ -97,7 +126,9 @@ function MemberGroup({
             member={member}
             name={names[member.user_id]}
             isOwn={member.user_id === currentUserId}
+            canManageRoles={canManageRoles && member.user_id !== currentUserId}
             onOpenOwnProfile={onOpenOwnProfile}
+            onManageRoles={() => onManageRoles(member)}
           />
         ))}
       </div>
@@ -116,12 +147,14 @@ function MemberGroup({
 export function MembersSidebar({
   serverId,
   currentUserId,
+  isOwner,
   onOpenOwnProfile,
 }: MembersSidebarProps) {
   const [members, setMembers] = useState<Member[] | null>(null);
   const [names, setNames] = useState<Record<string, string>>({});
   const [total, setTotal] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
+  const [managingMember, setManagingMember] = useState<Member | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -178,17 +211,30 @@ export function MembersSidebar({
             members={owners}
             names={names}
             currentUserId={currentUserId}
+            canManageRoles={isOwner}
             onOpenOwnProfile={onOpenOwnProfile}
+            onManageRoles={setManagingMember}
           />
           <MemberGroup
             label="Miembros"
             members={regulars}
             names={names}
             currentUserId={currentUserId}
+            canManageRoles={isOwner}
             onOpenOwnProfile={onOpenOwnProfile}
+            onManageRoles={setManagingMember}
           />
         </div>
       )}
+
+      {managingMember ? (
+        <MemberRolesModal
+          serverId={serverId}
+          userId={managingMember.user_id}
+          memberName={names[managingMember.user_id] ?? managingMember.user_id}
+          onClose={() => setManagingMember(null)}
+        />
+      ) : null}
     </div>
   );
 }
