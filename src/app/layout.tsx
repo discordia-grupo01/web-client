@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Inter, Outfit } from "next/font/google";
 import type { ReactNode } from "react";
 
-import { AuthProvider } from "@/features/auth/auth-context";
-import { getCurrentUser } from "@/features/auth/session";
+import { AuthProvider } from "@/services/auth/auth-context";
+import { getCurrentUser } from "@/services/auth/session";
 import { APP_NAME } from "@/lib/constants";
 
 import "./globals.css";

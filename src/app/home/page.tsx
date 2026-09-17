@@ -1,8 +1,8 @@
 import { redirect } from "next/navigation";
 
 import { HomeShell } from "@/components/home/home-shell";
-import { getSession } from "@/features/auth/session";
-import { listMyServers } from "@/features/servers/service";
+import { getSession } from "@/services/auth/session";
+import { listMyServers } from "@/services/servers/service";
 import { ROUTES } from "@/lib/constants";
 
 /**
@@ -11,7 +11,11 @@ import { ROUTES } from "@/lib/constants";
  * profundidad, y de paso pedimos los servidores del usuario para no arrancar
  * el home con un estado vacio si ya tiene alguno creado.
  */
-export default async function HomePage() {
+export default async function HomePage({
+  searchParams,
+}: {
+  searchParams: { server?: string };
+}) {
   const session = getSession();
   if (!session) {
     redirect(ROUTES.login);
@@ -20,5 +24,10 @@ export default async function HomePage() {
   const result = await listMyServers(session.token);
   const initialServers = result.ok ? result.data : [];
 
-  return <HomeShell initialServers={initialServers} />;
+  return (
+    <HomeShell
+      initialServers={initialServers}
+      initialSelectedServerId={searchParams.server ?? null}
+    />
+  );
 }

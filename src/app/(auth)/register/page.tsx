@@ -30,7 +30,7 @@ export default function RegisterPage() {
         Crea tu cuenta
       </h1>
       <p className="text-content-muted mb-7 text-sm">
-        Es gratis y siempre lo sera.
+        Es gratis y siempre lo será.
       </p>
 
       <RegisterForm />
@@ -38,7 +38,7 @@ export default function RegisterPage() {
       <div className="my-5 flex items-center gap-3">
         <span className="bg-line h-px flex-1" />
         <span className="text-content-subtle text-xs font-medium">
-          o continua con
+          o continuá con
         </span>
         <span className="bg-line h-px flex-1" />
       </div>
@@ -46,19 +46,19 @@ export default function RegisterPage() {
       <GoogleButton />
 
       <p className="text-content-subtle mt-6 text-center text-sm">
-        Ya tenes cuenta?{" "}
+        ¿Ya tenés cuenta?{" "}
         <Link
           href={ROUTES.login}
           className="text-sky font-medium hover:underline"
         >
-          Inicia sesion
+          Inicia sesión
         </Link>
       </p>
 
       <p className="text-content-subtle mt-4 text-center text-[11px] leading-relaxed opacity-70">
         Al registrarte aceptas nuestros{" "}
-        <span className="text-content-muted">Terminos de Servicio</span> y{" "}
-        <span className="text-content-muted">Politica de Privacidad</span>.
+        <span className="text-content-muted">Términos de Servicio</span> y{" "}
+        <span className="text-content-muted">Política de Privacidad</span>.
       </p>
     </>
   );

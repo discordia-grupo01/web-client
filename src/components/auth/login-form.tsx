@@ -2,22 +2,21 @@
 
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
-import { loginRequest } from "@/features/auth/client";
+import { loginRequest } from "@/services/auth/client";
 import {
   hasErrors,
   validateLogin,
   type LoginErrors,
-} from "@/features/auth/validation";
+} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function LoginForm() {
-  const router = useRouter();
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
@@ -26,6 +25,7 @@ export function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const resetSuccess = searchParams.get("reset") === "success";
+  const justRegistered = searchParams.get("registered") === "1";
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,8 +45,7 @@ export function LoginForm() {
     }
 
     const next = searchParams.get("next");
-    router.replace(next && next.startsWith("/") ? next : ROUTES.home);
-    router.refresh();
+    window.location.href = next && next.startsWith("/") ? next : ROUTES.home;
   }
 
   return (
@@ -54,6 +53,10 @@ export function LoginForm() {
       {resetSuccess ? (
         <p className="border-success/30 bg-success/10 text-success rounded-lg border px-3 py-2 text-xs">
           Contraseña actualizada. Ingresa con tu contraseña nueva.
+        </p>
+      ) : justRegistered ? (
+        <p className="border-success/30 bg-success/10 text-success rounded-lg border px-3 py-2 text-xs">
+          ¡Cuenta creada con éxito! Ingresa tus datos para continuar.
         </p>
       ) : null}
 

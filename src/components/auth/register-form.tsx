@@ -7,12 +7,12 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
-import { registerRequest } from "@/features/auth/client";
+import { registerRequest } from "@/services/auth/client";
 import {
   hasErrors,
   validateRegister,
   type RegisterErrors,
-} from "@/features/auth/validation";
+} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function RegisterForm() {
@@ -46,9 +46,10 @@ export function RegisterForm() {
       return;
     }
 
-    // El registro deja la sesion iniciada: vamos directo a la home.
-    router.replace(ROUTES.home);
-    router.refresh();
+    // El registro YA NO deja la sesion iniciada (identify-service dejo de
+    // devolver un token al registrarse): mandamos al login con un aviso,
+    // si no no hay ninguna senal de que el registro funciono.
+    router.replace(`${ROUTES.login}?registered=1`);
   }
 
   return (
@@ -66,7 +67,7 @@ export function RegisterForm() {
       />
 
       <TextField
-        label="Correo electronico"
+        label="Correo electrónico"
         name="email"
         type="email"
         autoComplete="email"
@@ -78,7 +79,7 @@ export function RegisterForm() {
       />
 
       <PasswordField
-        label="Contrasena"
+        label="Contraseña"
         name="password"
         autoComplete="new-password"
         placeholder="••••••••"

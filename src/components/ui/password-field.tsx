@@ -34,8 +34,8 @@ export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(
           <button
             type="button"
             onClick={() => setVisible((v) => !v)}
-            aria-label={visible ? "Ocultar contrasena" : "Mostrar contrasena"}
-            className="text-content-subtle hover:text-content-muted focus-visible:text-content-muted flex transition-colors focus-visible:outline-none"
+            aria-label={visible ? "Ocultar contraseña" : "Mostrar contraseña"}
+            className="text-content-subtle hover:text-content-muted focus-visible:text-content-muted flex cursor-pointer transition-colors focus-visible:outline-none"
           >
             {visible ? <EyeOff size={16} /> : <Eye size={16} />}
           </button>

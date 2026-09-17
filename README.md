@@ -33,9 +33,10 @@ discordia-web/
 │   ├── middleware.ts            guardia de rutas (corre antes de cada request)
 │   ├── components/
 │   │   ├── ui/                  piezas genericas reutilizables (Button, TextField, ...)
-│   │   └── <feature>/           componentes propios de una feature
-│   ├── features/                codigo agrupado por dominio (auth, chat, voz, ...)
-│   │   └── <feature>/           types, validacion, service (server), client (browser), hooks
+│   │   └── <feature>/           componentes propios de una feature de UI
+│   ├── services/                codigo agrupado por dominio del backend (auth, servers, channels, ...)
+│   │   └── <dominio>/           validacion, service (server), client (browser), hooks
+│   ├── types/                   tipos por dominio: <dominio>.types.ts (Channel, Role, User, ...)
 │   ├── hooks/                   hooks de React reutilizables entre features
 │   └── lib/
 │       ├── api-client.ts         cliente HTTP hacia el backend (server-only)
@@ -57,15 +58,19 @@ discordia-web/
 └── .env.example                 estructura de variables de entorno (sin valores sensibles)
 ```
 
-`components/` y `features/` crecen con cada feature: una carpeta bajo `features/`,
-sus rutas bajo `app/` y sus componentes bajo `components/<feature>/`. Hoy la unica
-feature es `auth` (el login); los tests van al lado de cada archivo (`*.test.ts`).
+Los tipos de cada dominio (`Channel`, `Role`, `User`, los `*ActionResult` de cada
+endpoint, etc.) viven en `types/<dominio>.types.ts`, no dentro de
+`services/<dominio>/`: así se pueden importar sin arrastrar `service.ts`/`client.ts`
+(uno es server-only, el otro pega contra el BFF) y quedan todos los tipos del
+proyecto en un solo lugar. Un tipo que un dominio necesita de otro (ej.
+`ServerSummary` referenciando `Channel`) se importa entre archivos de `types/`
+con ruta relativa (`./channel.types`), no cruzando a `services/`.
 
 ## Convenciones de Next (App Router)
 
 - **Rutas por carpeta.** Un `page.tsx` dentro de `src/app/x/` crea la ruta `/x`. No hay router que configurar.
 - **Route groups.** Una carpeta entre parentesis —`(auth)`— agrupa rutas para compartir un `layout.tsx` sin aparecer en la URL: `(auth)/login/page.tsx` responde a `/login`, no a `/auth/login`.
-- **Route handlers.** Un `route.ts` es un endpoint HTTP. Se exporta una funcion por verbo (`GET`, `POST`, ...) y Next llama la que coincide con el metodo del request. La logica vive en `features/`; el `route.ts` es solo la cascara HTTP.
+- **Route handlers.** Un `route.ts` es un endpoint HTTP. Se exporta una funcion por verbo (`GET`, `POST`, ...) y Next llama la que coincide con el metodo del request. La logica vive en `services/`; el `route.ts` es solo la cascara HTTP.
 - **Server vs client.** Los componentes corren en el servidor por defecto: ahi se lee la cookie, se habla con el backend y se manejan secretos. Los que necesitan estado o eventos del navegador llevan `"use client"` en la primera linea.
 - **`middleware.ts`.** Corre antes de cada request. Lo usamos para redirigir segun haya o no sesion.
 - **Alias `@/`.** `@/x` apunta a `src/x` (configurado en `tsconfig.json`).
@@ -86,10 +91,10 @@ navegador ──► /api/... (Next) ──► backend
   con sesion, `/login` redirige a la app.
 - Las paginas server revalidan la sesion antes de renderizar (segunda barrera).
 - Cada feature con llamadas autenticadas sigue el mismo camino: `route.ts` en
-  `app/api/` + logica en `features/<dominio>/`.
+  `app/api/` + logica en `services/<dominio>/`.
 
 El detalle fino del login (endpoints, forma del token, que falta del backend) esta en
-los comentarios de `src/features/auth/`.
+los comentarios de `src/services/auth/`.
 
 ## Stack
 

@@ -1,15 +1,14 @@
 import { NextResponse } from "next/server";
 
-import { register } from "@/features/auth/service";
-import { createSession } from "@/features/auth/session";
-import type { RegisterActionResult } from "@/features/auth/types";
-import { hasErrors, validateRegister } from "@/features/auth/validation";
+import { register } from "@/services/auth/service";
+import type { RegisterActionResult } from "@/types/auth.types";
+import { hasErrors, validateRegister } from "@/services/auth/validation";
 
 /**
  * BFF de registro. El navegador pega aca (mismo origen); este handler llama a
- * `POST /v1/users` de identify-service y, si la cuenta se crea, guarda el JWT
- * en una cookie httpOnly. El token nunca vuelve al navegador: el registro deja
- * al usuario con sesion iniciada, igual que el login.
+ * `POST /v1/users` de identify-service. Esa respuesta YA NO trae un token
+ * (identify-service dejo de generarlo al registrarse): no se crea sesion
+ * aca, el usuario tiene que loguearse aparte despues de crear la cuenta.
  */
 export async function POST(
   request: Request,
@@ -19,7 +18,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: "Petición inválida." },
       { status: 400 },
     );
   }
@@ -48,7 +47,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Ya existe una cuenta con ese correo electronico.",
+          message: "Ya existe una cuenta con ese correo electrónico.",
         },
         { status: 409 },
       );
@@ -60,7 +59,7 @@ export async function POST(
         {
           ok: false,
           message:
-            "Revisa los datos: la contraseña necesita 8+ caracteres con mayuscula, minuscula y numero.",
+            "Revisa los datos: la contraseña necesita 8+ caracteres con mayúscula, minúscula y número.",
         },
         { status: 400 },
       );
@@ -71,16 +70,11 @@ export async function POST(
       {
         ok: false,
         message:
-          "No pudimos crear tu cuenta en este momento. Intenta de nuevo mas tarde.",
+          "No pudimos crear tu cuenta en este momento. Intenta de nuevo más tarde.",
       },
       { status: 502 },
     );
   }
 
-  createSession({ token: result.data.token, user: result.data.user });
-
-  return NextResponse.json(
-    { ok: true, user: result.data.user },
-    { status: 201 },
-  );
+  return NextResponse.json({ ok: true }, { status: 201 });
 }

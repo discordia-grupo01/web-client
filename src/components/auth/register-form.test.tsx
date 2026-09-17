@@ -2,7 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { registerRequest } from "@/features/auth/client";
+import { registerRequest } from "@/services/auth/client";
 
 import { RegisterForm } from "./register-form";
 
@@ -13,7 +13,7 @@ vi.mock("next/navigation", () => ({
   useRouter: () => ({ replace, refresh }),
 }));
 
-vi.mock("@/features/auth/client", () => ({
+vi.mock("@/services/auth/client", () => ({
   registerRequest: vi.fn(),
 }));
 
@@ -27,10 +27,10 @@ async function fillForm() {
   const user = userEvent.setup();
   await user.type(screen.getByLabelText("Nombre de usuario"), "ada");
   await user.type(
-    screen.getByLabelText("Correo electronico"),
+    screen.getByLabelText("Correo electrónico"),
     "ada@example.com",
   );
-  await user.type(screen.getByLabelText("Contrasena"), "Secret123");
+  await user.type(screen.getByLabelText("Contraseña"), "Secret123");
   return user;
 }
 
@@ -47,11 +47,8 @@ describe("<RegisterForm />", () => {
     expect(registerRequestMock).not.toHaveBeenCalled();
   });
 
-  it("con datos validos: llama al backend y redirige a la home", async () => {
-    registerRequestMock.mockResolvedValue({
-      ok: true,
-      user: { id: "1", name: "ada", email: "ada@example.com", created_at: "" },
-    });
+  it("con datos validos: llama al backend y redirige al login con aviso", async () => {
+    registerRequestMock.mockResolvedValue({ ok: true });
     render(<RegisterForm />);
 
     const user = await fillForm();
@@ -64,13 +61,13 @@ describe("<RegisterForm />", () => {
         password: "Secret123",
       });
     });
-    expect(replace).toHaveBeenCalledWith("/home");
+    expect(replace).toHaveBeenCalledWith("/login?registered=1");
   });
 
   it("muestra el mensaje de error que devuelve el backend", async () => {
     registerRequestMock.mockResolvedValue({
       ok: false,
-      message: "Ya existe una cuenta con ese correo electronico.",
+      message: "Ya existe una cuenta con ese correo electrónico.",
     });
     render(<RegisterForm />);
 

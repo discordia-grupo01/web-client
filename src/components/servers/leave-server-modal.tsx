@@ -3,7 +3,7 @@
 import { AlertCircle, LogOut, Shield, X } from "lucide-react";
 import { useState } from "react";
 
-import { leaveServerRequest } from "@/features/servers/client";
+import { leaveServerRequest } from "@/services/servers/client";
 
 interface LeaveServerModalProps {
   serverId: string;
@@ -14,7 +14,7 @@ interface LeaveServerModalProps {
 }
 
 /**
- * Solo self-leave (ver `features/servers/service.ts`): el owner no puede
+ * Solo self-leave (ver `services/servers/service.ts`): el owner no puede
  * abandonar su propio servidor, el backend lo rechaza con 409. Si lo sabemos
  * de antemano (`isOwner`) saltamos directo a ese estado.
  */
@@ -60,7 +60,7 @@ export function LeaveServerModal({
             type="button"
             onClick={onClose}
             aria-label="Cerrar"
-            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 items-center justify-center rounded-full border transition-transform hover:scale-110"
+            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
           >
             <X size={13} />
           </button>
@@ -100,7 +100,7 @@ export function LeaveServerModal({
               <button
                 type="button"
                 onClick={onClose}
-                className="bg-surface-input border-line text-content-muted w-full rounded-xl border py-3 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98]"
+                className="bg-surface-input border-line text-content-muted w-full cursor-pointer rounded-xl border py-3 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98]"
               >
                 Entendido
               </button>
@@ -122,7 +122,7 @@ export function LeaveServerModal({
                   type="button"
                   onClick={onClose}
                   disabled={isLoading}
-                  className="bg-surface-input border-line text-content-muted flex-1 rounded-xl border py-3 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-40"
+                  className="bg-surface-input border-line text-content-muted flex-1 cursor-pointer rounded-xl border py-3 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-40"
                 >
                   Cancelar
                 </button>
@@ -130,7 +130,7 @@ export function LeaveServerModal({
                   type="button"
                   onClick={handleLeave}
                   disabled={isLoading}
-                  className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#c0392b] to-[#922b21] py-3 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(192,57,43,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:opacity-70 disabled:shadow-none"
+                  className="flex flex-1 cursor-pointer items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#c0392b] to-[#922b21] py-3 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(192,57,43,0.4)] transition-all hover:brightness-110 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-70 disabled:shadow-none"
                 >
                   {isLoading ? (
                     <>

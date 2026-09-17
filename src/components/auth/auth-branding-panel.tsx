@@ -211,14 +211,14 @@ export function AuthBrandingPanel() {
               WebkitTextFillColor: "transparent",
             }}
           >
-            sin limites.
+            sin límites.
           </span>
         </h1>
         <p
           className="text-sm leading-relaxed"
           style={{ color: "rgba(168,198,223,0.6)" }}
         >
-          Chat de texto, voz y video para comunidades de todos los tamanos.
+          Chat de texto, voz y video para comunidades de todos los tamaños.
           Gratis para siempre.
         </p>
 

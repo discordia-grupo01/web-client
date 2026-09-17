@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { getSession } from "@/features/auth/session";
+import { getSession } from "@/services/auth/session";
 import { ROUTES } from "@/lib/constants";
 
 export default function IndexPage(): never {

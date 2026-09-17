@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { getServerIcon } from "@/features/servers/service";
+import { getValidSession } from "@/services/auth/session";
+import { getServerIcon } from "@/services/servers/service";
 
 /**
  * BFF de `GET /v1/servers/:serverId/icon`. Ese endpoint exige JWT (via el
@@ -13,7 +13,7 @@ export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return new NextResponse(null, { status: 401 });
   }

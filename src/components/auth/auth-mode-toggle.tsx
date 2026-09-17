@@ -7,7 +7,7 @@ import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
 const TABS = [
-  { href: ROUTES.login, label: "Iniciar Sesion" },
+  { href: ROUTES.login, label: "Iniciar Sesión" },
   { href: ROUTES.register, label: "Crear Cuenta" },
 ] as const;
 

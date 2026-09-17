@@ -1,10 +1,10 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { leaveServer } from "@/features/servers/service";
-import type { LeaveServerActionResult } from "@/features/servers/types";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getValidSession } from "@/services/auth/session";
+import { leaveServer } from "@/services/servers/service";
+import type { LeaveServerActionResult } from "@/types/server.types";
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
 const OWNER_BLOCKED_MESSAGE =
   "Sos el propietario de este servidor. Transferí la propiedad a otro miembro antes de salir.";
 
@@ -16,12 +16,9 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<LeaveServerActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await leaveServer(
@@ -43,10 +40,7 @@ export async function DELETE(
       );
     }
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
     return NextResponse.json(
       { ok: false, message: "Algo salio mal. Intenta de nuevo." },

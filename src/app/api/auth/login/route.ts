@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { login } from "@/features/auth/service";
-import { createSession } from "@/features/auth/session";
-import type { LoginActionResult } from "@/features/auth/types";
-import { hasErrors, validateLogin } from "@/features/auth/validation";
+import { login } from "@/services/auth/service";
+import { createSession } from "@/services/auth/session";
+import type { LoginActionResult } from "@/types/auth.types";
+import { hasErrors, validateLogin } from "@/services/auth/validation";
 
 export async function POST(
   request: Request,
@@ -13,7 +13,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: "Petición inválida." },
       { status: 400 },
     );
   }
@@ -29,7 +29,10 @@ export async function POST(
     );
   }
 
-  const result = await login({ email: email.trim(), password });
+  const { result, refreshToken } = await login({
+    email: email.trim(),
+    password,
+  });
 
   if (!result.ok) {
     // 401: credenciales invalidas. Mensaje generico, sin distinguir campo.
@@ -37,7 +40,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "El correo electronico o la contraseña son incorrectos.",
+          message: "El correo electrónico o la contraseña son incorrectos.",
         },
         { status: 401 },
       );
@@ -56,13 +59,17 @@ export async function POST(
       {
         ok: false,
         message:
-          "No pudimos iniciar sesion en este momento. Intenta de nuevo mas tarde.",
+          "No pudimos iniciar sesión en este momento. Intenta de nuevo más tarde.",
       },
       { status: 502 },
     );
   }
 
-  createSession({ token: result.data.token, user: result.data.user });
+  createSession({
+    token: result.data.token,
+    refreshToken: refreshToken ?? "",
+    user: result.data.user,
+  });
 
   return NextResponse.json(
     { ok: true, user: result.data.user },

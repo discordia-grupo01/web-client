@@ -6,12 +6,12 @@ import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
-import { forgotPasswordRequest } from "@/features/auth/client";
+import { forgotPasswordRequest } from "@/services/auth/client";
 import {
   hasErrors,
   validateForgotPassword,
   type ForgotPasswordErrors,
-} from "@/features/auth/validation";
+} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function ForgotPasswordForm() {
@@ -52,9 +52,9 @@ export function ForgotPasswordForm() {
           Revisa tu correo
         </h1>
         <p className="text-content-muted mb-2 text-sm leading-relaxed">
-          Si <strong className="text-content">{email.trim()}</strong> esta
-          registrado en Discordia, recibiras un enlace para restablecer tu
-          contraseña en los proximos minutos.
+          Si <strong className="text-content">{email.trim()}</strong> está
+          registrado en Discordia, recibirás un enlace para restablecer tu
+          contraseña en los próximos minutos.
         </p>
         <p className="text-content-subtle mb-8 text-xs">
           Recuerda revisar tu carpeta de spam por si acaso.
@@ -77,7 +77,7 @@ export function ForgotPasswordForm() {
         className="text-content-subtle mb-6 flex items-center gap-1.5 text-sm transition-colors hover:opacity-80"
       >
         <ArrowLeft size={14} />
-        Volver al inicio de sesion
+        Volver al inicio de sesión
       </Link>
 
       <h1 className="font-display text-content mb-1 text-2xl font-bold">
@@ -90,7 +90,7 @@ export function ForgotPasswordForm() {
 
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
         <TextField
-          label="Correo electronico"
+          label="Correo electrónico"
           name="email"
           type="email"
           autoComplete="email"

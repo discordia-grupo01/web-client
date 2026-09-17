@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
-import { logout } from "@/features/auth/service";
-import { destroySession, getSession } from "@/features/auth/session";
+import { logout } from "@/services/auth/service";
+import { destroySession, getSession } from "@/services/auth/session";
 
 /**
  * BFF de logout. Revoca la sesion en el backend (best effort) y borra la cookie.
@@ -11,7 +11,7 @@ export async function POST(): Promise<NextResponse> {
   const session = getSession();
 
   if (session) {
-    await logout(session.token);
+    await logout(session.refreshToken);
   }
 
   destroySession();

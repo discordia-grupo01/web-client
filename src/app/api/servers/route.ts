@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/features/auth/session";
-import { createServer, listMyServers } from "@/features/servers/service";
-import type { CreateServerActionResult } from "@/features/servers/types";
+import { unauthorizedResponse } from "@/lib/api-route";
+import { getValidSession } from "@/services/auth/session";
+import { createServer, listMyServers } from "@/services/servers/service";
+import type { CreateServerActionResult } from "@/types/server.types";
 
 /** Traduce `details.reason` del back a un mensaje de campo en español. */
 const REASON_MESSAGES: Record<string, string> = {
@@ -16,19 +17,14 @@ const REASON_MESSAGES: Record<string, string> = {
   icon_unreadable: "No pudimos leer ese archivo. Probá con otro.",
 };
 
-const SESSION_EXPIRED = "Tu sesion expiro. Volve a iniciar sesion.";
-
 /**
  * BFF de `GET /v1/servers`. El navegador pega aca (mismo origen); reenvia el
  * JWT de la cookie httpOnly, nunca lo expone.
  */
 export async function GET(): Promise<NextResponse> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   const result = await listMyServers(session.token);
@@ -52,12 +48,9 @@ export async function GET(): Promise<NextResponse> {
 export async function POST(
   request: Request,
 ): Promise<NextResponse<CreateServerActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
-    return NextResponse.json(
-      { ok: false, message: SESSION_EXPIRED },
-      { status: 401 },
-    );
+    return unauthorizedResponse();
   }
 
   let formData: FormData;
@@ -91,10 +84,7 @@ export async function POST(
     }
 
     if (result.status === 401) {
-      return NextResponse.json(
-        { ok: false, message: SESSION_EXPIRED },
-        { status: 401 },
-      );
+      return unauthorizedResponse();
     }
 
     return NextResponse.json(

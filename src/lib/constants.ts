@@ -1,7 +1,5 @@
 export const APP_NAME = "Discordia";
 
-export const APP_TAGLINE = "Tu comunidad, sin limites.";
-
 /** Nombre de la cookie httpOnly donde vive la sesion (JWT + datos del usuario). */
 export const SESSION_COOKIE = "discordia_session";
 
@@ -13,4 +11,5 @@ export const ROUTES = {
   resetPassword: "/reset-password",
   /** Landing despues de iniciar sesion (por ahora un placeholder). */
   home: "/home",
+  invite: "/invite",
 } as const;

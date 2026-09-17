@@ -2,7 +2,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { resetPasswordRequest } from "@/features/auth/client";
+import { resetPasswordRequest } from "@/services/auth/client";
 
 import { ResetPasswordForm } from "./reset-password-form";
 
@@ -14,7 +14,7 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => searchParams,
 }));
 
-vi.mock("@/features/auth/client", () => ({
+vi.mock("@/services/auth/client", () => ({
   resetPasswordRequest: vi.fn(),
 }));
 
@@ -29,8 +29,8 @@ describe("<ResetPasswordForm />", () => {
   it("sin token en la URL: muestra que el enlace es invalido y no renderiza el form", () => {
     render(<ResetPasswordForm />);
 
-    expect(screen.getByText(/enlace invalido/i)).toBeInTheDocument();
-    expect(screen.queryByLabelText("Nueva contrasena")).not.toBeInTheDocument();
+    expect(screen.getByText(/enlace inválido/i)).toBeInTheDocument();
+    expect(screen.queryByLabelText("Nueva contraseña")).not.toBeInTheDocument();
   });
 
   it("muestra errores de validacion y no llama al backend con contrasenas invalidas", async () => {
@@ -38,17 +38,17 @@ describe("<ResetPasswordForm />", () => {
     const user = userEvent.setup();
     render(<ResetPasswordForm />);
 
-    await user.type(screen.getByLabelText("Nueva contrasena"), "corta");
-    await user.type(screen.getByLabelText("Confirmar contrasena"), "otra");
+    await user.type(screen.getByLabelText("Nueva contraseña"), "corta");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "otra");
     await user.click(
-      screen.getByRole("button", { name: /actualizar contrasena/i }),
+      screen.getByRole("button", { name: /actualizar contraseña/i }),
     );
 
     expect(
-      await screen.findByText(/mayuscula, una minuscula y un numero/i),
+      await screen.findByText(/mayúscula, una minúscula y un número/i),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/las contrasenas no coinciden/i),
+      screen.getByText(/las contraseñas no coinciden/i),
     ).toBeInTheDocument();
     expect(resetPasswordRequestMock).not.toHaveBeenCalled();
   });
@@ -59,10 +59,10 @@ describe("<ResetPasswordForm />", () => {
     const user = userEvent.setup();
     render(<ResetPasswordForm />);
 
-    await user.type(screen.getByLabelText("Nueva contrasena"), "Secret123");
-    await user.type(screen.getByLabelText("Confirmar contrasena"), "Secret123");
+    await user.type(screen.getByLabelText("Nueva contraseña"), "Secret123");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "Secret123");
     await user.click(
-      screen.getByRole("button", { name: /actualizar contrasena/i }),
+      screen.getByRole("button", { name: /actualizar contraseña/i }),
     );
 
     expect(resetPasswordRequestMock).toHaveBeenCalledWith({
@@ -77,18 +77,18 @@ describe("<ResetPasswordForm />", () => {
     searchParams = new URLSearchParams({ token: "expirado" });
     resetPasswordRequestMock.mockResolvedValue({
       ok: false,
-      message: "El enlace de recuperacion no es valido o expiro.",
+      message: "El enlace de recuperación no es válido o expiró.",
     });
     const user = userEvent.setup();
     render(<ResetPasswordForm />);
 
-    await user.type(screen.getByLabelText("Nueva contrasena"), "Secret123");
-    await user.type(screen.getByLabelText("Confirmar contrasena"), "Secret123");
+    await user.type(screen.getByLabelText("Nueva contraseña"), "Secret123");
+    await user.type(screen.getByLabelText("Confirmar contraseña"), "Secret123");
     await user.click(
-      screen.getByRole("button", { name: /actualizar contrasena/i }),
+      screen.getByRole("button", { name: /actualizar contraseña/i }),
     );
 
-    expect(await screen.findByRole("alert")).toHaveTextContent(/expiro/i);
+    expect(await screen.findByRole("alert")).toHaveTextContent(/expiró/i);
     expect(replace).not.toHaveBeenCalled();
   });
 });
