@@ -45,10 +45,11 @@ export async function login(credentials: {
   email: string;
   password: string;
 }): Promise<{ result: ApiResult<AuthResponse>; refreshToken: string | null }> {
-  const { result, setCookieHeader } = await apiRequestWithSetCookie<AuthResponse>(
-    "/v1/login",
-    { method: "POST", data: credentials },
-  );
+  const { result, setCookieHeader } =
+    await apiRequestWithSetCookie<AuthResponse>("/v1/login", {
+      method: "POST",
+      data: credentials,
+    });
   return {
     result,
     refreshToken: extractCookieValue(setCookieHeader, REFRESH_COOKIE_NAME),
@@ -66,10 +67,11 @@ export async function refresh(refreshToken: string): Promise<{
   result: ApiResult<AuthResponse>;
   newRefreshToken: string | null;
 }> {
-  const { result, setCookieHeader } = await apiRequestWithSetCookie<AuthResponse>(
-    "/v1/refresh",
-    { method: "POST", cookie: refreshToken },
-  );
+  const { result, setCookieHeader } =
+    await apiRequestWithSetCookie<AuthResponse>("/v1/refresh", {
+      method: "POST",
+      cookie: refreshToken,
+    });
   return {
     result,
     newRefreshToken: extractCookieValue(setCookieHeader, REFRESH_COOKIE_NAME),

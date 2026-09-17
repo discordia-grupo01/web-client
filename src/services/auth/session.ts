@@ -65,7 +65,8 @@ export async function getValidSession(): Promise<Session | null> {
   if (!session) return null;
 
   const exp = decodeJwtPayload(session.token)?.exp;
-  const stillValid = typeof exp === "number" && exp - REFRESH_SKEW_SECONDS > Date.now() / 1000;
+  const stillValid =
+    typeof exp === "number" && exp - REFRESH_SKEW_SECONDS > Date.now() / 1000;
   if (stillValid) return session;
 
   const { result, newRefreshToken } = await refresh(session.refreshToken);
