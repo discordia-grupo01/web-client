@@ -5,6 +5,7 @@ import { cookies } from "next/headers";
 import { SESSION_COOKIE } from "@/lib/constants";
 import { isProduction } from "@/lib/env";
 import { refresh } from "@/services/auth/service";
+import { parseSessionCookie } from "@/services/auth/session-shape";
 
 import type { Session, User } from "@/types/auth.types";
 
@@ -45,19 +46,7 @@ export function destroySession(): void {
  * antes de pegarle al backend en logout.
  */
 export function getSession(): Session | null {
-  const cookie = cookies().get(SESSION_COOKIE)?.value;
-  if (!cookie) return null;
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cookie);
-  } catch {
-    return null;
-  }
-
-  if (!isSession(parsed)) return null;
-
-  return parsed;
+  return parseSessionCookie(cookies().get(SESSION_COOKIE)?.value);
 }
 
 /**
@@ -96,21 +85,6 @@ export async function getValidSession(): Promise<Session | null> {
 
 export function getCurrentUser(): User | null {
   return getSession()?.user ?? null;
-}
-
-function isSession(value: unknown): value is Session {
-  if (typeof value !== "object" || value === null) return false;
-  const candidate = value as Record<string, unknown>;
-  const user = candidate.user as Record<string, unknown> | undefined;
-  return (
-    typeof candidate.token === "string" &&
-    typeof candidate.refreshToken === "string" &&
-    typeof user === "object" &&
-    user !== null &&
-    typeof user.id === "string" &&
-    typeof user.email === "string" &&
-    typeof user.name === "string"
-  );
 }
 
 interface JwtPayload {
