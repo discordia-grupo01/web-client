@@ -28,9 +28,10 @@ import {
   Trash2,
   Volume2,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 
 import { OwnProfileModal } from "@/components/profile/own-profile-modal";
+import { PublicProfileModal } from "@/components/profile/public-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
 import { CreateCategoryModal } from "@/components/categories/create-category-modal";
 import { EditCategoryModal } from "@/components/categories/edit-category-modal";
@@ -38,6 +39,7 @@ import { CreateChannelModal } from "@/components/channels/create-channel-modal";
 import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
 import { MembersSidebar } from "@/components/members/members-sidebar";
+import { Dropdown } from "@/components/ui/dropdown";
 import { useAuth } from "@/services/auth/auth-context";
 import type { User } from "@/types/auth.types";
 import { getOwnProfileRequest } from "@/services/profile/client";
@@ -86,6 +88,7 @@ function ChannelRow({
 }) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="group relative flex items-center">
@@ -109,6 +112,7 @@ function ChannelRow({
       {isOwner ? (
         <>
           <button
+            ref={menuButtonRef}
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label="Opciones del canal"
@@ -117,40 +121,36 @@ function ChannelRow({
             <MoreVertical size={14} />
           </button>
 
-          {isMenuOpen ? (
-            <>
-              <button
-                type="button"
-                aria-label="Cerrar menu"
-                onClick={() => setIsMenuOpen(false)}
-                className="fixed inset-0 z-40 cursor-default"
-              />
-              <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border shadow-2xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onEdit();
-                  }}
-                  className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-                >
-                  <Pencil size={14} />
-                  Editar Canal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onDelete();
-                  }}
-                  className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-                >
-                  <Trash2 size={14} />
-                  Eliminar Canal
-                </button>
-              </div>
-            </>
-          ) : null}
+          <Dropdown
+            anchorRef={menuButtonRef}
+            isOpen={isMenuOpen}
+            onClose={() => setIsMenuOpen(false)}
+            align="right"
+            className="w-44"
+          >
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                onEdit();
+              }}
+              className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+            >
+              <Pencil size={14} />
+              Editar Canal
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                onDelete();
+              }}
+              className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+            >
+              <Trash2 size={14} />
+              Eliminar Canal
+            </button>
+          </Dropdown>
         </>
       ) : null}
     </div>
@@ -238,6 +238,7 @@ function CategorySectionHeader({
   onDelete?: () => void;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const Chevron = isCollapsed ? ChevronRight : ChevronDown;
   const hasMenu = isOwner && (onAddChannel || onEdit || onDelete);
 
@@ -254,6 +255,7 @@ function CategorySectionHeader({
 
       {hasMenu ? (
         <button
+          ref={menuButtonRef}
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-label="Opciones de la categoría"
@@ -263,57 +265,53 @@ function CategorySectionHeader({
         </button>
       ) : null}
 
-      {isMenuOpen ? (
-        <>
+      <Dropdown
+        anchorRef={menuButtonRef}
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        align="right"
+        className="w-48"
+      >
+        {onAddChannel ? (
           <button
             type="button"
-            aria-label="Cerrar menu"
-            onClick={() => setIsMenuOpen(false)}
-            className="fixed inset-0 z-40 cursor-default"
-          />
-          <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-48 overflow-hidden rounded-xl border shadow-2xl">
-            {onAddChannel ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onAddChannel();
-                }}
-                className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-              >
-                <Plus size={14} />
-                Añadir Canal
-              </button>
-            ) : null}
-            {onEdit ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onEdit();
-                }}
-                className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-              >
-                <Pencil size={14} />
-                Editar Categoría
-              </button>
-            ) : null}
-            {onDelete ? (
-              <button
-                type="button"
-                onClick={() => {
-                  setIsMenuOpen(false);
-                  onDelete();
-                }}
-                className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-              >
-                <Trash2 size={14} />
-                Eliminar Categoría
-              </button>
-            ) : null}
-          </div>
-        </>
-      ) : null}
+            onClick={() => {
+              setIsMenuOpen(false);
+              onAddChannel();
+            }}
+            className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+          >
+            <Plus size={14} />
+            Añadir Canal
+          </button>
+        ) : null}
+        {onEdit ? (
+          <button
+            type="button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              onEdit();
+            }}
+            className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+          >
+            <Pencil size={14} />
+            Editar Categoría
+          </button>
+        ) : null}
+        {onDelete ? (
+          <button
+            type="button"
+            onClick={() => {
+              setIsMenuOpen(false);
+              onDelete();
+            }}
+            className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+          >
+            <Trash2 size={14} />
+            Eliminar Categoría
+          </button>
+        ) : null}
+      </Dropdown>
     </div>
   );
 }
@@ -333,6 +331,7 @@ export function ServerView({
   const isOwner = user !== null && String(user.id) === server.owner_id;
   const [ownProfile, setOwnProfile] = useState<User | null>(null);
   const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
+  const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
     useState<string | null>(null);
@@ -697,8 +696,8 @@ export function ServerView({
       <MembersSidebar
         serverId={server.id}
         currentUserId={ownProfile?.id ?? user?.id ?? null}
-        isOwner={isOwner}
         onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+        onOpenPublicProfile={setViewingUserId}
       />
 
       {isCreateChannelOpen ? (
@@ -748,9 +747,19 @@ export function ServerView({
 
       {isOwnProfileOpen && ownProfile ? (
         <OwnProfileModal
+          serverId={server.id}
           profile={ownProfile}
           onClose={() => setIsOwnProfileOpen(false)}
           onUpdated={setOwnProfile}
+        />
+      ) : null}
+
+      {viewingUserId ? (
+        <PublicProfileModal
+          serverId={server.id}
+          userId={viewingUserId}
+          canManageRoles={isOwner}
+          onClose={() => setViewingUserId(null)}
         />
       ) : null}
     </div>

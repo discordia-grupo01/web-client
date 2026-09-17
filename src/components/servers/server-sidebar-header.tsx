@@ -8,10 +8,11 @@ import {
   Shield,
   UserPlus,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { InviteModal } from "@/components/invites/invite-modal";
 import { RolesModal } from "@/components/roles/roles-modal";
+import { Dropdown } from "@/components/ui/dropdown";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
 
@@ -43,6 +44,7 @@ export function ServerSidebarHeader({
 }: ServerSidebarHeaderProps) {
   const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const [isInviteModalOpen, setIsInviteModalOpen] = useState(false);
   const [isRolesModalOpen, setIsRolesModalOpen] = useState(false);
   const [isLeaveModalOpen, setIsLeaveModalOpen] = useState(false);
@@ -51,6 +53,7 @@ export function ServerSidebarHeader({
   return (
     <div className="border-line relative shrink-0 border-b">
       <button
+        ref={menuButtonRef}
         type="button"
         onClick={() => setIsMenuOpen((prev) => !prev)}
         className="hover:bg-surface-hover flex h-12 w-full cursor-pointer items-center gap-2 px-4 transition-colors"
@@ -73,77 +76,72 @@ export function ServerSidebarHeader({
         />
       </button>
 
-      {isMenuOpen ? (
-        <>
-          <button
-            type="button"
-            aria-label="Cerrar menu"
-            onClick={() => setIsMenuOpen(false)}
-            className="fixed inset-0 z-40 cursor-default"
-          />
-          <div className="bg-surface-raised border-line absolute top-full right-2 left-2 z-50 overflow-hidden rounded-xl border shadow-2xl">
+      <Dropdown
+        anchorRef={menuButtonRef}
+        isOpen={isMenuOpen}
+        onClose={() => setIsMenuOpen(false)}
+        align="stretch"
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setIsMenuOpen(false);
+            setIsInviteModalOpen(true);
+          }}
+          className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+        >
+          <UserPlus size={14} />
+          Invitar miembros
+        </button>
+        {isOwner ? (
+          <>
             <button
               type="button"
               onClick={() => {
                 setIsMenuOpen(false);
-                setIsInviteModalOpen(true);
+                onCreateChannel();
               }}
               className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
             >
-              <UserPlus size={14} />
-              Invitar miembros
+              <Plus size={14} />
+              Crear canal
             </button>
-            {isOwner ? (
-              <>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onCreateChannel();
-                  }}
-                  className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-                >
-                  <Plus size={14} />
-                  Crear canal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onCreateCategory();
-                  }}
-                  className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-                >
-                  <FolderPlus size={14} />
-                  Crear categoría
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    setIsRolesModalOpen(true);
-                  }}
-                  className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-                >
-                  <Shield size={14} />
-                  Gestionar roles
-                </button>
-              </>
-            ) : null}
             <button
               type="button"
               onClick={() => {
                 setIsMenuOpen(false);
-                setIsLeaveModalOpen(true);
+                onCreateCategory();
               }}
-              className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+              className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
             >
-              <LogOut size={14} />
-              Abandonar servidor
+              <FolderPlus size={14} />
+              Crear categoría
             </button>
-          </div>
-        </>
-      ) : null}
+            <button
+              type="button"
+              onClick={() => {
+                setIsMenuOpen(false);
+                setIsRolesModalOpen(true);
+              }}
+              className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+            >
+              <Shield size={14} />
+              Gestionar roles
+            </button>
+          </>
+        ) : null}
+        <button
+          type="button"
+          onClick={() => {
+            setIsMenuOpen(false);
+            setIsLeaveModalOpen(true);
+          }}
+          className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+        >
+          <LogOut size={14} />
+          Abandonar servidor
+        </button>
+      </Dropdown>
 
       {isInviteModalOpen ? (
         <InviteModal
