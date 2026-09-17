@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { createChannel } from "@/services/channels/service";
 import type { CreateChannelActionResult } from "@/types/channel.types";
 
@@ -22,7 +22,7 @@ export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<CreateChannelActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

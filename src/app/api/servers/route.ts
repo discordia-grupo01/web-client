@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { createServer, listMyServers } from "@/services/servers/service";
 import type { CreateServerActionResult } from "@/types/server.types";
 
@@ -22,7 +22,7 @@ const REASON_MESSAGES: Record<string, string> = {
  * JWT de la cookie httpOnly, nunca lo expone.
  */
 export async function GET(): Promise<NextResponse> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -48,7 +48,7 @@ export async function GET(): Promise<NextResponse> {
 export async function POST(
   request: Request,
 ): Promise<NextResponse<CreateServerActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

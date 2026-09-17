@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { removeRole } from "@/services/roles/service";
 import type { RemoveRoleActionResult } from "@/types/role.types";
 
@@ -14,7 +14,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { serverId: string; userId: string; roleId: string } },
 ): Promise<NextResponse<RemoveRoleActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

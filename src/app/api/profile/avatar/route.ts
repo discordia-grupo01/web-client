@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { getOwnProfile, getProfileImage } from "@/services/profile/service";
 
 /**
@@ -11,7 +11,7 @@ import { getOwnProfile, getProfileImage } from "@/services/profile/service";
  * criterio que `/api/servers/:id/icon`.
  */
 export async function GET(): Promise<NextResponse> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return new NextResponse(null, { status: 401 });
   }

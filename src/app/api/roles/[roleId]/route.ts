@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { deleteRole, updateRole } from "@/services/roles/service";
 import type {
   DeleteRoleActionResult,
@@ -25,7 +25,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: { roleId: string } },
 ): Promise<NextResponse<UpdateRoleActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -114,7 +114,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { roleId: string } },
 ): Promise<NextResponse<DeleteRoleActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

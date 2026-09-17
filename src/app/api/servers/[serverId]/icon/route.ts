@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { getServerIcon } from "@/services/servers/service";
 
 /**
@@ -13,7 +13,7 @@ export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return new NextResponse(null, { status: 401 });
   }

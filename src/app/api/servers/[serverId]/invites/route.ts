@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import {
   generateInvitation,
   listInvitations,
@@ -26,7 +26,7 @@ export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<ListInvitationsActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -62,7 +62,7 @@ export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<CreateInviteActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

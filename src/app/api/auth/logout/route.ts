@@ -11,7 +11,7 @@ export async function POST(): Promise<NextResponse> {
   const session = getSession();
 
   if (session) {
-    await logout(session.token);
+    await logout(session.refreshToken);
   }
 
   destroySession();

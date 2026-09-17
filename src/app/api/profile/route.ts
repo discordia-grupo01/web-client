@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { createSession, getSession } from "@/services/auth/session";
+import { createSession, getValidSession } from "@/services/auth/session";
 import { getOwnProfile, updateOwnProfile } from "@/services/profile/service";
 import type {
   GetOwnProfileActionResult,
@@ -13,7 +13,7 @@ import type {
  * publico de `/api/users/:id`): incluye email y description.
  */
 export async function GET(): Promise<NextResponse<GetOwnProfileActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -44,7 +44,7 @@ export async function GET(): Promise<NextResponse<GetOwnProfileActionResult>> {
 export async function PATCH(
   request: Request,
 ): Promise<NextResponse<UpdateOwnProfileActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -74,7 +74,7 @@ export async function PATCH(
     );
   }
 
-  createSession({ token: session.token, user: result.data });
+  createSession({ ...session, user: result.data });
 
   return NextResponse.json({ ok: true, user: result.data }, { status: 200 });
 }

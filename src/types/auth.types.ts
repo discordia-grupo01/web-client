@@ -18,6 +18,8 @@ export interface AuthResponse {
 /** Lo que guardamos en la cookie httpOnly de sesion. */
 export interface Session {
   token: string;
+  /** Refresh token de identify-service (rota en cada /v1/refresh). */
+  refreshToken: string;
   user: User;
 }
 
