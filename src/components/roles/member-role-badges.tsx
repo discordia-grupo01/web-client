@@ -144,6 +144,7 @@ export function MemberRoleBadges({
 
         {canManage ? (
           <SearchableSelect
+            floating
             options={addableRoles.map((role) => ({
               id: role.id,
               label: role.name,

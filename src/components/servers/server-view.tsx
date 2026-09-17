@@ -28,7 +28,7 @@ import {
   Trash2,
   Volume2,
 } from "lucide-react";
-import { useEffect, useRef, useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 
 import { OwnProfileModal } from "@/components/profile/own-profile-modal";
 import { PublicProfileModal } from "@/components/profile/public-profile-modal";
@@ -39,7 +39,6 @@ import { CreateChannelModal } from "@/components/channels/create-channel-modal";
 import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
 import { MembersSidebar } from "@/components/members/members-sidebar";
-import { Dropdown } from "@/components/ui/dropdown";
 import { useAuth } from "@/services/auth/auth-context";
 import type { User } from "@/types/auth.types";
 import { getOwnProfileRequest } from "@/services/profile/client";
@@ -88,7 +87,6 @@ function ChannelRow({
 }) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
 
   return (
     <div className="group relative flex items-center">
@@ -112,7 +110,6 @@ function ChannelRow({
       {isOwner ? (
         <>
           <button
-            ref={menuButtonRef}
             type="button"
             onClick={() => setIsMenuOpen((prev) => !prev)}
             aria-label="Opciones del canal"
@@ -121,36 +118,40 @@ function ChannelRow({
             <MoreVertical size={14} />
           </button>
 
-          <Dropdown
-            anchorRef={menuButtonRef}
-            isOpen={isMenuOpen}
-            onClose={() => setIsMenuOpen(false)}
-            align="right"
-            className="w-44"
-          >
-            <button
-              type="button"
-              onClick={() => {
-                setIsMenuOpen(false);
-                onEdit();
-              }}
-              className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-            >
-              <Pencil size={14} />
-              Editar Canal
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                setIsMenuOpen(false);
-                onDelete();
-              }}
-              className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-            >
-              <Trash2 size={14} />
-              Eliminar Canal
-            </button>
-          </Dropdown>
+          {isMenuOpen ? (
+            <>
+              <button
+                type="button"
+                aria-label="Cerrar menu"
+                onClick={() => setIsMenuOpen(false)}
+                className="fixed inset-0 z-40 cursor-default"
+              />
+              <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border shadow-2xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onEdit();
+                  }}
+                  className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                >
+                  <Pencil size={14} />
+                  Editar Canal
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMenuOpen(false);
+                    onDelete();
+                  }}
+                  className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+                >
+                  <Trash2 size={14} />
+                  Eliminar Canal
+                </button>
+              </div>
+            </>
+          ) : null}
         </>
       ) : null}
     </div>
@@ -238,7 +239,6 @@ function CategorySectionHeader({
   onDelete?: () => void;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const menuButtonRef = useRef<HTMLButtonElement>(null);
   const Chevron = isCollapsed ? ChevronRight : ChevronDown;
   const hasMenu = isOwner && (onAddChannel || onEdit || onDelete);
 
@@ -255,7 +255,6 @@ function CategorySectionHeader({
 
       {hasMenu ? (
         <button
-          ref={menuButtonRef}
           type="button"
           onClick={() => setIsMenuOpen((prev) => !prev)}
           aria-label="Opciones de la categoría"
@@ -265,53 +264,57 @@ function CategorySectionHeader({
         </button>
       ) : null}
 
-      <Dropdown
-        anchorRef={menuButtonRef}
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
-        align="right"
-        className="w-48"
-      >
-        {onAddChannel ? (
+      {isMenuOpen ? (
+        <>
           <button
             type="button"
-            onClick={() => {
-              setIsMenuOpen(false);
-              onAddChannel();
-            }}
-            className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-          >
-            <Plus size={14} />
-            Añadir Canal
-          </button>
-        ) : null}
-        {onEdit ? (
-          <button
-            type="button"
-            onClick={() => {
-              setIsMenuOpen(false);
-              onEdit();
-            }}
-            className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-          >
-            <Pencil size={14} />
-            Editar Categoría
-          </button>
-        ) : null}
-        {onDelete ? (
-          <button
-            type="button"
-            onClick={() => {
-              setIsMenuOpen(false);
-              onDelete();
-            }}
-            className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-          >
-            <Trash2 size={14} />
-            Eliminar Categoría
-          </button>
-        ) : null}
-      </Dropdown>
+            aria-label="Cerrar menu"
+            onClick={() => setIsMenuOpen(false)}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-48 overflow-hidden rounded-xl border shadow-2xl">
+            {onAddChannel ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onAddChannel();
+                }}
+                className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+              >
+                <Plus size={14} />
+                Añadir Canal
+              </button>
+            ) : null}
+            {onEdit ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onEdit();
+                }}
+                className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+              >
+                <Pencil size={14} />
+                Editar Categoría
+              </button>
+            ) : null}
+            {onDelete ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onDelete();
+                }}
+                className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
+              >
+                <Trash2 size={14} />
+                Eliminar Categoría
+              </button>
+            ) : null}
+          </div>
+        </>
+      ) : null}
     </div>
   );
 }
