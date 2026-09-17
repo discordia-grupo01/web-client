@@ -1,11 +1,11 @@
 "use client";
 
 import { Search } from "lucide-react";
+import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
+import { useFloatingPanel } from "@/hooks/use-floating-panel";
 import { cn } from "@/lib/cn";
-
-import { Dropdown } from "./dropdown";
 
 export interface SearchableSelectOption {
   id: string;
@@ -26,13 +26,18 @@ interface SearchableSelectProps {
   noResultsMessage?: string;
   align?: "left" | "right";
   className?: string;
+  /**
+   * Por default el panel se posiciona inline (`absolute`, como cualquier
+   * menu de la app). Activar solo cuando el select vive dentro de un
+   * contenedor con scroll que lo recorta -- hoy, el único caso real es
+   * "Añadir rol" en el modal de perfil.
+   */
+  floating?: boolean;
 }
 
 /**
- * Select con buscador: botón que abre un panel flotante (vía `Dropdown`, con
- * portal -- no lo recorta ningún modal con scroll) con un input de filtro y
- * la lista de opciones. Reemplaza implementaciones ad-hoc como el selector
- * de "Añadir rol".
+ * Select con buscador: botón que abre un panel con un input de filtro y la
+ * lista de opciones.
  */
 export function SearchableSelect({
   options,
@@ -44,11 +49,20 @@ export function SearchableSelect({
   noResultsMessage = "Sin resultados",
   align = "left",
   className,
+  floating = false,
 }: SearchableSelectProps) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
   const anchorRef = useRef<HTMLButtonElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+  const close = () => setIsOpen(false);
+  const { panelRef, position } = useFloatingPanel({
+    enabled: floating,
+    isOpen,
+    onClose: close,
+    anchorRef,
+    align,
+  });
 
   useEffect(() => {
     if (!isOpen) return;
@@ -61,8 +75,54 @@ export function SearchableSelect({
     option.label.toLowerCase().includes(query.toLowerCase()),
   );
 
-  return (
+  const panelContent = (
     <>
+      <div className="border-line border-b p-2">
+        <div className="bg-surface-input flex items-center gap-2 rounded-lg px-2.5 py-1.5">
+          <Search size={12} className="text-content-subtle shrink-0" />
+          <input
+            ref={inputRef}
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={searchPlaceholder}
+            className="text-content placeholder:text-content-subtle w-full bg-transparent text-xs outline-none"
+          />
+        </div>
+      </div>
+      <div className="max-h-52 overflow-y-auto py-1">
+        {filtered.length === 0 ? (
+          <p className="text-content-subtle px-3 py-3 text-center text-xs">
+            {query ? noResultsMessage : emptyMessage}
+          </p>
+        ) : (
+          filtered.map((option) => (
+            <button
+              key={option.id}
+              type="button"
+              onClick={() => {
+                onSelect(option.id);
+                close();
+              }}
+              className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors"
+            >
+              {option.color ? (
+                <span
+                  className="size-2.5 shrink-0 rounded-full"
+                  style={{ background: option.color }}
+                />
+              ) : null}
+              <span className="text-content truncate text-sm font-medium">
+                {option.label}
+              </span>
+            </button>
+          ))
+        )}
+      </div>
+    </>
+  );
+
+  return (
+    <div className="relative">
       <button
         ref={anchorRef}
         type="button"
@@ -79,55 +139,44 @@ export function SearchableSelect({
         {triggerLabel}
       </button>
 
-      <Dropdown
-        anchorRef={anchorRef}
-        isOpen={isOpen}
-        onClose={() => setIsOpen(false)}
-        align={align}
-        className="w-56"
-      >
-        <div className="border-line border-b p-2">
-          <div className="bg-surface-input flex items-center gap-2 rounded-lg px-2.5 py-1.5">
-            <Search size={12} className="text-content-subtle shrink-0" />
-            <input
-              ref={inputRef}
-              value={query}
-              onChange={(event) => setQuery(event.target.value)}
-              placeholder={searchPlaceholder}
-              className="text-content placeholder:text-content-subtle w-full bg-transparent text-xs outline-none"
-            />
+      {isOpen && floating && typeof document !== "undefined"
+        ? createPortal(
+            <div
+              ref={panelRef}
+              className={cn(
+                "bg-surface-raised border-line-strong fixed z-50 w-56 max-w-[calc(100vw-1rem)] overflow-hidden rounded-xl border shadow-2xl",
+                !position && "invisible",
+              )}
+              style={{
+                top: position?.top ?? -9999,
+                left: position?.left,
+                right: position?.right,
+              }}
+            >
+              {panelContent}
+            </div>,
+            document.body,
+          )
+        : null}
+
+      {isOpen && !floating ? (
+        <>
+          <button
+            type="button"
+            aria-label="Cerrar selector"
+            onClick={close}
+            className="fixed inset-0 z-40 cursor-default"
+          />
+          <div
+            className={cn(
+              "bg-surface-raised border-line-strong absolute top-full z-50 mt-1.5 w-56 overflow-hidden rounded-xl border shadow-2xl",
+              align === "right" ? "right-0" : "left-0",
+            )}
+          >
+            {panelContent}
           </div>
-        </div>
-        <div className="max-h-52 overflow-y-auto py-1">
-          {filtered.length === 0 ? (
-            <p className="text-content-subtle px-3 py-3 text-center text-xs">
-              {query ? noResultsMessage : emptyMessage}
-            </p>
-          ) : (
-            filtered.map((option) => (
-              <button
-                key={option.id}
-                type="button"
-                onClick={() => {
-                  onSelect(option.id);
-                  setIsOpen(false);
-                }}
-                className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2 text-left transition-colors"
-              >
-                {option.color ? (
-                  <span
-                    className="size-2.5 shrink-0 rounded-full"
-                    style={{ background: option.color }}
-                  />
-                ) : null}
-                <span className="text-content truncate text-sm font-medium">
-                  {option.label}
-                </span>
-              </button>
-            ))
-          )}
-        </div>
-      </Dropdown>
-    </>
+        </>
+      ) : null}
+    </div>
   );
 }
