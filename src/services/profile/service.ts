@@ -11,9 +11,11 @@ import type { ApiErrorBody, PublicUser } from "@/types/profile.types";
  * publico). Ver `services/auth/service.ts` para login/register/logout/reset.
  *
  * Endpoints reales (ver identify-service/openapi.yaml):
- *   GET   /v1/users/:id           -> 200 PublicUser | 400 | 401 | 404 (Bearer)
- *   GET   /v1/me/profile          -> 200 User | 401 | 404 (Bearer)
- *   PATCH /v1/me/profile          -> 200 User | 400 | 401 | 404 (Bearer, multipart)
+ *   GET    /v1/users/:id           -> 200 PublicUser | 400 | 401 | 404 (Bearer)
+ *   GET    /v1/me/profile          -> 200 User | 401 | 404 (Bearer)
+ *   PATCH  /v1/me/profile          -> 200 User | 400 | 401 | 404 (Bearer, multipart)
+ *   PUT    /v1/me/status           -> 200 User | 400 | 401 | 404 (Bearer, JSON)
+ *   DELETE /v1/me/status           -> 204 | 401 | 404 (Bearer)
  */
 
 export function getPublicProfile(
@@ -28,6 +30,26 @@ export function getPublicProfile(
 
 export function getOwnProfile(token: string): Promise<ApiResult<User>> {
   return apiRequest<User>("/v1/me/profile", { method: "GET", token });
+}
+
+export interface StatusUpdateBody {
+  status_text?: string;
+  status_emoji?: string;
+}
+
+export function updateStatus(
+  token: string,
+  body: StatusUpdateBody,
+): Promise<ApiResult<User>> {
+  return apiRequest<User>("/v1/me/status", {
+    method: "PUT",
+    token,
+    data: body,
+  });
+}
+
+export function clearStatus(token: string): Promise<ApiResult<void>> {
+  return apiRequest<void>("/v1/me/status", { method: "DELETE", token });
 }
 
 interface ProfileUpdateSuccess {

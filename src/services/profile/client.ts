@@ -3,6 +3,7 @@ import { api } from "@/lib/browser-api-client";
 import type {
   GetOwnProfileActionResult,
   GetPublicProfileActionResult,
+  UpdateCustomStatusActionResult,
   UpdateOwnProfileActionResult,
 } from "@/types/profile.types";
 
@@ -58,6 +59,36 @@ export async function updateOwnProfileRequest(
     return {
       ok: false,
       message: "No pudimos actualizar tu perfil. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function updateCustomStatusRequest(
+  statusText: string,
+): Promise<UpdateCustomStatusActionResult> {
+  try {
+    const { data } = await api.put<UpdateCustomStatusActionResult>(
+      "/profile/status",
+      { status_text: statusText },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos actualizar tu estado. Intenta de nuevo.",
+    };
+  }
+}
+
+export async function clearCustomStatusRequest(): Promise<UpdateCustomStatusActionResult> {
+  try {
+    const { data } =
+      await api.delete<UpdateCustomStatusActionResult>("/profile/status");
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos borrar tu estado. Intenta de nuevo.",
     };
   }
 }
