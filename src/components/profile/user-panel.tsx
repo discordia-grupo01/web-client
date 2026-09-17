@@ -1,5 +1,6 @@
 "use client";
 
+import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import type { User } from "@/types/auth.types";
 
@@ -24,12 +25,21 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
         borderTop: "1px solid var(--border)",
       }}
     >
-      <ServerAvatar
-        name={user.name}
-        src={user.avatar_url ? "/api/profile/avatar" : null}
-        size={32}
-        className="shrink-0 rounded-full"
-      />
+      <div className="relative shrink-0">
+        <ServerAvatar
+          name={user.name}
+          src={user.avatar_url ? "/api/profile/avatar" : null}
+          size={32}
+          className="rounded-full"
+        />
+        {/* Estado de actividad mock: no hay presencia real en identify-service. */}
+        <ActivityStatusDot
+          status="online"
+          size={11}
+          ringColor="var(--bg-user-panel)"
+          className="absolute right-0 bottom-0"
+        />
+      </div>
       <div className="min-w-0 flex-1">
         <div className="text-content truncate text-sm leading-tight font-semibold">
           {user.name}
