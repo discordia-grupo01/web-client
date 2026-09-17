@@ -31,6 +31,7 @@ import {
 import { useEffect, useState, type ReactNode } from "react";
 
 import { OwnProfileModal } from "@/components/profile/own-profile-modal";
+import { PublicProfileModal } from "@/components/profile/public-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
 import { CreateCategoryModal } from "@/components/categories/create-category-modal";
 import { EditCategoryModal } from "@/components/categories/edit-category-modal";
@@ -333,6 +334,7 @@ export function ServerView({
   const isOwner = user !== null && String(user.id) === server.owner_id;
   const [ownProfile, setOwnProfile] = useState<User | null>(null);
   const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
+  const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
     useState<string | null>(null);
@@ -697,8 +699,8 @@ export function ServerView({
       <MembersSidebar
         serverId={server.id}
         currentUserId={ownProfile?.id ?? user?.id ?? null}
-        isOwner={isOwner}
         onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+        onOpenPublicProfile={setViewingUserId}
       />
 
       {isCreateChannelOpen ? (
@@ -748,9 +750,19 @@ export function ServerView({
 
       {isOwnProfileOpen && ownProfile ? (
         <OwnProfileModal
+          serverId={server.id}
           profile={ownProfile}
           onClose={() => setIsOwnProfileOpen(false)}
           onUpdated={setOwnProfile}
+        />
+      ) : null}
+
+      {viewingUserId ? (
+        <PublicProfileModal
+          serverId={server.id}
+          userId={viewingUserId}
+          canManageRoles={isOwner}
+          onClose={() => setViewingUserId(null)}
         />
       ) : null}
     </div>

@@ -1,47 +1,77 @@
 "use client";
 
-import { Crown, Shield } from "lucide-react";
+import { Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { ServerAvatar } from "@/components/ui/server-avatar";
-import { MemberRolesModal } from "@/components/roles/member-roles-modal";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
 import type { Member } from "@/types/member.types";
+import type { PublicUser } from "@/types/profile.types";
 
 interface MembersSidebarProps {
   serverId: string;
   /** Id del usuario autenticado, para distinguir "yo" en la lista. */
   currentUserId: string | null;
-  /** Solo el owner puede gestionar los roles de otros miembros. */
-  isOwner: boolean;
   /** Click en mi propia fila: abre el perfil propio (editable), no el público. */
   onOpenOwnProfile: () => void;
+  /**
+   * Click en la fila de otro miembro: abre su perfil público (CA1 de
+   * "Visualización de perfil público"). La gestión de roles vive dentro de
+   * ese modal (`MemberRoleBadges`), no acá.
+   */
+  onOpenPublicProfile: (userId: string) => void;
+}
+
+function MemberAvatar({
+  profile,
+  userId,
+}: {
+  profile?: PublicUser;
+  userId: string;
+}) {
+  return (
+    <div className="relative shrink-0">
+      <ServerAvatar
+        name={profile?.name ?? userId}
+        src={profile?.avatar_url ? `/api/users/${userId}/avatar` : null}
+        size={28}
+        className="rounded-full"
+      />
+      {/* Estado de actividad mock: no hay presencia real en identify-service. */}
+      <ActivityStatusDot
+        status="online"
+        size={10}
+        ringColor="var(--bg-channels)"
+        className="absolute right-0 bottom-0"
+      />
+    </div>
+  );
 }
 
 function MemberRow({
   member,
-  name,
+  profile,
   isOwn,
-  canManageRoles,
   onOpenOwnProfile,
-  onManageRoles,
+  onOpenPublicProfile,
 }: {
   member: Member;
-  name?: string;
+  profile?: PublicUser;
   isOwn: boolean;
-  canManageRoles: boolean;
   onOpenOwnProfile: () => void;
-  onManageRoles: () => void;
+  onOpenPublicProfile: () => void;
 }) {
-  const displayName = name ?? member.user_id;
-  const content = (
-    <>
-      <ServerAvatar
-        name={displayName}
-        size={28}
-        className="shrink-0 rounded-full"
-      />
+  const displayName = profile?.name ?? member.user_id;
+
+  return (
+    <button
+      type="button"
+      onClick={isOwn ? onOpenOwnProfile : onOpenPublicProfile}
+      className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2 rounded-md px-1.5 py-1.5 text-left transition-colors"
+    >
+      <MemberAvatar profile={profile} userId={member.user_id} />
       <span
         className="text-content-muted min-w-0 flex-1 truncate text-sm"
         title={member.user_id}
@@ -56,61 +86,24 @@ function MemberRow({
           aria-label="Propietario"
         />
       ) : null}
-    </>
-  );
-
-  if (isOwn) {
-    return (
-      <button
-        type="button"
-        onClick={onOpenOwnProfile}
-        className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2 rounded-md px-1.5 py-1.5 text-left transition-colors"
-      >
-        {content}
-      </button>
-    );
-  }
-
-  if (canManageRoles) {
-    return (
-      <div className="group hover:bg-surface-hover flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors">
-        {content}
-        <button
-          type="button"
-          onClick={onManageRoles}
-          aria-label={`Gestionar roles de ${displayName}`}
-          title="Gestionar roles"
-          className="text-content-subtle hover:text-content flex size-6 shrink-0 cursor-pointer items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
-        >
-          <Shield size={13} />
-        </button>
-      </div>
-    );
-  }
-
-  return (
-    <div className="hover:bg-surface-hover flex items-center gap-2 rounded-md px-1.5 py-1.5 transition-colors">
-      {content}
-    </div>
+    </button>
   );
 }
 
 function MemberGroup({
   label,
   members,
-  names,
+  profiles,
   currentUserId,
-  canManageRoles,
   onOpenOwnProfile,
-  onManageRoles,
+  onOpenPublicProfile,
 }: {
   label: string;
   members: Member[];
-  names: Record<string, string>;
+  profiles: Record<string, PublicUser>;
   currentUserId: string | null;
-  canManageRoles: boolean;
   onOpenOwnProfile: () => void;
-  onManageRoles: (member: Member) => void;
+  onOpenPublicProfile: (userId: string) => void;
 }) {
   if (members.length === 0) return null;
   return (
@@ -123,11 +116,10 @@ function MemberGroup({
           <MemberRow
             key={member.user_id}
             member={member}
-            name={names[member.user_id]}
+            profile={profiles[member.user_id]}
             isOwn={member.user_id === currentUserId}
-            canManageRoles={canManageRoles && member.user_id !== currentUserId}
             onOpenOwnProfile={onOpenOwnProfile}
-            onManageRoles={() => onManageRoles(member)}
+            onOpenPublicProfile={() => onOpenPublicProfile(member.user_id)}
           />
         ))}
       </div>
@@ -137,28 +129,27 @@ function MemberGroup({
 
 /**
  * Panel de miembros del server activo. La lista (`user_id`, `is_owner`,
- * `joined_at`) viene de `servers`; el nombre de cada uno se resuelve aparte
- * contra identify-service (`GET /v1/users/:id`, uno por miembro -- todavía
- * no hay un endpoint batch). Si un lookup falla (usuario borrado, error de
- * red puntual) se muestra el `user_id` crudo como respaldo en vez de romper
- * toda la lista.
+ * `joined_at`) viene de `servers`; el perfil público de cada uno (nombre,
+ * avatar) se resuelve aparte contra identify-service (`GET /v1/users/:id`,
+ * uno por miembro -- todavía no hay un endpoint batch). Si un lookup falla
+ * (usuario borrado, error de red puntual) se muestra el `user_id` crudo como
+ * respaldo en vez de romper toda la lista.
  */
 export function MembersSidebar({
   serverId,
   currentUserId,
-  isOwner,
   onOpenOwnProfile,
+  onOpenPublicProfile,
 }: MembersSidebarProps) {
   const [members, setMembers] = useState<Member[] | null>(null);
-  const [names, setNames] = useState<Record<string, string>>({});
+  const [profiles, setProfiles] = useState<Record<string, PublicUser>>({});
   const [total, setTotal] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
-  const [managingMember, setManagingMember] = useState<Member | null>(null);
 
   useEffect(() => {
     let cancelled = false;
     setMembers(null);
-    setNames({});
+    setProfiles({});
     setErrorMessage("");
 
     listMembersRequest(serverId).then((result) => {
@@ -174,9 +165,9 @@ export function MembersSidebar({
       for (const member of result.members) {
         getPublicProfileRequest(member.user_id).then((profile) => {
           if (cancelled || !profile.ok) return;
-          setNames((prev) => ({
+          setProfiles((prev) => ({
             ...prev,
-            [member.user_id]: profile.user.name,
+            [member.user_id]: profile.user,
           }));
         });
       }
@@ -208,32 +199,21 @@ export function MembersSidebar({
           <MemberGroup
             label="Propietario"
             members={owners}
-            names={names}
+            profiles={profiles}
             currentUserId={currentUserId}
-            canManageRoles={isOwner}
             onOpenOwnProfile={onOpenOwnProfile}
-            onManageRoles={setManagingMember}
+            onOpenPublicProfile={onOpenPublicProfile}
           />
           <MemberGroup
             label="Miembros"
             members={regulars}
-            names={names}
+            profiles={profiles}
             currentUserId={currentUserId}
-            canManageRoles={isOwner}
             onOpenOwnProfile={onOpenOwnProfile}
-            onManageRoles={setManagingMember}
+            onOpenPublicProfile={onOpenPublicProfile}
           />
         </div>
       )}
-
-      {managingMember ? (
-        <MemberRolesModal
-          serverId={serverId}
-          userId={managingMember.user_id}
-          memberName={names[managingMember.user_id] ?? managingMember.user_id}
-          onClose={() => setManagingMember(null)}
-        />
-      ) : null}
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { AlertCircle, Hash, Volume2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
+import { Select } from "@/components/ui/select";
 import type { Category } from "@/types/category.types";
 import { createChannelRequest } from "@/services/channels/client";
 import type { Channel } from "@/types/channel.types";
@@ -196,27 +197,19 @@ export function CreateChannelModal({
               <FieldError message={nameError} />
             </div>
 
-            <div>
-              <label
-                htmlFor="channel-category"
-                className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
-              >
-                Categoría
-              </label>
-              <select
-                id="channel-category"
-                value={categoryId}
-                onChange={(event) => setCategoryId(event.target.value)}
-                className="bg-surface-input border-line text-content w-full rounded-xl border px-4 py-3 text-sm outline-none"
-              >
-                <option value="">Sin categoría</option>
-                {categories.map((category) => (
-                  <option key={category.id} value={category.id}>
-                    {category.name}
-                  </option>
-                ))}
-              </select>
-            </div>
+            <Select
+              floating
+              label="Categoría"
+              value={categoryId}
+              onChange={setCategoryId}
+              options={[
+                { value: "", label: "Sin categoría" },
+                ...categories.map((category) => ({
+                  value: category.id,
+                  label: category.name,
+                })),
+              ]}
+            />
           </div>
 
           <div className="border-line flex items-center justify-end gap-3 border-t px-7 py-5">

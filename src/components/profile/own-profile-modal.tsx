@@ -1,41 +1,46 @@
 "use client";
 
-import { AlertCircle, Calendar, Camera, Check, Pencil, X } from "lucide-react";
+import { AlertCircle, Camera, Check, Pencil, X } from "lucide-react";
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/button";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { SectionLabel } from "@/components/ui/section-label";
+import { MemberRoleBadges } from "@/components/roles/member-role-badges";
 import type { User } from "@/types/auth.types";
-import { updateOwnProfileRequest } from "@/services/profile/client";
+import {
+  clearCustomStatusRequest,
+  updateCustomStatusRequest,
+  updateOwnProfileRequest,
+} from "@/services/profile/client";
 import { cn } from "@/lib/cn";
+
+import type { ActivityStatus } from "./activity-status";
+import {
+  ActivityStatusPicker,
+  type ActivityStatusMode,
+} from "./activity-status-picker";
+import { CustomStatusEditor } from "./custom-status-editor";
+import { MemberSince } from "./member-since";
+import { ProfileAvatarFrame } from "./profile-avatar-frame";
+import { ProfileBanner } from "./profile-banner";
+import { ProfileModalOverlay } from "./profile-modal-overlay";
 
 const MAX_NAME = 100;
 const MAX_DESCRIPTION = 500;
 const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_MB = 5;
 
-const BANNER_GRADIENT =
-  "linear-gradient(135deg, #0f1f2e 0%, #1a3a4a 40%, #245C6B 70%, #1c293b 100%)";
-
 interface OwnProfileModalProps {
+  serverId: string;
   profile: User;
   onClose: () => void;
   onUpdated: (user: User) => void;
 }
 
-function formatMemberSince(isoDate: string): string {
-  const date = new Date(isoDate);
-  if (Number.isNaN(date.getTime())) return "";
-  return new Intl.DateTimeFormat("es-AR", {
-    day: "numeric",
-    month: "long",
-    year: "numeric",
-  }).format(date);
-}
-
 type EditingField = "name" | "description" | null;
 
 export function OwnProfileModal({
+  serverId,
   profile,
   onClose,
   onUpdated,
@@ -50,6 +55,17 @@ export function OwnProfileModal({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  // Estado de actividad: mock puramente visual, no hay presencia real en
+  // identify-service (ver activity-status.ts). Se resetea a "Automático" al
+  // reabrir el modal a propósito -- no hay nada real que persistir.
+  const [activityMode, setActivityMode] = useState<ActivityStatusMode>("auto");
+  const resolvedActivityStatus: ActivityStatus =
+    activityMode === "auto"
+      ? "online"
+      : activityMode === "dnd"
+        ? "dnd"
+        : "offline";
 
   const avatarSrc =
     imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
@@ -80,6 +96,28 @@ export function OwnProfileModal({
       return false;
     }
 
+    onUpdated(result.user);
+    return true;
+  }
+
+  async function saveCustomStatus(text: string): Promise<boolean> {
+    setGlobalError("");
+    const result = await updateCustomStatusRequest(text);
+    if (!result.ok) {
+      setGlobalError(result.message);
+      return false;
+    }
+    onUpdated(result.user);
+    return true;
+  }
+
+  async function clearCustomStatus(): Promise<boolean> {
+    setGlobalError("");
+    const result = await clearCustomStatusRequest();
+    if (!result.ok) {
+      setGlobalError(result.message);
+      return false;
+    }
     onUpdated(result.user);
     return true;
   }
@@ -151,111 +189,59 @@ export function OwnProfileModal({
   }
 
   return (
-    <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        className="border-line-strong relative flex w-full flex-col overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
-        style={{
-          maxWidth: 400,
-          maxHeight: "95dvh",
-          background: "var(--bg-modal)",
-        }}
-      >
-        {/*
-          Portada + avatar viven en un bloque `shrink-0` sin overflow propio:
-          el avatar se superpone a la portada con margin-top negativo, y ese
-          solapamiento se recorta si queda dentro del contenedor con scroll
-          de mas abajo (overflow-y-auto tambien clippea hacia arriba). Solo
-          el contenido debajo del avatar scrollea.
-        */}
-        <div className="relative shrink-0">
-          <div
-            className="relative h-[100px]"
-            style={{ background: BANNER_GRADIENT }}
+    <ProfileModalOverlay onClose={onClose}>
+      <div className="relative shrink-0">
+        <ProfileBanner onClose={onClose} />
+
+        <ProfileAvatarFrame
+          name={profile.name}
+          src={avatarSrc}
+          onClick={() => fileInputRef.current?.click()}
+          ariaLabel="Cambiar foto de perfil"
+        >
+          <span
+            className={cn(
+              "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/55 opacity-0 transition-opacity group-hover:opacity-100",
+              isUploadingAvatar && "opacity-100",
+            )}
           >
-            <div
-              className="absolute inset-0 opacity-30"
-              style={{
-                backgroundImage:
-                  "radial-gradient(ellipse at 30% 50%, rgba(36,92,107,0.8) 0%, transparent 55%), radial-gradient(ellipse at 80% 20%, rgba(252,227,164,0.2) 0%, transparent 50%)",
-              }}
-            />
-            <button
-              type="button"
-              onClick={onClose}
-              aria-label="Cerrar"
-              className="absolute top-3 right-3 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
-            >
-              <X size={14} className="text-white/80" />
-            </button>
-          </div>
+            {isUploadingAvatar ? (
+              <span className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+            ) : (
+              <>
+                <Camera size={18} className="text-white" />
+                <span className="text-[9px] font-semibold text-white">
+                  Cambiar
+                </span>
+              </>
+            )}
+          </span>
+        </ProfileAvatarFrame>
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/png,image/jpeg,image/gif"
+          className="hidden"
+          onChange={handleFileInput}
+        />
+        {imageError ? (
+          <p className="text-danger mt-1 px-6 text-xs">{imageError}</p>
+        ) : null}
+      </div>
 
-          {/* Avatar, superpuesto a la portada y alineado a la izquierda. */}
-          <div className="relative px-6" style={{ marginTop: -32 }}>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              aria-label="Cambiar foto de perfil"
-              className="group relative block cursor-pointer rounded-full"
-            >
-              <ServerAvatar
-                name={profile.name}
-                src={avatarSrc}
-                size={80}
-                className="rounded-full"
-              />
-              <span
-                className="absolute inset-0 rounded-full border-4"
-                style={{ borderColor: "var(--bg-modal)" }}
-                aria-hidden="true"
-              />
-              <span
-                className={cn(
-                  "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/55 opacity-0 transition-opacity group-hover:opacity-100",
-                  isUploadingAvatar && "opacity-100",
-                )}
-              >
-                {isUploadingAvatar ? (
-                  <span className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-                ) : (
-                  <>
-                    <Camera size={18} className="text-white" />
-                    <span className="text-[9px] font-semibold text-white">
-                      Cambiar
-                    </span>
-                  </>
-                )}
-              </span>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/png,image/jpeg,image/gif"
-              className="hidden"
-              onChange={handleFileInput}
-            />
-            {imageError ? (
-              <p className="text-danger mt-1 text-xs">{imageError}</p>
-            ) : null}
-          </div>
-        </div>
+      <div className="flex-1 overflow-y-auto">
+        <div className="space-y-4 px-6 pt-3 pb-6">
+          {globalError ? (
+            <div className="border-danger/30 bg-danger/10 text-danger flex items-start gap-3 rounded-xl border px-4 py-3 text-sm">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <span>{globalError}</span>
+            </div>
+          ) : null}
 
-        <div className="flex-1 overflow-y-auto">
-          <div className="px-6 pt-3 pb-6">
-            {globalError ? (
-              <div className="border-danger/30 bg-danger/10 text-danger mb-4 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm">
-                <AlertCircle size={16} className="mt-0.5 shrink-0" />
-                <span>{globalError}</span>
-              </div>
-            ) : null}
-
+          <div>
             {/* Nombre -- el lapiz de aca edita solo el nombre. */}
             {editingField === "name" ? (
-              <div className="mb-1 flex items-center gap-2">
+              <div className="flex items-center gap-2">
                 <input
                   value={nameDraft}
                   onChange={(event) => {
@@ -290,7 +276,7 @@ export function OwnProfileModal({
                 </button>
               </div>
             ) : (
-              <div className="group/name mb-1 flex items-center gap-1.5">
+              <div className="group/name flex items-center gap-1.5">
                 <h2 className="font-display text-content text-lg font-bold">
                   {profile.name}
                 </h2>
@@ -306,104 +292,98 @@ export function OwnProfileModal({
               </div>
             )}
             {editingField === "name" && nameError ? (
-              <p className="text-danger mb-2 text-xs">{nameError}</p>
+              <p className="text-danger mt-1 text-xs">{nameError}</p>
             ) : null}
 
-            <p className="text-content-subtle mb-3 text-xs">{profile.email}</p>
-
-            {profile.status_text || profile.status_emoji ? (
-              <div className="bg-surface-input mb-3 flex w-fit items-center gap-1.5 rounded-full px-3 py-1 text-xs">
-                {profile.status_emoji ? (
-                  <span>{profile.status_emoji}</span>
-                ) : null}
-                {profile.status_text ? (
-                  <span className="text-content-muted">
-                    {profile.status_text}
-                  </span>
-                ) : null}
-              </div>
-            ) : null}
-
-            <div className="bg-line mb-4 h-px" />
-
-            {/* Sobre mi -- el lapiz de aca edita solo la descripcion. */}
-            <div className="group/desc mb-4">
-              <div className="mb-1.5 flex items-center gap-1.5">
-                <h3 className="text-content-subtle text-[10px] font-bold tracking-wider uppercase">
-                  Sobre mí
-                </h3>
-                {editingField !== "description" ? (
-                  <button
-                    type="button"
-                    onClick={startEditingDescription}
-                    aria-label="Editar descripción"
-                    title="Editar descripción"
-                    className="text-content-subtle hover:text-accent-strong flex size-5 cursor-pointer items-center justify-center rounded-md opacity-0 transition-opacity group-hover/desc:opacity-100"
-                  >
-                    <Pencil size={12} />
-                  </button>
-                ) : null}
-              </div>
-
-              {editingField === "description" ? (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-end">
-                    <span className="text-content-subtle font-mono text-[11px] tabular-nums">
-                      {descriptionDraft.length}/{MAX_DESCRIPTION}
-                    </span>
-                  </div>
-                  <textarea
-                    value={descriptionDraft}
-                    onChange={(event) =>
-                      setDescriptionDraft(
-                        event.target.value.slice(0, MAX_DESCRIPTION),
-                      )
-                    }
-                    rows={3}
-                    autoFocus
-                    placeholder="Contá algo sobre vos..."
-                    className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
-                  />
-                  <div className="flex items-center justify-end gap-2">
-                    <Button
-                      type="button"
-                      variant="secondary"
-                      onClick={cancelEditing}
-                      disabled={isSubmitting}
-                      className="w-auto"
-                    >
-                      Cancelar
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={saveDescription}
-                      isLoading={isSubmitting}
-                      className="w-auto"
-                    >
-                      Guardar
-                    </Button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-content-muted text-sm leading-relaxed">
-                  {profile.description ||
-                    "Todavía no agregaste una descripción."}
-                </p>
-              )}
-            </div>
-
-            <div>
-              <h3 className="text-content-subtle mb-1.5 text-[10px] font-bold tracking-wider uppercase">
-                Miembro desde
-              </h3>
-              <div className="text-content-muted flex items-center gap-2 text-sm">
-                <Calendar size={14} className="text-content-subtle" />
-                {formatMemberSince(profile.created_at)}
-              </div>
-            </div>
+            <p className="text-content-subtle mt-1 text-xs">{profile.email}</p>
           </div>
+
+          <ActivityStatusPicker
+            mode={activityMode}
+            resolvedStatus={resolvedActivityStatus}
+            onChange={setActivityMode}
+          />
+
+          <CustomStatusEditor
+            statusText={profile.status_text}
+            onSave={saveCustomStatus}
+            onClear={clearCustomStatus}
+          />
+
+          <div className="bg-line h-px" />
+
+          {/* Sobre mi -- el lapiz de aca edita solo la descripcion. */}
+          <div className="group/desc">
+            <div className="mb-1.5 flex items-center gap-1.5">
+              <SectionLabel>Sobre mí</SectionLabel>
+              {editingField !== "description" ? (
+                <button
+                  type="button"
+                  onClick={startEditingDescription}
+                  aria-label="Editar descripción"
+                  title="Editar descripción"
+                  className="text-content-subtle hover:text-accent-strong flex size-5 cursor-pointer items-center justify-center rounded-md opacity-0 transition-opacity group-hover/desc:opacity-100"
+                >
+                  <Pencil size={12} />
+                </button>
+              ) : null}
+            </div>
+
+            {editingField === "description" ? (
+              <div className="space-y-2">
+                <div className="flex items-center justify-end">
+                  <span className="text-content-subtle font-mono text-[11px] tabular-nums">
+                    {descriptionDraft.length}/{MAX_DESCRIPTION}
+                  </span>
+                </div>
+                <textarea
+                  value={descriptionDraft}
+                  onChange={(event) =>
+                    setDescriptionDraft(
+                      event.target.value.slice(0, MAX_DESCRIPTION),
+                    )
+                  }
+                  rows={3}
+                  autoFocus
+                  placeholder="Contá algo sobre vos..."
+                  className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
+                />
+                <div className="flex items-center justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    onClick={cancelEditing}
+                    disabled={isSubmitting}
+                    className="w-auto"
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={saveDescription}
+                    isLoading={isSubmitting}
+                    className="w-auto"
+                  >
+                    Guardar
+                  </Button>
+                </div>
+              </div>
+            ) : (
+              <p className="text-content-muted text-sm leading-relaxed">
+                {profile.description || "Todavía no agregaste una descripción."}
+              </p>
+            )}
+          </div>
+
+          <MemberSince isoDate={profile.created_at} />
+
+          <MemberRoleBadges
+            serverId={serverId}
+            userId={profile.id}
+            canManage={false}
+          />
         </div>
       </div>
-    </div>
+    </ProfileModalOverlay>
   );
 }
