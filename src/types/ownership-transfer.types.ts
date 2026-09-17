@@ -29,5 +29,4 @@ export type GetPendingTransferActionResult =
 
 /** Resultado de aceptar/rechazar/cancelar (`POST .../:transferId/<accion>`). */
 export type RespondTransferActionResult =
-  | { ok: true; transfer: OwnershipTransfer }
-  | { ok: false; message: string };
+  { ok: true; transfer: OwnershipTransfer } | { ok: false; message: string };

@@ -37,7 +37,8 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Solo la persona invitada puede rechazar esta transferencia.",
+          message:
+            "Solo la persona invitada puede rechazar esta transferencia.",
         },
         { status: 403 },
       );

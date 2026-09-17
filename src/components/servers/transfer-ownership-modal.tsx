@@ -285,8 +285,8 @@ export function TransferOwnershipModal({
               {counterpartProfile?.name ?? pendingTransfer.from_user_id}
             </strong>{" "}
             quiere transferirte la propiedad de{" "}
-            <strong className="text-content">{serverName}</strong>. Si
-            aceptás, pasás a ser el nuevo propietario.
+            <strong className="text-content">{serverName}</strong>. Si aceptás,
+            pasás a ser el nuevo propietario.
           </p>
           <div className="flex w-full gap-3">
             <button
