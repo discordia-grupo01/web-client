@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { moveChannelToCategory } from "@/services/channels/service";
 import type { MoveChannelActionResult } from "@/types/channel.types";
 
@@ -17,7 +17,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: { channelId: string } },
 ): Promise<NextResponse<MoveChannelActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

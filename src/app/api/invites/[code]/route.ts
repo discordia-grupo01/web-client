@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { revokeInvitation } from "@/services/invites/service";
 import type { RevokeInviteActionResult } from "@/types/invite.types";
 
@@ -13,7 +13,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { code: string } },
 ): Promise<NextResponse<RevokeInviteActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

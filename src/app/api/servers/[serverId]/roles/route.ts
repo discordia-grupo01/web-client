@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { createRole, listRoles } from "@/services/roles/service";
 import type {
   CreateRoleActionResult,
@@ -21,7 +21,7 @@ export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<ListRolesActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -52,7 +52,7 @@ export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<CreateRoleActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

@@ -6,10 +6,14 @@ import { useEffect, useState } from "react";
 
 import { EmptyState } from "@/components/home/empty-state";
 import { JoinServerModal } from "@/components/invites/join-server-modal";
+import { OwnProfileModal } from "@/components/profile/own-profile-modal";
+import { UserPanel } from "@/components/profile/user-panel";
 import { CreateServerModal } from "@/components/servers/create-server-modal";
 import { ServerView } from "@/components/servers/server-view";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
+import { getOwnProfileRequest } from "@/services/profile/client";
+import type { User } from "@/types/auth.types";
 import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
@@ -24,15 +28,30 @@ export function HomeShell({
   initialSelectedServerId = null,
 }: HomeShellProps) {
   const router = useRouter();
-  const { user, logout, isLoggingOut } = useAuth();
+  const { user } = useAuth();
   const [servers, setServers] = useState<ServerSummary[]>(initialServers);
   const [selectedServerId, setSelectedServerId] = useState<string | null>(
     initialSelectedServerId,
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [ownProfile, setOwnProfile] = useState<User | null>(null);
+  const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
+
+  // Perfil propio: se pide una sola vez aca (no en `ServerView`) para no
+  // refetchear cada vez que se cambia de servidor, y para que el panel de
+  // usuario este disponible incluso sin servidor seleccionado.
+  useEffect(() => {
+    let cancelled = false;
+    getOwnProfileRequest().then((result) => {
+      if (!cancelled && result.ok) setOwnProfile(result.user);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // `?server=...` solo sirve para el estado inicial (arriba, al volver de
   // aceptar una invitacion); lo sacamos de la URL para que un refresh no
@@ -124,15 +143,6 @@ export function HomeShell({
         >
           <Plus size={22} />
         </button>
-
-        <button
-          type="button"
-          onClick={logout}
-          disabled={isLoggingOut}
-          className="text-content-subtle hover:text-danger mt-auto cursor-pointer text-[10px] font-semibold tracking-wider uppercase disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Salir
-        </button>
       </div>
 
       {/* Main panel */}
@@ -142,22 +152,57 @@ export function HomeShell({
           server={selectedServer}
           onLeft={() => removeServer(selectedServer.id)}
           onServerUpdate={updateServer}
+          ownProfile={ownProfile}
+          onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
         />
-      ) : servers.length > 0 ? (
-        <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-          <p className="font-display text-content-subtle text-sm font-semibold tracking-wider uppercase">
-            Tus servidores
-          </p>
-          <h1 className="font-display text-content text-2xl font-bold">
-            Elegí un servidor de la barra lateral
-          </h1>
-        </div>
       ) : (
-        <EmptyState
-          userName={user?.name}
-          onCreateClick={() => setIsCreateModalOpen(true)}
-          onJoinClick={() => setIsJoinModalOpen(true)}
-        />
+        <div className="flex flex-1 overflow-hidden">
+          {/* Home sidebar: mismo ancho/columna que el sidebar de canales de
+              ServerView, para que el panel de usuario viva siempre en el
+              mismo lugar tenga o no un servidor seleccionado. */}
+          <div
+            className="flex w-60 shrink-0 flex-col overflow-hidden"
+            style={{ background: "var(--bg-channels)" }}
+          >
+            <div className="border-line flex h-12 shrink-0 items-center gap-2 border-b px-4">
+              <HomeIcon size={16} className="text-content-subtle" />
+              <span className="font-display text-content text-sm font-semibold">
+                Inicio
+              </span>
+            </div>
+
+            <div className="flex-1" />
+
+            {ownProfile ? (
+              <UserPanel
+                user={ownProfile}
+                onClick={() => setIsOwnProfileOpen(true)}
+              />
+            ) : null}
+          </div>
+
+          <div
+            className="flex flex-1 flex-col overflow-hidden"
+            style={{ background: "var(--bg-chat)" }}
+          >
+            {servers.length > 0 ? (
+              <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
+                <p className="font-display text-content-subtle text-sm font-semibold tracking-wider uppercase">
+                  Tus servidores
+                </p>
+                <h1 className="font-display text-content text-2xl font-bold">
+                  Elegí un servidor de la barra lateral
+                </h1>
+              </div>
+            ) : (
+              <EmptyState
+                userName={user?.name}
+                onCreateClick={() => setIsCreateModalOpen(true)}
+                onJoinClick={() => setIsJoinModalOpen(true)}
+              />
+            )}
+          </div>
+        </div>
       )}
 
       {isCreateModalOpen ? (
@@ -171,6 +216,15 @@ export function HomeShell({
         <JoinServerModal
           onClose={() => setIsJoinModalOpen(false)}
           onJoined={addAndSelect}
+        />
+      ) : null}
+
+      {isOwnProfileOpen && ownProfile ? (
+        <OwnProfileModal
+          serverId={selectedServer?.id}
+          profile={ownProfile}
+          onClose={() => setIsOwnProfileOpen(false)}
+          onUpdated={setOwnProfile}
         />
       ) : null}
     </div>

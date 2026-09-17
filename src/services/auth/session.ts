@@ -4,10 +4,20 @@ import { cookies } from "next/headers";
 
 import { SESSION_COOKIE } from "@/lib/constants";
 import { isProduction } from "@/lib/env";
+import { refresh } from "@/services/auth/service";
+import { parseSessionCookie } from "@/services/auth/session-shape";
 
 import type { Session, User } from "@/types/auth.types";
 
-const DEFAULT_MAX_AGE_SECONDS = 72 * 60 * 60; // el JWT del backend dura 72h
+// Margen de seguridad: si al access token le quedan menos de esto, se
+// refresca antes de usarlo (cubre la latencia entre este chequeo y el
+// momento real en que identify-service recibe la request).
+const REFRESH_SKEW_SECONDS = 30;
+
+// El refresh token de identify-service dura 30 dias (RefreshTokenTTL); la
+// cookie de sesion tiene que sobrevivir al menos eso, no los 15min del access
+// token (que se renueva solo via refresh mientras el refresh token siga vivo).
+const DEFAULT_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
 /**
  * Escribe la sesion en una cookie httpOnly. El JS del navegador no puede leerla
@@ -20,7 +30,7 @@ export function createSession(session: Session): void {
     secure: isProduction,
     sameSite: "lax",
     path: "/",
-    maxAge: secondsUntilExpiry(session.token) ?? DEFAULT_MAX_AGE_SECONDS,
+    maxAge: DEFAULT_MAX_AGE_SECONDS,
   });
 }
 
@@ -29,42 +39,53 @@ export function destroySession(): void {
 }
 
 /**
- * Lee y valida la sesion. Devuelve `null` si no hay cookie, si esta corrupta
- * o si el JWT ya expiro. Seguro de usar en Server Components.
+ * Lee la sesion tal cual esta en la cookie. Devuelve `null` si no hay cookie
+ * o si esta corrupta. No valida si el access token sigue vigente -- para eso
+ * esta `getValidSession`. Sirve para chequeos rapidos sin red (`middleware.ts`,
+ * mostrar el usuario en un Server Component) y para leer el `refreshToken`
+ * antes de pegarle al backend en logout.
  */
 export function getSession(): Session | null {
-  const cookie = cookies().get(SESSION_COOKIE)?.value;
-  if (!cookie) return null;
+  return parseSessionCookie(cookies().get(SESSION_COOKIE)?.value);
+}
 
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(cookie);
-  } catch {
+/**
+ * Como `getSession`, pero garantiza que el access token devuelto sirva para
+ * pegarle a identify-service: si esta vencido (o por vencer) lo refresca via
+ * /v1/refresh, reescribe la cookie y devuelve la sesion nueva. Si el refresh
+ * falla (refresh token vencido, invalido o reutilizado), borra la sesion y
+ * devuelve `null`.
+ *
+ * Solo se puede llamar desde Route Handlers o Server Actions: si refresca,
+ * necesita reescribir la cookie de sesion (`cookies().set(...)`), algo que
+ * Next no permite hacer desde un Server Component en render.
+ */
+export async function getValidSession(): Promise<Session | null> {
+  const session = getSession();
+  if (!session) return null;
+
+  const exp = decodeJwtPayload(session.token)?.exp;
+  const stillValid =
+    typeof exp === "number" && exp - REFRESH_SKEW_SECONDS > Date.now() / 1000;
+  if (stillValid) return session;
+
+  const { result, newRefreshToken } = await refresh(session.refreshToken);
+  if (!result.ok) {
+    destroySession();
     return null;
   }
 
-  if (!isSession(parsed)) return null;
-  if (isExpired(parsed.token)) return null;
-
-  return parsed;
+  const newSession: Session = {
+    token: result.data.token,
+    refreshToken: newRefreshToken ?? session.refreshToken,
+    user: result.data.user,
+  };
+  createSession(newSession);
+  return newSession;
 }
 
 export function getCurrentUser(): User | null {
   return getSession()?.user ?? null;
-}
-
-function isSession(value: unknown): value is Session {
-  if (typeof value !== "object" || value === null) return false;
-  const candidate = value as Record<string, unknown>;
-  const user = candidate.user as Record<string, unknown> | undefined;
-  return (
-    typeof candidate.token === "string" &&
-    typeof user === "object" &&
-    user !== null &&
-    typeof user.id === "string" &&
-    typeof user.email === "string" &&
-    typeof user.name === "string"
-  );
 }
 
 interface JwtPayload {
@@ -80,17 +101,4 @@ function decodeJwtPayload(token: string): JwtPayload | null {
   } catch {
     return null;
   }
-}
-
-function isExpired(token: string): boolean {
-  const exp = decodeJwtPayload(token)?.exp;
-  if (typeof exp !== "number") return false; // sin exp legible, delega en el backend
-  return exp * 1000 <= Date.now();
-}
-
-function secondsUntilExpiry(token: string): number | null {
-  const exp = decodeJwtPayload(token)?.exp;
-  if (typeof exp !== "number") return null;
-  const seconds = Math.floor(exp - Date.now() / 1000);
-  return seconds > 0 ? seconds : null;
 }

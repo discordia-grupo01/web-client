@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { createSession, getSession } from "@/services/auth/session";
+import { createSession, getValidSession } from "@/services/auth/session";
 import { clearStatus, updateStatus } from "@/services/profile/service";
 import type { UpdateCustomStatusActionResult } from "@/types/profile.types";
 
@@ -13,7 +13,7 @@ import type { UpdateCustomStatusActionResult } from "@/types/profile.types";
 export async function PUT(
   request: Request,
 ): Promise<NextResponse<UpdateCustomStatusActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -47,7 +47,7 @@ export async function PUT(
     );
   }
 
-  createSession({ token: session.token, user: result.data });
+  createSession({ ...session, user: result.data });
 
   return NextResponse.json({ ok: true, user: result.data }, { status: 200 });
 }
@@ -55,7 +55,7 @@ export async function PUT(
 export async function DELETE(): Promise<
   NextResponse<UpdateCustomStatusActionResult>
 > {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -77,7 +77,7 @@ export async function DELETE(): Promise<
   // `DELETE /v1/me/status` responde 204 sin body: el estado limpio se arma
   // localmente a partir de la sesión actual en vez de pedir el perfil de nuevo.
   const updatedUser = { ...session.user, status_text: "", status_emoji: "" };
-  createSession({ token: session.token, user: updatedUser });
+  createSession({ ...session, user: updatedUser });
 
   return NextResponse.json({ ok: true, user: updatedUser }, { status: 200 });
 }

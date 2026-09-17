@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { getPublicProfile } from "@/services/profile/service";
 import type { GetPublicProfileActionResult } from "@/types/profile.types";
 
@@ -14,7 +14,7 @@ export async function GET(
   _request: Request,
   { params }: { params: { id: string } },
 ): Promise<NextResponse<GetPublicProfileActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

@@ -31,7 +31,8 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/gif"];
 const MAX_FILE_MB = 5;
 
 interface OwnProfileModalProps {
-  serverId: string;
+  /** Sin servidor seleccionado (p.ej. abierto desde el home) no hay roles que mostrar. */
+  serverId?: string;
   profile: User;
   onClose: () => void;
   onUpdated: (user: User) => void;
@@ -377,11 +378,13 @@ export function OwnProfileModal({
 
           <MemberSince isoDate={profile.created_at} />
 
-          <MemberRoleBadges
-            serverId={serverId}
-            userId={profile.id}
-            canManage={false}
-          />
+          {serverId ? (
+            <MemberRoleBadges
+              serverId={serverId}
+              userId={profile.id}
+              canManage={false}
+            />
+          ) : null}
         </div>
       </div>
     </ProfileModalOverlay>

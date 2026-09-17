@@ -29,7 +29,10 @@ export async function POST(
     );
   }
 
-  const result = await login({ email: email.trim(), password });
+  const { result, refreshToken } = await login({
+    email: email.trim(),
+    password,
+  });
 
   if (!result.ok) {
     // 401: credenciales invalidas. Mensaje generico, sin distinguir campo.
@@ -62,7 +65,11 @@ export async function POST(
     );
   }
 
-  createSession({ token: result.data.token, user: result.data.user });
+  createSession({
+    token: result.data.token,
+    refreshToken: refreshToken ?? "",
+    user: result.data.user,
+  });
 
   return NextResponse.json(
     { ok: true, user: result.data.user },

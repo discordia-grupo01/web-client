@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { updateCategory } from "@/services/categories/service";
 import type { UpdateCategoryActionResult } from "@/types/category.types";
 
@@ -18,7 +18,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: { categoryId: string } },
 ): Promise<NextResponse<UpdateCategoryActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

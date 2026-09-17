@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { deleteChannel, updateChannel } from "@/services/channels/service";
 import type {
   DeleteChannelActionResult,
@@ -22,7 +22,7 @@ export async function PATCH(
   request: Request,
   { params }: { params: { channelId: string } },
 ): Promise<NextResponse<UpdateChannelActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
@@ -76,7 +76,7 @@ export async function DELETE(
   _request: Request,
   { params }: { params: { channelId: string } },
 ): Promise<NextResponse<DeleteChannelActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }

@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
-import { getSession } from "@/services/auth/session";
+import { getValidSession } from "@/services/auth/session";
 import { joinServerByCode } from "@/services/invites/service";
 import type { JoinServerActionResult } from "@/types/invite.types";
 import { getServer } from "@/services/servers/service";
@@ -15,7 +15,7 @@ export async function POST(
   _request: Request,
   { params }: { params: { code: string } },
 ): Promise<NextResponse<JoinServerActionResult>> {
-  const session = getSession();
+  const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
   }
