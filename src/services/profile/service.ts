@@ -120,15 +120,17 @@ interface ProfileImageFailure {
 export type ProfileImageResult = ProfileImageSuccess | ProfileImageFailure;
 
 /**
- * Trae el binario de una imagen de perfil ya subida. `imagePath` es el valor
- * de `avatar_url` tal cual lo devuelve el backend (ej.
- * `/uploads/profile-images/<id>.jpg`, servido sin auth por identify-service
- * -- ver `router.Static` en cmd/api/main.go).
+ * Trae el binario de una imagen de perfil ya subida. Acepta tanto rutas
+ * relativas servidas por identify-service como URLs publicas de Supabase
+ * Storage.
  */
 export async function getProfileImage(
   imagePath: string,
 ): Promise<ProfileImageResult> {
-  const response = await fetch(`${env.apiUrl}${imagePath}`);
+  const imageURL = /^https?:\/\//i.test(imagePath)
+    ? imagePath
+    : `${env.apiUrl}${imagePath}`;
+  const response = await fetch(imageURL);
 
   if (!response.ok || !response.body) {
     return { ok: false, status: response.status || 502 };
