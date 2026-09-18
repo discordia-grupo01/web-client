@@ -5,6 +5,7 @@ import {
   Camera,
   Check,
   Hash,
+  Link2,
   Pencil,
   Volume2,
   X,
@@ -30,6 +31,8 @@ const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 interface CreateServerModalProps {
   onClose: () => void;
   onCreated: (server: ServerSummary) => void;
+  /** Si se pasa, muestra al pie la opcion de unirse con un enlace. */
+  onJoinClick?: () => void;
 }
 
 function ServerIconPreview({
@@ -73,6 +76,7 @@ function FieldError({ message }: { message?: string }) {
 export function CreateServerModal({
   onClose,
   onCreated,
+  onJoinClick,
 }: CreateServerModalProps) {
   const [step, setStep] = useState<"form" | "success">("form");
   const [created, setCreated] = useState<ServerSummary | null>(null);
@@ -425,6 +429,22 @@ export function CreateServerModal({
                   Crear servidor
                 </Button>
               </div>
+
+              {onJoinClick ? (
+                <div className="bg-surface-sunken border-line flex flex-col items-center gap-2 border-t px-7 py-5 text-center">
+                  <p className="font-display text-content text-sm font-semibold">
+                    ¿Ya tenés una invitación?
+                  </p>
+                  <button
+                    type="button"
+                    onClick={onJoinClick}
+                    className="bg-surface-input border-line text-content-muted hover:text-content flex cursor-pointer items-center gap-2 rounded-lg border px-4 py-2 text-sm font-semibold transition-all hover:brightness-110"
+                  >
+                    <Link2 size={15} />
+                    Unirme con un enlace
+                  </button>
+                </div>
+              ) : null}
 
               <input
                 ref={fileInputRef}

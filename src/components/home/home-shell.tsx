@@ -209,6 +209,10 @@ export function HomeShell({
         <CreateServerModal
           onClose={() => setIsCreateModalOpen(false)}
           onCreated={addAndSelect}
+          onJoinClick={() => {
+            setIsCreateModalOpen(false);
+            setIsJoinModalOpen(true);
+          }}
         />
       ) : null}
 
