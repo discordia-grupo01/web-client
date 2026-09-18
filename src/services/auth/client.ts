@@ -38,10 +38,9 @@ export async function oauthGoogleLoginRequest(
   idToken: string,
 ): Promise<LoginActionResult> {
   try {
-    const { data } = await api.post<LoginActionResult>(
-      "/auth/oauth/google",
-      { idToken },
-    );
+    const { data } = await api.post<LoginActionResult>("/auth/oauth/google", {
+      idToken,
+    });
     return data;
   } catch {
     return {

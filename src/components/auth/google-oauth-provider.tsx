@@ -9,11 +9,7 @@ import type { ReactNode } from "react";
  * necesita "use client" para exponer el contexto de `@react-oauth/google`
  * (lo consume `GoogleButton` via `<GoogleLogin>`).
  */
-export function AppGoogleOAuthProvider({
-  children,
-}: {
-  children: ReactNode;
-}) {
+export function AppGoogleOAuthProvider({ children }: { children: ReactNode }) {
   return (
     <GoogleOAuthProvider
       clientId={process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID ?? ""}
