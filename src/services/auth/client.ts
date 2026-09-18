@@ -34,6 +34,22 @@ export async function loginRequest(
   }
 }
 
+export async function oauthGoogleLoginRequest(
+  idToken: string,
+): Promise<LoginActionResult> {
+  try {
+    const { data } = await api.post<LoginActionResult>("/auth/oauth/google", {
+      idToken,
+    });
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+    };
+  }
+}
+
 export async function registerRequest(
   values: RegisterValues,
 ): Promise<RegisterActionResult> {

@@ -545,6 +545,10 @@ export function ServerView({
             setIsCreateChannelOpen(true);
           }}
           onCreateCategory={() => setIsCreateCategoryOpen(true)}
+          onOwnershipAccepted={() => {
+            if (!user) return;
+            onServerUpdate({ ...server, owner_id: String(user.id) });
+          }}
         />
 
         {dragError ? (
@@ -685,6 +689,13 @@ export function ServerView({
       </div>
 
       <MembersSidebar
+        // Fuerza un remount (y por lo tanto un refetch de la lista) cuando
+        // cambia el owner: `MembersSidebar` solo carga una vez por
+        // `serverId` (ver su propio useEffect), y una transferencia de
+        // propiedad no cambia el `serverId`. Sin esto, el nuevo owner
+        // aparecería como miembro regular (sin la corona) hasta refrescar
+        // la página entera.
+        key={`${server.id}:${server.owner_id}`}
         serverId={server.id}
         currentUserId={ownProfile?.id ?? user?.id ?? null}
         onOpenOwnProfile={onOpenOwnProfile}
