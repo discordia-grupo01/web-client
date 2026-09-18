@@ -1,14 +1,20 @@
 "use client";
 
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
+import { GoogleIcon } from "@/components/icons/google-icon";
 import { oauthGoogleLoginRequest } from "@/services/auth/client";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
 const CLIENT_SIDE_ERROR_MESSAGE =
   "No pudimos conectar con Google. Iniciá sesión con tu correo y contraseña.";
+
+// Tamano con el que Google renderiza el boton (`size="large"`, ancho maximo
+// permitido 400px). Se escala via CSS para cubrir el boton visual.
+const GOOGLE_BUTTON_WIDTH = 400;
+const GOOGLE_BUTTON_HEIGHT = 40;
 
 /**
  * Login federado con Google (CA1: cuenta nueva, CA2: cuenta existente por
@@ -22,6 +28,23 @@ const CLIENT_SIDE_ERROR_MESSAGE =
 export function GoogleButton() {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState({ x: 1, y: 1 });
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container) return;
+
+    const observer = new ResizeObserver(([entry]) => {
+      const { width, height } = entry.contentRect;
+      setScale({
+        x: width / GOOGLE_BUTTON_WIDTH,
+        y: height / GOOGLE_BUTTON_HEIGHT,
+      });
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, []);
 
   async function handleSuccess(credentialResponse: CredentialResponse) {
     setError(null);
@@ -54,20 +77,55 @@ export function GoogleButton() {
   return (
     <div className="flex flex-col gap-2">
       <div
+        ref={containerRef}
         className={cn(
-          "flex justify-center",
+          "group relative h-11 w-full",
           isSubmitting && "pointer-events-none opacity-60",
         )}
         aria-busy={isSubmitting}
       >
-        <GoogleLogin
-          onSuccess={handleSuccess}
-          onError={handleError}
-          theme="outline"
-          shape="rectangular"
-          text="continue_with"
-          width="336"
-        />
+        {/* Boton visual, con los estilos del design system. No recibe
+            eventos: el click lo toma el iframe de Google que esta encima. */}
+        <div
+          aria-hidden="true"
+          className={cn(
+            "font-display flex h-full w-full items-center justify-center gap-2.5 rounded-xl border px-4 text-sm font-semibold transition-all",
+            "bg-surface-input border-line text-content",
+            "group-hover:border-line-strong group-hover:bg-surface-hover",
+            "group-focus-within:ring-accent group-focus-within:ring-offset-surface-sunken group-focus-within:ring-2 group-focus-within:ring-offset-2",
+            "group-active:scale-[0.98]",
+          )}
+        >
+          {isSubmitting ? (
+            <span className="border-content/30 border-t-content size-5 animate-spin rounded-full border-2" />
+          ) : (
+            <>
+              <GoogleIcon size={18} />
+              <span>Continuar con Google</span>
+            </>
+          )}
+        </div>
+
+        {/* El iframe de `<GoogleLogin>` no se puede estilar, asi que lo
+            dejamos invisible y lo escalamos para que cubra todo el boton. */}
+        <div
+          className="absolute top-0 left-0 origin-top-left overflow-hidden opacity-0"
+          style={{
+            width: GOOGLE_BUTTON_WIDTH,
+            height: GOOGLE_BUTTON_HEIGHT,
+            transform: `scale(${scale.x}, ${scale.y})`,
+          }}
+        >
+          <GoogleLogin
+            onSuccess={handleSuccess}
+            onError={handleError}
+            theme="outline"
+            size="large"
+            shape="rectangular"
+            text="continue_with"
+            width={String(GOOGLE_BUTTON_WIDTH)}
+          />
+        </div>
       </div>
 
       {error ? (
