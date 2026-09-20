@@ -1,4 +1,9 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  CHANNEL_REASONS,
+  fieldOf,
+  messageFor,
+  reasonOf,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -8,13 +13,6 @@ import type {
   DeleteChannelActionResult,
   UpdateChannelActionResult,
 } from "@/types/channel.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el canal.",
-  name_too_long: "El nombre es demasiado largo.",
-  name_invalid_chars: "El nombre tiene caracteres invalidos.",
-  name_taken: "Ya existe un canal con ese nombre en esa categoria.",
-};
 
 /**
  * BFF de `PATCH /v1/channels/:id`. Body JSON: `{ name }`.
@@ -36,12 +34,9 @@ export async function PATCH(
   });
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
+    const field = fieldOf(result.details);
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? CHANNEL_REASONS[reason] : undefined;
 
     if (field === "name" && friendly) {
       return NextResponse.json(
@@ -55,7 +50,11 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos editar el canal. Intenta de nuevo.",
+        message: messageFor(
+          result,
+          CHANNEL_REASONS,
+          "No pudimos editar el canal. Intenta de nuevo.",
+        ),
       },
       {
         status:

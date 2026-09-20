@@ -1,4 +1,9 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  fieldOf,
+  messageFor,
+  reasonOf,
+  ROLE_REASONS,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -9,12 +14,6 @@ import type {
   RolePermission,
   UpdateRoleActionResult,
 } from "@/types/role.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el rol.",
-  name_too_long: "El nombre es demasiado largo.",
-  color_invalid_format: "Elegí un color válido para el rol.",
-};
 
 /**
  * BFF de `PATCH /v1/roles/:id`. Body JSON: `{ name?, color?, permissions? }`.
@@ -45,12 +44,9 @@ export async function PATCH(
   });
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
+    const field = fieldOf(result.details);
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? ROLE_REASONS[reason] : undefined;
 
     if ((field === "name" || field === "color") && friendly) {
       return NextResponse.json(
@@ -92,7 +88,11 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos editar el rol. Intenta de nuevo.",
+        message: messageFor(
+          result,
+          ROLE_REASONS,
+          "No pudimos editar el rol. Intenta de nuevo.",
+        ),
       },
       {
         status:

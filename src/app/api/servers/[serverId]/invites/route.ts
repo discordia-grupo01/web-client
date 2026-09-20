@@ -1,4 +1,9 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  fieldOf,
+  INVITE_REASONS,
+  messageFor,
+  reasonOf,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -11,13 +16,6 @@ import type {
   CreateInviteActionResult,
   ListInvitationsActionResult,
 } from "@/types/invite.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  max_uses_invalid: "El límite de usos debe ser un número mayor a 0.",
-  server_not_found: "El servidor no existe.",
-  invite_permission_denied:
-    "Tenés que ser miembro de este servidor para invitar gente.",
-};
 
 /**
  * BFF de `GET /v1/servers/:id/invites`. Trae todas las invitaciones del
@@ -83,12 +81,9 @@ export async function POST(
   );
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
+    const field = fieldOf(result.details);
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? INVITE_REASONS[reason] : undefined;
 
     if (field === "max_uses" && friendly) {
       return NextResponse.json(
@@ -100,7 +95,14 @@ export async function POST(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: friendly ?? "Algo salio mal. Intenta de nuevo." },
+      {
+        ok: false,
+        message: messageFor(
+          result,
+          INVITE_REASONS,
+          "Algo salio mal. Intenta de nuevo.",
+        ),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

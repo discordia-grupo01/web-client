@@ -1,19 +1,15 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  CHANNEL_REASONS,
+  fieldOf,
+  messageFor,
+  reasonOf,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createChannel } from "@/services/channels/service";
 import type { CreateChannelActionResult } from "@/types/channel.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el canal.",
-  name_too_long: "El nombre es demasiado largo.",
-  name_invalid_chars: "El nombre tiene caracteres invalidos.",
-  name_taken: "Ya existe un canal con ese nombre en esa categoria.",
-  kind_invalid: "El tipo de canal debe ser texto o voz.",
-  category_server_mismatch: "Esa categoria no pertenece a este servidor.",
-};
 
 /**
  * BFF de `POST /v1/servers/:id/channels`. Body JSON: `{ name, kind, categoryId? }`.
@@ -41,12 +37,9 @@ export async function POST(
   });
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
+    const field = fieldOf(result.details);
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? CHANNEL_REASONS[reason] : undefined;
 
     if (field && friendly && (field === "name" || field === "kind")) {
       return NextResponse.json(
@@ -60,7 +53,11 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos crear el canal. Intenta de nuevo.",
+        message: messageFor(
+          result,
+          CHANNEL_REASONS,
+          "No pudimos crear el canal. Intenta de nuevo.",
+        ),
       },
       {
         status:

@@ -1,4 +1,4 @@
-import { reasonOf } from "@discordia/client-shared";
+import { INVITE_REASONS, messageFor, reasonOf } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -6,11 +6,6 @@ import { getValidSession } from "@/services/auth/session";
 import { joinServerByCode } from "@/services/invites/service";
 import type { JoinServerActionResult } from "@/types/invite.types";
 import { getServer } from "@/services/servers/service";
-
-const REASON_MESSAGES: Record<string, string> = {
-  invitation_invalid: "Este enlace de invitación no es válido o expiró.",
-  user_banned: "No podés unirte a este servidor.",
-};
 
 export async function POST(
   _request: Request,
@@ -25,7 +20,7 @@ export async function POST(
 
   if (!joinResult.ok) {
     const reason = reasonOf(joinResult.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? INVITE_REASONS[reason] : undefined;
 
     if (friendly) {
       return NextResponse.json(

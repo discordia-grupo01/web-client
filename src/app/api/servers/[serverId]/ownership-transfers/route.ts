@@ -1,4 +1,9 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  fieldOf,
+  messageFor,
+  reasonOf,
+  TRANSFER_REASONS,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -11,14 +16,6 @@ import type {
   GetPendingTransferActionResult,
   InitiateTransferActionResult,
 } from "@/types/ownership-transfer.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  required: "Tenés que elegir un miembro para transferir la propiedad.",
-  not_a_member: "Ese usuario no es miembro de este servidor.",
-  already_owner: "Ese usuario ya es el propietario del servidor.",
-  transfer_already_pending:
-    "Ya hay una transferencia de propiedad pendiente para este servidor.",
-};
 
 /**
  * BFF de `GET /v1/servers/:id/ownership-transfers/pending`. Un servidor sin
@@ -107,12 +104,9 @@ export async function POST(
       );
     }
 
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
+    const field = fieldOf(result.details);
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? TRANSFER_REASONS[reason] : undefined;
 
     if (field === "to_user_id" && friendly) {
       return NextResponse.json(
@@ -121,7 +115,14 @@ export async function POST(
       );
     }
     return NextResponse.json(
-      { ok: false, message: friendly ?? "Algo salió mal. Intenta de nuevo." },
+      {
+        ok: false,
+        message: messageFor(
+          result,
+          TRANSFER_REASONS,
+          "Algo salió mal. Intenta de nuevo.",
+        ),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

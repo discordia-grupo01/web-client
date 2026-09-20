@@ -1,14 +1,14 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  CHANNEL_REASONS,
+  messageFor,
+  reasonOf,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { moveChannelToCategory } from "@/services/channels/service";
 import type { MoveChannelActionResult } from "@/types/channel.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_taken: "Ya existe un canal con ese nombre en esa categoría.",
-};
 
 /**
  * BFF de `PATCH /v1/channels/:id/category`. Body JSON: `{ categoryId: string | null }`.
@@ -38,11 +38,15 @@ export async function PATCH(
       return unauthorizedResponse();
     }
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? CHANNEL_REASONS[reason] : undefined;
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos mover el canal. Intenta de nuevo.",
+        message: messageFor(
+          result,
+          CHANNEL_REASONS,
+          "No pudimos mover el canal. Intenta de nuevo.",
+        ),
       },
       {
         status:

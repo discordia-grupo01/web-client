@@ -1,14 +1,14 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  messageFor,
+  reasonOf,
+  TRANSFER_REASONS,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { rejectOwnershipTransfer } from "@/services/ownership-transfers/service";
 import type { RespondTransferActionResult } from "@/types/ownership-transfer.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  transfer_not_pending: "Esta transferencia ya no está pendiente.",
-};
 
 /**
  * BFF de `POST /v1/servers/:id/ownership-transfers/:transferId/reject`.
@@ -52,9 +52,16 @@ export async function POST(
     }
 
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? TRANSFER_REASONS[reason] : undefined;
     return NextResponse.json(
-      { ok: false, message: friendly ?? "Algo salió mal. Intenta de nuevo." },
+      {
+        ok: false,
+        message: messageFor(
+          result,
+          TRANSFER_REASONS,
+          "Algo salió mal. Intenta de nuevo.",
+        ),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

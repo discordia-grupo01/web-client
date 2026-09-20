@@ -1,22 +1,15 @@
-import { reasonOf } from "@discordia/client-shared";
+import {
+  fieldOf,
+  messageFor,
+  reasonOf,
+  SERVER_REASONS,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createServer, listMyServers } from "@/services/servers/service";
 import type { CreateServerActionResult } from "@/types/server.types";
-
-/** Traduce `details.reason` del back a un mensaje de campo en español. */
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el servidor.",
-  name_too_short: "El nombre debe tener entre 2 y 100 caracteres.",
-  name_too_long: "El nombre debe tener entre 2 y 100 caracteres.",
-  name_invalid_chars: "El nombre contiene caracteres no permitidos.",
-  name_taken: "Ya tenés un servidor con ese nombre.",
-  icon_too_large: "El archivo no puede pesar más de 20 MB.",
-  icon_unsupported_type: "El archivo debe ser PNG, JPG o WEBP.",
-  icon_unreadable: "No pudimos leer ese archivo. Probá con otro.",
-};
 
 /**
  * BFF de `GET /v1/servers`. El navegador pega aca (mismo origen); reenvia el
@@ -67,12 +60,9 @@ export async function POST(
   const result = await createServer(session.token, formData);
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
+    const field = fieldOf(result.details);
     const reason = reasonOf(result.details);
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const friendly = reason ? SERVER_REASONS[reason] : undefined;
 
     if ((field === "name" || field === "icon") && friendly) {
       return NextResponse.json(
