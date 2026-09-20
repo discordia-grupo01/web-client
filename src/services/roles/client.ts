@@ -1,3 +1,14 @@
+import {
+  DEFAULT_ROLE_SET_FAILED,
+  MEMBER_ROLE_ASSIGN_FAILED,
+  MEMBER_ROLE_REMOVE_FAILED,
+  MEMBER_ROLES_LOAD_FAILED,
+  ROLE_CREATE_FAILED,
+  ROLE_DELETE_FAILED,
+  ROLE_UPDATE_FAILED,
+  ROLES_LOAD_FAILED,
+} from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -31,7 +42,7 @@ export async function createRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos crear el rol. Intenta de nuevo.",
+      message: ROLE_CREATE_FAILED,
     };
   }
 }
@@ -47,7 +58,7 @@ export async function listRolesRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar los roles. Intenta de nuevo.",
+      message: ROLES_LOAD_FAILED,
     };
   }
 }
@@ -66,7 +77,7 @@ export async function updateRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos editar el rol. Intenta de nuevo.",
+      message: ROLE_UPDATE_FAILED,
     };
   }
 }
@@ -83,7 +94,7 @@ export async function deleteRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos eliminar el rol. Intenta de nuevo.",
+      message: ROLE_DELETE_FAILED,
     };
   }
 }
@@ -101,7 +112,7 @@ export async function setDefaultRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos definir el rol por defecto. Intenta de nuevo.",
+      message: DEFAULT_ROLE_SET_FAILED,
     };
   }
 }
@@ -118,7 +129,7 @@ export async function listMemberRolesRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar los roles del miembro. Intenta de nuevo.",
+      message: MEMBER_ROLES_LOAD_FAILED,
     };
   }
 }
@@ -137,7 +148,7 @@ export async function assignRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos asignar el rol. Intenta de nuevo.",
+      message: MEMBER_ROLE_ASSIGN_FAILED,
     };
   }
 }
@@ -155,7 +166,7 @@ export async function removeRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos quitar el rol. Intenta de nuevo.",
+      message: MEMBER_ROLE_REMOVE_FAILED,
     };
   }
 }

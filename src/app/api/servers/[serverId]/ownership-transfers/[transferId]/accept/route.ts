@@ -1,7 +1,10 @@
 import {
   messageFor,
   reasonOf,
+  TRANSFER_NOT_FOUND,
+  TRANSFER_ONLY_TARGET_ACCEPTS,
   TRANSFER_REASONS,
+  UNEXPECTED_ERROR_MESSAGE,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -38,14 +41,14 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Solo la persona invitada puede aceptar esta transferencia.",
+          message: TRANSFER_ONLY_TARGET_ACCEPTS,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "Esta transferencia ya no existe." },
+        { ok: false, message: TRANSFER_NOT_FOUND },
         { status: 404 },
       );
     }
@@ -55,11 +58,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          TRANSFER_REASONS,
-          "Algo salió mal. Intenta de nuevo.",
-        ),
+        message: messageFor(result, TRANSFER_REASONS, UNEXPECTED_ERROR_MESSAGE),
       },
       {
         status:

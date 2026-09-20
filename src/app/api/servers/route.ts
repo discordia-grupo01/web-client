@@ -3,6 +3,8 @@ import {
   messageFor,
   reasonOf,
   SERVER_REASONS,
+  SERVERS_LOAD_FAILED,
+  UNEXPECTED_ERROR_MESSAGE,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -26,7 +28,7 @@ export async function GET(): Promise<NextResponse> {
     return NextResponse.json(
       {
         ok: false,
-        message: "No pudimos cargar tus servidores. Intenta de nuevo.",
+        message: SERVERS_LOAD_FAILED,
       },
       { status: result.status || 502 },
     );
@@ -52,7 +54,7 @@ export async function POST(
     formData = await request.formData();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Peticion invalida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -76,7 +78,7 @@ export async function POST(
     }
 
     return NextResponse.json(
-      { ok: false, message: "Algo salio mal. Intenta de nuevo." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

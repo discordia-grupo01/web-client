@@ -1,3 +1,5 @@
+import { UNEXPECTED_ERROR_MESSAGE } from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -23,7 +25,7 @@ export async function PUT(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }

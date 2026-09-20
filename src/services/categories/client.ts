@@ -1,3 +1,8 @@
+import {
+  CATEGORY_CREATE_FAILED,
+  CATEGORY_UPDATE_FAILED,
+} from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -24,7 +29,7 @@ export async function createCategoryRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos crear la categoría. Intenta de nuevo.",
+      message: CATEGORY_CREATE_FAILED,
     };
   }
 }
@@ -42,7 +47,7 @@ export async function updateCategoryRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos editar la categoría. Intenta de nuevo.",
+      message: CATEGORY_UPDATE_FAILED,
     };
   }
 }

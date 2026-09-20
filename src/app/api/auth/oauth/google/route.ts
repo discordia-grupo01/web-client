@@ -1,3 +1,11 @@
+import {
+  GOOGLE_UNAVAILABLE,
+  GOOGLE_VERIFY_FAILED,
+  INVALID_DATA_MESSAGE,
+  LOGIN_UNAVAILABLE,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { loginWithGoogle } from "@/services/auth/service";
@@ -12,7 +20,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -22,7 +30,7 @@ export async function POST(
 
   if (!idToken) {
     return NextResponse.json(
-      { ok: false, message: "Revisa los datos ingresados." },
+      { ok: false, message: INVALID_DATA_MESSAGE },
       { status: 400 },
     );
   }
@@ -35,8 +43,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "Google no está disponible en este momento. Inicia sesión con tu correo y contraseña.",
+          message: GOOGLE_UNAVAILABLE,
         },
         { status: 503 },
       );
@@ -47,8 +54,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "No pudimos verificar tu cuenta de Google. Inicia sesión con tu correo y contraseña.",
+          message: GOOGLE_VERIFY_FAILED,
         },
         { status: 401 },
       );
@@ -57,7 +63,7 @@ export async function POST(
     // 400: falta id_token o el backend rechazo el formato del request.
     if (result.status === 400) {
       return NextResponse.json(
-        { ok: false, message: "Revisa los datos ingresados." },
+        { ok: false, message: INVALID_DATA_MESSAGE },
         { status: 400 },
       );
     }
@@ -66,8 +72,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "No pudimos iniciar sesión en este momento. Intenta de nuevo más tarde.",
+        message: LOGIN_UNAVAILABLE,
       },
       { status: 502 },
     );

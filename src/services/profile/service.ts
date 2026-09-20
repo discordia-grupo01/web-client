@@ -1,3 +1,8 @@
+import {
+  NETWORK_ERROR_MESSAGE,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
+
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
@@ -92,17 +97,14 @@ export async function updateOwnProfile(
     return {
       ok: false,
       status: response.status,
-      message:
-        errorBody?.error?.message ??
-        "Ocurrio un error inesperado. Intenta de nuevo.",
+      message: errorBody?.error?.message ?? UNEXPECTED_ERROR_MESSAGE,
       details: errorBody?.error?.details,
     };
   } catch {
     return {
       ok: false,
       status: 0,
-      message:
-        "No pudimos conectar con el servidor. Intenta de nuevo en un momento.",
+      message: NETWORK_ERROR_MESSAGE,
     };
   }
 }

@@ -1,4 +1,4 @@
-import { reasonOf } from "@discordia/client-shared";
+import { reasonOf, UNEXPECTED_ERROR_MESSAGE } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -41,7 +41,7 @@ export async function DELETE(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "Algo salio mal. Intenta de nuevo." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

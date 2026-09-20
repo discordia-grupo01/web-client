@@ -1,8 +1,10 @@
 import {
   fieldOf,
   INVITE_REASONS,
+  INVITES_LOAD_FAILED,
   messageFor,
   reasonOf,
+  UNEXPECTED_ERROR_MESSAGE,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -38,7 +40,7 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        message: "No pudimos cargar las invitaciones. Intenta de nuevo.",
+        message: INVITES_LOAD_FAILED,
       },
       {
         status:
@@ -97,11 +99,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          INVITE_REASONS,
-          "Algo salio mal. Intenta de nuevo.",
-        ),
+        message: messageFor(result, INVITE_REASONS, UNEXPECTED_ERROR_MESSAGE),
       },
       {
         status:

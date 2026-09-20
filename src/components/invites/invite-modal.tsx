@@ -1,5 +1,7 @@
 "use client";
 
+import { INVITE_COPY_FAILED } from "@discordia/client-shared";
+
 import {
   AlertCircle,
   Check,
@@ -81,7 +83,7 @@ function InvitationRow({
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setErrorMessage("No pudimos copiar el enlace.");
+      setErrorMessage(INVITE_COPY_FAILED);
     }
   }
 

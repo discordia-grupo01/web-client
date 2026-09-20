@@ -1,4 +1,5 @@
 import {
+  CHANNEL_MOVE_FAILED,
   CHANNEL_REASONS,
   messageFor,
   reasonOf,
@@ -42,11 +43,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          CHANNEL_REASONS,
-          "No pudimos mover el canal. Intenta de nuevo.",
-        ),
+        message: messageFor(result, CHANNEL_REASONS, CHANNEL_MOVE_FAILED),
       },
       {
         status:

@@ -1,3 +1,5 @@
+import { NETWORK_ERROR_MESSAGE } from "@discordia/client-shared";
+
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
@@ -149,8 +151,7 @@ export async function createServer(
     return {
       ok: false,
       status: 0,
-      message:
-        "No pudimos conectar con el servidor. Intenta de nuevo en un momento.",
+      message: NETWORK_ERROR_MESSAGE,
     };
   }
 }

@@ -1,3 +1,11 @@
+import {
+  OWN_PROFILE_LOAD_FAILED,
+  PROFILE_LOAD_FAILED,
+  PROFILE_UPDATE_FAILED,
+  STATUS_CLEAR_FAILED,
+  STATUS_UPDATE_FAILED,
+} from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -23,7 +31,7 @@ export async function getPublicProfileRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar el perfil.",
+      message: PROFILE_LOAD_FAILED,
     };
   }
 }
@@ -35,7 +43,7 @@ export async function getOwnProfileRequest(): Promise<GetOwnProfileActionResult>
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar tu perfil.",
+      message: OWN_PROFILE_LOAD_FAILED,
     };
   }
 }
@@ -58,7 +66,7 @@ export async function updateOwnProfileRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos actualizar tu perfil. Intenta de nuevo.",
+      message: PROFILE_UPDATE_FAILED,
     };
   }
 }
@@ -75,7 +83,7 @@ export async function updateCustomStatusRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos actualizar tu estado. Intenta de nuevo.",
+      message: STATUS_UPDATE_FAILED,
     };
   }
 }
@@ -88,7 +96,7 @@ export async function clearCustomStatusRequest(): Promise<UpdateCustomStatusActi
   } catch {
     return {
       ok: false,
-      message: "No pudimos borrar tu estado. Intenta de nuevo.",
+      message: STATUS_CLEAR_FAILED,
     };
   }
 }

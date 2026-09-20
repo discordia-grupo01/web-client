@@ -1,3 +1,9 @@
+import {
+  DEFAULT_ROLE_SET_FAILED,
+  OWNER_ONLY_SET_DEFAULT_ROLE,
+  ROLE_NOT_FOUND,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -34,22 +40,21 @@ export async function PUT(
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "No tenés permisos de administración para definir el rol por defecto.",
+          message: OWNER_ONLY_SET_DEFAULT_ROLE,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "No encontramos ese rol." },
+        { ok: false, message: ROLE_NOT_FOUND },
         { status: 404 },
       );
     }
     return NextResponse.json(
       {
         ok: false,
-        message: "No pudimos definir el rol por defecto. Intenta de nuevo.",
+        message: DEFAULT_ROLE_SET_FAILED,
       },
       {
         status:

@@ -1,8 +1,15 @@
 import {
   fieldOf,
+  invalidPermissionMessage,
   messageFor,
+  OWNER_ONLY_DELETE_ROLE,
+  OWNER_ONLY_UPDATE_ROLE,
   reasonOf,
+  ROLE_DELETE_FAILED,
+  ROLE_IS_DEFAULT,
+  ROLE_NOT_FOUND,
   ROLE_REASONS,
+  ROLE_UPDATE_FAILED,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -55,13 +62,7 @@ export async function PATCH(
       );
     }
     if (field === "permissions") {
-      const invalidValue =
-        typeof result.details?.invalid_value === "string"
-          ? result.details.invalid_value
-          : undefined;
-      const message = invalidValue
-        ? `"${invalidValue}" no es un permiso válido.`
-        : "Uno de los permisos enviados no es válido.";
+      const message = invalidPermissionMessage(result.details?.invalid_value);
       return NextResponse.json(
         { ok: false, message, fieldErrors: { permissions: message } },
         { status: result.status || 400 },
@@ -74,25 +75,21 @@ export async function PATCH(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para editar roles.",
+          message: OWNER_ONLY_UPDATE_ROLE,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "No encontramos ese rol." },
+        { ok: false, message: ROLE_NOT_FOUND },
         { status: 404 },
       );
     }
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          ROLE_REASONS,
-          "No pudimos editar el rol. Intenta de nuevo.",
-        ),
+        message: messageFor(result, ROLE_REASONS, ROLE_UPDATE_FAILED),
       },
       {
         status:
@@ -127,7 +124,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para eliminar roles.",
+          message: OWNER_ONLY_DELETE_ROLE,
         },
         { status: 403 },
       );
@@ -137,20 +134,19 @@ export async function DELETE(
         {
           ok: false,
           isDefaultRole: true,
-          message:
-            "No podés eliminar este rol porque es el rol por defecto del servidor. Asigná otro rol por defecto primero.",
+          message: ROLE_IS_DEFAULT,
         },
         { status: 409 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "No encontramos ese rol." },
+        { ok: false, message: ROLE_NOT_FOUND },
         { status: 404 },
       );
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos eliminar el rol. Intenta de nuevo." },
+      { ok: false, message: ROLE_DELETE_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

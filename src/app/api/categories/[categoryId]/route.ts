@@ -1,5 +1,6 @@
 import {
   CATEGORY_REASONS,
+  CATEGORY_UPDATE_FAILED,
   fieldOf,
   messageFor,
   reasonOf,
@@ -45,11 +46,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          CATEGORY_REASONS,
-          "No pudimos editar la categoría. Intenta de nuevo.",
-        ),
+        message: messageFor(result, CATEGORY_REASONS, CATEGORY_UPDATE_FAILED),
       },
       {
         status:

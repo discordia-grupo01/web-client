@@ -1,3 +1,11 @@
+import {
+  CHANNEL_CREATE_FAILED,
+  CHANNEL_DELETE_FAILED,
+  CHANNEL_MOVE_FAILED,
+  CHANNEL_REORDER_FAILED,
+  CHANNEL_UPDATE_FAILED,
+} from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -27,7 +35,7 @@ export async function createChannelRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos crear el canal. Intenta de nuevo.",
+      message: CHANNEL_CREATE_FAILED,
     };
   }
 }
@@ -45,7 +53,7 @@ export async function updateChannelRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos editar el canal. Intenta de nuevo.",
+      message: CHANNEL_UPDATE_FAILED,
     };
   }
 }
@@ -61,7 +69,7 @@ export async function deleteChannelRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos eliminar el canal. Intenta de nuevo.",
+      message: CHANNEL_DELETE_FAILED,
     };
   }
 }
@@ -80,7 +88,7 @@ export async function moveChannelToCategoryRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos mover el canal. Intenta de nuevo.",
+      message: CHANNEL_MOVE_FAILED,
     };
   }
 }
@@ -100,7 +108,7 @@ export async function reorderChannelsRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos reordenar los canales. Intenta de nuevo.",
+      message: CHANNEL_REORDER_FAILED,
     };
   }
 }

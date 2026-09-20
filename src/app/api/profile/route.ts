@@ -1,3 +1,8 @@
+import {
+  OWN_PROFILE_LOAD_FAILED,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -24,7 +29,7 @@ export async function GET(): Promise<NextResponse<GetOwnProfileActionResult>> {
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos cargar tu perfil." },
+      { ok: false, message: OWN_PROFILE_LOAD_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,
@@ -54,7 +59,7 @@ export async function PATCH(
     formData = await request.formData();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }

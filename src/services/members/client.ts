@@ -1,3 +1,5 @@
+import { MEMBERS_LOAD_FAILED } from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type { ListMembersActionResult } from "@/types/member.types";
@@ -19,7 +21,7 @@ export async function listMembersRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar los miembros. Intenta de nuevo.",
+      message: MEMBERS_LOAD_FAILED,
     };
   }
 }

@@ -1,4 +1,5 @@
 import {
+  CHANNEL_CREATE_FAILED,
   CHANNEL_REASONS,
   fieldOf,
   messageFor,
@@ -53,11 +54,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          CHANNEL_REASONS,
-          "No pudimos crear el canal. Intenta de nuevo.",
-        ),
+        message: messageFor(result, CHANNEL_REASONS, CHANNEL_CREATE_FAILED),
       },
       {
         status:

@@ -49,7 +49,7 @@ export default async function InvitePage({
   const reason = reasonOf(result.details);
   const copy = (reason ? REASON_COPY[reason] : undefined) ?? {
     title: "No pudimos procesar la invitación",
-    body: "Intenta de nuevo en un momento.",
+    body: "Intentá de nuevo en un momento.",
   };
   const Icon = reason === "user_banned" ? ShieldOff : AlertCircle;
 

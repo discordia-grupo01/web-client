@@ -1,8 +1,11 @@
 import {
   fieldOf,
   messageFor,
+  OWNER_ONLY_TRANSFER,
   reasonOf,
+  TRANSFER_LOAD_FAILED,
   TRANSFER_REASONS,
+  UNEXPECTED_ERROR_MESSAGE,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -46,8 +49,7 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "No pudimos cargar la transferencia de propiedad. Intenta de nuevo.",
+        message: TRANSFER_LOAD_FAILED,
       },
       {
         status:
@@ -98,7 +100,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Solo el propietario puede transferir el servidor.",
+          message: OWNER_ONLY_TRANSFER,
         },
         { status: 403 },
       );
@@ -117,11 +119,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          TRANSFER_REASONS,
-          "Algo salió mal. Intenta de nuevo.",
-        ),
+        message: messageFor(result, TRANSFER_REASONS, UNEXPECTED_ERROR_MESSAGE),
       },
       {
         status:

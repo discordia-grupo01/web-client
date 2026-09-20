@@ -1,3 +1,8 @@
+import {
+  REQUEST_FAILED_MESSAGE,
+  SERVERS_LOAD_FAILED,
+} from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -23,7 +28,7 @@ export async function listServersRequest(): Promise<ListServersResult> {
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar tus servidores. Intenta de nuevo.",
+      message: SERVERS_LOAD_FAILED,
     };
   }
 }
@@ -39,7 +44,7 @@ export async function leaveServerRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -62,7 +67,7 @@ export async function createServerRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }

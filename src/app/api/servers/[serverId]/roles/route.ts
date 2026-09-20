@@ -1,8 +1,11 @@
 import {
   fieldOf,
   messageFor,
+  OWNER_ONLY_CREATE_ROLE,
   reasonOf,
+  ROLE_CREATE_FAILED,
   ROLE_REASONS,
+  ROLES_LOAD_FAILED,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -32,7 +35,7 @@ export async function GET(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos cargar los roles. Intenta de nuevo." },
+      { ok: false, message: ROLES_LOAD_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,
@@ -84,7 +87,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para crear roles.",
+          message: OWNER_ONLY_CREATE_ROLE,
         },
         { status: 403 },
       );
@@ -92,11 +95,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          ROLE_REASONS,
-          "No pudimos crear el rol. Intenta de nuevo.",
-        ),
+        message: messageFor(result, ROLE_REASONS, ROLE_CREATE_FAILED),
       },
       {
         status:

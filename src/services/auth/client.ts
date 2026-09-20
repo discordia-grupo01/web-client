@@ -1,3 +1,5 @@
+import { REQUEST_FAILED_MESSAGE } from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -29,7 +31,7 @@ export async function loginRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -45,7 +47,7 @@ export async function oauthGoogleLoginRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -62,7 +64,7 @@ export async function registerRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -87,7 +89,7 @@ export async function forgotPasswordRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -106,7 +108,7 @@ export async function resetPasswordRequest(values: {
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }

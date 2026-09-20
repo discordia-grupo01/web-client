@@ -1,3 +1,5 @@
+import { PROFILE_LOAD_FAILED } from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -25,7 +27,7 @@ export async function GET(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos cargar el perfil." },
+      { ok: false, message: PROFILE_LOAD_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

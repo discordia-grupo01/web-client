@@ -1,3 +1,5 @@
+import { MEMBERS_LOAD_FAILED } from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -26,7 +28,7 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        message: "No pudimos cargar los miembros. Intenta de nuevo.",
+        message: MEMBERS_LOAD_FAILED,
       },
       {
         status:

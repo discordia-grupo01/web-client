@@ -1,4 +1,5 @@
 import {
+  CATEGORY_CREATE_FAILED,
   CATEGORY_REASONS,
   fieldOf,
   messageFor,
@@ -45,11 +46,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          CATEGORY_REASONS,
-          "No pudimos crear la categoría. Intenta de nuevo.",
-        ),
+        message: messageFor(result, CATEGORY_REASONS, CATEGORY_CREATE_FAILED),
       },
       {
         status:

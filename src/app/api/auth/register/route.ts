@@ -1,3 +1,11 @@
+import {
+  EMAIL_ALREADY_REGISTERED,
+  INVALID_DATA_MESSAGE,
+  PASSWORD_TOO_WEAK,
+  REGISTER_UNAVAILABLE,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { register } from "@/services/auth/service";
@@ -18,7 +26,7 @@ export async function POST(
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -30,7 +38,7 @@ export async function POST(
 
   if (hasErrors(validateRegister({ name, email, password }))) {
     return NextResponse.json(
-      { ok: false, message: "Revisa los datos ingresados." },
+      { ok: false, message: INVALID_DATA_MESSAGE },
       { status: 400 },
     );
   }
@@ -47,7 +55,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Ya existe una cuenta con ese correo electrónico.",
+          message: EMAIL_ALREADY_REGISTERED,
         },
         { status: 409 },
       );
@@ -58,8 +66,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "Revisa los datos: la contraseña necesita 8+ caracteres con mayúscula, minúscula y número.",
+          message: PASSWORD_TOO_WEAK,
         },
         { status: 400 },
       );
@@ -69,8 +76,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "No pudimos crear tu cuenta en este momento. Intenta de nuevo más tarde.",
+        message: REGISTER_UNAVAILABLE,
       },
       { status: 502 },
     );

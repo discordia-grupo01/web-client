@@ -1,3 +1,5 @@
+import { CHANNEL_REORDER_FAILED } from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -43,7 +45,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: "No pudimos reordenar los canales. Intenta de nuevo.",
+        message: CHANNEL_REORDER_FAILED,
       },
       {
         status:

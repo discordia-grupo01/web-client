@@ -1,5 +1,7 @@
 import {
+  CHANNEL_DELETE_FAILED,
   CHANNEL_REASONS,
+  CHANNEL_UPDATE_FAILED,
   fieldOf,
   messageFor,
   reasonOf,
@@ -50,11 +52,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: messageFor(
-          result,
-          CHANNEL_REASONS,
-          "No pudimos editar el canal. Intenta de nuevo.",
-        ),
+        message: messageFor(result, CHANNEL_REASONS, CHANNEL_UPDATE_FAILED),
       },
       {
         status:
@@ -85,7 +83,7 @@ export async function DELETE(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos eliminar el canal. Intenta de nuevo." },
+      { ok: false, message: CHANNEL_DELETE_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

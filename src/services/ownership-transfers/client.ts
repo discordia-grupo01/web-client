@@ -1,3 +1,11 @@
+import {
+  TRANSFER_ACCEPT_FAILED,
+  TRANSFER_CANCEL_FAILED,
+  TRANSFER_LOAD_FAILED,
+  TRANSFER_REJECT_FAILED,
+  TRANSFER_START_FAILED,
+} from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -25,7 +33,7 @@ export async function initiateTransferRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos iniciar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_START_FAILED,
     };
   }
 }
@@ -41,7 +49,7 @@ export async function getPendingTransferRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar la transferencia de propiedad.",
+      message: TRANSFER_LOAD_FAILED,
     };
   }
 }
@@ -58,7 +66,7 @@ export async function acceptTransferRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos aceptar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_ACCEPT_FAILED,
     };
   }
 }
@@ -75,7 +83,7 @@ export async function rejectTransferRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos rechazar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_REJECT_FAILED,
     };
   }
 }
@@ -92,7 +100,7 @@ export async function cancelTransferRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos cancelar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_CANCEL_FAILED,
     };
   }
 }

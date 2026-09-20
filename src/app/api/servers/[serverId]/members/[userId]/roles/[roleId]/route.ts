@@ -1,3 +1,9 @@
+import {
+  MEMBER_ROLE_NOT_ASSIGNED,
+  MEMBER_ROLE_REMOVE_FAILED,
+  OWNER_ONLY_REMOVE_ROLE,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -34,19 +40,19 @@ export async function DELETE(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para quitar roles.",
+          message: OWNER_ONLY_REMOVE_ROLE,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "Ese miembro no tiene ese rol." },
+        { ok: false, message: MEMBER_ROLE_NOT_ASSIGNED },
         { status: 404 },
       );
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos quitar el rol. Intenta de nuevo." },
+      { ok: false, message: MEMBER_ROLE_REMOVE_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

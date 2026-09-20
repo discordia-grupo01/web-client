@@ -1,4 +1,9 @@
-import { INVITE_REASONS, messageFor, reasonOf } from "@discordia/client-shared";
+import {
+  INVITE_REASONS,
+  messageFor,
+  reasonOf,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -32,7 +37,7 @@ export async function POST(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "Algo salio mal. Intenta de nuevo." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       {
         status:
           joinResult.status >= 400 && joinResult.status < 500

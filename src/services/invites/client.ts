@@ -1,3 +1,10 @@
+import {
+  INVITE_CREATE_FAILED,
+  INVITE_REVOKE_FAILED,
+  INVITES_LOAD_FAILED,
+  REQUEST_FAILED_MESSAGE,
+} from "@discordia/client-shared";
+
 import { api } from "@/lib/browser-api-client";
 
 import type {
@@ -30,7 +37,7 @@ export async function joinServerRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -48,7 +55,7 @@ export async function createInviteRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos generar la invitación. Intenta de nuevo.",
+      message: INVITE_CREATE_FAILED,
     };
   }
 }
@@ -64,7 +71,7 @@ export async function listInvitationsRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar las invitaciones. Intenta de nuevo.",
+      message: INVITES_LOAD_FAILED,
     };
   }
 }
@@ -80,7 +87,7 @@ export async function revokeInviteRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos revocar el enlace. Intenta de nuevo.",
+      message: INVITE_REVOKE_FAILED,
     };
   }
 }
