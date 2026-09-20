@@ -24,7 +24,7 @@ describe("<ForgotPasswordForm />", () => {
     await user.click(screen.getByRole("button", { name: /enviar enlace/i }));
 
     expect(
-      await screen.findByText("Ingresa tu correo electrónico"),
+      await screen.findByText("Ingresá tu correo electrónico"),
     ).toBeInTheDocument();
     expect(forgotPasswordRequestMock).not.toHaveBeenCalled();
   });

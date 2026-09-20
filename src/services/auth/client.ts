@@ -1,4 +1,9 @@
-import { REQUEST_FAILED_MESSAGE } from "@discordia/client-shared";
+import {
+  REQUEST_FAILED_MESSAGE,
+  type ForgotPasswordValues,
+  type LoginValues,
+  type RegisterValues,
+} from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
 
@@ -8,11 +13,6 @@ import type {
   RegisterActionResult,
   ResetPasswordActionResult,
 } from "@/types/auth.types";
-import type {
-  ForgotPasswordValues,
-  LoginValues,
-  RegisterValues,
-} from "./validation";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/auth/*`, mismo origen).

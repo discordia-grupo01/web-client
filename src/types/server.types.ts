@@ -12,15 +12,6 @@ export interface ServerSummary {
   categories: Category[];
 }
 
-/** Forma de error de `servers`: `{ error: { code, message, details? } }`. */
-export interface ServersApiErrorBody {
-  error: {
-    code: number;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-}
-
 export interface CreateServerFieldErrors {
   name?: string;
   icon?: string;

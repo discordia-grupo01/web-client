@@ -1,8 +1,10 @@
 import {
+  hasErrors,
   INVALID_CREDENTIALS,
   INVALID_DATA_MESSAGE,
   LOGIN_UNAVAILABLE,
   UNEXPECTED_ERROR_MESSAGE,
+  validateLogin,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
@@ -10,7 +12,6 @@ import { NextResponse } from "next/server";
 import { login } from "@/services/auth/service";
 import { createSession } from "@/services/auth/session";
 import type { LoginActionResult } from "@/types/auth.types";
-import { hasErrors, validateLogin } from "@/services/auth/validation";
 
 export async function POST(
   request: Request,

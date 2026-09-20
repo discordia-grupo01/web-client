@@ -1,16 +1,17 @@
 import {
   EMAIL_ALREADY_REGISTERED,
+  hasErrors,
   INVALID_DATA_MESSAGE,
   PASSWORD_TOO_WEAK,
   REGISTER_UNAVAILABLE,
   UNEXPECTED_ERROR_MESSAGE,
+  validateRegister,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { register } from "@/services/auth/service";
 import type { RegisterActionResult } from "@/types/auth.types";
-import { hasErrors, validateRegister } from "@/services/auth/validation";
 
 /**
  * BFF de registro. El navegador pega aca (mismo origen); este handler llama a

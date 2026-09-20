@@ -37,8 +37,8 @@ describe("<LoginForm />", () => {
 
     await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
-    expect(await screen.findByText(/ingresa tu correo/i)).toBeInTheDocument();
-    expect(screen.getByText(/ingresa tu contraseña/i)).toBeInTheDocument();
+    expect(await screen.findByText(/ingresá tu correo/i)).toBeInTheDocument();
+    expect(screen.getByText(/ingresá tu contraseña/i)).toBeInTheDocument();
     expect(loginRequestMock).not.toHaveBeenCalled();
   });
 

@@ -1,14 +1,5 @@
 import type { User } from "./auth.types";
 
-/** Forma de error del backend: `{ error: { code, message, details? } }`. */
-export interface ApiErrorBody {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-}
-
 /**
  * `GET /v1/users/:id`: solo los campos públicos (CA1 de "Visualización de
  * perfil público" es una lista cerrada). A diferencia de `User` (perfil

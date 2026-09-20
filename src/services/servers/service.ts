@@ -1,11 +1,14 @@
-import { NETWORK_ERROR_MESSAGE } from "@discordia/client-shared";
+import {
+  type ApiErrorBody,
+  NETWORK_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
 
-import type { ServerSummary, ServersApiErrorBody } from "@/types/server.types";
+import type { ServerSummary } from "@/types/server.types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong):
@@ -140,7 +143,7 @@ export async function createServer(
       };
     }
 
-    const err = body as ServersApiErrorBody | undefined;
+    const err = body as ApiErrorBody | undefined;
     return {
       ok: false,
       status: response.status,

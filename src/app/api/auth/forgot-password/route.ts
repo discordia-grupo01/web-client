@@ -1,15 +1,16 @@
 import {
+  hasErrors,
   INVALID_EMAIL_MESSAGE,
   RATE_LIMITED_MESSAGE,
   RECOVERY_UNAVAILABLE,
   UNEXPECTED_ERROR_MESSAGE,
+  validateForgotPassword,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { recoverPassword } from "@/services/auth/service";
 import type { ForgotPasswordActionResult } from "@/types/auth.types";
-import { hasErrors, validateForgotPassword } from "@/services/auth/validation";
 
 /**
  * BFF de recuperacion de contrasena. El backend responde 202 exista o no el

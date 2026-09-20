@@ -42,7 +42,7 @@ describe("<RegisterForm />", () => {
     await user.click(screen.getByRole("button", { name: /crear cuenta/i }));
 
     expect(
-      await screen.findByText(/ingresa un nombre de usuario/i),
+      await screen.findByText(/ingresá un nombre de usuario/i),
     ).toBeInTheDocument();
     expect(registerRequestMock).not.toHaveBeenCalled();
   });

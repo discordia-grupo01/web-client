@@ -1,15 +1,16 @@
 import {
+  hasErrors,
   INVALID_DATA_MESSAGE,
   PASSWORD_TOO_WEAK,
   PASSWORD_UPDATE_UNAVAILABLE,
   UNEXPECTED_ERROR_MESSAGE,
+  validateResetPassword,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { resetPassword } from "@/services/auth/service";
 import type { ResetPasswordActionResult } from "@/types/auth.types";
-import { hasErrors, validateResetPassword } from "@/services/auth/validation";
 
 /**
  * BFF para definir la nueva contrasena. A diferencia de login/register no crea
