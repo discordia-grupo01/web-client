@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type ActivityStatus,
   CANCEL_NAME_EDIT_LABEL,
   CHANGE_AVATAR_LABEL,
   DESCRIPTION_PLACEHOLDER,
@@ -24,11 +25,7 @@ import {
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
 
-import type { ActivityStatus } from "./activity-status";
-import {
-  ActivityStatusPicker,
-  type ActivityStatusMode,
-} from "./activity-status-picker";
+import { ActivityStatusPicker } from "./activity-status-picker";
 import { CustomStatusEditor } from "./custom-status-editor";
 import { MemberSince } from "./member-since";
 import { ProfileAvatarFrame } from "./profile-avatar-frame";
@@ -63,15 +60,10 @@ export function OwnProfileModal({
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Estado de actividad: mock puramente visual, no hay presencia real en
-  // identify-service (ver activity-status.ts). Se resetea a "Automático" al
-  // reabrir el modal a propósito -- no hay nada real que persistir.
-  const [activityMode, setActivityMode] = useState<ActivityStatusMode>("auto");
-  const resolvedActivityStatus: ActivityStatus =
-    activityMode === "auto"
-      ? "online"
-      : activityMode === "dnd"
-        ? "dnd"
-        : "offline";
+  // identify-service. Se resetea a "En línea" al reabrir el modal a
+  // propósito -- no hay nada real que persistir.
+  const [activityStatus, setActivityStatus] =
+    useState<ActivityStatus>("online");
 
   const avatarSrc =
     imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
@@ -305,9 +297,8 @@ export function OwnProfileModal({
           </div>
 
           <ActivityStatusPicker
-            mode={activityMode}
-            resolvedStatus={resolvedActivityStatus}
-            onChange={setActivityMode}
+            status={activityStatus}
+            onChange={setActivityStatus}
           />
 
           <CustomStatusEditor
