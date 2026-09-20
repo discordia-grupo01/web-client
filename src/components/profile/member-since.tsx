@@ -1,8 +1,8 @@
+import { formatMemberSince } from "@discordia/client-shared";
+
 import { Calendar } from "lucide-react";
 
 import { SectionLabel } from "@/components/ui/section-label";
-
-import { formatMemberSince } from "./format-member-since";
 
 /** Bloque "Miembro desde" con la fecha de registro formateada. */
 export function MemberSince({ isoDate }: { isoDate: string }) {
