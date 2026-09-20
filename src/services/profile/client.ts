@@ -1,19 +1,16 @@
 import {
+  type GetOwnProfileResult,
+  type GetPublicProfileResult,
   OWN_PROFILE_LOAD_FAILED,
   PROFILE_LOAD_FAILED,
   PROFILE_UPDATE_FAILED,
   STATUS_CLEAR_FAILED,
   STATUS_UPDATE_FAILED,
+  type UpdateCustomStatusResult,
+  type UpdateOwnProfileResult,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
-
-import type {
-  GetOwnProfileActionResult,
-  GetPublicProfileActionResult,
-  UpdateCustomStatusActionResult,
-  UpdateOwnProfileActionResult,
-} from "@/types/profile.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/profile`, `/api/users/:id`,
@@ -22,11 +19,9 @@ import type {
 
 export async function getPublicProfileRequest(
   userId: string,
-): Promise<GetPublicProfileActionResult> {
+): Promise<GetPublicProfileResult> {
   try {
-    const { data } = await api.get<GetPublicProfileActionResult>(
-      `/users/${userId}`,
-    );
+    const { data } = await api.get<GetPublicProfileResult>(`/users/${userId}`);
     return data;
   } catch {
     return {
@@ -36,9 +31,9 @@ export async function getPublicProfileRequest(
   }
 }
 
-export async function getOwnProfileRequest(): Promise<GetOwnProfileActionResult> {
+export async function getOwnProfileRequest(): Promise<GetOwnProfileResult> {
   try {
-    const { data } = await api.get<GetOwnProfileActionResult>("/profile");
+    const { data } = await api.get<GetOwnProfileResult>("/profile");
     return data;
   } catch {
     return {
@@ -55,9 +50,9 @@ export async function getOwnProfileRequest(): Promise<GetOwnProfileActionResult>
  */
 export async function updateOwnProfileRequest(
   formData: FormData,
-): Promise<UpdateOwnProfileActionResult> {
+): Promise<UpdateOwnProfileResult> {
   try {
-    const { data } = await api.patch<UpdateOwnProfileActionResult>(
+    const { data } = await api.patch<UpdateOwnProfileResult>(
       "/profile",
       formData,
       { headers: { "Content-Type": undefined } },
@@ -73,9 +68,9 @@ export async function updateOwnProfileRequest(
 
 export async function updateCustomStatusRequest(
   statusText: string,
-): Promise<UpdateCustomStatusActionResult> {
+): Promise<UpdateCustomStatusResult> {
   try {
-    const { data } = await api.put<UpdateCustomStatusActionResult>(
+    const { data } = await api.put<UpdateCustomStatusResult>(
       "/profile/status",
       { status_text: statusText },
     );
@@ -88,10 +83,10 @@ export async function updateCustomStatusRequest(
   }
 }
 
-export async function clearCustomStatusRequest(): Promise<UpdateCustomStatusActionResult> {
+export async function clearCustomStatusRequest(): Promise<UpdateCustomStatusResult> {
   try {
     const { data } =
-      await api.delete<UpdateCustomStatusActionResult>("/profile/status");
+      await api.delete<UpdateCustomStatusResult>("/profile/status");
     return data;
   } catch {
     return {

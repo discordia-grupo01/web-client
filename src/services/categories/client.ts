@@ -1,14 +1,11 @@
 import {
   CATEGORY_CREATE_FAILED,
   CATEGORY_UPDATE_FAILED,
+  type CreateCategoryResult,
+  type UpdateCategoryResult,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
-
-import type {
-  CreateCategoryActionResult,
-  UpdateCategoryActionResult,
-} from "@/types/category.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/categories`, `/api/servers/:id/categories`,
@@ -19,9 +16,9 @@ import type {
 export async function createCategoryRequest(
   serverId: string,
   name: string,
-): Promise<CreateCategoryActionResult> {
+): Promise<CreateCategoryResult> {
   try {
-    const { data } = await api.post<CreateCategoryActionResult>(
+    const { data } = await api.post<CreateCategoryResult>(
       `/servers/${serverId}/categories`,
       { name },
     );
@@ -37,9 +34,9 @@ export async function createCategoryRequest(
 export async function updateCategoryRequest(
   categoryId: string,
   name: string,
-): Promise<UpdateCategoryActionResult> {
+): Promise<UpdateCategoryResult> {
   try {
-    const { data } = await api.patch<UpdateCategoryActionResult>(
+    const { data } = await api.patch<UpdateCategoryResult>(
       `/categories/${categoryId}`,
       { name },
     );

@@ -1,11 +1,13 @@
-import { CHANNEL_REORDER_FAILED } from "@discordia/client-shared";
+import {
+  CHANNEL_REORDER_FAILED,
+  type ReorderChannelsResult,
+} from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { reorderChannels } from "@/services/channels/service";
-import type { ReorderChannelsActionResult } from "@/types/channel.types";
 
 /**
  * BFF de `PATCH /v1/servers/:id/channels/reorder`. Body JSON:
@@ -16,7 +18,7 @@ import type { ReorderChannelsActionResult } from "@/types/channel.types";
 export async function PATCH(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<ReorderChannelsActionResult>> {
+): Promise<NextResponse<ReorderChannelsResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

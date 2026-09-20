@@ -1,6 +1,6 @@
 "use client";
 
-import { INVITE_COPY_FAILED } from "@discordia/client-shared";
+import { type Invitation, INVITE_COPY_FAILED } from "@discordia/client-shared";
 
 import {
   AlertCircle,
@@ -21,7 +21,6 @@ import {
   listInvitationsRequest,
   revokeInviteRequest,
 } from "@/services/invites/client";
-import type { Invitation } from "@/types/invite.types";
 import { cn } from "@/lib/cn";
 
 interface InviteModalProps {

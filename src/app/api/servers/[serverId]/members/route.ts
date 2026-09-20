@@ -1,11 +1,13 @@
-import { MEMBERS_LOAD_FAILED } from "@discordia/client-shared";
+import {
+  type ListMembersResult,
+  MEMBERS_LOAD_FAILED,
+} from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { listMembers } from "@/services/members/service";
-import type { ListMembersActionResult } from "@/types/member.types";
 
 /**
  * BFF de `GET /v1/servers/:id/members`. El navegador pega aca (mismo
@@ -14,7 +16,7 @@ import type { ListMembersActionResult } from "@/types/member.types";
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<ListMembersActionResult>> {
+): Promise<NextResponse<ListMembersResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

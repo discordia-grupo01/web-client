@@ -1,4 +1,6 @@
 import {
+  type AssignRoleResult,
+  type ListMemberRolesResult,
   MEMBER_OR_ROLE_NOT_FOUND,
   MEMBER_ROLE_ASSIGN_FAILED,
   MEMBER_ROLES_LOAD_FAILED,
@@ -10,10 +12,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { assignRole, listMemberRoles } from "@/services/roles/service";
-import type {
-  AssignRoleActionResult,
-  ListMemberRolesActionResult,
-} from "@/types/role.types";
 
 /**
  * BFF de `GET /v1/servers/:id/members/:userId/roles`.
@@ -21,7 +19,7 @@ import type {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string; userId: string } },
-): Promise<NextResponse<ListMemberRolesActionResult>> {
+): Promise<NextResponse<ListMemberRolesResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -59,7 +57,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string; userId: string } },
-): Promise<NextResponse<AssignRoleActionResult>> {
+): Promise<NextResponse<AssignRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

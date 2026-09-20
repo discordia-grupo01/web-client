@@ -1,6 +1,7 @@
 import {
   CATEGORY_CREATE_FAILED,
   CATEGORY_REASONS,
+  type CreateCategoryResult,
   fieldOf,
   messageFor,
   reasonOf,
@@ -10,7 +11,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createCategory } from "@/services/categories/service";
-import type { CreateCategoryActionResult } from "@/types/category.types";
 
 /**
  * BFF de `POST /v1/servers/:id/categories`. Body JSON: `{ name }`.
@@ -18,7 +18,7 @@ import type { CreateCategoryActionResult } from "@/types/category.types";
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateCategoryActionResult>> {
+): Promise<NextResponse<CreateCategoryResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

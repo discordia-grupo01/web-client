@@ -1,16 +1,15 @@
 import {
   type ApiErrorBody,
   NETWORK_ERROR_MESSAGE,
+  type PublicUser,
   UNEXPECTED_ERROR_MESSAGE,
+  type User,
 } from "@discordia/client-shared";
 
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
-import type { User } from "@/types/auth.types";
-
-import type { PublicUser } from "@/types/profile.types";
 
 /**
  * Capa de servicios contra identify-service: perfil de usuario (propio o

@@ -1,3 +1,5 @@
+import { type User } from "@discordia/client-shared";
+
 import "server-only";
 
 import { cookies } from "next/headers";
@@ -7,7 +9,7 @@ import { isProduction } from "@/lib/env";
 import { refresh } from "@/services/auth/service";
 import { parseSessionCookie } from "@/services/auth/session-shape";
 
-import type { Session, User } from "@/types/auth.types";
+import type { Session } from "@/types/auth.types";
 
 // Margen de seguridad: si al access token le quedan menos de esto, se
 // refresca antes de usarlo (cubre la latencia entre este chequeo y el

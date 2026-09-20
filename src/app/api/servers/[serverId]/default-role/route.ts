@@ -2,6 +2,7 @@ import {
   DEFAULT_ROLE_SET_FAILED,
   OWNER_ONLY_SET_DEFAULT_ROLE,
   ROLE_NOT_FOUND,
+  type SetDefaultRoleResult,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
@@ -9,7 +10,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { setDefaultRole } from "@/services/roles/service";
-import type { SetDefaultRoleActionResult } from "@/types/role.types";
 
 /**
  * BFF de `PUT /v1/servers/:id/default-role`. Body JSON: `{ roleId }`.
@@ -21,7 +21,7 @@ import type { SetDefaultRoleActionResult } from "@/types/role.types";
 export async function PUT(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<SetDefaultRoleActionResult>> {
+): Promise<NextResponse<SetDefaultRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

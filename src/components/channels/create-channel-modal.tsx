@@ -1,13 +1,13 @@
 "use client";
 
+import { type Category, type Channel } from "@discordia/client-shared";
+
 import { AlertCircle, Hash, Volume2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import type { Category } from "@/types/category.types";
 import { createChannelRequest } from "@/services/channels/client";
-import type { Channel } from "@/types/channel.types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

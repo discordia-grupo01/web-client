@@ -4,13 +4,13 @@ import {
   fieldOf,
   messageFor,
   reasonOf,
+  type UpdateCategoryResult,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { updateCategory } from "@/services/categories/service";
-import type { UpdateCategoryActionResult } from "@/types/category.types";
 
 /**
  * BFF de `PATCH /v1/categories/:id`. Body JSON: `{ name }`.
@@ -18,7 +18,7 @@ import type { UpdateCategoryActionResult } from "@/types/category.types";
 export async function PATCH(
   request: Request,
   { params }: { params: { categoryId: string } },
-): Promise<NextResponse<UpdateCategoryActionResult>> {
+): Promise<NextResponse<UpdateCategoryResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

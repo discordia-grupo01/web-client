@@ -1,18 +1,15 @@
 import {
+  type CreateInviteResult,
   INVITE_CREATE_FAILED,
   INVITE_REVOKE_FAILED,
   INVITES_LOAD_FAILED,
+  type JoinServerResult,
+  type ListInvitationsResult,
   REQUEST_FAILED_MESSAGE,
+  type RevokeInviteResult,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
-
-import type {
-  CreateInviteActionResult,
-  JoinServerActionResult,
-  ListInvitationsActionResult,
-  RevokeInviteActionResult,
-} from "@/types/invite.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/invites`, `/api/servers/:id/invites`,
@@ -28,9 +25,9 @@ export function normalizeInviteCode(raw: string): string {
 
 export async function joinServerRequest(
   code: string,
-): Promise<JoinServerActionResult> {
+): Promise<JoinServerResult> {
   try {
-    const { data } = await api.post<JoinServerActionResult>(
+    const { data } = await api.post<JoinServerResult>(
       `/invites/${encodeURIComponent(code)}/join`,
     );
     return data;
@@ -45,9 +42,9 @@ export async function joinServerRequest(
 export async function createInviteRequest(
   serverId: string,
   maxUses?: number,
-): Promise<CreateInviteActionResult> {
+): Promise<CreateInviteResult> {
   try {
-    const { data } = await api.post<CreateInviteActionResult>(
+    const { data } = await api.post<CreateInviteResult>(
       `/servers/${serverId}/invites`,
       maxUses !== undefined ? { maxUses } : {},
     );
@@ -62,9 +59,9 @@ export async function createInviteRequest(
 
 export async function listInvitationsRequest(
   serverId: string,
-): Promise<ListInvitationsActionResult> {
+): Promise<ListInvitationsResult> {
   try {
-    const { data } = await api.get<ListInvitationsActionResult>(
+    const { data } = await api.get<ListInvitationsResult>(
       `/servers/${serverId}/invites`,
     );
     return data;
@@ -78,9 +75,9 @@ export async function listInvitationsRequest(
 
 export async function revokeInviteRequest(
   code: string,
-): Promise<RevokeInviteActionResult> {
+): Promise<RevokeInviteResult> {
   try {
-    const { data } = await api.delete<RevokeInviteActionResult>(
+    const { data } = await api.delete<RevokeInviteResult>(
       `/invites/${encodeURIComponent(code)}`,
     );
     return data;

@@ -3,6 +3,7 @@ import {
   INVALID_CREDENTIALS,
   INVALID_DATA_MESSAGE,
   LOGIN_UNAVAILABLE,
+  type LoginResult,
   UNEXPECTED_ERROR_MESSAGE,
   validateLogin,
 } from "@discordia/client-shared";
@@ -11,11 +12,10 @@ import { NextResponse } from "next/server";
 
 import { login } from "@/services/auth/service";
 import { createSession } from "@/services/auth/session";
-import type { LoginActionResult } from "@/types/auth.types";
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<LoginActionResult>> {
+): Promise<NextResponse<LoginResult>> {
   let payload: unknown;
   try {
     payload = await request.json();

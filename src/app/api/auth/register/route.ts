@@ -4,6 +4,7 @@ import {
   INVALID_DATA_MESSAGE,
   PASSWORD_TOO_WEAK,
   REGISTER_UNAVAILABLE,
+  type RegisterResult,
   UNEXPECTED_ERROR_MESSAGE,
   validateRegister,
 } from "@discordia/client-shared";
@@ -11,7 +12,6 @@ import {
 import { NextResponse } from "next/server";
 
 import { register } from "@/services/auth/service";
-import type { RegisterActionResult } from "@/types/auth.types";
 
 /**
  * BFF de registro. El navegador pega aca (mismo origen); este handler llama a
@@ -21,7 +21,7 @@ import type { RegisterActionResult } from "@/types/auth.types";
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<RegisterActionResult>> {
+): Promise<NextResponse<RegisterResult>> {
   let payload: unknown;
   try {
     payload = await request.json();

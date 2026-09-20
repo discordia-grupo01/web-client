@@ -1,11 +1,12 @@
 "use client";
 
+import { type Category } from "@discordia/client-shared";
+
 import { AlertCircle, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createCategoryRequest } from "@/services/categories/client";
-import type { Category } from "@/types/category.types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

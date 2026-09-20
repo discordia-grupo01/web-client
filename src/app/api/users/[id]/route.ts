@@ -1,11 +1,13 @@
-import { PROFILE_LOAD_FAILED } from "@discordia/client-shared";
+import {
+  type GetPublicProfileResult,
+  PROFILE_LOAD_FAILED,
+} from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { getPublicProfile } from "@/services/profile/service";
-import type { GetPublicProfileActionResult } from "@/types/profile.types";
 
 /**
  * BFF de `GET /v1/users/:id` (identify-service, via Kong). Resuelve el
@@ -15,7 +17,7 @@ import type { GetPublicProfileActionResult } from "@/types/profile.types";
 export async function GET(
   _request: Request,
   { params }: { params: { id: string } },
-): Promise<NextResponse<GetPublicProfileActionResult>> {
+): Promise<NextResponse<GetPublicProfileResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

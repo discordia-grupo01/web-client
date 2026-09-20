@@ -1,7 +1,9 @@
 import {
+  type CreateInviteResult,
   fieldOf,
   INVITE_REASONS,
   INVITES_LOAD_FAILED,
+  type ListInvitationsResult,
   messageFor,
   reasonOf,
   UNEXPECTED_ERROR_MESSAGE,
@@ -14,10 +16,6 @@ import {
   generateInvitation,
   listInvitations,
 } from "@/services/invites/service";
-import type {
-  CreateInviteActionResult,
-  ListInvitationsActionResult,
-} from "@/types/invite.types";
 
 /**
  * BFF de `GET /v1/servers/:id/invites`. Trae todas las invitaciones del
@@ -26,7 +24,7 @@ import type {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<ListInvitationsActionResult>> {
+): Promise<NextResponse<ListInvitationsResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -62,7 +60,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateInviteActionResult>> {
+): Promise<NextResponse<CreateInviteResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

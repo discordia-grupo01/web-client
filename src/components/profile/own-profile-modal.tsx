@@ -1,12 +1,13 @@
 "use client";
 
+import { type User } from "@discordia/client-shared";
+
 import { AlertCircle, Camera, Check, Pencil, X } from "lucide-react";
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/section-label";
 import { MemberRoleBadges } from "@/components/roles/member-role-badges";
-import type { User } from "@/types/auth.types";
 import {
   clearCustomStatusRequest,
   updateCustomStatusRequest,

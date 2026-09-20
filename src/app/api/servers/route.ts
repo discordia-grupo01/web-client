@@ -1,4 +1,5 @@
 import {
+  type CreateServerResult,
   fieldOf,
   messageFor,
   reasonOf,
@@ -11,7 +12,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createServer, listMyServers } from "@/services/servers/service";
-import type { CreateServerActionResult } from "@/types/server.types";
 
 /**
  * BFF de `GET /v1/servers`. El navegador pega aca (mismo origen); reenvia el
@@ -43,7 +43,7 @@ export async function GET(): Promise<NextResponse> {
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<CreateServerActionResult>> {
+): Promise<NextResponse<CreateServerResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

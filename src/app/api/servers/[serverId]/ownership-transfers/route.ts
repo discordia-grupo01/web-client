@@ -1,5 +1,7 @@
 import {
   fieldOf,
+  type GetPendingTransferResult,
+  type InitiateTransferResult,
   messageFor,
   OWNER_ONLY_TRANSFER,
   reasonOf,
@@ -15,10 +17,6 @@ import {
   getPendingOwnershipTransfer,
   initiateOwnershipTransfer,
 } from "@/services/ownership-transfers/service";
-import type {
-  GetPendingTransferActionResult,
-  InitiateTransferActionResult,
-} from "@/types/ownership-transfer.types";
 
 /**
  * BFF de `GET /v1/servers/:id/ownership-transfers/pending`. Un servidor sin
@@ -28,7 +26,7 @@ import type {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<GetPendingTransferActionResult>> {
+): Promise<NextResponse<GetPendingTransferResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -72,7 +70,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<InitiateTransferActionResult>> {
+): Promise<NextResponse<InitiateTransferResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

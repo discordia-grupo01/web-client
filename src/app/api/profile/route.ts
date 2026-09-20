@@ -1,6 +1,8 @@
 import {
+  type GetOwnProfileResult,
   OWN_PROFILE_LOAD_FAILED,
   UNEXPECTED_ERROR_MESSAGE,
+  type UpdateOwnProfileResult,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
@@ -8,16 +10,12 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { createSession, getValidSession } from "@/services/auth/session";
 import { getOwnProfile, updateOwnProfile } from "@/services/profile/service";
-import type {
-  GetOwnProfileActionResult,
-  UpdateOwnProfileActionResult,
-} from "@/types/profile.types";
 
 /**
  * BFF de `GET /v1/me/profile`. Perfil propio del usuario autenticado (no el
  * publico de `/api/users/:id`): incluye email y description.
  */
-export async function GET(): Promise<NextResponse<GetOwnProfileActionResult>> {
+export async function GET(): Promise<NextResponse<GetOwnProfileResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -48,7 +46,7 @@ export async function GET(): Promise<NextResponse<GetOwnProfileActionResult>> {
  */
 export async function PATCH(
   request: Request,
-): Promise<NextResponse<UpdateOwnProfileActionResult>> {
+): Promise<NextResponse<UpdateOwnProfileResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

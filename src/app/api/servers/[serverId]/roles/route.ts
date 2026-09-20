@@ -1,5 +1,7 @@
 import {
+  type CreateRoleResult,
   fieldOf,
+  type ListRolesResult,
   messageFor,
   OWNER_ONLY_CREATE_ROLE,
   reasonOf,
@@ -12,10 +14,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createRole, listRoles } from "@/services/roles/service";
-import type {
-  CreateRoleActionResult,
-  ListRolesActionResult,
-} from "@/types/role.types";
 
 /**
  * BFF de `GET /v1/servers/:id/roles`. Trae todos los roles del server.
@@ -23,7 +21,7 @@ import type {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<ListRolesActionResult>> {
+): Promise<NextResponse<ListRolesResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -54,7 +52,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateRoleActionResult>> {
+): Promise<NextResponse<CreateRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

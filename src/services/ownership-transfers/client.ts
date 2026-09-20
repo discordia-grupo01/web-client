@@ -1,4 +1,7 @@
 import {
+  type GetPendingTransferResult,
+  type InitiateTransferResult,
+  type RespondTransferResult,
   TRANSFER_ACCEPT_FAILED,
   TRANSFER_CANCEL_FAILED,
   TRANSFER_LOAD_FAILED,
@@ -7,12 +10,6 @@ import {
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
-
-import type {
-  GetPendingTransferActionResult,
-  InitiateTransferActionResult,
-  RespondTransferActionResult,
-} from "@/types/ownership-transfer.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/servers/:id/ownership-transfers`,
@@ -23,9 +20,9 @@ import type {
 export async function initiateTransferRequest(
   serverId: string,
   toUserId: string,
-): Promise<InitiateTransferActionResult> {
+): Promise<InitiateTransferResult> {
   try {
-    const { data } = await api.post<InitiateTransferActionResult>(
+    const { data } = await api.post<InitiateTransferResult>(
       `/servers/${serverId}/ownership-transfers`,
       { to_user_id: toUserId },
     );
@@ -40,9 +37,9 @@ export async function initiateTransferRequest(
 
 export async function getPendingTransferRequest(
   serverId: string,
-): Promise<GetPendingTransferActionResult> {
+): Promise<GetPendingTransferResult> {
   try {
-    const { data } = await api.get<GetPendingTransferActionResult>(
+    const { data } = await api.get<GetPendingTransferResult>(
       `/servers/${serverId}/ownership-transfers`,
     );
     return data;
@@ -57,9 +54,9 @@ export async function getPendingTransferRequest(
 export async function acceptTransferRequest(
   serverId: string,
   transferId: string,
-): Promise<RespondTransferActionResult> {
+): Promise<RespondTransferResult> {
   try {
-    const { data } = await api.post<RespondTransferActionResult>(
+    const { data } = await api.post<RespondTransferResult>(
       `/servers/${serverId}/ownership-transfers/${transferId}/accept`,
     );
     return data;
@@ -74,9 +71,9 @@ export async function acceptTransferRequest(
 export async function rejectTransferRequest(
   serverId: string,
   transferId: string,
-): Promise<RespondTransferActionResult> {
+): Promise<RespondTransferResult> {
   try {
-    const { data } = await api.post<RespondTransferActionResult>(
+    const { data } = await api.post<RespondTransferResult>(
       `/servers/${serverId}/ownership-transfers/${transferId}/reject`,
     );
     return data;
@@ -91,9 +88,9 @@ export async function rejectTransferRequest(
 export async function cancelTransferRequest(
   serverId: string,
   transferId: string,
-): Promise<RespondTransferActionResult> {
+): Promise<RespondTransferResult> {
   try {
-    const { data } = await api.post<RespondTransferActionResult>(
+    const { data } = await api.post<RespondTransferResult>(
       `/servers/${serverId}/ownership-transfers/${transferId}/cancel`,
     );
     return data;

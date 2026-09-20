@@ -1,11 +1,13 @@
-import { UNEXPECTED_ERROR_MESSAGE } from "@discordia/client-shared";
+import {
+  type RevokeInviteResult,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { revokeInvitation } from "@/services/invites/service";
-import type { RevokeInviteActionResult } from "@/types/invite.types";
 
 /**
  * BFF de `DELETE /v1/invites/:code`. Idempotente del lado del back: revocar
@@ -14,7 +16,7 @@ import type { RevokeInviteActionResult } from "@/types/invite.types";
 export async function DELETE(
   _request: Request,
   { params }: { params: { code: string } },
-): Promise<NextResponse<RevokeInviteActionResult>> {
+): Promise<NextResponse<RevokeInviteResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

@@ -1,6 +1,7 @@
 import {
   CHANNEL_CREATE_FAILED,
   CHANNEL_REASONS,
+  type CreateChannelResult,
   fieldOf,
   messageFor,
   reasonOf,
@@ -10,7 +11,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createChannel } from "@/services/channels/service";
-import type { CreateChannelActionResult } from "@/types/channel.types";
 
 /**
  * BFF de `POST /v1/servers/:id/channels`. Body JSON: `{ name, kind, categoryId? }`.
@@ -19,7 +19,7 @@ import type { CreateChannelActionResult } from "@/types/channel.types";
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateChannelActionResult>> {
+): Promise<NextResponse<CreateChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

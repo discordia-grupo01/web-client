@@ -1,5 +1,7 @@
 "use client";
 
+import { type ServerSummary } from "@discordia/client-shared";
+
 import { AlertCircle, ArrowRight, Check, Link2, X } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 
@@ -9,7 +11,6 @@ import {
   joinServerRequest,
   normalizeInviteCode,
 } from "@/services/invites/client";
-import type { ServerSummary } from "@/types/server.types";
 
 interface JoinServerModalProps {
   onClose: () => void;

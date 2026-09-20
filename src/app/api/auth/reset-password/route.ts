@@ -3,6 +3,7 @@ import {
   INVALID_DATA_MESSAGE,
   PASSWORD_TOO_WEAK,
   PASSWORD_UPDATE_UNAVAILABLE,
+  type ResetPasswordResult,
   UNEXPECTED_ERROR_MESSAGE,
   validateResetPassword,
 } from "@discordia/client-shared";
@@ -10,7 +11,6 @@ import {
 import { NextResponse } from "next/server";
 
 import { resetPassword } from "@/services/auth/service";
-import type { ResetPasswordActionResult } from "@/types/auth.types";
 
 /**
  * BFF para definir la nueva contrasena. A diferencia de login/register no crea
@@ -19,7 +19,7 @@ import type { ResetPasswordActionResult } from "@/types/auth.types";
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<ResetPasswordActionResult>> {
+): Promise<NextResponse<ResetPasswordResult>> {
   let payload: unknown;
   try {
     payload = await request.json();

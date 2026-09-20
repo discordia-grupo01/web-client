@@ -1,6 +1,7 @@
 import {
   messageFor,
   reasonOf,
+  type RespondTransferResult,
   TRANSFER_NOT_FOUND,
   TRANSFER_ONLY_TARGET_ACCEPTS,
   TRANSFER_REASONS,
@@ -11,7 +12,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { acceptOwnershipTransfer } from "@/services/ownership-transfers/service";
-import type { RespondTransferActionResult } from "@/types/ownership-transfer.types";
 
 /**
  * BFF de `POST /v1/servers/:id/ownership-transfers/:transferId/accept`.
@@ -21,7 +21,7 @@ import type { RespondTransferActionResult } from "@/types/ownership-transfer.typ
 export async function POST(
   _request: Request,
   { params }: { params: { serverId: string; transferId: string } },
-): Promise<NextResponse<RespondTransferActionResult>> {
+): Promise<NextResponse<RespondTransferResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

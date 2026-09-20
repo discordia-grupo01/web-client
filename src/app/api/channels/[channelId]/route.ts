@@ -2,19 +2,17 @@ import {
   CHANNEL_DELETE_FAILED,
   CHANNEL_REASONS,
   CHANNEL_UPDATE_FAILED,
+  type DeleteChannelResult,
   fieldOf,
   messageFor,
   reasonOf,
+  type UpdateChannelResult,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { deleteChannel, updateChannel } from "@/services/channels/service";
-import type {
-  DeleteChannelActionResult,
-  UpdateChannelActionResult,
-} from "@/types/channel.types";
 
 /**
  * BFF de `PATCH /v1/channels/:id`. Body JSON: `{ name }`.
@@ -22,7 +20,7 @@ import type {
 export async function PATCH(
   request: Request,
   { params }: { params: { channelId: string } },
-): Promise<NextResponse<UpdateChannelActionResult>> {
+): Promise<NextResponse<UpdateChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -70,7 +68,7 @@ export async function PATCH(
 export async function DELETE(
   _request: Request,
   { params }: { params: { channelId: string } },
-): Promise<NextResponse<DeleteChannelActionResult>> {
+): Promise<NextResponse<DeleteChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

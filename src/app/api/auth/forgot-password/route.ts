@@ -1,4 +1,5 @@
 import {
+  type ForgotPasswordResult,
   hasErrors,
   INVALID_EMAIL_MESSAGE,
   RATE_LIMITED_MESSAGE,
@@ -10,7 +11,6 @@ import {
 import { NextResponse } from "next/server";
 
 import { recoverPassword } from "@/services/auth/service";
-import type { ForgotPasswordActionResult } from "@/types/auth.types";
 
 /**
  * BFF de recuperacion de contrasena. El backend responde 202 exista o no el
@@ -19,7 +19,7 @@ import type { ForgotPasswordActionResult } from "@/types/auth.types";
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<ForgotPasswordActionResult>> {
+): Promise<NextResponse<ForgotPasswordResult>> {
   let payload: unknown;
   try {
     payload = await request.json();

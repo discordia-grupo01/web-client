@@ -36,8 +36,9 @@ export function LeaveServerModal({
     setIsLoading(false);
 
     if (!result.ok) {
-      if (result.isOwnerBlocked) setIsOwnerBlocked(true);
-      else setErrorMessage(result.message);
+      if (result.reason === "owner_must_transfer_or_delete") {
+        setIsOwnerBlocked(true);
+      } else setErrorMessage(result.message);
       return;
     }
 

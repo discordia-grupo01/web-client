@@ -2,6 +2,7 @@ import {
   CHANNEL_MOVE_FAILED,
   CHANNEL_REASONS,
   messageFor,
+  type MoveChannelResult,
   reasonOf,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
@@ -9,7 +10,6 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { moveChannelToCategory } from "@/services/channels/service";
-import type { MoveChannelActionResult } from "@/types/channel.types";
 
 /**
  * BFF de `PATCH /v1/channels/:id/category`. Body JSON: `{ categoryId: string | null }`.
@@ -18,7 +18,7 @@ import type { MoveChannelActionResult } from "@/types/channel.types";
 export async function PATCH(
   request: Request,
   { params }: { params: { channelId: string } },
-): Promise<NextResponse<MoveChannelActionResult>> {
+): Promise<NextResponse<MoveChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();

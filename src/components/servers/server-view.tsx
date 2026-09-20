@@ -1,6 +1,13 @@
 "use client";
 
 import {
+  type Category,
+  type Channel,
+  type ServerSummary,
+  type User,
+} from "@discordia/client-shared";
+
+import {
   closestCenter,
   DndContext,
   DragOverlay,
@@ -39,14 +46,10 @@ import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
 import { MembersSidebar } from "@/components/members/members-sidebar";
 import { useAuth } from "@/services/auth/auth-context";
-import type { User } from "@/types/auth.types";
-import type { Category } from "@/types/category.types";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
 } from "@/services/channels/client";
-import type { Channel } from "@/types/channel.types";
-import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./server-sidebar-header";

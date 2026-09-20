@@ -1,14 +1,13 @@
 import {
   type ApiErrorBody,
   NETWORK_ERROR_MESSAGE,
+  type ServerSummary,
 } from "@discordia/client-shared";
 
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
-
-import type { ServerSummary } from "@/types/server.types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong):

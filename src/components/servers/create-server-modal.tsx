@@ -1,5 +1,7 @@
 "use client";
 
+import { type ServerSummary } from "@discordia/client-shared";
+
 import {
   AlertCircle,
   Camera,
@@ -21,7 +23,6 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { createServerRequest } from "@/services/servers/client";
-import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 
 const MAX_NAME = 100;

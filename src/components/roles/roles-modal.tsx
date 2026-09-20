@@ -1,6 +1,12 @@
 "use client";
 
 import {
+  type Role,
+  ROLE_PERMISSIONS,
+  type RolePermission,
+} from "@discordia/client-shared";
+
+import {
   AlertCircle,
   Check,
   ChevronRight,
@@ -27,11 +33,6 @@ import {
   setDefaultRoleRequest,
   updateRoleRequest,
 } from "@/services/roles/client";
-import {
-  ROLE_PERMISSIONS,
-  type Role,
-  type RolePermission,
-} from "@/types/role.types";
 import { cn } from "@/lib/cn";
 
 import { ColorPanel } from "./color-panel";

@@ -1,4 +1,5 @@
 import {
+  type DeleteRoleResult,
   fieldOf,
   invalidPermissionMessage,
   messageFor,
@@ -10,17 +11,14 @@ import {
   ROLE_NOT_FOUND,
   ROLE_REASONS,
   ROLE_UPDATE_FAILED,
+  type RolePermission,
+  type UpdateRoleResult,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { deleteRole, updateRole } from "@/services/roles/service";
-import type {
-  DeleteRoleActionResult,
-  RolePermission,
-  UpdateRoleActionResult,
-} from "@/types/role.types";
 
 /**
  * BFF de `PATCH /v1/roles/:id`. Body JSON: `{ name?, color?, permissions? }`.
@@ -31,7 +29,7 @@ import type {
 export async function PATCH(
   request: Request,
   { params }: { params: { roleId: string } },
-): Promise<NextResponse<UpdateRoleActionResult>> {
+): Promise<NextResponse<UpdateRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -108,7 +106,7 @@ export async function PATCH(
 export async function DELETE(
   _request: Request,
   { params }: { params: { roleId: string } },
-): Promise<NextResponse<DeleteRoleActionResult>> {
+): Promise<NextResponse<DeleteRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
