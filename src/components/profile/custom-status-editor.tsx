@@ -1,12 +1,16 @@
 "use client";
 
+import {
+  CLEAR_CUSTOM_STATUS_LABEL,
+  CUSTOM_STATUS_PLACEHOLDER,
+  MAX_CUSTOM_STATUS,
+} from "@discordia/client-shared";
+
 import { Pencil, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/section-label";
-
-const MAX_CUSTOM_STATUS = 64;
 
 interface CustomStatusEditorProps {
   statusText: string;
@@ -67,8 +71,8 @@ export function CustomStatusEditor({
             type="button"
             onClick={handleClear}
             disabled={isSubmitting}
-            aria-label="Quitar estado personalizado"
-            title="Quitar estado personalizado"
+            aria-label={CLEAR_CUSTOM_STATUS_LABEL}
+            title={CLEAR_CUSTOM_STATUS_LABEL}
             className="text-content-subtle hover:text-danger flex cursor-pointer items-center gap-1 text-[10px] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <X size={10} />
@@ -89,7 +93,7 @@ export function CustomStatusEditor({
               if (event.key === "Enter") handleSave();
               if (event.key === "Escape") setIsEditing(false);
             }}
-            placeholder="¿Qué estás haciendo?"
+            placeholder={CUSTOM_STATUS_PLACEHOLDER}
             disabled={isSubmitting}
             className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:opacity-60"
           />

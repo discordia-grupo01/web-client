@@ -1,6 +1,11 @@
 "use client";
 
-import { type ServerSummary } from "@discordia/client-shared";
+import {
+  ALREADY_MEMBER_SUFFIX,
+  INVITE_CODE_REQUIRED,
+  JOINED_SERVER_SUFFIX,
+  type ServerSummary,
+} from "@discordia/client-shared";
 
 import { AlertCircle, ArrowRight, Check, Link2, X } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
@@ -35,7 +40,7 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
 
     const trimmed = code.trim();
     if (!trimmed) {
-      setFieldError("Pegá un enlace o código de invitación.");
+      setFieldError(INVITE_CODE_REQUIRED);
       return;
     }
 
@@ -97,8 +102,8 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
                 <p className="text-content-muted max-w-[260px] text-sm leading-relaxed">
                   <strong className="text-content">{joined.server.name}</strong>
                   {joined.alreadyMember
-                    ? " ya te tenía como miembro."
-                    : " te está esperando en la barra lateral."}
+                    ? ALREADY_MEMBER_SUFFIX
+                    : JOINED_SERVER_SUFFIX}
                 </p>
               </div>
               <Button type="button" onClick={() => onJoined(joined.server)}>

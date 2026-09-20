@@ -1,9 +1,14 @@
 "use client";
 
 import {
+  COLOR_PALETTE,
+  isValidHex,
+  MAX_NAME,
+  PERMISSION_COPY,
   type Role,
   ROLE_PERMISSIONS,
   type RolePermission,
+  validateRole,
 } from "@discordia/client-shared";
 
 import {
@@ -36,63 +41,6 @@ import {
 import { cn } from "@/lib/cn";
 
 import { ColorPanel } from "./color-panel";
-
-const MAX_NAME = 100;
-
-const COLOR_PALETTE = [
-  "#e05252",
-  "#e8a800",
-  "#38A169",
-  "#1abc9c",
-  "#245C6B",
-  "#6b95bd",
-  "#9b59b6",
-  "#e91e8c",
-  "#e67e22",
-  "#f1c40f",
-  "#2ecc71",
-  "#3498db",
-  "#1C293B",
-  "#607d8b",
-  "#9e9e9e",
-  "#8B4513",
-];
-
-const PERMISSION_COPY: Record<RolePermission, { label: string; desc: string }> =
-  {
-    VIEW_CHANNELS: {
-      label: "Ver canales",
-      desc: "Permite ver los canales del servidor.",
-    },
-    SEND_MESSAGES: {
-      label: "Enviar mensajes",
-      desc: "Permite enviar mensajes en canales de texto.",
-    },
-    MANAGE_CHANNELS: {
-      label: "Gestionar canales",
-      desc: "Puede crear, editar y eliminar canales.",
-    },
-    MANAGE_ROLES: {
-      label: "Gestionar roles",
-      desc: "Puede crear, editar y asignar roles a miembros.",
-    },
-    KICK_MEMBERS: {
-      label: "Expulsar miembros",
-      desc: "Puede expulsar miembros del servidor.",
-    },
-    BAN_MEMBERS: {
-      label: "Banear miembros",
-      desc: "Puede banear miembros permanentemente.",
-    },
-    MANAGE_SERVER: {
-      label: "Gestionar el servidor",
-      desc: "Puede cambiar la configuración del servidor.",
-    },
-  };
-
-function isValidHex(value: string): boolean {
-  return /^#[0-9a-fA-F]{6}$/.test(value);
-}
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;
@@ -498,24 +446,13 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
     setNameError("");
     setColorError("");
     const trimmed = editName.trim();
-    if (!trimmed) {
-      setNameError("El nombre del rol no puede estar vacío.");
-      return;
-    }
-    if (trimmed.length > MAX_NAME) {
-      setNameError("El nombre no puede superar los 100 caracteres.");
-      return;
-    }
-    if (!isValidHex(editColor)) {
-      setColorError("Seleccioná un color válido.");
-      return;
-    }
-    const dup = (roles ?? []).find(
-      (r) =>
-        r.id !== selectedId && r.name.toLowerCase() === trimmed.toLowerCase(),
+    const errors = validateRole(
+      { name: trimmed, color: editColor },
+      { existingRoles: roles ?? [], currentRoleId: selectedId },
     );
-    if (dup) {
-      setNameError("Ya existe un rol con ese nombre.");
+    if (errors.name || errors.color) {
+      setNameError(errors.name ?? "");
+      setColorError(errors.color ?? "");
       return;
     }
 
@@ -579,23 +516,13 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
     setNewNameError("");
     setNewColorError("");
     const trimmed = newName.trim();
-    if (!trimmed) {
-      setNewNameError("El nombre del rol no puede estar vacío.");
-      return;
-    }
-    if (trimmed.length > MAX_NAME) {
-      setNewNameError("El nombre no puede superar los 100 caracteres.");
-      return;
-    }
-    if (!isValidHex(newColor)) {
-      setNewColorError("Seleccioná un color válido.");
-      return;
-    }
-    const dup = (roles ?? []).find(
-      (r) => r.name.toLowerCase() === trimmed.toLowerCase(),
+    const errors = validateRole(
+      { name: trimmed, color: newColor },
+      { existingRoles: roles ?? [] },
     );
-    if (dup) {
-      setNewNameError("Ya existe un rol con ese nombre.");
+    if (errors.name || errors.color) {
+      setNewNameError(errors.name ?? "");
+      setNewColorError(errors.color ?? "");
       return;
     }
 

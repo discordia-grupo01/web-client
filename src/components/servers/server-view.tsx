@@ -3,8 +3,10 @@
 import {
   type Category,
   type Channel,
+  CHANNEL_START_NOTICE,
   type ServerSummary,
   type User,
+  VOICE_NOT_IMPLEMENTED,
 } from "@discordia/client-shared";
 
 import {
@@ -671,8 +673,8 @@ export function ServerView({
                 </h2>
                 <p className="text-content-muted mt-1 max-w-sm text-sm leading-relaxed">
                   {activeChannel.kind === "text"
-                    ? "Este es el comienzo del canal. El chat todavía no está conectado en esta versión."
-                    : "La conexión de voz todavía no está implementada en esta versión."}
+                    ? CHANNEL_START_NOTICE
+                    : VOICE_NOT_IMPLEMENTED}
                 </p>
               </div>
             </div>

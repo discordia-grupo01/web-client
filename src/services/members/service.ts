@@ -1,4 +1,4 @@
-import { type Member } from "@discordia/client-shared";
+import { type Member, MEMBER_PAGE_LIMIT } from "@discordia/client-shared";
 
 import "server-only";
 
@@ -26,7 +26,7 @@ export function listMembers(
   serverId: string,
 ): Promise<ApiResult<MemberListResult>> {
   return apiRequest<MemberListResult>(
-    `/v1/servers/${serverId}/members?limit=100`,
+    `/v1/servers/${serverId}/members?limit=${MEMBER_PAGE_LIMIT}`,
     { method: "GET", token },
   );
 }

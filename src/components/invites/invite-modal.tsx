@@ -1,6 +1,11 @@
 "use client";
 
-import { type Invitation, INVITE_COPY_FAILED } from "@discordia/client-shared";
+import {
+  type Invitation,
+  INVITE_COPY_FAILED,
+  MAX_USES_LABEL,
+  validateMaxUses,
+} from "@discordia/client-shared";
 
 import {
   AlertCircle,
@@ -201,11 +206,12 @@ export function InviteModal({
 
   async function handleGenerate() {
     const trimmed = maxUsesInput.trim();
-    const parsed = trimmed ? Number(trimmed) : undefined;
-    if (trimmed && (!Number.isInteger(parsed) || (parsed as number) <= 0)) {
-      setErrorMessage("El límite de usos debe ser un número entero mayor a 0.");
+    const maxUsesError = validateMaxUses(trimmed);
+    if (maxUsesError) {
+      setErrorMessage(maxUsesError);
       return;
     }
+    const parsed = trimmed ? Number(trimmed) : undefined;
 
     setIsGenerating(true);
     setErrorMessage("");
@@ -283,7 +289,7 @@ export function InviteModal({
               min={1}
               value={maxUsesInput}
               onChange={(event) => setMaxUsesInput(event.target.value)}
-              placeholder="Límite de usos (opcional)"
+              placeholder={MAX_USES_LABEL}
               className="bg-surface-input border-line text-content min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none"
             />
             <Button

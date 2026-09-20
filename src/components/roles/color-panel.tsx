@@ -1,10 +1,8 @@
 "use client";
 
-import { HsvColorPicker, type HsvColor } from "react-colorful";
+import { isValidHex } from "@discordia/client-shared";
 
-function isValidHex(value: string): boolean {
-  return /^#[0-9a-fA-F]{6}$/.test(value);
-}
+import { HsvColorPicker, type HsvColor } from "react-colorful";
 
 function hexToHsv(hex: string): HsvColor {
   const clean = hex.replace("#", "");

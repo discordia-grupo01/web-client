@@ -1,6 +1,15 @@
 "use client";
 
-import { type User } from "@discordia/client-shared";
+import {
+  CANCEL_NAME_EDIT_LABEL,
+  CHANGE_AVATAR_LABEL,
+  DESCRIPTION_PLACEHOLDER,
+  MAX_DESCRIPTION,
+  MAX_NAME,
+  NO_DESCRIPTION_YET,
+  type User,
+  validateAvatar,
+} from "@discordia/client-shared";
 
 import { AlertCircle, Camera, Check, Pencil, X } from "lucide-react";
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
@@ -25,11 +34,6 @@ import { MemberSince } from "./member-since";
 import { ProfileAvatarFrame } from "./profile-avatar-frame";
 import { ProfileBanner } from "./profile-banner";
 import { ProfileModalOverlay } from "./profile-modal-overlay";
-
-const MAX_NAME = 100;
-const MAX_DESCRIPTION = 500;
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/gif"];
-const MAX_FILE_MB = 5;
 
 interface OwnProfileModalProps {
   /** Sin servidor seleccionado (p.ej. abierto desde el home) no hay roles que mostrar. */
@@ -165,12 +169,12 @@ export function OwnProfileModal({
 
   const processFile = useCallback((file: File) => {
     setImageError("");
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setImageError("La imagen debe ser JPEG, PNG o GIF.");
-      return;
-    }
-    if (file.size > MAX_FILE_MB * 1024 * 1024) {
-      setImageError(`El archivo no puede pesar más de ${MAX_FILE_MB} MB.`);
+    const avatarError = validateAvatar({
+      mimeType: file.type,
+      sizeBytes: file.size,
+    });
+    if (avatarError) {
+      setImageError(avatarError);
       return;
     }
 
@@ -199,7 +203,7 @@ export function OwnProfileModal({
           name={profile.name}
           src={avatarSrc}
           onClick={() => fileInputRef.current?.click()}
-          ariaLabel="Cambiar foto de perfil"
+          ariaLabel={CHANGE_AVATAR_LABEL}
         >
           <span
             className={cn(
@@ -271,7 +275,7 @@ export function OwnProfileModal({
                   type="button"
                   onClick={cancelEditing}
                   disabled={isSubmitting}
-                  aria-label="Cancelar edición del nombre"
+                  aria-label={CANCEL_NAME_EDIT_LABEL}
                   className="bg-danger/15 text-danger flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <X size={14} />
@@ -347,7 +351,7 @@ export function OwnProfileModal({
                   }
                   rows={3}
                   autoFocus
-                  placeholder="Contá algo sobre vos..."
+                  placeholder={DESCRIPTION_PLACEHOLDER}
                   className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
                 />
                 <div className="flex items-center justify-end gap-2">
@@ -372,7 +376,7 @@ export function OwnProfileModal({
               </div>
             ) : (
               <p className="text-content-muted text-sm leading-relaxed">
-                {profile.description || "Todavía no agregaste una descripción."}
+                {profile.description || NO_DESCRIPTION_YET}
               </p>
             )}
           </div>

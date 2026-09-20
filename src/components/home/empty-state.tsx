@@ -1,5 +1,14 @@
 "use client";
 
+import {
+  CREATE_FIRST_SERVER_DESCRIPTION,
+  CREATE_FIRST_SERVER_TITLE,
+  EMPTY_HOME_TITLE,
+  JOIN_WITH_LINK_DESCRIPTION,
+  JOIN_WITH_LINK_TITLE,
+  UNLIMITED_INVITES_FEATURE,
+} from "@discordia/client-shared";
+
 import { Hash, Link2, Plus, Users, Volume2, Zap } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -60,7 +69,7 @@ const FEATURE_PILLS = [
   { icon: <Hash size={11} />, label: "Canales de texto" },
   { icon: <Volume2 size={11} />, label: "Canales de voz" },
   { icon: <Zap size={11} />, label: "Roles y permisos" },
-  { icon: <Users size={11} />, label: "Invitaciones sin límite de usos" },
+  { icon: <Users size={11} />, label: UNLIMITED_INVITES_FEATURE },
 ];
 
 const FLOATING_SERVERS = [
@@ -188,7 +197,7 @@ export function EmptyState({
           <h1 className="font-display text-content text-2xl font-bold text-balance">
             {userName
               ? `Hola, ${userName}. Tu espacio está esperándote`
-              : "Tu espacio está esperándote"}
+              : EMPTY_HOME_TITLE}
           </h1>
           <p className="text-content-muted mx-auto mt-2 max-w-sm text-sm leading-relaxed">
             Todavía no pertenecés a ningún servidor. Creá el tuyo en segundos o
@@ -201,15 +210,15 @@ export function EmptyState({
           <ActionCard
             accent
             icon={<Plus size={20} />}
-            title="Crear mi primer servidor"
-            description="Elegí un nombre e ícono. El resto lo hacemos nosotros: dos canales listos para usar desde el principio."
+            title={CREATE_FIRST_SERVER_TITLE}
+            description={CREATE_FIRST_SERVER_DESCRIPTION}
             cta="Empezar ahora"
             onClick={onCreateClick}
           />
           <ActionCard
             icon={<Link2 size={20} />}
-            title="Unirme con un enlace"
-            description="¿Tenés un código de invitación? Pegalo acá y entrás al instante."
+            title={JOIN_WITH_LINK_TITLE}
+            description={JOIN_WITH_LINK_DESCRIPTION}
             cta="Ingresar código"
             onClick={onJoinClick}
           />
