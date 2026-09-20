@@ -1,8 +1,12 @@
 "use client";
 
 import {
+  buildInviteLink,
+  daysUntil,
   type Invitation,
   INVITE_COPY_FAILED,
+  inviteStatus,
+  type InviteStatus,
   MAX_USES_LABEL,
   validateMaxUses,
 } from "@discordia/client-shared";
@@ -34,8 +38,6 @@ interface InviteModalProps {
   onClose: () => void;
 }
 
-type InviteStatus = "active" | "revoked" | "expired" | "exhausted";
-
 const STATUS_COPY: Record<InviteStatus, { label: string; className: string }> =
   {
     active: { label: "Activa", className: "bg-success/15 text-success" },
@@ -49,25 +51,6 @@ const STATUS_COPY: Record<InviteStatus, { label: string; className: string }> =
       className: "bg-surface-input text-content-subtle",
     },
   };
-
-function inviteStatus(inv: Invitation): InviteStatus {
-  if (inv.revoked_at) return "revoked";
-  if (inv.expires_at && new Date(inv.expires_at).getTime() <= Date.now())
-    return "expired";
-  if (inv.max_uses !== null && inv.uses >= inv.max_uses) return "exhausted";
-  return "active";
-}
-
-/** Link real: abrirlo (`/invite/:code`) une al que lo abra al servidor -- o
- * le explica por que no puede si el codigo ya no sirve. */
-function inviteLink(code: string): string {
-  return `${window.location.origin}/invite/${code}`;
-}
-
-function daysUntil(iso: string): number {
-  const ms = new Date(iso).getTime() - Date.now();
-  return Math.max(0, Math.round(ms / (24 * 60 * 60 * 1000)));
-}
 
 function InvitationRow({
   invitation,
@@ -83,7 +66,9 @@ function InvitationRow({
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(inviteLink(invitation.code));
+      await navigator.clipboard.writeText(
+        buildInviteLink(invitation.code, window.location.origin),
+      );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {

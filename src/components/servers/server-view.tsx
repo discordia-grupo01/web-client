@@ -4,7 +4,9 @@ import {
   type Category,
   type Channel,
   CHANNEL_START_NOTICE,
+  channelsOfCategory,
   type ServerSummary,
+  sortByPosition,
   type User,
   VOICE_NOT_IMPLEMENTED,
 } from "@discordia/client-shared";
@@ -363,12 +365,8 @@ export function ServerView({
     (channel) => channel.id === activeChannelId,
   );
 
-  const sortedCategories = [...server.categories].sort(
-    (a, b) => a.position - b.position,
-  );
-  const uncategorized = server.channels
-    .filter((channel) => channel.category_id === null)
-    .sort((a, b) => a.position - b.position);
+  const sortedCategories = sortByPosition(server.categories);
+  const uncategorized = channelsOfCategory(server.channels, null);
 
   function toggleCollapsed(id: string) {
     setCollapsedIds((prev) => {
@@ -434,9 +432,7 @@ export function ServerView({
   function channelsInBucket(bucket: string): Channel[] {
     if (bucket === UNCATEGORIZED_BUCKET) return uncategorized;
     const categoryId = bucketCategoryId(bucket);
-    return server.channels
-      .filter((channel) => channel.category_id === categoryId)
-      .sort((a, b) => a.position - b.position);
+    return channelsOfCategory(server.channels, categoryId);
   }
 
   /** Resuelve a que bucket corresponde un id de `over` (un canal o un contenedor vacio). */
@@ -589,9 +585,7 @@ export function ServerView({
             ) : null}
 
             {sortedCategories.map((category) => {
-              const channels = server.channels
-                .filter((channel) => channel.category_id === category.id)
-                .sort((a, b) => a.position - b.position);
+              const channels = channelsOfCategory(server.channels, category.id);
               const collapsed = collapsedIds.has(category.id);
 
               return (

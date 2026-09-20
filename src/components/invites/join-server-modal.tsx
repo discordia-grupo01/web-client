@@ -4,6 +4,7 @@ import {
   ALREADY_MEMBER_SUFFIX,
   INVITE_CODE_REQUIRED,
   JOINED_SERVER_SUFFIX,
+  normalizeInviteCode,
   type ServerSummary,
 } from "@discordia/client-shared";
 
@@ -12,10 +13,7 @@ import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ServerAvatar } from "@/components/ui/server-avatar";
-import {
-  joinServerRequest,
-  normalizeInviteCode,
-} from "@/services/invites/client";
+import { joinServerRequest } from "@/services/invites/client";
 
 interface JoinServerModalProps {
   onClose: () => void;

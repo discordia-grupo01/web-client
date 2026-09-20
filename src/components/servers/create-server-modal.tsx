@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  getInitial,
   MAX_NAME,
   type ServerSummary,
   validateServerIcon,
@@ -44,7 +45,7 @@ function ServerIconPreview({
   name: string;
   size?: number;
 }) {
-  const initial = name.trim().charAt(0).toUpperCase() || null;
+  const initial = getInitial(name);
 
   return (
     <div

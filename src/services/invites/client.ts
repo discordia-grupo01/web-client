@@ -17,12 +17,6 @@ import { api } from "@/lib/browser-api-client";
  * servidor de Next.
  */
 
-/** Acepta tanto un link completo (".../xY7z2Q") como el código pelado. */
-export function normalizeInviteCode(raw: string): string {
-  const match = raw.trim().match(/([A-Za-z0-9_-]{4,20})$/);
-  return match ? match[1] : raw.trim();
-}
-
 export async function joinServerRequest(
   code: string,
 ): Promise<JoinServerResult> {
