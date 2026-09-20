@@ -1,3 +1,4 @@
+import { reasonOf } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -28,10 +29,7 @@ export async function DELETE(
   );
 
   if (!result.ok) {
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
+    const reason = reasonOf(result.details);
 
     if (reason === "owner_must_transfer_or_delete") {
       return NextResponse.json(

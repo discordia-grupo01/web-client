@@ -1,3 +1,4 @@
+import { reasonOf } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -36,10 +37,7 @@ export async function PATCH(
     if (result.status === 401) {
       return unauthorizedResponse();
     }
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
+    const reason = reasonOf(result.details);
     const friendly = reason ? REASON_MESSAGES[reason] : undefined;
     return NextResponse.json(
       {

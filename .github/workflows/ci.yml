@@ -14,6 +14,8 @@ jobs:
         with:
           node-version: "20"
           cache: "npm"
+      - name: Acceso al repo client-shared (privado)
+        run: git config --global url."https://x-access-token:${{ secrets.SHARED_REPO_TOKEN }}@github.com/".insteadOf "ssh://git@github.com/"
 
       - run: npm ci
       - run: npm run format:check

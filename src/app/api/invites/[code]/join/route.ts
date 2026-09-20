@@ -1,3 +1,4 @@
+import { reasonOf } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -23,10 +24,7 @@ export async function POST(
   const joinResult = await joinServerByCode(session.token, params.code);
 
   if (!joinResult.ok) {
-    const reason =
-      typeof joinResult.details?.reason === "string"
-        ? joinResult.details.reason
-        : undefined;
+    const reason = reasonOf(joinResult.details);
     const friendly = reason ? REASON_MESSAGES[reason] : undefined;
 
     if (friendly) {
