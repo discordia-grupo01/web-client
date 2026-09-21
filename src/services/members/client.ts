@@ -1,6 +1,9 @@
-import { api } from "@/lib/browser-api-client";
+import {
+  type ListMembersResult,
+  MEMBERS_LOAD_FAILED,
+} from "@discordia/client-shared";
 
-import type { ListMembersActionResult } from "@/types/member.types";
+import { api } from "@/lib/browser-api-client";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/servers/:id/members`, mismo
@@ -10,16 +13,16 @@ import type { ListMembersActionResult } from "@/types/member.types";
 
 export async function listMembersRequest(
   serverId: string,
-): Promise<ListMembersActionResult> {
+): Promise<ListMembersResult> {
   try {
-    const { data } = await api.get<ListMembersActionResult>(
+    const { data } = await api.get<ListMembersResult>(
       `/servers/${serverId}/members`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar los miembros. Intenta de nuevo.",
+      message: MEMBERS_LOAD_FAILED,
     };
   }
 }

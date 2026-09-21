@@ -1,60 +1,15 @@
-export interface User {
-  id: string;
-  name: string;
-  email: string;
-  description: string;
-  avatar_url: string;
-  status_text: string;
-  status_emoji: string;
-  created_at: string;
-}
+import type { SessionBase } from "@discordia/client-shared";
 
-/** Respuesta OK de `POST /v1/login` y `POST /v1/users`. */
-export interface AuthResponse {
-  user: User;
-  token: string;
-}
-
-/** Lo que guardamos en la cookie httpOnly de sesion. */
-export interface Session {
-  token: string;
-  /** Refresh token de identify-service (rota en cada /v1/refresh). */
+/**
+ * Lo unico de auth que es propio de web-client. Todo lo demas (`User`,
+ * `AuthResponse`, los resultados de cada accion) sale de
+ * `@discordia/client-shared`: lo define el backend, no esta app.
+ */
+export interface Session extends SessionBase {
+  /**
+   * Refresh token de identify-service, rota en cada `/v1/refresh`. No esta en
+   * `SessionBase` porque en `app-mobile` vive en una cookie nativa que el JS
+   * nunca ve.
+   */
   refreshToken: string;
-  user: User;
 }
-
-/**
- * Resultado que el BFF devuelve al cliente para las acciones de auth. Nunca
- * incluye el token: ese queda solo en la cookie httpOnly.
- */
-export type AuthActionResult =
-  { ok: true; user: User } | { ok: false; message: string };
-
-/** Resultado de `POST /api/auth/login`. */
-export type LoginActionResult = AuthActionResult;
-
-/**
- * Resultado de `POST /api/auth/register`. A diferencia de login, `POST
- * /v1/users` ya NO devuelve un token (ver identify-service commit
- * "Register does not generate jwt token anymore"): registrarse no deja al
- * usuario con sesion iniciada, hay que loguearse aparte. Por eso este
- * resultado no lleva `user` ni crea cookie -- el BFF ya no llama a
- * `createSession` en este endpoint.
- */
-export type RegisterActionResult =
-  { ok: true } | { ok: false; message: string };
-
-/**
- * Resultado de `POST /api/auth/forgot-password`. Nunca lleva datos de usuario:
- * el backend responde igual exista o no el correo, para no permitir enumerar
- * cuentas registradas.
- */
-export type ForgotPasswordActionResult =
-  { ok: true } | { ok: false; message: string };
-
-/**
- * Resultado de `POST /api/auth/reset-password`. A diferencia de login/register
- * no crea sesion: el backend no devuelve token al cambiar la contrasena.
- */
-export type ResetPasswordActionResult =
-  { ok: true } | { ok: false; message: string };

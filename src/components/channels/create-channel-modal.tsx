@@ -1,16 +1,19 @@
 "use client";
 
+import {
+  type Category,
+  type Channel,
+  MAX_NAME,
+  validateChannelName,
+} from "@discordia/client-shared";
+
 import { AlertCircle, Hash, Volume2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { Select } from "@/components/ui/select";
-import type { Category } from "@/types/category.types";
 import { createChannelRequest } from "@/services/channels/client";
-import type { Channel } from "@/types/channel.types";
 import { cn } from "@/lib/cn";
-
-const MAX_NAME = 100;
 
 interface CreateChannelModalProps {
   serverId: string;
@@ -53,8 +56,9 @@ export function CreateChannelModal({
     setNameError("");
     setGlobalError("");
 
-    if (!trimmed) {
-      setNameError("Ingresá un nombre para el canal.");
+    const nameError = validateChannelName(trimmed);
+    if (nameError) {
+      setNameError(nameError);
       return;
     }
 

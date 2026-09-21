@@ -1,6 +1,17 @@
 "use client";
 
 import {
+  buildInviteLink,
+  daysUntil,
+  type Invitation,
+  INVITE_COPY_FAILED,
+  inviteStatus,
+  type InviteStatus,
+  MAX_USES_LABEL,
+  validateMaxUses,
+} from "@discordia/client-shared";
+
+import {
   AlertCircle,
   Check,
   Clock,
@@ -19,7 +30,6 @@ import {
   listInvitationsRequest,
   revokeInviteRequest,
 } from "@/services/invites/client";
-import type { Invitation } from "@/types/invite.types";
 import { cn } from "@/lib/cn";
 
 interface InviteModalProps {
@@ -27,8 +37,6 @@ interface InviteModalProps {
   serverName: string;
   onClose: () => void;
 }
-
-type InviteStatus = "active" | "revoked" | "expired" | "exhausted";
 
 const STATUS_COPY: Record<InviteStatus, { label: string; className: string }> =
   {
@@ -44,25 +52,6 @@ const STATUS_COPY: Record<InviteStatus, { label: string; className: string }> =
     },
   };
 
-function inviteStatus(inv: Invitation): InviteStatus {
-  if (inv.revoked_at) return "revoked";
-  if (inv.expires_at && new Date(inv.expires_at).getTime() <= Date.now())
-    return "expired";
-  if (inv.max_uses !== null && inv.uses >= inv.max_uses) return "exhausted";
-  return "active";
-}
-
-/** Link real: abrirlo (`/invite/:code`) une al que lo abra al servidor -- o
- * le explica por que no puede si el codigo ya no sirve. */
-function inviteLink(code: string): string {
-  return `${window.location.origin}/invite/${code}`;
-}
-
-function daysUntil(iso: string): number {
-  const ms = new Date(iso).getTime() - Date.now();
-  return Math.max(0, Math.round(ms / (24 * 60 * 60 * 1000)));
-}
-
 function InvitationRow({
   invitation,
   onRevoked,
@@ -77,11 +66,13 @@ function InvitationRow({
 
   async function handleCopy() {
     try {
-      await navigator.clipboard.writeText(inviteLink(invitation.code));
+      await navigator.clipboard.writeText(
+        buildInviteLink(invitation.code, window.location.origin),
+      );
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      setErrorMessage("No pudimos copiar el enlace.");
+      setErrorMessage(INVITE_COPY_FAILED);
     }
   }
 
@@ -200,11 +191,12 @@ export function InviteModal({
 
   async function handleGenerate() {
     const trimmed = maxUsesInput.trim();
-    const parsed = trimmed ? Number(trimmed) : undefined;
-    if (trimmed && (!Number.isInteger(parsed) || (parsed as number) <= 0)) {
-      setErrorMessage("El límite de usos debe ser un número entero mayor a 0.");
+    const maxUsesError = validateMaxUses(trimmed);
+    if (maxUsesError) {
+      setErrorMessage(maxUsesError);
       return;
     }
+    const parsed = trimmed ? Number(trimmed) : undefined;
 
     setIsGenerating(true);
     setErrorMessage("");
@@ -282,7 +274,7 @@ export function InviteModal({
               min={1}
               value={maxUsesInput}
               onChange={(event) => setMaxUsesInput(event.target.value)}
-              placeholder="Límite de usos (opcional)"
+              placeholder={MAX_USES_LABEL}
               className="bg-surface-input border-line text-content min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none"
             />
             <Button

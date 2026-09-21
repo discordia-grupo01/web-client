@@ -1,8 +1,16 @@
+import {
+  hasErrors,
+  INVALID_DATA_MESSAGE,
+  PASSWORD_TOO_WEAK,
+  PASSWORD_UPDATE_UNAVAILABLE,
+  type ResetPasswordResult,
+  UNEXPECTED_ERROR_MESSAGE,
+  validateResetPassword,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { resetPassword } from "@/services/auth/service";
-import type { ResetPasswordActionResult } from "@/types/auth.types";
-import { hasErrors, validateResetPassword } from "@/services/auth/validation";
 
 /**
  * BFF para definir la nueva contrasena. A diferencia de login/register no crea
@@ -11,13 +19,13 @@ import { hasErrors, validateResetPassword } from "@/services/auth/validation";
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<ResetPasswordActionResult>> {
+): Promise<NextResponse<ResetPasswordResult>> {
   let payload: unknown;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -42,7 +50,7 @@ export async function POST(
 
   if (hasErrors(validateResetPassword({ newPassword, confirmPassword }))) {
     return NextResponse.json(
-      { ok: false, message: "Revisa los datos ingresados." },
+      { ok: false, message: INVALID_DATA_MESSAGE },
       { status: 400 },
     );
   }
@@ -66,8 +74,7 @@ export async function POST(
         return NextResponse.json(
           {
             ok: false,
-            message:
-              "Revisa los datos: la contraseña necesita 8+ caracteres con mayúscula, minúscula y número.",
+            message: PASSWORD_TOO_WEAK,
           },
           { status: 400 },
         );
@@ -77,8 +84,7 @@ export async function POST(
         return NextResponse.json(
           {
             ok: false,
-            message:
-              "No pudimos actualizar tu contraseña en este momento. Intenta de nuevo más tarde.",
+            message: PASSWORD_UPDATE_UNAVAILABLE,
           },
           { status: 502 },
         );

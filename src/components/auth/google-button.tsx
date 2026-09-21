@@ -1,5 +1,7 @@
 "use client";
 
+import { GOOGLE_CONNECT_FAILED } from "@discordia/client-shared";
+
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useEffect, useRef, useState } from "react";
 
@@ -8,8 +10,7 @@ import { oauthGoogleLoginRequest } from "@/services/auth/client";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
-const CLIENT_SIDE_ERROR_MESSAGE =
-  "No pudimos conectar con Google. Iniciá sesión con tu correo y contraseña.";
+const CLIENT_SIDE_ERROR_MESSAGE = GOOGLE_CONNECT_FAILED;
 
 // Tamano con el que Google renderiza el boton (`size="large"`, ancho maximo
 // permitido 400px). Se escala via CSS para cubrir el boton visual.

@@ -1,3 +1,13 @@
+import {
+  type CreateInviteResult,
+  fieldOf,
+  INVITE_REASONS,
+  INVITES_LOAD_FAILED,
+  type ListInvitationsResult,
+  messageFor,
+  reasonOf,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -6,17 +16,6 @@ import {
   generateInvitation,
   listInvitations,
 } from "@/services/invites/service";
-import type {
-  CreateInviteActionResult,
-  ListInvitationsActionResult,
-} from "@/types/invite.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  max_uses_invalid: "El límite de usos debe ser un número mayor a 0.",
-  server_not_found: "El servidor no existe.",
-  invite_permission_denied:
-    "Tenés que ser miembro de este servidor para invitar gente.",
-};
 
 /**
  * BFF de `GET /v1/servers/:id/invites`. Trae todas las invitaciones del
@@ -25,7 +24,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<ListInvitationsActionResult>> {
+): Promise<NextResponse<ListInvitationsResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -39,7 +38,7 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        message: "No pudimos cargar las invitaciones. Intenta de nuevo.",
+        message: INVITES_LOAD_FAILED,
       },
       {
         status:
@@ -61,7 +60,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateInviteActionResult>> {
+): Promise<NextResponse<CreateInviteResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -82,15 +81,9 @@ export async function POST(
   );
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const field = fieldOf(result.details);
+    const reason = reasonOf(result.details);
+    const friendly = reason ? INVITE_REASONS[reason] : undefined;
 
     if (field === "max_uses" && friendly) {
       return NextResponse.json(
@@ -102,7 +95,10 @@ export async function POST(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: friendly ?? "Algo salio mal. Intenta de nuevo." },
+      {
+        ok: false,
+        message: messageFor(result, INVITE_REASONS, UNEXPECTED_ERROR_MESSAGE),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

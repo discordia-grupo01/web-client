@@ -1,5 +1,7 @@
 "use client";
 
+import { type ServerSummary, type User } from "@discordia/client-shared";
+
 import { Home as HomeIcon, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -13,8 +15,6 @@ import { ServerView } from "@/components/servers/server-view";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
 import { getOwnProfileRequest } from "@/services/profile/client";
-import type { User } from "@/types/auth.types";
-import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 

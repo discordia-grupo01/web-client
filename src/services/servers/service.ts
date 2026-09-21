@@ -1,9 +1,13 @@
+import {
+  type ApiErrorBody,
+  NETWORK_ERROR_MESSAGE,
+  type ServerSummary,
+} from "@discordia/client-shared";
+
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
-
-import type { ServerSummary, ServersApiErrorBody } from "@/types/server.types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong):
@@ -138,7 +142,7 @@ export async function createServer(
       };
     }
 
-    const err = body as ServersApiErrorBody | undefined;
+    const err = body as ApiErrorBody | undefined;
     return {
       ok: false,
       status: response.status,
@@ -149,8 +153,7 @@ export async function createServer(
     return {
       ok: false,
       status: 0,
-      message:
-        "No pudimos conectar con el servidor. Intenta de nuevo en un momento.",
+      message: NETWORK_ERROR_MESSAGE,
     };
   }
 }

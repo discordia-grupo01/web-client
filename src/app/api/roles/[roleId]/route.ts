@@ -1,19 +1,24 @@
+import {
+  type DeleteRoleResult,
+  fieldOf,
+  invalidPermissionMessage,
+  messageFor,
+  OWNER_ONLY_DELETE_ROLE,
+  OWNER_ONLY_UPDATE_ROLE,
+  reasonOf,
+  ROLE_DELETE_FAILED,
+  ROLE_IS_DEFAULT,
+  ROLE_NOT_FOUND,
+  ROLE_REASONS,
+  ROLE_UPDATE_FAILED,
+  type RolePermission,
+  type UpdateRoleResult,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { deleteRole, updateRole } from "@/services/roles/service";
-import type {
-  DeleteRoleActionResult,
-  RolePermission,
-  UpdateRoleActionResult,
-} from "@/types/role.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el rol.",
-  name_too_long: "El nombre es demasiado largo.",
-  color_invalid_format: "Elegí un color válido para el rol.",
-};
 
 /**
  * BFF de `PATCH /v1/roles/:id`. Body JSON: `{ name?, color?, permissions? }`.
@@ -24,7 +29,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function PATCH(
   request: Request,
   { params }: { params: { roleId: string } },
-): Promise<NextResponse<UpdateRoleActionResult>> {
+): Promise<NextResponse<UpdateRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -44,15 +49,9 @@ export async function PATCH(
   });
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const field = fieldOf(result.details);
+    const reason = reasonOf(result.details);
+    const friendly = reason ? ROLE_REASONS[reason] : undefined;
 
     if ((field === "name" || field === "color") && friendly) {
       return NextResponse.json(
@@ -61,13 +60,7 @@ export async function PATCH(
       );
     }
     if (field === "permissions") {
-      const invalidValue =
-        typeof result.details?.invalid_value === "string"
-          ? result.details.invalid_value
-          : undefined;
-      const message = invalidValue
-        ? `"${invalidValue}" no es un permiso válido.`
-        : "Uno de los permisos enviados no es válido.";
+      const message = invalidPermissionMessage(result.details?.invalid_value);
       return NextResponse.json(
         { ok: false, message, fieldErrors: { permissions: message } },
         { status: result.status || 400 },
@@ -80,21 +73,21 @@ export async function PATCH(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para editar roles.",
+          message: OWNER_ONLY_UPDATE_ROLE,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "No encontramos ese rol." },
+        { ok: false, message: ROLE_NOT_FOUND },
         { status: 404 },
       );
     }
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos editar el rol. Intenta de nuevo.",
+        message: messageFor(result, ROLE_REASONS, ROLE_UPDATE_FAILED),
       },
       {
         status:
@@ -113,7 +106,7 @@ export async function PATCH(
 export async function DELETE(
   _request: Request,
   { params }: { params: { roleId: string } },
-): Promise<NextResponse<DeleteRoleActionResult>> {
+): Promise<NextResponse<DeleteRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -129,7 +122,7 @@ export async function DELETE(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para eliminar roles.",
+          message: OWNER_ONLY_DELETE_ROLE,
         },
         { status: 403 },
       );
@@ -139,20 +132,19 @@ export async function DELETE(
         {
           ok: false,
           isDefaultRole: true,
-          message:
-            "No podés eliminar este rol porque es el rol por defecto del servidor. Asigná otro rol por defecto primero.",
+          message: ROLE_IS_DEFAULT,
         },
         { status: 409 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "No encontramos ese rol." },
+        { ok: false, message: ROLE_NOT_FOUND },
         { status: 404 },
       );
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos eliminar el rol. Intenta de nuevo." },
+      { ok: false, message: ROLE_DELETE_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

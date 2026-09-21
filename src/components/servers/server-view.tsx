@@ -1,6 +1,17 @@
 "use client";
 
 import {
+  type Category,
+  type Channel,
+  CHANNEL_START_NOTICE,
+  channelsOfCategory,
+  type ServerSummary,
+  sortByPosition,
+  type User,
+  VOICE_NOT_IMPLEMENTED,
+} from "@discordia/client-shared";
+
+import {
   closestCenter,
   DndContext,
   DragOverlay,
@@ -39,14 +50,10 @@ import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
 import { MembersSidebar } from "@/components/members/members-sidebar";
 import { useAuth } from "@/services/auth/auth-context";
-import type { User } from "@/types/auth.types";
-import type { Category } from "@/types/category.types";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
 } from "@/services/channels/client";
-import type { Channel } from "@/types/channel.types";
-import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./server-sidebar-header";
@@ -358,12 +365,8 @@ export function ServerView({
     (channel) => channel.id === activeChannelId,
   );
 
-  const sortedCategories = [...server.categories].sort(
-    (a, b) => a.position - b.position,
-  );
-  const uncategorized = server.channels
-    .filter((channel) => channel.category_id === null)
-    .sort((a, b) => a.position - b.position);
+  const sortedCategories = sortByPosition(server.categories);
+  const uncategorized = channelsOfCategory(server.channels, null);
 
   function toggleCollapsed(id: string) {
     setCollapsedIds((prev) => {
@@ -429,9 +432,7 @@ export function ServerView({
   function channelsInBucket(bucket: string): Channel[] {
     if (bucket === UNCATEGORIZED_BUCKET) return uncategorized;
     const categoryId = bucketCategoryId(bucket);
-    return server.channels
-      .filter((channel) => channel.category_id === categoryId)
-      .sort((a, b) => a.position - b.position);
+    return channelsOfCategory(server.channels, categoryId);
   }
 
   /** Resuelve a que bucket corresponde un id de `over` (un canal o un contenedor vacio). */
@@ -584,9 +585,7 @@ export function ServerView({
             ) : null}
 
             {sortedCategories.map((category) => {
-              const channels = server.channels
-                .filter((channel) => channel.category_id === category.id)
-                .sort((a, b) => a.position - b.position);
+              const channels = channelsOfCategory(server.channels, category.id);
               const collapsed = collapsedIds.has(category.id);
 
               return (
@@ -668,8 +667,8 @@ export function ServerView({
                 </h2>
                 <p className="text-content-muted mt-1 max-w-sm text-sm leading-relaxed">
                   {activeChannel.kind === "text"
-                    ? "Este es el comienzo del canal. El chat todavía no está conectado en esta versión."
-                    : "La conexión de voz todavía no está implementada en esta versión."}
+                    ? CHANNEL_START_NOTICE
+                    : VOICE_NOT_IMPLEMENTED}
                 </p>
               </div>
             </div>

@@ -1,16 +1,15 @@
-import { api } from "@/lib/browser-api-client";
+import {
+  type ForgotPasswordResult,
+  type ForgotPasswordValues,
+  type LoginResult,
+  type LoginValues,
+  type RegisterResult,
+  type RegisterValues,
+  REQUEST_FAILED_MESSAGE,
+  type ResetPasswordResult,
+} from "@discordia/client-shared";
 
-import type {
-  ForgotPasswordActionResult,
-  LoginActionResult,
-  RegisterActionResult,
-  ResetPasswordActionResult,
-} from "@/types/auth.types";
-import type {
-  ForgotPasswordValues,
-  LoginValues,
-  RegisterValues,
-} from "./validation";
+import { api } from "@/lib/browser-api-client";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/auth/*`, mismo origen).
@@ -19,50 +18,44 @@ import type {
 
 export async function loginRequest(
   credentials: LoginValues,
-): Promise<LoginActionResult> {
+): Promise<LoginResult> {
   try {
-    const { data } = await api.post<LoginActionResult>(
-      "/auth/login",
-      credentials,
-    );
+    const { data } = await api.post<LoginResult>("/auth/login", credentials);
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
 
 export async function oauthGoogleLoginRequest(
   idToken: string,
-): Promise<LoginActionResult> {
+): Promise<LoginResult> {
   try {
-    const { data } = await api.post<LoginActionResult>("/auth/oauth/google", {
+    const { data } = await api.post<LoginResult>("/auth/oauth/google", {
       idToken,
     });
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
 
 export async function registerRequest(
   values: RegisterValues,
-): Promise<RegisterActionResult> {
+): Promise<RegisterResult> {
   try {
-    const { data } = await api.post<RegisterActionResult>(
-      "/auth/register",
-      values,
-    );
+    const { data } = await api.post<RegisterResult>("/auth/register", values);
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -77,9 +70,9 @@ export async function logoutRequest(): Promise<void> {
 
 export async function forgotPasswordRequest(
   values: ForgotPasswordValues,
-): Promise<ForgotPasswordActionResult> {
+): Promise<ForgotPasswordResult> {
   try {
-    const { data } = await api.post<ForgotPasswordActionResult>(
+    const { data } = await api.post<ForgotPasswordResult>(
       "/auth/forgot-password",
       values,
     );
@@ -87,7 +80,7 @@ export async function forgotPasswordRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -96,9 +89,9 @@ export async function resetPasswordRequest(values: {
   token: string;
   newPassword: string;
   confirmPassword: string;
-}): Promise<ResetPasswordActionResult> {
+}): Promise<ResetPasswordResult> {
   try {
-    const { data } = await api.post<ResetPasswordActionResult>(
+    const { data } = await api.post<ResetPasswordResult>(
       "/auth/reset-password",
       values,
     );
@@ -106,7 +99,7 @@ export async function resetPasswordRequest(values: {
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }

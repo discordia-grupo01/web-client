@@ -1,5 +1,7 @@
 "use client";
 
+import { type User } from "@discordia/client-shared";
+
 import {
   createContext,
   useCallback,
@@ -13,7 +15,6 @@ import {
 import { ROUTES } from "@/lib/constants";
 
 import { logoutRequest } from "./client";
-import type { User } from "@/types/auth.types";
 
 interface AuthContextValue {
   user: User | null;

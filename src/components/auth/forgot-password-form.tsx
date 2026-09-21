@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  hasErrors,
+  type ForgotPasswordErrors,
+  validateForgotPassword,
+} from "@discordia/client-shared";
+
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
@@ -7,11 +13,6 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { TextField } from "@/components/ui/text-field";
 import { forgotPasswordRequest } from "@/services/auth/client";
-import {
-  hasErrors,
-  validateForgotPassword,
-  type ForgotPasswordErrors,
-} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function ForgotPasswordForm() {

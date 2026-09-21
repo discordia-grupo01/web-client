@@ -1,11 +1,12 @@
 "use client";
 
+import { type PublicUser } from "@discordia/client-shared";
+
 import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/section-label";
 import { MemberRoleBadges } from "@/components/roles/member-role-badges";
 import { getPublicProfileRequest } from "@/services/profile/client";
-import type { PublicUser } from "@/types/profile.types";
 
 import { ActivityStatusDot } from "./activity-status-dot";
 import { CustomStatusBadge } from "./custom-status-badge";

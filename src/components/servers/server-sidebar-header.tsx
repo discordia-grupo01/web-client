@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  type OwnershipTransfer,
+  type ServerSummary,
+} from "@discordia/client-shared";
+
+import {
   ArrowLeftRight,
   ChevronDown,
   FolderPlus,
@@ -16,11 +21,9 @@ import { RolesModal } from "@/components/roles/roles-modal";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
 import { getPendingTransferRequest } from "@/services/ownership-transfers/client";
-import type { OwnershipTransfer } from "@/types/ownership-transfer.types";
 
 import { LeaveServerModal } from "./leave-server-modal";
 import { TransferOwnershipModal } from "./transfer-ownership-modal";
-import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
 
 interface ServerSidebarHeaderProps {

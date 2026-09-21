@@ -1,33 +1,18 @@
 import "server-only";
 
 import axios, { AxiosError, type AxiosRequestConfig } from "axios";
+import {
+  networkFailure,
+  NETWORK_ERROR_MESSAGE,
+  TIMEOUT_ERROR_MESSAGE,
+  toApiResult,
+  type ApiFailure,
+  type ApiResult,
+} from "@discordia/client-shared";
 
 import { env } from "./env";
 
-/** Forma de error del backend: `{ error: { code, message, details? } }`. */
-interface ApiErrorBody {
-  error: {
-    code: string;
-    message: string;
-    details?: Record<string, unknown>;
-  };
-}
-
-interface ApiSuccess<T> {
-  ok: true;
-  status: number;
-  data: T;
-}
-
-interface ApiFailure {
-  ok: false;
-  status: number;
-  code: string;
-  message: string;
-  details?: Record<string, unknown>;
-}
-
-export type ApiResult<T> = ApiSuccess<T> | ApiFailure;
+export type { ApiResult };
 
 /**
  * Instancia de axios hacia identify-service. Solo corre en el servidor: el
@@ -65,31 +50,13 @@ function buildRequestConfig({
   };
 }
 
-function toApiResult<T>(response: {
-  status: number;
-  data: T | ApiErrorBody;
-}): ApiResult<T> {
-  if (response.status >= 200 && response.status < 300) {
-    return { ok: true, status: response.status, data: response.data as T };
-  }
-
-  const body = response.data as ApiErrorBody | undefined;
-  return {
-    ok: false,
-    status: response.status,
-    code: body?.error?.code ?? "UNKNOWN_ERROR",
-    message:
-      body?.error?.message ?? "Ocurrio un error inesperado. Intenta de nuevo.",
-    details: body?.error?.details,
-  };
-}
-
+/** Axios solo distingue el timeout con `ECONNABORTED`; `fetch` no lo expone. */
 function toNetworkError(error: unknown): ApiFailure {
-  const message =
+  return networkFailure(
     error instanceof AxiosError && error.code === "ECONNABORTED"
-      ? "El servidor tardo demasiado en responder. Intenta de nuevo."
-      : "No pudimos conectar con el servidor. Intenta de nuevo en un momento.";
-  return { ok: false, status: 0, code: "NETWORK_ERROR", message };
+      ? TIMEOUT_ERROR_MESSAGE
+      : NETWORK_ERROR_MESSAGE,
+  );
 }
 
 export async function apiRequest<T>(
@@ -97,11 +64,11 @@ export async function apiRequest<T>(
   options: RequestOptions = {},
 ): Promise<ApiResult<T>> {
   try {
-    const response = await http.request<T | ApiErrorBody>({
+    const response = await http.request<unknown>({
       url: path,
       ...buildRequestConfig(options),
     });
-    return toApiResult<T>(response);
+    return toApiResult<T>(response.status, response.data);
   } catch (error) {
     return toNetworkError(error);
   }
@@ -117,12 +84,12 @@ export async function apiRequestWithSetCookie<T>(
   options: RequestOptions = {},
 ): Promise<{ result: ApiResult<T>; setCookieHeader: string[] | undefined }> {
   try {
-    const response = await http.request<T | ApiErrorBody>({
+    const response = await http.request<unknown>({
       url: path,
       ...buildRequestConfig(options),
     });
     return {
-      result: toApiResult<T>(response),
+      result: toApiResult<T>(response.status, response.data),
       setCookieHeader: response.headers["set-cookie"],
     };
   } catch (error) {

@@ -1,10 +1,12 @@
-import { api } from "@/lib/browser-api-client";
+import {
+  type CreateServerResult,
+  type LeaveServerResult,
+  REQUEST_FAILED_MESSAGE,
+  SERVERS_LOAD_FAILED,
+  type ServerSummary,
+} from "@discordia/client-shared";
 
-import type {
-  CreateServerActionResult,
-  LeaveServerActionResult,
-  ServerSummary,
-} from "@/types/server.types";
+import { api } from "@/lib/browser-api-client";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/servers`, mismo origen): alta,
@@ -23,23 +25,23 @@ export async function listServersRequest(): Promise<ListServersResult> {
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar tus servidores. Intenta de nuevo.",
+      message: SERVERS_LOAD_FAILED,
     };
   }
 }
 
 export async function leaveServerRequest(
   serverId: string,
-): Promise<LeaveServerActionResult> {
+): Promise<LeaveServerResult> {
   try {
-    const { data } = await api.delete<LeaveServerActionResult>(
+    const { data } = await api.delete<LeaveServerResult>(
       `/servers/${serverId}/leave`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -51,18 +53,16 @@ export async function leaveServerRequest(
  */
 export async function createServerRequest(
   formData: FormData,
-): Promise<CreateServerActionResult> {
+): Promise<CreateServerResult> {
   try {
-    const { data } = await api.post<CreateServerActionResult>(
-      "/servers",
-      formData,
-      { headers: { "Content-Type": undefined } },
-    );
+    const { data } = await api.post<CreateServerResult>("/servers", formData, {
+      headers: { "Content-Type": undefined },
+    });
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }

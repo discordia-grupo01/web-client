@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  type Member,
+  type OwnershipTransfer,
+  type PublicUser,
+} from "@discordia/client-shared";
+
 import { AlertCircle, ArrowLeftRight, Check, Crown, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -13,9 +19,6 @@ import {
   initiateTransferRequest,
   rejectTransferRequest,
 } from "@/services/ownership-transfers/client";
-import type { Member } from "@/types/member.types";
-import type { OwnershipTransfer } from "@/types/ownership-transfer.types";
-import type { PublicUser } from "@/types/profile.types";
 
 interface TransferOwnershipModalProps {
   serverId: string;

@@ -1,3 +1,4 @@
+import { reasonOf } from "@discordia/client-shared";
 import { AlertCircle, ShieldOff } from "lucide-react";
 import Link from "next/link";
 import type { Metadata } from "next";
@@ -45,13 +46,10 @@ export default async function InvitePage({
     redirect(`${ROUTES.home}?server=${result.data.server_id}`);
   }
 
-  const reason =
-    typeof result.details?.reason === "string"
-      ? result.details.reason
-      : undefined;
+  const reason = reasonOf(result.details);
   const copy = (reason ? REASON_COPY[reason] : undefined) ?? {
     title: "No pudimos procesar la invitación",
-    body: "Intenta de nuevo en un momento.",
+    body: "Intentá de nuevo en un momento.",
   };
   const Icon = reason === "user_banned" ? ShieldOff : AlertCircle;
 

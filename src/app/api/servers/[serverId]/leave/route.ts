@@ -1,9 +1,13 @@
+import {
+  type LeaveServerResult,
+  reasonOf,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { leaveServer } from "@/services/servers/service";
-import type { LeaveServerActionResult } from "@/types/server.types";
 
 const OWNER_BLOCKED_MESSAGE =
   "Sos el propietario de este servidor. Transferí la propiedad a otro miembro antes de salir.";
@@ -15,7 +19,7 @@ const OWNER_BLOCKED_MESSAGE =
 export async function DELETE(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<LeaveServerActionResult>> {
+): Promise<NextResponse<LeaveServerResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -28,14 +32,11 @@ export async function DELETE(
   );
 
   if (!result.ok) {
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
+    const reason = reasonOf(result.details);
 
     if (reason === "owner_must_transfer_or_delete") {
       return NextResponse.json(
-        { ok: false, message: OWNER_BLOCKED_MESSAGE, isOwnerBlocked: true },
+        { ok: false, message: OWNER_BLOCKED_MESSAGE, reason },
         { status: 409 },
       );
     }
@@ -43,7 +44,7 @@ export async function DELETE(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "Algo salio mal. Intenta de nuevo." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

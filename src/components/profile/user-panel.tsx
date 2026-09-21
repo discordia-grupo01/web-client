@@ -1,12 +1,13 @@
 "use client";
 
+import { type User } from "@discordia/client-shared";
+
 import { Headphones, LogOut, Mic, Settings } from "lucide-react";
 import { useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { LogoutConfirmModal } from "@/components/profile/logout-confirm-modal";
 import { ServerAvatar } from "@/components/ui/server-avatar";
-import type { User } from "@/types/auth.types";
 
 interface UserPanelProps {
   user: User;

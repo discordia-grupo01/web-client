@@ -1,5 +1,7 @@
 "use client";
 
+import { type Role } from "@discordia/client-shared";
+
 import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -11,7 +13,6 @@ import {
   listRolesRequest,
   removeRoleRequest,
 } from "@/services/roles/client";
-import type { Role } from "@/types/role.types";
 
 interface MemberRoleBadgesProps {
   serverId: string;
