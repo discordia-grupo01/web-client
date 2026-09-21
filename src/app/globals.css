@@ -6,33 +6,12 @@
    `:root` = tema oscuro (default). `[data-theme="light"]` lo pisa.
    ──────────────────────────────────────────────────────────── */
 
-/* ────────────────────────────────────────────────────────────
-   Puente hacia Tailwind. `inline` resuelve la var en el punto de
-   uso, asi el cambio de tema se refleja sin recompilar utilidades.
-   Ej: `bg-surface-raised`, `text-content-muted`, `border-line`.
-   ──────────────────────────────────────────────────────────── */
+/* Puente hacia Tailwind (`bg-surface`, `text-content-muted`, `border-line`...),
+   compartido con app-mobile. */
+@import "@discordia/client-shared/theme.css";
+
+/* Solo web: las fuentes vienen de next/font en layout.tsx. */
 @theme inline {
-  --color-accent: var(--accent);
-  --color-accent-strong: var(--accent-bright);
-  --color-highlight: var(--highlight);
-  --color-sky: var(--sky);
-  --color-info: var(--info);
-  --color-success: var(--success);
-  --color-danger: var(--danger);
-
-  --color-surface: var(--bg-chat);
-  --color-surface-raised: var(--bg-card);
-  --color-surface-sunken: var(--bg-channels);
-  --color-surface-input: var(--bg-input);
-  --color-surface-hover: var(--bg-hover);
-
-  --color-content: var(--text);
-  --color-content-muted: var(--text-2);
-  --color-content-subtle: var(--text-3);
-
-  --color-line: var(--border);
-  --color-line-strong: var(--border-strong);
-
   --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --font-display: var(--font-outfit), ui-sans-serif, system-ui, sans-serif;
 }
