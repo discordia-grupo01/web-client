@@ -1,60 +1,10 @@
 @import "tailwindcss";
 
 /* ────────────────────────────────────────────────────────────
-   Design tokens — portados del prototipo de Figma.
+   Design tokens — viven en @discordia/client-shared (THEMES) y se
+   inyectan como variables CSS desde layout.tsx con `themeToCss()`.
    `:root` = tema oscuro (default). `[data-theme="light"]` lo pisa.
    ──────────────────────────────────────────────────────────── */
-:root {
-  --accent: #245c6b;
-  --accent-bright: #2d7a8c;
-  --highlight: #fce3a4;
-  --sky: #a8c6df;
-  --success: #38a169;
-  --info: #6b95bd;
-  --danger: #e05252;
-
-  --bg-servers: #0f1922;
-  --bg-channels: #1c293b;
-  --bg-chat: #1e2d42;
-  --bg-hover: #273d52;
-  --bg-user-panel: #111e2c;
-  --bg-input: rgba(168, 198, 223, 0.07);
-  --bg-card: #1a2e40;
-  --bg-modal: #162435;
-
-  --text: #f5f2eb;
-  --text-2: #a8c6df;
-  --text-3: rgba(168, 198, 223, 0.45);
-
-  --border: rgba(168, 198, 223, 0.08);
-  --border-strong: rgba(168, 198, 223, 0.18);
-}
-
-[data-theme="light"] {
-  --accent: #245c6b;
-  --accent-bright: #1d4e5a;
-  --highlight: #e8a800;
-  --sky: #6b95bd;
-  --success: #38a169;
-  --info: #6b95bd;
-  --danger: #c0392b;
-
-  --bg-servers: #245c6b;
-  --bg-channels: #e8e4da;
-  --bg-chat: #f5f2eb;
-  --bg-hover: #ddd9cf;
-  --bg-user-panel: #d5d1c6;
-  --bg-input: rgba(36, 92, 107, 0.07);
-  --bg-card: #ffffff;
-  --bg-modal: #ffffff;
-
-  --text: #18181b;
-  --text-2: #245c6b;
-  --text-3: rgba(36, 92, 107, 0.5);
-
-  --border: rgba(36, 92, 107, 0.12);
-  --border-strong: rgba(36, 92, 107, 0.22);
-}
 
 /* ────────────────────────────────────────────────────────────
    Puente hacia Tailwind. `inline` resuelve la var en el punto de
