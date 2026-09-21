@@ -1,3 +1,14 @@
+import {
+  fieldOf,
+  type GetPendingTransferResult,
+  type InitiateTransferResult,
+  messageFor,
+  OWNER_ONLY_TRANSFER,
+  reasonOf,
+  TRANSFER_LOAD_FAILED,
+  TRANSFER_REASONS,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
@@ -6,18 +17,6 @@ import {
   getPendingOwnershipTransfer,
   initiateOwnershipTransfer,
 } from "@/services/ownership-transfers/service";
-import type {
-  GetPendingTransferActionResult,
-  InitiateTransferActionResult,
-} from "@/types/ownership-transfer.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  required: "Tenés que elegir un miembro para transferir la propiedad.",
-  not_a_member: "Ese usuario no es miembro de este servidor.",
-  already_owner: "Ese usuario ya es el propietario del servidor.",
-  transfer_already_pending:
-    "Ya hay una transferencia de propiedad pendiente para este servidor.",
-};
 
 /**
  * BFF de `GET /v1/servers/:id/ownership-transfers/pending`. Un servidor sin
@@ -27,7 +26,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<GetPendingTransferActionResult>> {
+): Promise<NextResponse<GetPendingTransferResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -48,8 +47,7 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "No pudimos cargar la transferencia de propiedad. Intenta de nuevo.",
+        message: TRANSFER_LOAD_FAILED,
       },
       {
         status:
@@ -72,7 +70,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<InitiateTransferActionResult>> {
+): Promise<NextResponse<InitiateTransferResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -100,21 +98,15 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Solo el propietario puede transferir el servidor.",
+          message: OWNER_ONLY_TRANSFER,
         },
         { status: 403 },
       );
     }
 
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const field = fieldOf(result.details);
+    const reason = reasonOf(result.details);
+    const friendly = reason ? TRANSFER_REASONS[reason] : undefined;
 
     if (field === "to_user_id" && friendly) {
       return NextResponse.json(
@@ -123,7 +115,10 @@ export async function POST(
       );
     }
     return NextResponse.json(
-      { ok: false, message: friendly ?? "Algo salió mal. Intenta de nuevo." },
+      {
+        ok: false,
+        message: messageFor(result, TRANSFER_REASONS, UNEXPECTED_ERROR_MESSAGE),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

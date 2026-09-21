@@ -1,10 +1,15 @@
+import {
+  type ApiErrorBody,
+  NETWORK_ERROR_MESSAGE,
+  type PublicUser,
+  UNEXPECTED_ERROR_MESSAGE,
+  type User,
+} from "@discordia/client-shared";
+
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
 import { env } from "@/lib/env";
-import type { User } from "@/types/auth.types";
-
-import type { ApiErrorBody, PublicUser } from "@/types/profile.types";
 
 /**
  * Capa de servicios contra identify-service: perfil de usuario (propio o
@@ -92,17 +97,14 @@ export async function updateOwnProfile(
     return {
       ok: false,
       status: response.status,
-      message:
-        errorBody?.error?.message ??
-        "Ocurrio un error inesperado. Intenta de nuevo.",
+      message: errorBody?.error?.message ?? UNEXPECTED_ERROR_MESSAGE,
       details: errorBody?.error?.details,
     };
   } catch {
     return {
       ok: false,
       status: 0,
-      message:
-        "No pudimos conectar con el servidor. Intenta de nuevo en un momento.",
+      message: NETWORK_ERROR_MESSAGE,
     };
   }
 }
@@ -120,15 +122,17 @@ interface ProfileImageFailure {
 export type ProfileImageResult = ProfileImageSuccess | ProfileImageFailure;
 
 /**
- * Trae el binario de una imagen de perfil ya subida. `imagePath` es el valor
- * de `avatar_url` tal cual lo devuelve el backend (ej.
- * `/uploads/profile-images/<id>.jpg`, servido sin auth por identify-service
- * -- ver `router.Static` en cmd/api/main.go).
+ * Trae el binario de una imagen de perfil ya subida. Acepta tanto rutas
+ * relativas servidas por identify-service como URLs publicas de Supabase
+ * Storage.
  */
 export async function getProfileImage(
   imagePath: string,
 ): Promise<ProfileImageResult> {
-  const response = await fetch(`${env.apiUrl}${imagePath}`);
+  const imageURL = /^https?:\/\//i.test(imagePath)
+    ? imagePath
+    : `${env.apiUrl}${imagePath}`;
+  const response = await fetch(imageURL);
 
   if (!response.ok || !response.body) {
     return { ok: false, status: response.status || 502 };

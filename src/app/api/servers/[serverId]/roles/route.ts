@@ -1,18 +1,19 @@
+import {
+  type CreateRoleResult,
+  fieldOf,
+  type ListRolesResult,
+  messageFor,
+  OWNER_ONLY_CREATE_ROLE,
+  reasonOf,
+  ROLE_CREATE_FAILED,
+  ROLE_REASONS,
+  ROLES_LOAD_FAILED,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createRole, listRoles } from "@/services/roles/service";
-import type {
-  CreateRoleActionResult,
-  ListRolesActionResult,
-} from "@/types/role.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el rol.",
-  name_too_long: "El nombre es demasiado largo.",
-  color_invalid_format: "Elegí un color válido para el rol.",
-};
 
 /**
  * BFF de `GET /v1/servers/:id/roles`. Trae todos los roles del server.
@@ -20,7 +21,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<ListRolesActionResult>> {
+): Promise<NextResponse<ListRolesResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -32,7 +33,7 @@ export async function GET(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos cargar los roles. Intenta de nuevo." },
+      { ok: false, message: ROLES_LOAD_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,
@@ -51,7 +52,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateRoleActionResult>> {
+): Promise<NextResponse<CreateRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -67,15 +68,9 @@ export async function POST(
   });
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const field = fieldOf(result.details);
+    const reason = reasonOf(result.details);
+    const friendly = reason ? ROLE_REASONS[reason] : undefined;
 
     if ((field === "name" || field === "color") && friendly) {
       return NextResponse.json(
@@ -90,7 +85,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para crear roles.",
+          message: OWNER_ONLY_CREATE_ROLE,
         },
         { status: 403 },
       );
@@ -98,7 +93,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos crear el rol. Intenta de nuevo.",
+        message: messageFor(result, ROLE_REASONS, ROLE_CREATE_FAILED),
       },
       {
         status:

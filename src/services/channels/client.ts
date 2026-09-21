@@ -1,12 +1,17 @@
-import { api } from "@/lib/browser-api-client";
+import {
+  CHANNEL_CREATE_FAILED,
+  CHANNEL_DELETE_FAILED,
+  CHANNEL_MOVE_FAILED,
+  CHANNEL_REORDER_FAILED,
+  CHANNEL_UPDATE_FAILED,
+  type CreateChannelResult,
+  type DeleteChannelResult,
+  type MoveChannelResult,
+  type ReorderChannelsResult,
+  type UpdateChannelResult,
+} from "@discordia/client-shared";
 
-import type {
-  CreateChannelActionResult,
-  DeleteChannelActionResult,
-  MoveChannelActionResult,
-  ReorderChannelsActionResult,
-  UpdateChannelActionResult,
-} from "@/types/channel.types";
+import { api } from "@/lib/browser-api-client";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/channels`, `/api/servers/:id/channels`,
@@ -17,9 +22,9 @@ import type {
 export async function createChannelRequest(
   serverId: string,
   input: { name: string; kind: "text" | "voice"; categoryId?: string },
-): Promise<CreateChannelActionResult> {
+): Promise<CreateChannelResult> {
   try {
-    const { data } = await api.post<CreateChannelActionResult>(
+    const { data } = await api.post<CreateChannelResult>(
       `/servers/${serverId}/channels`,
       input,
     );
@@ -27,7 +32,7 @@ export async function createChannelRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos crear el canal. Intenta de nuevo.",
+      message: CHANNEL_CREATE_FAILED,
     };
   }
 }
@@ -35,9 +40,9 @@ export async function createChannelRequest(
 export async function updateChannelRequest(
   channelId: string,
   input: { name: string },
-): Promise<UpdateChannelActionResult> {
+): Promise<UpdateChannelResult> {
   try {
-    const { data } = await api.patch<UpdateChannelActionResult>(
+    const { data } = await api.patch<UpdateChannelResult>(
       `/channels/${channelId}`,
       input,
     );
@@ -45,23 +50,23 @@ export async function updateChannelRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos editar el canal. Intenta de nuevo.",
+      message: CHANNEL_UPDATE_FAILED,
     };
   }
 }
 
 export async function deleteChannelRequest(
   channelId: string,
-): Promise<DeleteChannelActionResult> {
+): Promise<DeleteChannelResult> {
   try {
-    const { data } = await api.delete<DeleteChannelActionResult>(
+    const { data } = await api.delete<DeleteChannelResult>(
       `/channels/${channelId}`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos eliminar el canal. Intenta de nuevo.",
+      message: CHANNEL_DELETE_FAILED,
     };
   }
 }
@@ -70,9 +75,9 @@ export async function deleteChannelRequest(
 export async function moveChannelToCategoryRequest(
   channelId: string,
   categoryId: string | null,
-): Promise<MoveChannelActionResult> {
+): Promise<MoveChannelResult> {
   try {
-    const { data } = await api.patch<MoveChannelActionResult>(
+    const { data } = await api.patch<MoveChannelResult>(
       `/channels/${channelId}/category`,
       { categoryId },
     );
@@ -80,7 +85,7 @@ export async function moveChannelToCategoryRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos mover el canal. Intenta de nuevo.",
+      message: CHANNEL_MOVE_FAILED,
     };
   }
 }
@@ -90,9 +95,9 @@ export async function reorderChannelsRequest(
   serverId: string,
   categoryId: string | null,
   channelIds: string[],
-): Promise<ReorderChannelsActionResult> {
+): Promise<ReorderChannelsResult> {
   try {
-    const { data } = await api.patch<ReorderChannelsActionResult>(
+    const { data } = await api.patch<ReorderChannelsResult>(
       `/servers/${serverId}/channels/reorder`,
       { categoryId, channelIds },
     );
@@ -100,7 +105,7 @@ export async function reorderChannelsRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos reordenar los canales. Intenta de nuevo.",
+      message: CHANNEL_REORDER_FAILED,
     };
   }
 }

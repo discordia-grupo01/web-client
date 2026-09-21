@@ -1,9 +1,13 @@
+import {
+  UNEXPECTED_ERROR_MESSAGE,
+  type UpdateCustomStatusResult,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { createSession, getValidSession } from "@/services/auth/session";
 import { clearStatus, updateStatus } from "@/services/profile/service";
-import type { UpdateCustomStatusActionResult } from "@/types/profile.types";
 
 /**
  * BFF de `PUT`/`DELETE /v1/me/status` (estado personalizado). El campo
@@ -12,7 +16,7 @@ import type { UpdateCustomStatusActionResult } from "@/types/profile.types";
  */
 export async function PUT(
   request: Request,
-): Promise<NextResponse<UpdateCustomStatusActionResult>> {
+): Promise<NextResponse<UpdateCustomStatusResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -23,7 +27,7 @@ export async function PUT(
     body = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -53,7 +57,7 @@ export async function PUT(
 }
 
 export async function DELETE(): Promise<
-  NextResponse<UpdateCustomStatusActionResult>
+  NextResponse<UpdateCustomStatusResult>
 > {
   const session = await getValidSession();
   if (!session) {

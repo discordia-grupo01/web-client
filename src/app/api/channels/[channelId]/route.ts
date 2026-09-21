@@ -1,19 +1,18 @@
+import {
+  CHANNEL_DELETE_FAILED,
+  CHANNEL_REASONS,
+  CHANNEL_UPDATE_FAILED,
+  type DeleteChannelResult,
+  fieldOf,
+  messageFor,
+  reasonOf,
+  type UpdateChannelResult,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { deleteChannel, updateChannel } from "@/services/channels/service";
-import type {
-  DeleteChannelActionResult,
-  UpdateChannelActionResult,
-} from "@/types/channel.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el canal.",
-  name_too_long: "El nombre es demasiado largo.",
-  name_invalid_chars: "El nombre tiene caracteres invalidos.",
-  name_taken: "Ya existe un canal con ese nombre en esa categoria.",
-};
 
 /**
  * BFF de `PATCH /v1/channels/:id`. Body JSON: `{ name }`.
@@ -21,7 +20,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function PATCH(
   request: Request,
   { params }: { params: { channelId: string } },
-): Promise<NextResponse<UpdateChannelActionResult>> {
+): Promise<NextResponse<UpdateChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -35,15 +34,9 @@ export async function PATCH(
   });
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const field = fieldOf(result.details);
+    const reason = reasonOf(result.details);
+    const friendly = reason ? CHANNEL_REASONS[reason] : undefined;
 
     if (field === "name" && friendly) {
       return NextResponse.json(
@@ -57,7 +50,7 @@ export async function PATCH(
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos editar el canal. Intenta de nuevo.",
+        message: messageFor(result, CHANNEL_REASONS, CHANNEL_UPDATE_FAILED),
       },
       {
         status:
@@ -75,7 +68,7 @@ export async function PATCH(
 export async function DELETE(
   _request: Request,
   { params }: { params: { channelId: string } },
-): Promise<NextResponse<DeleteChannelActionResult>> {
+): Promise<NextResponse<DeleteChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -88,7 +81,7 @@ export async function DELETE(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos eliminar el canal. Intenta de nuevo." },
+      { ok: false, message: CHANNEL_DELETE_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

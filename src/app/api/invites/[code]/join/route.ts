@@ -1,20 +1,20 @@
+import {
+  INVITE_REASONS,
+  type JoinServerResult,
+  reasonOf,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { joinServerByCode } from "@/services/invites/service";
-import type { JoinServerActionResult } from "@/types/invite.types";
 import { getServer } from "@/services/servers/service";
-
-const REASON_MESSAGES: Record<string, string> = {
-  invitation_invalid: "Este enlace de invitación no es válido o expiró.",
-  user_banned: "No podés unirte a este servidor.",
-};
 
 export async function POST(
   _request: Request,
   { params }: { params: { code: string } },
-): Promise<NextResponse<JoinServerActionResult>> {
+): Promise<NextResponse<JoinServerResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -23,11 +23,8 @@ export async function POST(
   const joinResult = await joinServerByCode(session.token, params.code);
 
   if (!joinResult.ok) {
-    const reason =
-      typeof joinResult.details?.reason === "string"
-        ? joinResult.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const reason = reasonOf(joinResult.details);
+    const friendly = reason ? INVITE_REASONS[reason] : undefined;
 
     if (friendly) {
       return NextResponse.json(
@@ -39,7 +36,7 @@ export async function POST(
       return unauthorizedResponse();
     }
     return NextResponse.json(
-      { ok: false, message: "Algo salio mal. Intenta de nuevo." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       {
         status:
           joinResult.status >= 400 && joinResult.status < 500

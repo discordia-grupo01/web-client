@@ -1,15 +1,16 @@
+import {
+  CATEGORY_CREATE_FAILED,
+  CATEGORY_REASONS,
+  type CreateCategoryResult,
+  fieldOf,
+  messageFor,
+  reasonOf,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createCategory } from "@/services/categories/service";
-import type { CreateCategoryActionResult } from "@/types/category.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para la categoría.",
-  name_too_long: "El nombre es demasiado largo.",
-  name_invalid_chars: "El nombre tiene caracteres invalidos.",
-};
 
 /**
  * BFF de `POST /v1/servers/:id/categories`. Body JSON: `{ name }`.
@@ -17,7 +18,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateCategoryActionResult>> {
+): Promise<NextResponse<CreateCategoryResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -29,15 +30,9 @@ export async function POST(
   const result = await createCategory(session.token, params.serverId, name);
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const field = fieldOf(result.details);
+    const reason = reasonOf(result.details);
+    const friendly = reason ? CATEGORY_REASONS[reason] : undefined;
 
     if (field === "name" && friendly) {
       return NextResponse.json(
@@ -51,7 +46,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos crear la categoría. Intenta de nuevo.",
+        message: messageFor(result, CATEGORY_REASONS, CATEGORY_CREATE_FAILED),
       },
       {
         status:

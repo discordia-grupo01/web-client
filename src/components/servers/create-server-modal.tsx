@@ -1,6 +1,14 @@
 "use client";
 
 import {
+  getInitial,
+  MAX_NAME,
+  type ServerSummary,
+  validateServerIcon,
+  validateServerName,
+} from "@discordia/client-shared";
+
+import {
   AlertCircle,
   Camera,
   Check,
@@ -21,12 +29,7 @@ import {
 
 import { Button } from "@/components/ui/button";
 import { createServerRequest } from "@/services/servers/client";
-import type { ServerSummary } from "@/types/server.types";
 import { cn } from "@/lib/cn";
-
-const MAX_NAME = 100;
-const MAX_FILE_MB = 20;
-const ALLOWED_TYPES = ["image/png", "image/jpeg", "image/webp"];
 
 interface CreateServerModalProps {
   onClose: () => void;
@@ -42,7 +45,7 @@ function ServerIconPreview({
   name: string;
   size?: number;
 }) {
-  const initial = name.trim().charAt(0).toUpperCase() || null;
+  const initial = getInitial(name);
 
   return (
     <div
@@ -97,12 +100,12 @@ export function CreateServerModal({
 
   const processFile = useCallback((file: File) => {
     setIconError("");
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      setIconError("El archivo debe ser PNG, JPG o WEBP.");
-      return;
-    }
-    if (file.size > MAX_FILE_MB * 1024 * 1024) {
-      setIconError(`El archivo no puede pesar más de ${MAX_FILE_MB} MB.`);
+    const iconError = validateServerIcon({
+      mimeType: file.type,
+      sizeBytes: file.size,
+    });
+    if (iconError) {
+      setIconError(iconError);
       return;
     }
     setIconFile(file);
@@ -136,12 +139,9 @@ export function CreateServerModal({
     setGlobalError("");
 
     const trimmed = name.trim();
-    if (!trimmed) {
-      setNameError("Ingresá un nombre para el servidor.");
-      return;
-    }
-    if (trimmed.length < 2 || trimmed.length > MAX_NAME) {
-      setNameError("El nombre debe tener entre 2 y 100 caracteres.");
+    const nameError = validateServerName(trimmed);
+    if (nameError) {
+      setNameError(nameError);
       return;
     }
 

@@ -1,19 +1,27 @@
+import {
+  hasErrors,
+  INVALID_CREDENTIALS,
+  INVALID_DATA_MESSAGE,
+  LOGIN_UNAVAILABLE,
+  type LoginResult,
+  UNEXPECTED_ERROR_MESSAGE,
+  validateLogin,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { login } from "@/services/auth/service";
 import { createSession } from "@/services/auth/session";
-import type { LoginActionResult } from "@/types/auth.types";
-import { hasErrors, validateLogin } from "@/services/auth/validation";
 
 export async function POST(
   request: Request,
-): Promise<NextResponse<LoginActionResult>> {
+): Promise<NextResponse<LoginResult>> {
   let payload: unknown;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -24,7 +32,7 @@ export async function POST(
 
   if (hasErrors(validateLogin({ email, password }))) {
     return NextResponse.json(
-      { ok: false, message: "Revisa los datos ingresados." },
+      { ok: false, message: INVALID_DATA_MESSAGE },
       { status: 400 },
     );
   }
@@ -40,7 +48,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "El correo electrónico o la contraseña son incorrectos.",
+          message: INVALID_CREDENTIALS,
         },
         { status: 401 },
       );
@@ -49,7 +57,7 @@ export async function POST(
     // 400/422: el backend rechazo el formato del request.
     if (result.status === 400 || result.status === 422) {
       return NextResponse.json(
-        { ok: false, message: "Revisa los datos ingresados." },
+        { ok: false, message: INVALID_DATA_MESSAGE },
         { status: 400 },
       );
     }
@@ -58,8 +66,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "No pudimos iniciar sesión en este momento. Intenta de nuevo más tarde.",
+        message: LOGIN_UNAVAILABLE,
       },
       { status: 502 },
     );

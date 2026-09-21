@@ -1,10 +1,11 @@
 "use client";
 
+import { type Channel } from "@discordia/client-shared";
+
 import { AlertCircle, Trash2, X } from "lucide-react";
 import { useState } from "react";
 
 import { deleteChannelRequest } from "@/services/channels/client";
-import type { Channel } from "@/types/channel.types";
 
 interface DeleteChannelModalProps {
   channel: Channel;

@@ -1,3 +1,5 @@
+import { type AuthResponse, type User } from "@discordia/client-shared";
+
 import "server-only";
 
 import {
@@ -6,8 +8,6 @@ import {
   type ApiResult,
 } from "@/lib/api-client";
 import { extractCookieValue } from "@/lib/set-cookie";
-
-import type { AuthResponse, User } from "@/types/auth.types";
 
 const REFRESH_COOKIE_NAME = "refresh_token";
 

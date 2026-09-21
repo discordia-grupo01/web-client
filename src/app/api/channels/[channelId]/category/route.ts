@@ -1,13 +1,15 @@
+import {
+  CHANNEL_MOVE_FAILED,
+  CHANNEL_REASONS,
+  messageFor,
+  type MoveChannelResult,
+  reasonOf,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { moveChannelToCategory } from "@/services/channels/service";
-import type { MoveChannelActionResult } from "@/types/channel.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_taken: "Ya existe un canal con ese nombre en esa categoría.",
-};
 
 /**
  * BFF de `PATCH /v1/channels/:id/category`. Body JSON: `{ categoryId: string | null }`.
@@ -16,7 +18,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function PATCH(
   request: Request,
   { params }: { params: { channelId: string } },
-): Promise<NextResponse<MoveChannelActionResult>> {
+): Promise<NextResponse<MoveChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -36,15 +38,12 @@ export async function PATCH(
     if (result.status === 401) {
       return unauthorizedResponse();
     }
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const reason = reasonOf(result.details);
+    const friendly = reason ? CHANNEL_REASONS[reason] : undefined;
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos mover el canal. Intenta de nuevo.",
+        message: messageFor(result, CHANNEL_REASONS, CHANNEL_MOVE_FAILED),
       },
       {
         status:

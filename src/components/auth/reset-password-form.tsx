@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  hasErrors,
+  type ResetPasswordErrors,
+  validateResetPassword,
+} from "@discordia/client-shared";
+
 import { ArrowRight, Lock } from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -8,11 +14,6 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { resetPasswordRequest } from "@/services/auth/client";
-import {
-  hasErrors,
-  validateResetPassword,
-  type ResetPasswordErrors,
-} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function ResetPasswordForm() {

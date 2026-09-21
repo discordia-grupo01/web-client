@@ -1,9 +1,15 @@
+import {
+  MEMBER_ROLE_NOT_ASSIGNED,
+  MEMBER_ROLE_REMOVE_FAILED,
+  OWNER_ONLY_REMOVE_ROLE,
+  type RemoveRoleResult,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { removeRole } from "@/services/roles/service";
-import type { RemoveRoleActionResult } from "@/types/role.types";
 
 /**
  * BFF de `DELETE /v1/servers/:id/members/:userId/roles/:roleId`. A
@@ -13,7 +19,7 @@ import type { RemoveRoleActionResult } from "@/types/role.types";
 export async function DELETE(
   _request: Request,
   { params }: { params: { serverId: string; userId: string; roleId: string } },
-): Promise<NextResponse<RemoveRoleActionResult>> {
+): Promise<NextResponse<RemoveRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -34,19 +40,19 @@ export async function DELETE(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para quitar roles.",
+          message: OWNER_ONLY_REMOVE_ROLE,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "Ese miembro no tiene ese rol." },
+        { ok: false, message: MEMBER_ROLE_NOT_ASSIGNED },
         { status: 404 },
       );
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos quitar el rol. Intenta de nuevo." },
+      { ok: false, message: MEMBER_ROLE_REMOVE_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

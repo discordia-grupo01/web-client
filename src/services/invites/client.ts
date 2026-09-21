@@ -1,11 +1,15 @@
-import { api } from "@/lib/browser-api-client";
+import {
+  type CreateInviteResult,
+  INVITE_CREATE_FAILED,
+  INVITE_REVOKE_FAILED,
+  INVITES_LOAD_FAILED,
+  type JoinServerResult,
+  type ListInvitationsResult,
+  REQUEST_FAILED_MESSAGE,
+  type RevokeInviteResult,
+} from "@discordia/client-shared";
 
-import type {
-  CreateInviteActionResult,
-  JoinServerActionResult,
-  ListInvitationsActionResult,
-  RevokeInviteActionResult,
-} from "@/types/invite.types";
+import { api } from "@/lib/browser-api-client";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/invites`, `/api/servers/:id/invites`,
@@ -13,24 +17,18 @@ import type {
  * servidor de Next.
  */
 
-/** Acepta tanto un link completo (".../xY7z2Q") como el código pelado. */
-export function normalizeInviteCode(raw: string): string {
-  const match = raw.trim().match(/([A-Za-z0-9_-]{4,20})$/);
-  return match ? match[1] : raw.trim();
-}
-
 export async function joinServerRequest(
   code: string,
-): Promise<JoinServerActionResult> {
+): Promise<JoinServerResult> {
   try {
-    const { data } = await api.post<JoinServerActionResult>(
+    const { data } = await api.post<JoinServerResult>(
       `/invites/${encodeURIComponent(code)}/join`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos procesar la solicitud. Intenta de nuevo.",
+      message: REQUEST_FAILED_MESSAGE,
     };
   }
 }
@@ -38,9 +36,9 @@ export async function joinServerRequest(
 export async function createInviteRequest(
   serverId: string,
   maxUses?: number,
-): Promise<CreateInviteActionResult> {
+): Promise<CreateInviteResult> {
   try {
-    const { data } = await api.post<CreateInviteActionResult>(
+    const { data } = await api.post<CreateInviteResult>(
       `/servers/${serverId}/invites`,
       maxUses !== undefined ? { maxUses } : {},
     );
@@ -48,39 +46,39 @@ export async function createInviteRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos generar la invitación. Intenta de nuevo.",
+      message: INVITE_CREATE_FAILED,
     };
   }
 }
 
 export async function listInvitationsRequest(
   serverId: string,
-): Promise<ListInvitationsActionResult> {
+): Promise<ListInvitationsResult> {
   try {
-    const { data } = await api.get<ListInvitationsActionResult>(
+    const { data } = await api.get<ListInvitationsResult>(
       `/servers/${serverId}/invites`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar las invitaciones. Intenta de nuevo.",
+      message: INVITES_LOAD_FAILED,
     };
   }
 }
 
 export async function revokeInviteRequest(
   code: string,
-): Promise<RevokeInviteActionResult> {
+): Promise<RevokeInviteResult> {
   try {
-    const { data } = await api.delete<RevokeInviteActionResult>(
+    const { data } = await api.delete<RevokeInviteResult>(
       `/invites/${encodeURIComponent(code)}`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos revocar el enlace. Intenta de nuevo.",
+      message: INVITE_REVOKE_FAILED,
     };
   }
 }

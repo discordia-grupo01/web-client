@@ -1,5 +1,11 @@
 "use client";
 
+import {
+  hasErrors,
+  type LoginErrors,
+  validateLogin,
+} from "@discordia/client-shared";
+
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -9,11 +15,6 @@ import { Button } from "@/components/ui/button";
 import { PasswordField } from "@/components/ui/password-field";
 import { TextField } from "@/components/ui/text-field";
 import { loginRequest } from "@/services/auth/client";
-import {
-  hasErrors,
-  validateLogin,
-  type LoginErrors,
-} from "@/services/auth/validation";
 import { ROUTES } from "@/lib/constants";
 
 export function LoginForm() {

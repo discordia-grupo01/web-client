@@ -1,8 +1,8 @@
+import { type Member, MEMBER_PAGE_LIMIT } from "@discordia/client-shared";
+
 import "server-only";
 
 import { apiRequest, type ApiResult } from "@/lib/api-client";
-
-import type { Member } from "@/types/member.types";
 
 /**
  * Capa de servicios contra el servicio `servers` (via el gateway Kong) para
@@ -26,7 +26,7 @@ export function listMembers(
   serverId: string,
 ): Promise<ApiResult<MemberListResult>> {
   return apiRequest<MemberListResult>(
-    `/v1/servers/${serverId}/members?limit=100`,
+    `/v1/servers/${serverId}/members?limit=${MEMBER_PAGE_LIMIT}`,
     { method: "GET", token },
   );
 }

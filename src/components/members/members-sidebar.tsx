@@ -1,5 +1,7 @@
 "use client";
 
+import { type Member, type PublicUser } from "@discordia/client-shared";
+
 import { Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 
@@ -7,8 +9,6 @@ import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
-import type { Member } from "@/types/member.types";
-import type { PublicUser } from "@/types/profile.types";
 
 interface MembersSidebarProps {
   serverId: string;

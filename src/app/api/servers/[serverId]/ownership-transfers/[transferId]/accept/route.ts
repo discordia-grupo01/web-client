@@ -1,13 +1,17 @@
+import {
+  messageFor,
+  reasonOf,
+  type RespondTransferResult,
+  TRANSFER_NOT_FOUND,
+  TRANSFER_ONLY_TARGET_ACCEPTS,
+  TRANSFER_REASONS,
+  UNEXPECTED_ERROR_MESSAGE,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { acceptOwnershipTransfer } from "@/services/ownership-transfers/service";
-import type { RespondTransferActionResult } from "@/types/ownership-transfer.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  transfer_not_pending: "Esta transferencia ya no está pendiente.",
-};
 
 /**
  * BFF de `POST /v1/servers/:id/ownership-transfers/:transferId/accept`.
@@ -17,7 +21,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function POST(
   _request: Request,
   { params }: { params: { serverId: string; transferId: string } },
-): Promise<NextResponse<RespondTransferActionResult>> {
+): Promise<NextResponse<RespondTransferResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -37,25 +41,25 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Solo la persona invitada puede aceptar esta transferencia.",
+          message: TRANSFER_ONLY_TARGET_ACCEPTS,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "Esta transferencia ya no existe." },
+        { ok: false, message: TRANSFER_NOT_FOUND },
         { status: 404 },
       );
     }
 
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const reason = reasonOf(result.details);
+    const friendly = reason ? TRANSFER_REASONS[reason] : undefined;
     return NextResponse.json(
-      { ok: false, message: friendly ?? "Algo salió mal. Intenta de nuevo." },
+      {
+        ok: false,
+        message: messageFor(result, TRANSFER_REASONS, UNEXPECTED_ERROR_MESSAGE),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

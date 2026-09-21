@@ -1,11 +1,12 @@
 "use client";
 
+import { type ServerSummary } from "@discordia/client-shared";
+
 import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/section-label";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { listServersRequest } from "@/services/servers/client";
-import type { ServerSummary } from "@/types/server.types";
 
 interface MutualServersListProps {
   serverIds: string[];

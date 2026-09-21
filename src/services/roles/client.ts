@@ -1,16 +1,24 @@
-import { api } from "@/lib/browser-api-client";
+import {
+  type AssignRoleResult,
+  type CreateRoleResult,
+  DEFAULT_ROLE_SET_FAILED,
+  type DeleteRoleResult,
+  type ListMemberRolesResult,
+  type ListRolesResult,
+  MEMBER_ROLE_ASSIGN_FAILED,
+  MEMBER_ROLE_REMOVE_FAILED,
+  MEMBER_ROLES_LOAD_FAILED,
+  type RemoveRoleResult,
+  ROLE_CREATE_FAILED,
+  ROLE_DELETE_FAILED,
+  ROLE_UPDATE_FAILED,
+  type RolePermission,
+  ROLES_LOAD_FAILED,
+  type SetDefaultRoleResult,
+  type UpdateRoleResult,
+} from "@discordia/client-shared";
 
-import type {
-  AssignRoleActionResult,
-  CreateRoleActionResult,
-  DeleteRoleActionResult,
-  ListMemberRolesActionResult,
-  ListRolesActionResult,
-  RemoveRoleActionResult,
-  RolePermission,
-  SetDefaultRoleActionResult,
-  UpdateRoleActionResult,
-} from "@/types/role.types";
+import { api } from "@/lib/browser-api-client";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/roles`, `/api/servers/:id/roles`,
@@ -21,9 +29,9 @@ import type {
 export async function createRoleRequest(
   serverId: string,
   input: { name: string; color: string },
-): Promise<CreateRoleActionResult> {
+): Promise<CreateRoleResult> {
   try {
-    const { data } = await api.post<CreateRoleActionResult>(
+    const { data } = await api.post<CreateRoleResult>(
       `/servers/${serverId}/roles`,
       input,
     );
@@ -31,23 +39,23 @@ export async function createRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos crear el rol. Intenta de nuevo.",
+      message: ROLE_CREATE_FAILED,
     };
   }
 }
 
 export async function listRolesRequest(
   serverId: string,
-): Promise<ListRolesActionResult> {
+): Promise<ListRolesResult> {
   try {
-    const { data } = await api.get<ListRolesActionResult>(
+    const { data } = await api.get<ListRolesResult>(
       `/servers/${serverId}/roles`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar los roles. Intenta de nuevo.",
+      message: ROLES_LOAD_FAILED,
     };
   }
 }
@@ -56,9 +64,9 @@ export async function listRolesRequest(
 export async function updateRoleRequest(
   roleId: string,
   input: { name?: string; color?: string; permissions?: RolePermission[] },
-): Promise<UpdateRoleActionResult> {
+): Promise<UpdateRoleResult> {
   try {
-    const { data } = await api.patch<UpdateRoleActionResult>(
+    const { data } = await api.patch<UpdateRoleResult>(
       `/roles/${roleId}`,
       input,
     );
@@ -66,7 +74,7 @@ export async function updateRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos editar el rol. Intenta de nuevo.",
+      message: ROLE_UPDATE_FAILED,
     };
   }
 }
@@ -74,16 +82,14 @@ export async function updateRoleRequest(
 /** 409 (`isDefaultRole: true`) si el rol es el rol por defecto del servidor. */
 export async function deleteRoleRequest(
   roleId: string,
-): Promise<DeleteRoleActionResult> {
+): Promise<DeleteRoleResult> {
   try {
-    const { data } = await api.delete<DeleteRoleActionResult>(
-      `/roles/${roleId}`,
-    );
+    const { data } = await api.delete<DeleteRoleResult>(`/roles/${roleId}`);
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos eliminar el rol. Intenta de nuevo.",
+      message: ROLE_DELETE_FAILED,
     };
   }
 }
@@ -91,9 +97,9 @@ export async function deleteRoleRequest(
 export async function setDefaultRoleRequest(
   serverId: string,
   roleId: string,
-): Promise<SetDefaultRoleActionResult> {
+): Promise<SetDefaultRoleResult> {
   try {
-    const { data } = await api.put<SetDefaultRoleActionResult>(
+    const { data } = await api.put<SetDefaultRoleResult>(
       `/servers/${serverId}/default-role`,
       { roleId },
     );
@@ -101,7 +107,7 @@ export async function setDefaultRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos definir el rol por defecto. Intenta de nuevo.",
+      message: DEFAULT_ROLE_SET_FAILED,
     };
   }
 }
@@ -109,16 +115,16 @@ export async function setDefaultRoleRequest(
 export async function listMemberRolesRequest(
   serverId: string,
   userId: string,
-): Promise<ListMemberRolesActionResult> {
+): Promise<ListMemberRolesResult> {
   try {
-    const { data } = await api.get<ListMemberRolesActionResult>(
+    const { data } = await api.get<ListMemberRolesResult>(
       `/servers/${serverId}/members/${userId}/roles`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar los roles del miembro. Intenta de nuevo.",
+      message: MEMBER_ROLES_LOAD_FAILED,
     };
   }
 }
@@ -127,9 +133,9 @@ export async function assignRoleRequest(
   serverId: string,
   userId: string,
   roleId: string,
-): Promise<AssignRoleActionResult> {
+): Promise<AssignRoleResult> {
   try {
-    const { data } = await api.post<AssignRoleActionResult>(
+    const { data } = await api.post<AssignRoleResult>(
       `/servers/${serverId}/members/${userId}/roles`,
       { roleId },
     );
@@ -137,7 +143,7 @@ export async function assignRoleRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos asignar el rol. Intenta de nuevo.",
+      message: MEMBER_ROLE_ASSIGN_FAILED,
     };
   }
 }
@@ -146,16 +152,16 @@ export async function removeRoleRequest(
   serverId: string,
   userId: string,
   roleId: string,
-): Promise<RemoveRoleActionResult> {
+): Promise<RemoveRoleResult> {
   try {
-    const { data } = await api.delete<RemoveRoleActionResult>(
+    const { data } = await api.delete<RemoveRoleResult>(
       `/servers/${serverId}/members/${userId}/roles/${roleId}`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos quitar el rol. Intenta de nuevo.",
+      message: MEMBER_ROLE_REMOVE_FAILED,
     };
   }
 }

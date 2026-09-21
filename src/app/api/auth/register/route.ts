@@ -1,8 +1,17 @@
+import {
+  EMAIL_ALREADY_REGISTERED,
+  hasErrors,
+  INVALID_DATA_MESSAGE,
+  PASSWORD_TOO_WEAK,
+  REGISTER_UNAVAILABLE,
+  type RegisterResult,
+  UNEXPECTED_ERROR_MESSAGE,
+  validateRegister,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { register } from "@/services/auth/service";
-import type { RegisterActionResult } from "@/types/auth.types";
-import { hasErrors, validateRegister } from "@/services/auth/validation";
 
 /**
  * BFF de registro. El navegador pega aca (mismo origen); este handler llama a
@@ -12,13 +21,13 @@ import { hasErrors, validateRegister } from "@/services/auth/validation";
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<RegisterActionResult>> {
+): Promise<NextResponse<RegisterResult>> {
   let payload: unknown;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -30,7 +39,7 @@ export async function POST(
 
   if (hasErrors(validateRegister({ name, email, password }))) {
     return NextResponse.json(
-      { ok: false, message: "Revisa los datos ingresados." },
+      { ok: false, message: INVALID_DATA_MESSAGE },
       { status: 400 },
     );
   }
@@ -47,7 +56,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "Ya existe una cuenta con ese correo electrónico.",
+          message: EMAIL_ALREADY_REGISTERED,
         },
         { status: 409 },
       );
@@ -58,8 +67,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "Revisa los datos: la contraseña necesita 8+ caracteres con mayúscula, minúscula y número.",
+          message: PASSWORD_TOO_WEAK,
         },
         { status: 400 },
       );
@@ -69,8 +77,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message:
-          "No pudimos crear tu cuenta en este momento. Intenta de nuevo más tarde.",
+        message: REGISTER_UNAVAILABLE,
       },
       { status: 502 },
     );

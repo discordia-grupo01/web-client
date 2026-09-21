@@ -9,7 +9,7 @@ import { ROUTES } from "@/lib/constants";
  * Home de la app (protegida). El middleware ya bloquea el acceso sin cookie;
  * aca revalidamos la sesion completa (JWT no expirado) como defensa en
  * profundidad, y de paso pedimos los servidores del usuario para no arrancar
- * el home con un estado vacio si ya tiene alguno creado.
+ * el home con un estado vacio si ya tiene alguno creado
  */
 export default async function HomePage({
   searchParams,

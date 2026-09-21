@@ -1,12 +1,17 @@
+import {
+  type AssignRoleResult,
+  type ListMemberRolesResult,
+  MEMBER_OR_ROLE_NOT_FOUND,
+  MEMBER_ROLE_ASSIGN_FAILED,
+  MEMBER_ROLES_LOAD_FAILED,
+  OWNER_ONLY_ASSIGN_ROLE,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { assignRole, listMemberRoles } from "@/services/roles/service";
-import type {
-  AssignRoleActionResult,
-  ListMemberRolesActionResult,
-} from "@/types/role.types";
 
 /**
  * BFF de `GET /v1/servers/:id/members/:userId/roles`.
@@ -14,7 +19,7 @@ import type {
 export async function GET(
   _request: Request,
   { params }: { params: { serverId: string; userId: string } },
-): Promise<NextResponse<ListMemberRolesActionResult>> {
+): Promise<NextResponse<ListMemberRolesResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -32,7 +37,7 @@ export async function GET(
     return NextResponse.json(
       {
         ok: false,
-        message: "No pudimos cargar los roles del miembro. Intenta de nuevo.",
+        message: MEMBER_ROLES_LOAD_FAILED,
       },
       {
         status:
@@ -52,7 +57,7 @@ export async function GET(
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string; userId: string } },
-): Promise<NextResponse<AssignRoleActionResult>> {
+): Promise<NextResponse<AssignRoleResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -76,19 +81,19 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message: "No tenés permisos de administración para asignar roles.",
+          message: OWNER_ONLY_ASSIGN_ROLE,
         },
         { status: 403 },
       );
     }
     if (result.status === 404) {
       return NextResponse.json(
-        { ok: false, message: "No encontramos ese rol o ese miembro." },
+        { ok: false, message: MEMBER_OR_ROLE_NOT_FOUND },
         { status: 404 },
       );
     }
     return NextResponse.json(
-      { ok: false, message: "No pudimos asignar el rol. Intenta de nuevo." },
+      { ok: false, message: MEMBER_ROLE_ASSIGN_FAILED },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

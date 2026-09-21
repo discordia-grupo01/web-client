@@ -1,10 +1,15 @@
-import { api } from "@/lib/browser-api-client";
+import {
+  type GetPendingTransferResult,
+  type InitiateTransferResult,
+  type RespondTransferResult,
+  TRANSFER_ACCEPT_FAILED,
+  TRANSFER_CANCEL_FAILED,
+  TRANSFER_LOAD_FAILED,
+  TRANSFER_REJECT_FAILED,
+  TRANSFER_START_FAILED,
+} from "@discordia/client-shared";
 
-import type {
-  GetPendingTransferActionResult,
-  InitiateTransferActionResult,
-  RespondTransferActionResult,
-} from "@/types/ownership-transfer.types";
+import { api } from "@/lib/browser-api-client";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/servers/:id/ownership-transfers`,
@@ -15,9 +20,9 @@ import type {
 export async function initiateTransferRequest(
   serverId: string,
   toUserId: string,
-): Promise<InitiateTransferActionResult> {
+): Promise<InitiateTransferResult> {
   try {
-    const { data } = await api.post<InitiateTransferActionResult>(
+    const { data } = await api.post<InitiateTransferResult>(
       `/servers/${serverId}/ownership-transfers`,
       { to_user_id: toUserId },
     );
@@ -25,23 +30,23 @@ export async function initiateTransferRequest(
   } catch {
     return {
       ok: false,
-      message: "No pudimos iniciar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_START_FAILED,
     };
   }
 }
 
 export async function getPendingTransferRequest(
   serverId: string,
-): Promise<GetPendingTransferActionResult> {
+): Promise<GetPendingTransferResult> {
   try {
-    const { data } = await api.get<GetPendingTransferActionResult>(
+    const { data } = await api.get<GetPendingTransferResult>(
       `/servers/${serverId}/ownership-transfers`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos cargar la transferencia de propiedad.",
+      message: TRANSFER_LOAD_FAILED,
     };
   }
 }
@@ -49,16 +54,16 @@ export async function getPendingTransferRequest(
 export async function acceptTransferRequest(
   serverId: string,
   transferId: string,
-): Promise<RespondTransferActionResult> {
+): Promise<RespondTransferResult> {
   try {
-    const { data } = await api.post<RespondTransferActionResult>(
+    const { data } = await api.post<RespondTransferResult>(
       `/servers/${serverId}/ownership-transfers/${transferId}/accept`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos aceptar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_ACCEPT_FAILED,
     };
   }
 }
@@ -66,16 +71,16 @@ export async function acceptTransferRequest(
 export async function rejectTransferRequest(
   serverId: string,
   transferId: string,
-): Promise<RespondTransferActionResult> {
+): Promise<RespondTransferResult> {
   try {
-    const { data } = await api.post<RespondTransferActionResult>(
+    const { data } = await api.post<RespondTransferResult>(
       `/servers/${serverId}/ownership-transfers/${transferId}/reject`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos rechazar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_REJECT_FAILED,
     };
   }
 }
@@ -83,16 +88,16 @@ export async function rejectTransferRequest(
 export async function cancelTransferRequest(
   serverId: string,
   transferId: string,
-): Promise<RespondTransferActionResult> {
+): Promise<RespondTransferResult> {
   try {
-    const { data } = await api.post<RespondTransferActionResult>(
+    const { data } = await api.post<RespondTransferResult>(
       `/servers/${serverId}/ownership-transfers/${transferId}/cancel`,
     );
     return data;
   } catch {
     return {
       ok: false,
-      message: "No pudimos cancelar la transferencia. Intenta de nuevo.",
+      message: TRANSFER_CANCEL_FAILED,
     };
   }
 }

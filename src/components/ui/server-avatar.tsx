@@ -1,3 +1,5 @@
+import { getInitial } from "@discordia/client-shared";
+
 import { cn } from "@/lib/cn";
 
 interface ServerAvatarProps {
@@ -26,7 +28,7 @@ export function ServerAvatar({
     );
   }
 
-  const initial = name.trim().charAt(0).toUpperCase() || "?";
+  const initial = getInitial(name) ?? "?";
 
   return (
     <div

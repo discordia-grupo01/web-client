@@ -1,8 +1,16 @@
+import {
+  type ForgotPasswordResult,
+  hasErrors,
+  INVALID_EMAIL_MESSAGE,
+  RATE_LIMITED_MESSAGE,
+  RECOVERY_UNAVAILABLE,
+  UNEXPECTED_ERROR_MESSAGE,
+  validateForgotPassword,
+} from "@discordia/client-shared";
+
 import { NextResponse } from "next/server";
 
 import { recoverPassword } from "@/services/auth/service";
-import type { ForgotPasswordActionResult } from "@/types/auth.types";
-import { hasErrors, validateForgotPassword } from "@/services/auth/validation";
 
 /**
  * BFF de recuperacion de contrasena. El backend responde 202 exista o no el
@@ -11,13 +19,13 @@ import { hasErrors, validateForgotPassword } from "@/services/auth/validation";
  */
 export async function POST(
   request: Request,
-): Promise<NextResponse<ForgotPasswordActionResult>> {
+): Promise<NextResponse<ForgotPasswordResult>> {
   let payload: unknown;
   try {
     payload = await request.json();
   } catch {
     return NextResponse.json(
-      { ok: false, message: "Petición inválida." },
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
       { status: 400 },
     );
   }
@@ -27,7 +35,7 @@ export async function POST(
 
   if (hasErrors(validateForgotPassword({ email }))) {
     return NextResponse.json(
-      { ok: false, message: "Ingresa un correo electrónico válido." },
+      { ok: false, message: INVALID_EMAIL_MESSAGE },
       { status: 400 },
     );
   }
@@ -40,15 +48,14 @@ export async function POST(
         return NextResponse.json(
           {
             ok: false,
-            message:
-              "Alcanzaste el límite de solicitudes. Intenta de nuevo más tarde.",
+            message: RATE_LIMITED_MESSAGE,
           },
           { status: 429 },
         );
 
       case "INVALID_INPUT":
         return NextResponse.json(
-          { ok: false, message: "Ingresa un correo electrónico válido." },
+          { ok: false, message: INVALID_EMAIL_MESSAGE },
           { status: 400 },
         );
 
@@ -57,8 +64,7 @@ export async function POST(
         return NextResponse.json(
           {
             ok: false,
-            message:
-              "No pudimos procesar la solicitud. Intenta de nuevo más tarde.",
+            message: RECOVERY_UNAVAILABLE,
           },
           { status: 502 },
         );

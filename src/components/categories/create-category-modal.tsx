@@ -1,14 +1,17 @@
 "use client";
 
+import {
+  type Category,
+  MAX_NAME,
+  validateCategoryName,
+} from "@discordia/client-shared";
+
 import { AlertCircle, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { createCategoryRequest } from "@/services/categories/client";
-import type { Category } from "@/types/category.types";
 import { cn } from "@/lib/cn";
-
-const MAX_NAME = 100;
 
 interface CreateCategoryModalProps {
   serverId: string;
@@ -45,8 +48,9 @@ export function CreateCategoryModal({
     setNameError("");
     setGlobalError("");
 
-    if (!trimmed) {
-      setNameError("Ingresá un nombre para la categoría.");
+    const nameError = validateCategoryName(trimmed);
+    if (nameError) {
+      setNameError(nameError);
       return;
     }
 

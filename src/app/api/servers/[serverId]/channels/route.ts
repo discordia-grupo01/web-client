@@ -1,18 +1,16 @@
+import {
+  CHANNEL_CREATE_FAILED,
+  CHANNEL_REASONS,
+  type CreateChannelResult,
+  fieldOf,
+  messageFor,
+  reasonOf,
+} from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
 import { createChannel } from "@/services/channels/service";
-import type { CreateChannelActionResult } from "@/types/channel.types";
-
-const REASON_MESSAGES: Record<string, string> = {
-  name_required: "Ingresá un nombre para el canal.",
-  name_too_long: "El nombre es demasiado largo.",
-  name_invalid_chars: "El nombre tiene caracteres invalidos.",
-  name_taken: "Ya existe un canal con ese nombre en esa categoria.",
-  kind_invalid: "El tipo de canal debe ser texto o voz.",
-  category_server_mismatch: "Esa categoria no pertenece a este servidor.",
-};
 
 /**
  * BFF de `POST /v1/servers/:id/channels`. Body JSON: `{ name, kind, categoryId? }`.
@@ -21,7 +19,7 @@ const REASON_MESSAGES: Record<string, string> = {
 export async function POST(
   request: Request,
   { params }: { params: { serverId: string } },
-): Promise<NextResponse<CreateChannelActionResult>> {
+): Promise<NextResponse<CreateChannelResult>> {
   const session = await getValidSession();
   if (!session) {
     return unauthorizedResponse();
@@ -40,15 +38,9 @@ export async function POST(
   });
 
   if (!result.ok) {
-    const field =
-      typeof result.details?.field === "string"
-        ? result.details.field
-        : undefined;
-    const reason =
-      typeof result.details?.reason === "string"
-        ? result.details.reason
-        : undefined;
-    const friendly = reason ? REASON_MESSAGES[reason] : undefined;
+    const field = fieldOf(result.details);
+    const reason = reasonOf(result.details);
+    const friendly = reason ? CHANNEL_REASONS[reason] : undefined;
 
     if (field && friendly && (field === "name" || field === "kind")) {
       return NextResponse.json(
@@ -62,7 +54,7 @@ export async function POST(
     return NextResponse.json(
       {
         ok: false,
-        message: friendly ?? "No pudimos crear el canal. Intenta de nuevo.",
+        message: messageFor(result, CHANNEL_REASONS, CHANNEL_CREATE_FAILED),
       },
       {
         status:
