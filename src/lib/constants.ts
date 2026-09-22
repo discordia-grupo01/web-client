@@ -9,6 +9,7 @@ export const ROUTES = {
   register: "/register",
   forgotPassword: "/forgot-password",
   resetPassword: "/reset-password",
+  confirmEmail: "/confirm-email",
   /** Landing despues de iniciar sesion (por ahora un placeholder). */
   home: "/home",
   invite: "/invite",

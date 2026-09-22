@@ -94,6 +94,29 @@ describe("<LoginForm />", () => {
     expect(window.location.href).toBe("");
   });
 
+  it("redirige a confirmar el correo cuando la cuenta ya existe pero no está verificada", async () => {
+    loginRequestMock.mockResolvedValue({
+      ok: false,
+      message:
+        "Tu cuenta ya está registrada, pero debes confirmar tu correo electrónico antes de iniciar sesión.",
+    });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.type(
+      screen.getByLabelText("Correo electrónico"),
+      "ada@example.com",
+    );
+    await user.type(screen.getByLabelText("Contraseña"), "Secure123");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
+
+    await waitFor(() => {
+      expect(window.location.href).toBe(
+        "/confirm-email?email=ada%40example.com&from=login",
+      );
+    });
+  });
+
   it("muestra el aviso de cuenta creada cuando viene de registrarse", () => {
     searchParams = new URLSearchParams("registered=1");
     render(<LoginForm />);

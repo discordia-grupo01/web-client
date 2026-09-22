@@ -43,6 +43,17 @@ export async function POST(
   });
 
   if (!result.ok) {
+    if (result.status === 403 || result.code === "EMAIL_NOT_VERIFIED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message:
+            "Tu cuenta ya está registrada, pero debes confirmar tu correo electrónico antes de iniciar sesión.",
+        },
+        { status: 403 },
+      );
+    }
+
     // 401: credenciales invalidas. Mensaje generico, sin distinguir campo.
     if (result.status === 401) {
       return NextResponse.json(

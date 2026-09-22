@@ -17,6 +17,9 @@ import { TextField } from "@/components/ui/text-field";
 import { loginRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 
+const EMAIL_NOT_VERIFIED_MESSAGE =
+  "Tu cuenta ya está registrada, pero debes confirmar tu correo electrónico antes de iniciar sesión.";
+
 export function LoginForm() {
   const searchParams = useSearchParams();
 
@@ -41,6 +44,10 @@ export function LoginForm() {
     setIsSubmitting(false);
 
     if (!result.ok) {
+      if (result.message === EMAIL_NOT_VERIFIED_MESSAGE) {
+        window.location.href = `${ROUTES.confirmEmail}?email=${encodeURIComponent(email.trim())}&from=login`;
+        return;
+      }
       setFormError(result.message);
       return;
     }

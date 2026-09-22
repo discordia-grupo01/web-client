@@ -12,6 +12,7 @@ const GUEST_ONLY = [
   ROUTES.register,
   ROUTES.forgotPassword,
   ROUTES.resetPassword,
+  ROUTES.confirmEmail,
 ];
 
 /**
