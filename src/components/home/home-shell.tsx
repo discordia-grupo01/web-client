@@ -15,6 +15,7 @@ import { ServerView } from "@/components/servers/server-view";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
 import { getOwnProfileRequest } from "@/services/profile/client";
+import { serverIconSrc } from "@/services/servers/image-urls";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
@@ -127,7 +128,7 @@ export function HomeShell({
               >
                 <ServerAvatar
                   name={server.name}
-                  src={`/api/servers/${server.id}/icon`}
+                  src={serverIconSrc(server)}
                   size={48}
                 />
               </button>

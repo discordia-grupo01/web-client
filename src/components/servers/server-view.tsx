@@ -39,12 +39,13 @@ import {
   Trash2,
   Volume2,
 } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { PublicProfileModal } from "@/components/profile/public-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
 import { CreateCategoryModal } from "@/components/categories/create-category-modal";
 import { EditCategoryModal } from "@/components/categories/edit-category-modal";
+import { ChannelHeader } from "@/components/channels/channel-header";
 import { CreateChannelModal } from "@/components/channels/create-channel-modal";
 import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
@@ -56,7 +57,7 @@ import {
 } from "@/services/channels/client";
 import { cn } from "@/lib/cn";
 
-import { ServerSidebarHeader } from "./server-sidebar-header";
+import { ServerSidebarHeader } from "./sidebar/server-sidebar-header";
 
 /** Id del "bucket" de canales sin categoria (`category_id: null`). */
 const UNCATEGORIZED_BUCKET = "none";
@@ -353,6 +354,9 @@ export function ServerView({
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [draggingChannel, setDraggingChannel] = useState<Channel | null>(null);
   const [dragError, setDragError] = useState("");
+  // Preferencias de la vista, desde la barra del canal.
+  const [isBannerVisible, setIsBannerVisible] = useState(true);
+  const [isMembersVisible, setIsMembersVisible] = useState(true);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -540,12 +544,14 @@ export function ServerView({
       >
         <ServerSidebarHeader
           server={server}
+          isBannerVisible={isBannerVisible}
           onLeft={onLeft}
           onCreateChannel={() => {
             setCreateChannelDefaultCategoryId(null);
             setIsCreateChannelOpen(true);
           }}
           onCreateCategory={() => setIsCreateCategoryOpen(true)}
+          onServerUpdated={onServerUpdate}
           onOwnershipAccepted={() => {
             if (!user) return;
             onServerUpdate({ ...server, owner_id: String(user.id) });
@@ -640,19 +646,17 @@ export function ServerView({
       >
         {activeChannel ? (
           <>
-            <div className="border-line flex h-12 shrink-0 items-center gap-2 border-b px-4">
-              {activeChannel.kind === "text" ? (
-                <Hash size={18} className="text-content-subtle" />
-              ) : (
-                <Volume2 size={18} className="text-content-subtle" />
-              )}
-              <span className="font-display text-content text-sm font-semibold">
-                {activeChannel.name}
-              </span>
-            </div>
+            <ChannelHeader
+              channel={activeChannel}
+              hasBanner={server.banner_url !== null}
+              isBannerVisible={isBannerVisible}
+              onToggleBanner={() => setIsBannerVisible((prev) => !prev)}
+              isMembersVisible={isMembersVisible}
+              onToggleMembers={() => setIsMembersVisible((prev) => !prev)}
+            />
 
             <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-              <div className="from-accent flex size-14 items-center justify-center rounded-full bg-gradient-to-br to-[#1a4050]">
+              <div className="from-accent-gradient-start to-accent-gradient-end flex size-14 items-center justify-center rounded-full bg-gradient-to-br">
                 {activeChannel.kind === "text" ? (
                   <Hash size={26} className="text-white" />
                 ) : (
@@ -687,19 +691,15 @@ export function ServerView({
         ) : null}
       </div>
 
-      <MembersSidebar
-        // Fuerza un remount (y por lo tanto un refetch de la lista) cuando
-        // cambia el owner: `MembersSidebar` solo carga una vez por
-        // `serverId` (ver su propio useEffect), y una transferencia de
-        // propiedad no cambia el `serverId`. Sin esto, el nuevo owner
-        // aparecería como miembro regular (sin la corona) hasta refrescar
-        // la página entera.
-        key={`${server.id}:${server.owner_id}`}
-        serverId={server.id}
-        currentUserId={ownProfile?.id ?? user?.id ?? null}
-        onOpenOwnProfile={onOpenOwnProfile}
-        onOpenPublicProfile={setViewingUserId}
-      />
+      {isMembersVisible ? (
+        <MembersSidebar
+          key={`${server.id}:${server.owner_id}`}
+          serverId={server.id}
+          currentUserId={ownProfile?.id ?? user?.id ?? null}
+          onOpenOwnProfile={onOpenOwnProfile}
+          onOpenPublicProfile={setViewingUserId}
+        />
+      ) : null}
 
       {isCreateChannelOpen ? (
         <CreateChannelModal
