@@ -36,14 +36,14 @@ function ActionCard({
       className={`group flex w-full cursor-pointer items-start gap-4 rounded-2xl border p-5 text-left transition-all ${
         accent
           ? "bg-accent/[0.12] border-accent/40 hover:border-accent/70 hover:bg-accent/[0.18]"
-          : "bg-surface-input border-line hover:border-line-strong hover:bg-white/[0.03]"
+          : "bg-surface-input border-line hover:border-line-strong hover:bg-surface-hover"
       }`}
     >
       <div
         className={`mt-0.5 flex size-11 shrink-0 items-center justify-center rounded-xl ${
           accent
             ? "bg-accent/30 text-sky"
-            : "text-content-subtle bg-white/[0.06]"
+            : "text-content-subtle bg-line-strong"
         }`}
       >
         {icon}

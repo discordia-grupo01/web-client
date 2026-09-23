@@ -17,9 +17,7 @@ export function CharacterCounter({ length, max }: CharacterCounterProps) {
         tooLong
           ? "text-danger"
           : nearLimit
-            ? // Ambar de aviso: no hay token para este estado intermedio (el
-              // `highlight` del tema es otro amarillo, mas claro).
-              "text-[#F0B232]"
+            ? "text-highlight"
             : "text-content-subtle",
       )}
     >

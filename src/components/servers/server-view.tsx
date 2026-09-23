@@ -656,7 +656,7 @@ export function ServerView({
             />
 
             <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-              <div className="from-accent flex size-14 items-center justify-center rounded-full bg-gradient-to-br to-[#1a4050]">
+              <div className="from-accent-gradient-start to-accent-gradient-end flex size-14 items-center justify-center rounded-full bg-gradient-to-br">
                 {activeChannel.kind === "text" ? (
                   <Hash size={26} className="text-white" />
                 ) : (

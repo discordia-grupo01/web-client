@@ -52,7 +52,7 @@ function ServerIconPreview({
 
   return (
     <div
-      className="from-accent border-line-strong flex shrink-0 items-center justify-center rounded-full border-2 border-dashed bg-gradient-to-br to-[#1a4050]"
+      className="from-accent-gradient-start border-line-strong to-accent-gradient-end flex shrink-0 items-center justify-center rounded-full border-2 border-dashed bg-gradient-to-br"
       style={{ width: size, height: size }}
     >
       {initial ? (
@@ -385,7 +385,7 @@ export function CreateServerModal({
                         nameTooLong
                           ? "text-danger"
                           : nameNearLimit
-                            ? "text-[#F0B232]"
+                            ? "text-highlight"
                             : "text-content-subtle",
                       )}
                     >
