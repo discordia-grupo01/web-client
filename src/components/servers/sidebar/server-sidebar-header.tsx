@@ -22,6 +22,7 @@ type OpenModal = null | "invite" | "settings" | "roles" | "leave" | "transfer";
 
 interface ServerSidebarHeaderProps {
   server: ServerSummary;
+  isBannerVisible: boolean;
   onLeft: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
@@ -38,6 +39,7 @@ interface ServerSidebarHeaderProps {
  */
 export function ServerSidebarHeader({
   server,
+  isBannerVisible,
   onLeft,
   onCreateChannel,
   onCreateCategory,
@@ -95,6 +97,7 @@ export function ServerSidebarHeader({
     <div className="border-line relative shrink-0 border-b">
       <ServerHeaderTrigger
         server={server}
+        isBannerVisible={isBannerVisible}
         isMenuOpen={isMenuOpen}
         onToggle={() => setIsMenuOpen((prev) => !prev)}
       />
