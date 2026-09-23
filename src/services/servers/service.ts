@@ -84,6 +84,12 @@ async function getServerImage(
 ): Promise<ServerImageResult> {
   const response = await fetch(`${env.apiUrl}/v1/servers/${serverId}/${kind}`, {
     headers: { Authorization: `Bearer ${token}` },
+    // Sin esto, Next cachea esta llamada server-side por URL para siempre: el
+    // `?v=<hash>` que hace cache-busting en la URL que ve el navegador no
+    // toca esta URL interna hacia el backend (siempre la misma), asi que sin
+    // `no-store` esta respuesta se queda pegada a la primera version que se
+    // pidio, aunque el icono/banner ya haya cambiado en el backend.
+    cache: "no-store",
   });
 
   if (!response.ok || !response.body) {
