@@ -1,5 +1,6 @@
 import {
   hasErrors,
+  EMAIL_NOT_VERIFIED,
   INVALID_CREDENTIALS,
   INVALID_DATA_MESSAGE,
   LOGIN_UNAVAILABLE,
@@ -47,8 +48,7 @@ export async function POST(
       return NextResponse.json(
         {
           ok: false,
-          message:
-            "Tu cuenta ya está registrada, pero debes confirmar tu correo electrónico antes de iniciar sesión.",
+          message: EMAIL_NOT_VERIFIED,
         },
         { status: 403 },
       );

@@ -1,5 +1,6 @@
 "use client";
 
+import { EMAIL_NOT_VERIFIED } from "@discordia/client-shared";
 import { CheckCircle2, Mail, RefreshCw, TriangleAlert } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -10,9 +11,6 @@ import {
   confirmEmailRequest,
   requestEmailConfirmationRequest,
 } from "@/services/auth/client";
-
-const EMAIL_NOT_VERIFIED_MESSAGE =
-  "Tu cuenta ya está registrada, pero debes confirmar tu correo electrónico antes de iniciar sesión.";
 
 export function ConfirmEmailForm() {
   const searchParams = useSearchParams();
@@ -90,7 +88,7 @@ export function ConfirmEmailForm() {
     status === "expired"
       ? "Este enlace ya no es válido. Vuelve al inicio de sesión e intenta nuevamente para recibir otro correo."
       : fromLogin
-        ? EMAIL_NOT_VERIFIED_MESSAGE
+        ? EMAIL_NOT_VERIFIED
         : "Te enviamos un enlace para confirmar tu correo y activar tu cuenta.";
 
   return (

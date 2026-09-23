@@ -1,6 +1,7 @@
 import {
   hasErrors,
   INVALID_EMAIL_MESSAGE,
+  type EmailConfirmationResult,
   type ForgotPasswordValues,
   validateForgotPassword,
 } from "@discordia/client-shared";
@@ -8,7 +9,6 @@ import {
 import { NextResponse } from "next/server";
 
 import { requestEmailConfirmation } from "@/services/auth/service";
-import type { EmailConfirmationResult } from "@/types/auth.types";
 
 export async function POST(
   request: Request,

@@ -7,10 +7,10 @@ import {
   type RegisterValues,
   REQUEST_FAILED_MESSAGE,
   type ResetPasswordResult,
+  type EmailConfirmationResult,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
-import type { EmailConfirmationResult } from "@/types/auth.types";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/auth/*`, mismo origen).

@@ -1,7 +1,7 @@
+import { type EmailConfirmationResult } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { confirmEmail } from "@/services/auth/service";
-import type { EmailConfirmationResult } from "@/types/auth.types";
 
 export async function POST(
   request: Request,

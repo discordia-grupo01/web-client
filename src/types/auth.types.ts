@@ -14,7 +14,3 @@ export interface Session extends SessionBase {
   refreshToken: string;
 }
 
-export interface EmailConfirmationResult {
-  ok: boolean;
-  message?: string;
-}
