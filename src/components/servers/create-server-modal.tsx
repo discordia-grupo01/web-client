@@ -1,7 +1,10 @@
 "use client";
 
 import {
+  ALLOWED_SERVER_ICON_TYPES,
+  formatImageTypes,
   getInitial,
+  MAX_ICON_FILE_MB,
   MAX_NAME,
   type ServerSummary,
   validateServerIcon,
@@ -358,8 +361,13 @@ export function CreateServerModal({
 
                   <FieldError message={iconError} />
 
+                  {/* Formatos y tope salen de las mismas constantes que usa
+                      `validateServerIcon`: decia "20 MB" cuando el backend
+                      corta en 5, asi que el cartel prometia lo que el submit
+                      despues rechazaba. */}
                   <p className="text-content-subtle text-center text-[11px]">
-                    PNG, JPG o WEBP · Máx. 20 MB
+                    {formatImageTypes(ALLOWED_SERVER_ICON_TYPES)} · Máx.{" "}
+                    {MAX_ICON_FILE_MB} MB
                   </p>
                 </div>
 
@@ -449,7 +457,7 @@ export function CreateServerModal({
               <input
                 ref={fileInputRef}
                 type="file"
-                accept="image/png,image/jpeg,image/webp"
+                accept={ALLOWED_SERVER_ICON_TYPES.join(",")}
                 className="hidden"
                 onChange={handleFileInput}
               />
