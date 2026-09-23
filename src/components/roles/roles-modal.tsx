@@ -4,6 +4,7 @@ import {
   COLOR_PALETTE,
   isValidHex,
   MAX_NAME,
+  NO_ROLES_YET,
   PERMISSION_COPY,
   type Role,
   ROLE_PERMISSIONS,
@@ -594,7 +595,7 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
               <p className="text-danger px-2 text-xs">{loadError}</p>
             ) : (roles ?? []).length === 0 ? (
               <p className="text-content-muted px-2 py-2 text-xs">
-                Todavía no hay roles.
+                {NO_ROLES_YET}
               </p>
             ) : (
               (roles ?? []).map((role) => {
