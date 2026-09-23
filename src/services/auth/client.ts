@@ -7,6 +7,7 @@ import {
   type RegisterValues,
   REQUEST_FAILED_MESSAGE,
   type ResetPasswordResult,
+  type EmailConfirmationResult,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
@@ -94,6 +95,40 @@ export async function resetPasswordRequest(values: {
     const { data } = await api.post<ResetPasswordResult>(
       "/auth/reset-password",
       values,
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: REQUEST_FAILED_MESSAGE,
+    };
+  }
+}
+
+export async function requestEmailConfirmationRequest(
+  email: string,
+): Promise<EmailConfirmationResult> {
+  try {
+    const { data } = await api.post<EmailConfirmationResult>(
+      "/auth/email-confirmation",
+      { email },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: REQUEST_FAILED_MESSAGE,
+    };
+  }
+}
+
+export async function confirmEmailRequest(
+  token: string,
+): Promise<EmailConfirmationResult> {
+  try {
+    const { data } = await api.post<EmailConfirmationResult>(
+      "/auth/email-confirmation/confirm",
+      { token },
     );
     return data;
   } catch {

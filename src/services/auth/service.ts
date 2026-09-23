@@ -113,3 +113,21 @@ export function resetPassword(data: {
     data,
   });
 }
+
+export function requestEmailConfirmation(
+  email: string,
+): Promise<ApiResult<{ message: string }>> {
+  return apiRequest<{ message: string }>("/v1/email-confirmation", {
+    method: "POST",
+    data: { email },
+  });
+}
+
+export function confirmEmail(
+  token: string,
+): Promise<ApiResult<{ message: string }>> {
+  return apiRequest<{ message: string }>("/v1/email-confirmation/confirm", {
+    method: "POST",
+    data: { token },
+  });
+}
