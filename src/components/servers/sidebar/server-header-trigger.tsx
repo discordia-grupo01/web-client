@@ -13,23 +13,21 @@ const BANNER_HEIGHT = 88;
 
 interface ServerHeaderTriggerProps {
   server: ServerSummary;
+  isBannerVisible: boolean;
   isMenuOpen: boolean;
   onToggle: () => void;
 }
 
 /**
  * El boton que abre el menu del servidor.
- *
- * Con banner ocupa la franja entera y el nombre va abajo en blanco sobre un
- * velo oscuro (si no, un banner claro se come el texto). Sin banner cae a la
- * fila compacta de siempre, con el icono al lado del nombre.
  */
 export function ServerHeaderTrigger({
   server,
+  isBannerVisible,
   isMenuOpen,
   onToggle,
 }: ServerHeaderTriggerProps) {
-  const bannerSrc = serverBannerSrc(server);
+  const bannerSrc = isBannerVisible ? serverBannerSrc(server) : null;
 
   if (!bannerSrc) {
     return (
