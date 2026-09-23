@@ -1,9 +1,5 @@
 import {
   type CreateServerResult,
-  fieldOf,
-  messageFor,
-  reasonOf,
-  SERVER_REASONS,
   SERVERS_LOAD_FAILED,
   UNEXPECTED_ERROR_MESSAGE,
 } from "@discordia/client-shared";
@@ -11,6 +7,7 @@ import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/api-route";
 import { getValidSession } from "@/services/auth/session";
+import { serverErrorResponse } from "@/services/servers/error-payload";
 import { createServer, listMyServers } from "@/services/servers/service";
 
 /**
@@ -62,28 +59,15 @@ export async function POST(
   const result = await createServer(session.token, formData);
 
   if (!result.ok) {
-    const field = fieldOf(result.details);
-    const reason = reasonOf(result.details);
-    const friendly = reason ? SERVER_REASONS[reason] : undefined;
-
-    if ((field === "name" || field === "icon") && friendly) {
-      return NextResponse.json(
-        { ok: false, message: friendly, fieldErrors: { [field]: friendly } },
-        { status: result.status || 400 },
-      );
-    }
-
     if (result.status === 401) {
       return unauthorizedResponse();
     }
 
-    return NextResponse.json(
-      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
-      {
-        status:
-          result.status >= 400 && result.status < 500 ? result.status : 502,
-      },
+    const { payload, status } = serverErrorResponse(
+      result,
+      UNEXPECTED_ERROR_MESSAGE,
     );
+    return NextResponse.json(payload, { status });
   }
 
   return NextResponse.json({ ok: true, server: result.data }, { status: 201 });
