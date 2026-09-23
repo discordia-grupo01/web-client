@@ -6,7 +6,7 @@ import { DEFAULT_THEME, themeToCss } from "@discordia/client-shared";
 
 import { AuthProvider } from "@/services/auth/auth-context";
 import { getCurrentUser } from "@/services/auth/session";
-import { APP_NAME } from "@/lib/constants";
+import { APP_NAME, THEME_STORAGE_KEY } from "@/lib/constants";
 
 import "./globals.css";
 
@@ -38,10 +38,18 @@ export default function RootLayout({ children }: { children: ReactNode }) {
     <html
       lang="es"
       data-theme={DEFAULT_THEME}
+      // El script de abajo puede cambiar `data-theme` antes de que React
+      // hidrate; sin esto, React avisaria de una diferencia que es a proposito.
+      suppressHydrationWarning
       className={`${inter.variable} ${outfit.variable}`}
     >
       <head>
         <style dangerouslySetInnerHTML={{ __html: themeToCss() }} />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem(${JSON.stringify(THEME_STORAGE_KEY)});if(t==="light"||t==="dark")document.documentElement.dataset.theme=t}catch(e){}`,
+          }}
+        />
       </head>
       <body>
         <AuthProvider initialUser={user}>{children}</AuthProvider>

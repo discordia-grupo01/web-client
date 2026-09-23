@@ -2,6 +2,7 @@
 
 import {
   type ActivityStatus,
+  ALLOWED_AVATAR_TYPES,
   CANCEL_NAME_EDIT_LABEL,
   CHANGE_AVATAR_LABEL,
   DESCRIPTION_PLACEHOLDER,
@@ -218,7 +219,7 @@ export function OwnProfileModal({
         <input
           ref={fileInputRef}
           type="file"
-          accept="image/png,image/jpeg,image/gif"
+          accept={ALLOWED_AVATAR_TYPES.join(",")}
           className="hidden"
           onChange={handleFileInput}
         />

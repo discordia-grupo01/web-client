@@ -4,6 +4,7 @@ import {
   COLOR_PALETTE,
   isValidHex,
   MAX_NAME,
+  NO_ROLES_YET,
   PERMISSION_COPY,
   type Role,
   ROLE_PERMISSIONS,
@@ -195,10 +196,10 @@ function PermissionToggle({
       <div
         className={cn(
           "mt-0.5 flex h-6 w-10 shrink-0 items-center rounded-full p-0.5 transition-all",
-          enabled ? "bg-accent justify-end" : "bg-line-strong justify-start",
+          enabled ? "bg-accent justify-end" : "bg-content-subtle justify-start",
         )}
       >
-        <div className="size-5 rounded-full bg-white shadow-sm" />
+        <div className="bg-on-accent size-5 rounded-full shadow-sm" />
       </div>
     </div>
   );
@@ -578,7 +579,7 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
             <button
               type="button"
               onClick={() => setRightView("create")}
-              className="from-accent flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br to-[#1a4050] py-2 text-xs font-semibold text-white transition-all hover:brightness-110"
+              className="from-accent-gradient-start to-accent-gradient-end text-on-accent flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br py-2 text-xs font-semibold transition-all hover:brightness-110"
             >
               <Plus size={12} />
               Crear rol
@@ -594,7 +595,7 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
               <p className="text-danger px-2 text-xs">{loadError}</p>
             ) : (roles ?? []).length === 0 ? (
               <p className="text-content-muted px-2 py-2 text-xs">
-                Todavía no hay roles.
+                {NO_ROLES_YET}
               </p>
             ) : (
               (roles ?? []).map((role) => {
@@ -748,7 +749,7 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
                   type="button"
                   onClick={handleCreate}
                   disabled={creating}
-                  className="from-accent flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-br to-[#1a4050] px-6 py-2.5 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(36,92,107,0.4)] transition-all hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+                  className="from-accent-gradient-start to-accent-gradient-end text-on-accent flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-br px-6 py-2.5 text-sm font-semibold shadow-[0_6px_20px_rgba(36,92,107,0.4)] transition-all hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {creating ? (
                     <>
@@ -1048,7 +1049,7 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
                     type="button"
                     onClick={handleSave}
                     disabled={!isDirty || saving}
-                    className="from-accent flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-br to-[#1a4050] px-6 py-2.5 text-sm font-semibold text-white transition-all hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
+                    className="from-accent-gradient-start to-accent-gradient-end text-on-accent flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-br px-6 py-2.5 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                     style={{
                       boxShadow: isDirty
                         ? "0 6px 20px rgba(36,92,107,0.4)"

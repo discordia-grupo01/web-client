@@ -4,6 +4,10 @@ import {
   type Member,
   type OwnershipTransfer,
   type PublicUser,
+  TRANSFER_CHOOSE_NEW_OWNER,
+  TRANSFER_NONE_PENDING,
+  TRANSFER_NO_OTHER_MEMBERS,
+  TRANSFER_PENDING_OTHER_VIEWER,
 } from "@discordia/client-shared";
 
 import { AlertCircle, ArrowLeftRight, Check, Crown, X } from "lucide-react";
@@ -349,7 +353,7 @@ export function TransferOwnershipModal({
     return (
       <ModalShell onClose={onClose}>
         <p className="text-content-muted py-4 text-center text-sm">
-          Hay una transferencia de propiedad pendiente para este servidor.
+          {TRANSFER_PENDING_OTHER_VIEWER}
         </p>
       </ModalShell>
     );
@@ -359,7 +363,7 @@ export function TransferOwnershipModal({
     return (
       <ModalShell onClose={onClose}>
         <p className="text-content-muted py-4 text-center text-sm">
-          No hay ninguna transferencia de propiedad pendiente.
+          {TRANSFER_NONE_PENDING}
         </p>
       </ModalShell>
     );
@@ -369,7 +373,7 @@ export function TransferOwnershipModal({
     <ModalShell onClose={onClose}>
       {errorBanner}
       <p className="text-content-subtle mb-3 text-xs font-bold tracking-wider uppercase">
-        Elegí el nuevo propietario
+        {TRANSFER_CHOOSE_NEW_OWNER}
       </p>
 
       {members === null ? (
@@ -378,7 +382,7 @@ export function TransferOwnershipModal({
         </div>
       ) : members.length === 0 ? (
         <p className="text-content-muted py-4 text-center text-sm">
-          No hay otros miembros en este servidor todavía.
+          {TRANSFER_NO_OTHER_MEMBERS}
         </p>
       ) : (
         <div className="space-y-2">

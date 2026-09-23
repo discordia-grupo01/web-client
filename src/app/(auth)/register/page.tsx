@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import Link from "next/link";
 
+import { AuthLogo } from "@/components/auth/auth-logo";
 import { AuthModeToggle } from "@/components/auth/auth-mode-toggle";
 import { GoogleButton } from "@/components/auth/google-button";
 import { RegisterForm } from "@/components/auth/register-form";
@@ -14,15 +14,7 @@ export const metadata: Metadata = {
 export default function RegisterPage() {
   return (
     <>
-      {/* Logo (solo mobile; en desktop lo muestra AuthBrandingPanel) */}
-      <Image
-        src="/logo-light.png"
-        alt="discordia"
-        width={1010}
-        height={269}
-        priority
-        className="mb-8 h-auto w-48 lg:hidden"
-      />
+      <AuthLogo />
 
       <AuthModeToggle />
 
