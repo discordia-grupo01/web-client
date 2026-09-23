@@ -56,7 +56,7 @@ import {
 } from "@/services/channels/client";
 import { cn } from "@/lib/cn";
 
-import { ServerSidebarHeader } from "./server-sidebar-header";
+import { ServerSidebarHeader } from "./sidebar/server-sidebar-header";
 
 /** Id del "bucket" de canales sin categoria (`category_id: null`). */
 const UNCATEGORIZED_BUCKET = "none";
@@ -546,6 +546,7 @@ export function ServerView({
             setIsCreateChannelOpen(true);
           }}
           onCreateCategory={() => setIsCreateCategoryOpen(true)}
+          onServerUpdated={onServerUpdate}
           onOwnershipAccepted={() => {
             if (!user) return;
             onServerUpdate({ ...server, owner_id: String(user.id) });
