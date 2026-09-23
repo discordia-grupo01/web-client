@@ -1,5 +1,6 @@
 import {
   hasErrors,
+  EMAIL_NOT_VERIFIED,
   INVALID_CREDENTIALS,
   INVALID_DATA_MESSAGE,
   LOGIN_UNAVAILABLE,
@@ -43,6 +44,16 @@ export async function POST(
   });
 
   if (!result.ok) {
+    if (result.status === 403 || result.code === "EMAIL_NOT_VERIFIED") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: EMAIL_NOT_VERIFIED,
+        },
+        { status: 403 },
+      );
+    }
+
     // 401: credenciales invalidas. Mensaje generico, sin distinguir campo.
     if (result.status === 401) {
       return NextResponse.json(

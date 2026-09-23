@@ -47,10 +47,7 @@ export function RegisterForm() {
       return;
     }
 
-    // El registro YA NO deja la sesion iniciada (identify-service dejo de
-    // devolver un token al registrarse): mandamos al login con un aviso,
-    // si no no hay ninguna senal de que el registro funciono.
-    router.replace(`${ROUTES.login}?registered=1`);
+    router.replace(`${ROUTES.confirmEmail}?sent=1`);
   }
 
   return (

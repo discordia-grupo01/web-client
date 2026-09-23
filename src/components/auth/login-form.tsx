@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  EMAIL_NOT_VERIFIED,
   hasErrors,
   type LoginErrors,
   validateLogin,
@@ -41,6 +42,10 @@ export function LoginForm() {
     setIsSubmitting(false);
 
     if (!result.ok) {
+      if (result.message === EMAIL_NOT_VERIFIED) {
+        window.location.href = `${ROUTES.confirmEmail}?email=${encodeURIComponent(email.trim())}&from=login`;
+        return;
+      }
       setFormError(result.message);
       return;
     }

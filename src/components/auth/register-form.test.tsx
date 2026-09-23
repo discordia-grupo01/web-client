@@ -47,7 +47,7 @@ describe("<RegisterForm />", () => {
     expect(registerRequestMock).not.toHaveBeenCalled();
   });
 
-  it("con datos validos: llama al backend y redirige al login con aviso", async () => {
+  it("con datos validos: llama al backend y redirige a confirmar el correo", async () => {
     registerRequestMock.mockResolvedValue({ ok: true });
     render(<RegisterForm />);
 
@@ -61,7 +61,7 @@ describe("<RegisterForm />", () => {
         password: "Secret123",
       });
     });
-    expect(replace).toHaveBeenCalledWith("/login?registered=1");
+    expect(replace).toHaveBeenCalledWith("/confirm-email?sent=1");
   });
 
   it("muestra el mensaje de error que devuelve el backend", async () => {
