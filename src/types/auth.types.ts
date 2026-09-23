@@ -13,4 +13,3 @@ export interface Session extends SessionBase {
    */
   refreshToken: string;
 }
-
