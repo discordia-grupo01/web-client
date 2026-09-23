@@ -21,11 +21,13 @@ import { env } from "@/lib/env";
  *   GET    /v1/servers                          -> 200 [Server] | 401
  *   GET    /v1/servers/:id                      -> 200 Server | 400 | 404
  *   POST   /v1/servers                           -> 201 Server | 400 | 401 | 409 (nombre repetido)
+ *   PATCH  /v1/servers/:id                       -> 200 Server | 400 | 401 | 403 (no owner) | 404
  *   DELETE /v1/servers/:id/members/:userId       -> 204 | 401 | 403 | 404 | 409 (owner)
  *   GET    /v1/servers/:id/icon                  -> binario | 401 | 404
+ *   GET    /v1/servers/:id/banner                -> binario | 401 | 404
  *
- * Todavia NO existen: editar/borrar servidor. Ver la referencia de la API
- * para transferencia de ownership.
+ * Todavia NO existe: borrar servidor. Ver la referencia de la API para
+ * transferencia de ownership.
  */
 
 export function listMyServers(
@@ -63,30 +65,24 @@ export function leaveServer(
   });
 }
 
-interface ServerIconSuccess {
+interface ServerImageSuccess {
   ok: true;
   status: number;
   body: ReadableStream<Uint8Array>;
   contentType: string;
 }
-interface ServerIconFailure {
+interface ServerImageFailure {
   ok: false;
   status: number;
 }
-export type ServerIconResult = ServerIconSuccess | ServerIconFailure;
+export type ServerImageResult = ServerImageSuccess | ServerImageFailure;
 
-/**
- * `GET /v1/servers/:id/icon` exige JWT (via el plugin jwt de Kong), y un
- * `<img src="...">` del navegador no puede mandar el header Authorization
- * -- por eso esto vive del lado server y usa fetch nativo en vez de
- * `apiRequest` (pensada para JSON): devolvemos el binario tal cual, sin
- * parsear.
- */
-export async function getServerIcon(
+async function getServerImage(
   token: string,
   serverId: string,
-): Promise<ServerIconResult> {
-  const response = await fetch(`${env.apiUrl}/v1/servers/${serverId}/icon`, {
+  kind: "icon" | "banner",
+): Promise<ServerImageResult> {
+  const response = await fetch(`${env.apiUrl}/v1/servers/${serverId}/${kind}`, {
     headers: { Authorization: `Bearer ${token}` },
   });
 
@@ -100,6 +96,20 @@ export async function getServerIcon(
     body: response.body,
     contentType: response.headers.get("content-type") ?? "image/png",
   };
+}
+
+export function getServerIcon(
+  token: string,
+  serverId: string,
+): Promise<ServerImageResult> {
+  return getServerImage(token, serverId, "icon");
+}
+
+export function getServerBanner(
+  token: string,
+  serverId: string,
+): Promise<ServerImageResult> {
+  return getServerImage(token, serverId, "banner");
 }
 
 interface ServersServiceSuccess<T> {
@@ -116,18 +126,15 @@ interface ServersServiceFailure {
 export type ServersServiceResult<T> =
   ServersServiceSuccess<T> | ServersServiceFailure;
 
-/**
- * `POST /v1/servers` es multipart/form-data (name + icon opcional). Usamos
- * fetch nativo en vez de la instancia axios de lib/api-client.ts (pensada
- * para JSON): asi Node arma el boundary del FormData sin ambiguedad.
- */
-export async function createServer(
+async function sendServerForm(
+  method: "POST" | "PATCH",
+  path: string,
   token: string,
   formData: FormData,
 ): Promise<ServersServiceResult<ServerSummary>> {
   try {
-    const response = await fetch(`${env.apiUrl}/v1/servers`, {
-      method: "POST",
+    const response = await fetch(`${env.apiUrl}${path}`, {
+      method,
       headers: { Authorization: `Bearer ${token}` },
       body: formData,
     });
@@ -156,4 +163,19 @@ export async function createServer(
       message: NETWORK_ERROR_MESSAGE,
     };
   }
+}
+
+export function createServer(
+  token: string,
+  formData: FormData,
+): Promise<ServersServiceResult<ServerSummary>> {
+  return sendServerForm("POST", "/v1/servers", token, formData);
+}
+
+export function updateServer(
+  token: string,
+  serverId: string,
+  formData: FormData,
+): Promise<ServersServiceResult<ServerSummary>> {
+  return sendServerForm("PATCH", `/v1/servers/${serverId}`, token, formData);
 }

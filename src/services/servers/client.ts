@@ -2,18 +2,13 @@ import {
   type CreateServerResult,
   type LeaveServerResult,
   REQUEST_FAILED_MESSAGE,
+  SERVER_UPDATE_FAILED,
   SERVERS_LOAD_FAILED,
   type ServerSummary,
+  type UpdateServerResult,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
-
-/**
- * Llamadas del navegador hacia el BFF (`/api/servers`, mismo origen): alta,
- * listado y salida del servidor en si. Canales, categorias, roles,
- * invitaciones y miembros tienen cada uno su propio
- * `services/<dominio>/client.ts`.
- */
 
 type ListServersResult =
   { ok: true; servers: ServerSummary[] } | { ok: false; message: string };
@@ -63,6 +58,25 @@ export async function createServerRequest(
     return {
       ok: false,
       message: REQUEST_FAILED_MESSAGE,
+    };
+  }
+}
+
+export async function updateServerRequest(
+  serverId: string,
+  formData: FormData,
+): Promise<UpdateServerResult> {
+  try {
+    const { data } = await api.patch<UpdateServerResult>(
+      `/servers/${serverId}`,
+      formData,
+      { headers: { "Content-Type": undefined } },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: SERVER_UPDATE_FAILED,
     };
   }
 }

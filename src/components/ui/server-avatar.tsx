@@ -33,7 +33,7 @@ export function ServerAvatar({
   return (
     <div
       className={cn(
-        "from-accent font-display flex shrink-0 items-center justify-center bg-gradient-to-br to-[#1a4050] font-bold text-white select-none",
+        "from-accent-gradient-start font-display to-accent-gradient-end text-on-accent flex shrink-0 items-center justify-center bg-gradient-to-br font-bold select-none",
         className,
       )}
       style={{ width: size, height: size, fontSize: size * 0.42 }}
