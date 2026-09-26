@@ -3,6 +3,13 @@ export const APP_NAME = "Discordia";
 /** Nombre de la cookie httpOnly donde vive la sesion (JWT + datos del usuario). */
 export const SESSION_COOKIE = "discordia_session";
 
+/**
+ * Cookie httpOnly donde el BFF guarda el desafio de segundo factor entre el
+ * paso 1 (email + contrasena) y el paso 2 (codigo) del login. Vive pocos
+ * minutos y no es una sesion: sin el codigo no sirve para nada.
+ */
+export const TWO_FACTOR_CHALLENGE_COOKIE = "discordia_2fa_challenge";
+
 /** Clave para almacenar el tema en el localStorage. */
 export const THEME_STORAGE_KEY = "discordia:theme";
 
