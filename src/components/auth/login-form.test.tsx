@@ -1,8 +1,11 @@
+import { TWO_FACTOR_CHALLENGE_EXPIRED } from "@discordia/client-shared";
+
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { loginRequest } from "@/services/auth/client";
+import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
 import { LoginForm } from "./login-form";
 
@@ -16,7 +19,12 @@ vi.mock("@/services/auth/client", () => ({
   loginRequest: vi.fn(),
 }));
 
+vi.mock("@/services/two-factor/client", () => ({
+  twoFactorVerifyRequest: vi.fn(),
+}));
+
 const loginRequestMock = vi.mocked(loginRequest);
+const twoFactorVerifyRequestMock = vi.mocked(twoFactorVerifyRequest);
 
 beforeEach(() => {
   vi.clearAllMocks();
@@ -122,5 +130,89 @@ describe("<LoginForm />", () => {
     render(<LoginForm />);
 
     expect(screen.getByText(/cuenta creada con éxito/i)).toBeInTheDocument();
+  });
+
+  // CA2: con 2FA activo la contraseña correcta no entra a ningún lado; la
+  // pantalla pasa al paso del código.
+  it("con 2FA activo pasa al paso del codigo en vez de redirigir", async () => {
+    loginRequestMock.mockResolvedValue({ ok: true, twoFactorRequired: true });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.type(
+      screen.getByLabelText("Correo electrónico"),
+      "ada@example.com",
+    );
+    await user.type(screen.getByLabelText("Contraseña"), "Secure123");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
+
+    expect(await screen.findByLabelText("Código")).toBeInTheDocument();
+    expect(window.location.href).toBe("");
+  });
+
+  it("vuelve al paso de la contrasena cuando el desafio se vence", async () => {
+    loginRequestMock.mockResolvedValue({ ok: true, twoFactorRequired: true });
+    twoFactorVerifyRequestMock.mockResolvedValue({
+      ok: false,
+      message: TWO_FACTOR_CHALLENGE_EXPIRED,
+      expired: true,
+    });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.type(
+      screen.getByLabelText("Correo electrónico"),
+      "ada@example.com",
+    );
+    await user.type(screen.getByLabelText("Contraseña"), "Secure123");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
+
+    await user.type(await screen.findByLabelText("Código"), "123456");
+    await user.click(screen.getByRole("button", { name: /verificar/i }));
+
+    expect(await screen.findByLabelText("Contraseña")).toBeInTheDocument();
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      TWO_FACTOR_CHALLENGE_EXPIRED,
+    );
+  });
+
+  // CA4: entrar con un código de recuperación arrastra el aviso de regenerar
+  // la lista hasta la pantalla siguiente.
+  it("tras usar un codigo de recuperacion redirige con el aviso de regenerar", async () => {
+    loginRequestMock.mockResolvedValue({ ok: true, twoFactorRequired: true });
+    twoFactorVerifyRequestMock.mockResolvedValue({
+      ok: true,
+      user: {
+        id: "1",
+        name: "Ada",
+        email: "ada@example.com",
+        description: "",
+        avatar_url: "",
+        status_text: "",
+        status_emoji: "",
+        created_at: "",
+      },
+      recoveryCodeUsed: true,
+      recoveryCodesRemaining: 9,
+    });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.type(
+      screen.getByLabelText("Correo electrónico"),
+      "ada@example.com",
+    );
+    await user.type(screen.getByLabelText("Contraseña"), "Secure123");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
+
+    await user.type(await screen.findByLabelText("Código"), "123456");
+    await user.click(screen.getByRole("button", { name: /verificar/i }));
+
+    await waitFor(() => {
+      expect(window.location.href).toContain("/home?notice=");
+    });
+    expect(decodeURIComponent(window.location.href)).toContain(
+      "código de recuperación",
+    );
   });
 });

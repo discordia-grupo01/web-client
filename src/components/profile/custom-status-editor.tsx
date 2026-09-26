@@ -18,12 +18,6 @@ interface CustomStatusEditorProps {
   onClear: () => Promise<boolean>;
 }
 
-/**
- * Edición inline del estado personalizado del perfil propio (CA1/CA3 de
- * "Estado personalizado"): texto corto de hasta 64 caracteres, con opción de
- * borrarlo. A diferencia del estado de actividad, esto sí pega contra un
- * endpoint real (`PUT`/`DELETE /v1/me/status`).
- */
 export function CustomStatusEditor({
   statusText,
   onSave,

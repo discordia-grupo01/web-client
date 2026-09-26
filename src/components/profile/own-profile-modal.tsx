@@ -19,6 +19,7 @@ import { useCallback, useRef, useState, type ChangeEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { SectionLabel } from "@/components/ui/section-label";
 import { MemberRoleBadges } from "@/components/roles/member-role-badges";
+import { TwoFactorSection } from "@/components/security/two-factor-section";
 import {
   clearCustomStatusRequest,
   updateCustomStatusRequest,
@@ -372,6 +373,10 @@ export function OwnProfileModal({
               </p>
             )}
           </div>
+
+          <div className="bg-line h-px" />
+
+          <TwoFactorSection />
 
           <MemberSince isoDate={profile.created_at} />
 
