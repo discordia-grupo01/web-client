@@ -1,4 +1,8 @@
-import { type AuthResponse, type User } from "@discordia/client-shared";
+import {
+  type AuthResponse,
+  type TwoFactorChallengePayload,
+  type User,
+} from "@discordia/client-shared";
 
 import "server-only";
 
@@ -42,15 +46,24 @@ export function register(data: {
   });
 }
 
+/**
+ * El 200 trae una de dos cosas: la sesion, o un desafio de segundo factor si
+ * la cuenta lo tiene activo. Se distinguen con `isTwoFactorChallenge`. En el
+ * segundo caso no hay Set-Cookie: todavia no hay sesion que guardar.
+ */
 export async function login(credentials: {
   email: string;
   password: string;
-}): Promise<{ result: ApiResult<AuthResponse>; refreshToken: string | null }> {
-  const { result, setCookieHeader } =
-    await apiRequestWithSetCookie<AuthResponse>("/v1/login", {
-      method: "POST",
-      data: credentials,
-    });
+}): Promise<{
+  result: ApiResult<AuthResponse | TwoFactorChallengePayload>;
+  refreshToken: string | null;
+}> {
+  const { result, setCookieHeader } = await apiRequestWithSetCookie<
+    AuthResponse | TwoFactorChallengePayload
+  >("/v1/login", {
+    method: "POST",
+    data: credentials,
+  });
   return {
     result,
     refreshToken: extractCookieValue(setCookieHeader, REFRESH_COOKIE_NAME),

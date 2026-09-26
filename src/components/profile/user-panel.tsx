@@ -14,14 +14,6 @@ interface UserPanelProps {
   onClick: () => void;
 }
 
-/**
- * Barra fija al pie de la lista de canales: avatar + nombre propios, con
- * acceso directo al perfil (CA1). El icono de edicion vive dentro del modal
- * de perfil (`OwnProfileModal`), no aca.
- *
- * Mic/headphones/settings son decorativos (igual que en el prototipo Figma):
- * todavia no hay voz ni tema claro implementados en la app.
- */
 export function UserPanel({ user, onClick }: UserPanelProps) {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
 
