@@ -1,15 +1,17 @@
 "use client";
 
 import {
+  formatTwoFactorChallengeCountdown,
   hasErrors,
-  TOTP_CODE_LENGTH,
+  RECOVERY_CODE_LENGTH,
+  TWO_FACTOR_CHALLENGE_EXPIRED,
   TWO_FACTOR_VERIFY_INSTRUCTIONS,
   type TwoFactorCodeErrors,
   validateTwoFactorCode,
 } from "@discordia/client-shared";
 
 import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
-import { useState, type FormEvent } from "react";
+import { useEffect, useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -17,6 +19,8 @@ import { TextField } from "@/components/ui/text-field";
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
 interface TwoFactorVerifyFormProps {
+  /** Segundos de validez del desafío, del backend (no un timer inventado). */
+  expiresIn: number;
   /** Vuelve al paso de email y contraseña: el desafío ya no sirve. */
   onChallengeLost: (message: string) => void;
   onVerified: (result: {
@@ -26,11 +30,12 @@ interface TwoFactorVerifyFormProps {
 }
 
 /**
- * Segundo paso del login (CA2). El mismo campo acepta el código de la app y
+ * Segundo paso del login (CA2). Un solo campo acepta el código de la app y
  * uno de recuperación (CA4): el usuario escribe lo que tenga a mano y es el
  * backend el que los distingue por el formato.
  */
 export function TwoFactorVerifyForm({
+  expiresIn,
   onChallengeLost,
   onVerified,
 }: TwoFactorVerifyFormProps) {
@@ -38,7 +43,30 @@ export function TwoFactorVerifyForm({
   const [errors, setErrors] = useState<TwoFactorCodeErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [useRecoveryCode, setUseRecoveryCode] = useState(false);
+  const [secondsLeft, setSecondsLeft] = useState(expiresIn);
+  const onChallengeLostRef = useRef(onChallengeLost);
+  useEffect(() => {
+    onChallengeLostRef.current = onChallengeLost;
+  }, [onChallengeLost]);
+
+  useEffect(() => {
+    if (expiresIn <= 0) {
+      onChallengeLostRef.current(TWO_FACTOR_CHALLENGE_EXPIRED);
+      return;
+    }
+    const interval = window.setInterval(() => {
+      setSecondsLeft((value) => {
+        if (value <= 1) {
+          window.clearInterval(interval);
+          onChallengeLostRef.current(TWO_FACTOR_CHALLENGE_EXPIRED);
+          return 0;
+        }
+        return value - 1;
+      });
+    }, 1000);
+    return () => window.clearInterval(interval);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -70,43 +98,27 @@ export function TwoFactorVerifyForm({
     });
   }
 
-  /**
-   * Cambiar de modo es solo un cambio de ayuda visual: el endpoint es el
-   * mismo. Por eso limpia el campo pero no toca nada del desafío.
-   */
-  function toggleRecoveryCode() {
-    setUseRecoveryCode((previous) => !previous);
-    setCode("");
-    setErrors({});
-    setFormError(null);
-  }
-
   return (
     <form onSubmit={handleSubmit} noValidate className="space-y-4">
       <div className="border-info/30 bg-info/10 flex items-start gap-3 rounded-xl border px-4 py-3">
         <ShieldCheck size={16} className="text-info mt-0.5 shrink-0" />
         <p className="text-content-muted text-xs leading-relaxed">
-          {useRecoveryCode
-            ? "Ingresá uno de los códigos de recuperación que guardaste al activar el segundo factor. Cada uno sirve una sola vez."
-            : TWO_FACTOR_VERIFY_INSTRUCTIONS}
+          {TWO_FACTOR_VERIFY_INSTRUCTIONS}
         </p>
       </div>
 
       <TextField
-        label={useRecoveryCode ? "Código de recuperación" : "Código"}
+        label="Código de seguridad"
         name="code"
-        // `one-time-code` es lo que hace que iOS y Android ofrezcan pegar el
-        // código; en modo recuperación no aplica, sale de un gestor o un papel.
-        autoComplete={useRecoveryCode ? "off" : "one-time-code"}
-        inputMode={useRecoveryCode ? "text" : "numeric"}
-        placeholder={useRecoveryCode ? "A1B2C-D3E4F" : "123456"}
-        maxLength={useRecoveryCode ? 11 : TOTP_CODE_LENGTH}
+        autoComplete="one-time-code"
+        placeholder="123456 o A1B2C-D3E4F"
+        maxLength={RECOVERY_CODE_LENGTH + 1}
         autoFocus
         icon={<KeyRound size={16} />}
         value={code}
         onChange={(event) => setCode(event.target.value)}
         error={errors.code}
-        className={useRecoveryCode ? "tracking-widest" : "tracking-[0.3em]"}
+        className="tracking-widest"
       />
 
       <FormAlert message={formError ?? undefined} />
@@ -116,15 +128,12 @@ export function TwoFactorVerifyForm({
         <ArrowRight size={16} />
       </Button>
 
-      <button
-        type="button"
-        onClick={toggleRecoveryCode}
-        className="text-info w-full cursor-pointer text-center text-xs transition-colors hover:underline"
-      >
-        {useRecoveryCode
-          ? "Volver al código de la app"
-          : "No tengo acceso a mi app autenticadora"}
-      </button>
+      <p className="text-content-subtle flex items-center justify-between text-xs">
+        <span>Sesión aún no iniciada</span>
+        <span className="font-mono tabular-nums">
+          {formatTwoFactorChallengeCountdown(secondsLeft)}
+        </span>
+      </p>
     </form>
   );
 }

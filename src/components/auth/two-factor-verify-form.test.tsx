@@ -3,9 +3,9 @@ import {
   TWO_FACTOR_CODE_INVALID,
 } from "@discordia/client-shared";
 
-import { render, screen } from "@testing-library/react";
+import { act, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
@@ -36,10 +36,14 @@ describe("<TwoFactorVerifyForm />", () => {
   it("no llama al backend con un codigo que no es ni TOTP ni de recuperacion", async () => {
     const typer = userEvent.setup();
     render(
-      <TwoFactorVerifyForm onChallengeLost={vi.fn()} onVerified={vi.fn()} />,
+      <TwoFactorVerifyForm
+        expiresIn={300}
+        onChallengeLost={vi.fn()}
+        onVerified={vi.fn()}
+      />,
     );
 
-    await typer.type(screen.getByLabelText("Código"), "123");
+    await typer.type(screen.getByLabelText("Código de seguridad"), "123");
     await typer.click(screen.getByRole("button", { name: /verificar/i }));
 
     expect(await screen.findByText(/dígitos de tu app/i)).toBeInTheDocument();
@@ -57,10 +61,14 @@ describe("<TwoFactorVerifyForm />", () => {
     const onVerified = vi.fn();
     const typer = userEvent.setup();
     render(
-      <TwoFactorVerifyForm onChallengeLost={vi.fn()} onVerified={onVerified} />,
+      <TwoFactorVerifyForm
+        expiresIn={300}
+        onChallengeLost={vi.fn()}
+        onVerified={onVerified}
+      />,
     );
 
-    await typer.type(screen.getByLabelText("Código"), "123456");
+    await typer.type(screen.getByLabelText("Código de seguridad"), "123456");
     await typer.click(screen.getByRole("button", { name: /verificar/i }));
 
     expect(twoFactorVerifyRequestMock).toHaveBeenCalledWith("123456");
@@ -70,6 +78,7 @@ describe("<TwoFactorVerifyForm />", () => {
     });
   });
 
+  // CA4: el mismo campo, sin ningun toggle, acepta un codigo de recuperacion.
   it("propaga que se uso un codigo de recuperacion y cuantos quedan", async () => {
     twoFactorVerifyRequestMock.mockResolvedValue({
       ok: true,
@@ -80,14 +89,15 @@ describe("<TwoFactorVerifyForm />", () => {
     const onVerified = vi.fn();
     const typer = userEvent.setup();
     render(
-      <TwoFactorVerifyForm onChallengeLost={vi.fn()} onVerified={onVerified} />,
+      <TwoFactorVerifyForm
+        expiresIn={300}
+        onChallengeLost={vi.fn()}
+        onVerified={onVerified}
+      />,
     );
 
-    await typer.click(
-      screen.getByRole("button", { name: /no tengo acceso a mi app/i }),
-    );
     await typer.type(
-      screen.getByLabelText("Código de recuperación"),
+      screen.getByLabelText("Código de seguridad"),
       "A1B2C-D3E4F",
     );
     await typer.click(screen.getByRole("button", { name: /verificar/i }));
@@ -108,12 +118,13 @@ describe("<TwoFactorVerifyForm />", () => {
     const typer = userEvent.setup();
     render(
       <TwoFactorVerifyForm
+        expiresIn={300}
         onChallengeLost={onChallengeLost}
         onVerified={vi.fn()}
       />,
     );
 
-    await typer.type(screen.getByLabelText("Código"), "000000");
+    await typer.type(screen.getByLabelText("Código de seguridad"), "000000");
     await typer.click(screen.getByRole("button", { name: /verificar/i }));
 
     expect(await screen.findByRole("alert")).toHaveTextContent(
@@ -121,7 +132,7 @@ describe("<TwoFactorVerifyForm />", () => {
     );
     expect(onChallengeLost).not.toHaveBeenCalled();
     // El campo se limpia para que el proximo intento no arrastre el anterior.
-    expect(screen.getByLabelText("Código")).toHaveValue("");
+    expect(screen.getByLabelText("Código de seguridad")).toHaveValue("");
   });
 
   // Con el desafio quemado reintentar no sirve: hay que volver al login.
@@ -135,31 +146,56 @@ describe("<TwoFactorVerifyForm />", () => {
     const typer = userEvent.setup();
     render(
       <TwoFactorVerifyForm
+        expiresIn={300}
         onChallengeLost={onChallengeLost}
         onVerified={vi.fn()}
       />,
     );
 
-    await typer.type(screen.getByLabelText("Código"), "123456");
+    await typer.type(screen.getByLabelText("Código de seguridad"), "123456");
     await typer.click(screen.getByRole("button", { name: /verificar/i }));
 
     expect(onChallengeLost).toHaveBeenCalledWith(TWO_FACTOR_CHALLENGE_EXPIRED);
   });
 
-  it("alterna entre el codigo de la app y el de recuperacion", async () => {
-    const typer = userEvent.setup();
-    render(
-      <TwoFactorVerifyForm onChallengeLost={vi.fn()} onVerified={vi.fn()} />,
-    );
+  describe("cuenta regresiva", () => {
+    beforeEach(() => {
+      vi.useFakeTimers();
+    });
 
-    await typer.click(
-      screen.getByRole("button", { name: /no tengo acceso a mi app/i }),
-    );
-    expect(screen.getByLabelText("Código de recuperación")).toBeInTheDocument();
+    afterEach(() => {
+      vi.useRealTimers();
+    });
 
-    await typer.click(
-      screen.getByRole("button", { name: /volver al código de la app/i }),
-    );
-    expect(screen.getByLabelText("Código")).toBeInTheDocument();
+    it("muestra el tiempo restante real recibido del backend", () => {
+      render(
+        <TwoFactorVerifyForm
+          expiresIn={125}
+          onChallengeLost={vi.fn()}
+          onVerified={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText("2:05")).toBeInTheDocument();
+    });
+
+    it("al llegar a cero avisa que el desafio vencio, sin esperar al backend", async () => {
+      const onChallengeLost = vi.fn();
+      render(
+        <TwoFactorVerifyForm
+          expiresIn={2}
+          onChallengeLost={onChallengeLost}
+          onVerified={vi.fn()}
+        />,
+      );
+
+      await act(async () => {
+        await vi.advanceTimersByTimeAsync(2000);
+      });
+
+      expect(onChallengeLost).toHaveBeenCalledWith(
+        TWO_FACTOR_CHALLENGE_EXPIRED,
+      );
+    });
   });
 });
