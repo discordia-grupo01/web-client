@@ -42,7 +42,9 @@ export function CreateChannelModal({
 }: CreateChannelModalProps) {
   const [kind, setKind] = useState<"text" | "voice">("text");
   const [name, setName] = useState("");
-  const [categoryId, setCategoryId] = useState(defaultCategoryId ?? "");
+  const [categoryId, setCategoryId] = useState(
+    defaultCategoryId ?? categories[0]?.id ?? "",
+  );
   const [nameError, setNameError] = useState("");
   const [globalError, setGlobalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -206,13 +208,10 @@ export function CreateChannelModal({
               label="Categoría"
               value={categoryId}
               onChange={setCategoryId}
-              options={[
-                { value: "", label: "Sin categoría" },
-                ...categories.map((category) => ({
-                  value: category.id,
-                  label: category.name,
-                })),
-              ]}
+              options={categories.map((category) => ({
+                value: category.id,
+                label: category.name,
+              }))}
             />
           </div>
 

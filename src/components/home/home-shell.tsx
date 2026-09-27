@@ -105,7 +105,7 @@ export function HomeShell({
             "flex size-12 cursor-pointer items-center justify-center rounded-2xl transition-all",
             selectedServerId === null
               ? "bg-accent text-white"
-              : "bg-surface-input text-content-muted hover:bg-accent/30",
+              : "bg-surface-input text-on-accent/70 hover:bg-accent/30 hover:text-on-accent",
           )}
         >
           <HomeIcon size={20} />

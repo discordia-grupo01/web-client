@@ -470,18 +470,29 @@ export function ServerView({
       const targetCategoryId = bucketCategoryId(overBucket);
       if (targetCategoryId === channel.category_id) return;
 
+      const previousChannels = server.channels;
+      onServerUpdate({
+        ...server,
+        channels: previousChannels.map((existing) =>
+          existing.id === channel.id
+            ? { ...existing, category_id: targetCategoryId }
+            : existing,
+        ),
+      });
+
       const result = await moveChannelToCategoryRequest(
         channel.id,
         targetCategoryId,
       );
       if (!result.ok) {
         setDragError(result.message);
+        onServerUpdate({ ...server, channels: previousChannels });
         return;
       }
 
       onServerUpdate({
         ...server,
-        channels: server.channels.map((existing) =>
+        channels: previousChannels.map((existing) =>
           existing.id === channel.id ? result.channel : existing,
         ),
       });
