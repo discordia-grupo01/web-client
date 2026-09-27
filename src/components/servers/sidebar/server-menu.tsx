@@ -13,8 +13,9 @@ import {
 import { ServerMenuItem } from "./server-menu-item";
 
 interface ServerMenuProps {
-  isOwner: boolean;
-  /** El owner lo inicia; el destinatario de una pendiente lo responde. */
+  canManageServer: boolean;
+  canManageChannels: boolean;
+  canManageRoles: boolean;
   transferLabel: string | null;
   onClose: () => void;
   onInvite: () => void;
@@ -26,18 +27,10 @@ interface ServerMenuProps {
   onLeave: () => void;
 }
 
-/**
- * Menu desplegable del servidor. Las opciones de administracion son
- * owner-only porque hoy el backend no tiene permisos mas finos:
- * `RequireManageChannels`, `RequireManageRoles` y `RequireManageServer` son
- * los tres literalmente "es el owner" (ver `servers/internal/service/authz.go`).
- * Cuando el backend tenga permisos por rol, este es el unico lugar que hay que
- * cambiar del lado de la UI.
- *
- * No hay notificaciones ni buscador: no existen todavia del lado del back.
- */
 export function ServerMenu({
-  isOwner,
+  canManageServer,
+  canManageChannels,
+  canManageRoles,
   transferLabel,
   onClose,
   onInvite,
@@ -71,13 +64,16 @@ export function ServerMenu({
           onClick={run(onInvite)}
         />
 
-        {isOwner ? (
+        {canManageServer ? (
+          <ServerMenuItem
+            icon={Settings}
+            label="Configuración del servidor"
+            onClick={run(onOpenSettings)}
+          />
+        ) : null}
+
+        {canManageChannels ? (
           <>
-            <ServerMenuItem
-              icon={Settings}
-              label="Configuración del servidor"
-              onClick={run(onOpenSettings)}
-            />
             <ServerMenuItem
               icon={Plus}
               label="Crear canal"
@@ -88,12 +84,15 @@ export function ServerMenu({
               label="Crear categoría"
               onClick={run(onCreateCategory)}
             />
-            <ServerMenuItem
-              icon={Shield}
-              label="Gestionar roles"
-              onClick={run(onManageRoles)}
-            />
           </>
+        ) : null}
+
+        {canManageRoles ? (
+          <ServerMenuItem
+            icon={Shield}
+            label="Gestionar roles"
+            onClick={run(onManageRoles)}
+          />
         ) : null}
 
         {transferLabel ? (
