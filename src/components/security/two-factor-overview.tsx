@@ -1,6 +1,9 @@
 "use client";
 
-import { twoFactorRecoveryCodesRemaining } from "@discordia/client-shared";
+import {
+  RECOVERY_CODES_LOW_THRESHOLD,
+  twoFactorRecoveryCodesRemaining,
+} from "@discordia/client-shared";
 
 import { Download, KeyRound, Lock, ShieldCheck } from "lucide-react";
 
@@ -60,7 +63,7 @@ export function TwoFactorOverview({
             <p
               className={cn(
                 "mt-1 text-xs",
-                recoveryCodesRemaining <= 2
+                recoveryCodesRemaining <= RECOVERY_CODES_LOW_THRESHOLD
                   ? "text-highlight"
                   : "text-content-subtle",
               )}
