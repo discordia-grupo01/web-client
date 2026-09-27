@@ -23,28 +23,31 @@ type OpenModal = null | "invite" | "settings" | "roles" | "leave" | "transfer";
 interface ServerSidebarHeaderProps {
   server: ServerSummary;
   isBannerVisible: boolean;
+  canManageServer: boolean;
+  canManageChannels: boolean;
+  canManageRoles: boolean;
   onLeft: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
   onServerUpdated: (server: ServerSummary) => void;
   /** Se dispara cuando YO acepto una transferencia: paso a ser el nuevo owner. */
   onOwnershipAccepted: () => void;
+  /** Se dispara al cerrar el modal de roles: los permisos propios pudieron cambiar. */
+  onPermissionsChanged: () => void;
 }
 
-/**
- * Header del panel de canales: banner (si hay) + nombre + menu desplegable.
- * Aca solo vive el estado (que menu/modal esta abierto y la transferencia
- * pendiente); como se ve el boton esta en `ServerHeaderTrigger` y las
- * opciones en `ServerMenu`.
- */
 export function ServerSidebarHeader({
   server,
   isBannerVisible,
+  canManageServer,
+  canManageChannels,
+  canManageRoles,
   onLeft,
   onCreateChannel,
   onCreateCategory,
   onServerUpdated,
   onOwnershipAccepted,
+  onPermissionsChanged,
 }: ServerSidebarHeaderProps) {
   const { user } = useAuth();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -104,7 +107,9 @@ export function ServerSidebarHeader({
 
       {isMenuOpen ? (
         <ServerMenu
-          isOwner={isOwner}
+          canManageServer={canManageServer}
+          canManageChannels={canManageChannels}
+          canManageRoles={canManageRoles}
           transferLabel={transferLabel}
           onClose={() => setIsMenuOpen(false)}
           onInvite={() => setOpenModal("invite")}
@@ -125,7 +130,7 @@ export function ServerSidebarHeader({
         />
       ) : null}
 
-      {openModal === "settings" ? (
+      {openModal === "settings" && canManageServer ? (
         <ServerSettingsModal
           server={server}
           onClose={closeModal}
@@ -136,11 +141,14 @@ export function ServerSidebarHeader({
         />
       ) : null}
 
-      {openModal === "roles" ? (
+      {openModal === "roles" && canManageRoles ? (
         <RolesModal
           serverId={server.id}
           serverName={server.name}
-          onClose={closeModal}
+          onClose={() => {
+            closeModal();
+            onPermissionsChanged();
+          }}
         />
       ) : null}
 
