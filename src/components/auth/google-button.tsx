@@ -14,7 +14,7 @@ import { oauthGoogleLoginRequest } from "@/services/auth/client";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
-import { TwoFactorVerifyForm } from "./two-factor-verify-form";
+import { TwoFactorLoginStep } from "./two-factor-login-step";
 
 const CLIENT_SIDE_ERROR_MESSAGE = GOOGLE_CONNECT_FAILED;
 
@@ -22,6 +22,10 @@ const CLIENT_SIDE_ERROR_MESSAGE = GOOGLE_CONNECT_FAILED;
 // permitido 400px). Se escala via CSS para cubrir el boton visual.
 const GOOGLE_BUTTON_WIDTH = 400;
 const GOOGLE_BUTTON_HEIGHT = 40;
+
+interface GoogleButtonProps {
+  onTwoFactorChallengeChange?: (active: boolean) => void;
+}
 
 /**
  * Login federado con Google (CA1: cuenta nueva, CA2: cuenta existente por
@@ -32,7 +36,9 @@ const GOOGLE_BUTTON_HEIGHT = 40;
  * JWT via `onSuccess` (`credentialResponse.credential`), que es lo que el
  * backend espera como `id_token`.
  */
-export function GoogleButton() {
+export function GoogleButton({
+  onTwoFactorChallengeChange,
+}: GoogleButtonProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -76,6 +82,7 @@ export function GoogleButton() {
     if (result.twoFactorRequired) {
       setChallengeExpiresIn(result.expiresIn);
       setAwaitingTwoFactor(true);
+      onTwoFactorChallengeChange?.(true);
       return;
     }
 
@@ -105,12 +112,19 @@ export function GoogleButton() {
   function handleChallengeLost(message: string) {
     setAwaitingTwoFactor(false);
     setError(message);
+    onTwoFactorChallengeChange?.(false);
+  }
+
+  function handleBack() {
+    setAwaitingTwoFactor(false);
+    onTwoFactorChallengeChange?.(false);
   }
 
   if (awaitingTwoFactor) {
     return (
-      <TwoFactorVerifyForm
+      <TwoFactorLoginStep
         expiresIn={challengeExpiresIn}
+        onBack={handleBack}
         onChallengeLost={handleChallengeLost}
         onVerified={handleVerified}
       />

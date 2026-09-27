@@ -104,8 +104,8 @@ export function HomeShell({
           className={cn(
             "flex size-12 cursor-pointer items-center justify-center rounded-2xl transition-all",
             selectedServerId === null
-              ? "bg-accent text-white"
-              : "bg-surface-input text-on-accent/70 hover:bg-accent/30 hover:text-on-accent",
+              ? "bg-rail-active-bg text-rail-active-text"
+              : "bg-rail-surface text-on-accent/70 hover:bg-rail-surface-hover hover:text-on-accent",
           )}
         >
           <HomeIcon size={20} />
@@ -118,7 +118,7 @@ export function HomeShell({
           return (
             <div key={server.id} className="relative">
               {active ? (
-                <div className="bg-accent absolute top-1/2 -left-2 h-8 w-1 -translate-y-1/2 rounded-r-full" />
+                <div className="bg-server-pill absolute top-1/2 -left-2 h-8 w-1 -translate-y-1/2 rounded-r-full" />
               ) : null}
               <button
                 type="button"
@@ -140,7 +140,7 @@ export function HomeShell({
           type="button"
           onClick={() => setIsCreateModalOpen(true)}
           aria-label="Crear servidor"
-          className="bg-surface-input text-success hover:bg-success/15 flex size-12 cursor-pointer items-center justify-center rounded-full transition-all hover:rounded-2xl"
+          className="bg-rail-surface text-success hover:bg-success/15 flex size-12 cursor-pointer items-center justify-center rounded-full transition-all hover:rounded-2xl"
         >
           <Plus size={22} />
         </button>
