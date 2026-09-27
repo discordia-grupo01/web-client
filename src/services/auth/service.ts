@@ -28,6 +28,7 @@ const REFRESH_COOKIE_NAME = "refresh_token";
  *   POST  /v1/logout              -> 204 (cookie refresh_token, ya no Bearer) | 401 SESSION_EXPIRED
  *   POST  /v1/password-recovery   -> 202 (siempre, exista o no el email) | 400 | 429 RECOVERY_RATE_LIMITED
  *   POST  /v1/password-reset      -> 200 | 400 (PASSWORDS_DO_NOT_MATCH | INSECURE_PASSWORD | INVALID_RESET_TOKEN)
+ *   POST  /v1/me/password         -> 204 | 400 INSECURE_PASSWORD | 409 PASSWORD_ALREADY_SET
  *
  * El refresh token nunca viaja en el body: siempre se extrae del header
  * Set-Cookie de login/refresh, y se manda de vuelta como header Cookie manual
@@ -131,6 +132,17 @@ export function resetPassword(data: {
   return apiRequest<{ message: string }>("/v1/password-reset", {
     method: "POST",
     data,
+  });
+}
+
+export function setAccountPassword(
+  token: string,
+  password: string,
+): Promise<ApiResult<void>> {
+  return apiRequest<void>("/v1/me/password", {
+    method: "POST",
+    token,
+    data: { password },
   });
 }
 

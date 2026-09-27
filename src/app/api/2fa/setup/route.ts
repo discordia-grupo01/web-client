@@ -1,5 +1,6 @@
 import {
   TWO_FACTOR_ALREADY_ENABLED,
+  TWO_FACTOR_PASSWORD_REQUIRED,
   TWO_FACTOR_SETUP_UNAVAILABLE,
   type TwoFactorSetupResult,
 } from "@discordia/client-shared";
@@ -24,6 +25,16 @@ export async function POST(): Promise<NextResponse<TwoFactorSetupResult>> {
   if (!result.ok) {
     if (result.status === 401) {
       return unauthorizedResponse();
+    }
+    if (result.code === "PASSWORD_REQUIRED_FOR_TWO_FACTOR") {
+      return NextResponse.json(
+        {
+          ok: false,
+          message: TWO_FACTOR_PASSWORD_REQUIRED,
+          passwordRequired: true,
+        },
+        { status: 409 },
+      );
     }
     if (result.status === 409) {
       return NextResponse.json(

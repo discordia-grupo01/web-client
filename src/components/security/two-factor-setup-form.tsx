@@ -12,7 +12,7 @@ import {
 
 import { Check, Copy, KeyRound, Loader2, Smartphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
-import { useEffect, useState, type FormEvent } from "react";
+import { useCallback, useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
@@ -21,6 +21,8 @@ import {
   twoFactorActivateRequest,
   twoFactorSetupRequest,
 } from "@/services/two-factor/client";
+
+import { SetPasswordStep } from "./set-password-step";
 
 interface TwoFactorSetupFormProps {
   onCancel: () => void;
@@ -38,24 +40,25 @@ export function TwoFactorSetupForm({
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [secretCopied, setSecretCopied] = useState(false);
+  const [needsPassword, setNeedsPassword] = useState(false);
+
+  const fetchSetup = useCallback(async () => {
+    setIsLoading(true);
+    setNeedsPassword(false);
+    const result = await twoFactorSetupRequest();
+    setIsLoading(false);
+    if (result.ok) {
+      setSetup(result.setup);
+    } else if (result.passwordRequired) {
+      setNeedsPassword(true);
+    } else {
+      setFormError(result.message);
+    }
+  }, []);
 
   useEffect(() => {
-    let active = true;
-
-    void twoFactorSetupRequest().then((result) => {
-      if (!active) return;
-      setIsLoading(false);
-      if (result.ok) {
-        setSetup(result.setup);
-      } else {
-        setFormError(result.message);
-      }
-    });
-
-    return () => {
-      active = false;
-    };
-  }, []);
+    void fetchSetup();
+  }, [fetchSetup]);
 
   async function copySecret() {
     if (!setup) return;
@@ -99,6 +102,10 @@ export function TwoFactorSetupForm({
         />
       </div>
     );
+  }
+
+  if (needsPassword) {
+    return <SetPasswordStep onCancel={onCancel} onPasswordReady={fetchSetup} />;
   }
 
   if (!setup) {
