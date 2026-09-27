@@ -2,7 +2,7 @@ import { forwardRef, type ButtonHTMLAttributes } from "react";
 
 import { cn } from "@/lib/cn";
 
-type Variant = "primary" | "secondary";
+type Variant = "primary" | "secondary" | "danger";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;
@@ -14,6 +14,8 @@ const VARIANTS: Record<Variant, string> = {
     "bg-gradient-to-br from-accent-gradient-start to-accent-gradient-end text-on-accent shadow-[0_6px_20px_rgba(36,92,107,0.4)] hover:brightness-110",
   secondary:
     "bg-surface-input text-content-muted border border-line hover:border-line-strong",
+  danger:
+    "bg-gradient-to-br from-[#c0392b] to-[#922b21] text-white shadow-[0_6px_20px_rgba(192,57,43,0.4)] hover:brightness-110",
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
