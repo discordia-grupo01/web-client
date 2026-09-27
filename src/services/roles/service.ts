@@ -20,13 +20,13 @@ import { apiRequest, type ApiResult } from "@/lib/api-client";
  *   GET    /v1/servers/:id/members/:userId/roles   -> 200 [Role] | 401 | 404
  *
  * Nota sobre roles (ver servers/internal/service/role_service,
- * member_role_service): "tener permisos de administracion" en TODOS estos
- * endpoints hoy es literalmente "ser el owner del servidor"
- * (`service.RequireManageRoles`) -- el bitmask de permisos que guarda cada
- * rol no habilita ni restringe nada todavia. Tampoco hay endpoint que
- * exponga cual es el rol por defecto del servidor (`default_role_id` no
- * viaja en `ServerSummary`), asi que el front puede *fijar* el default pero
- * no puede mostrar de forma confiable cual es el actual.
+ * member_role_service): estos endpoints exigen `service.RequireManageRoles`,
+ * que hoy ya mira el bitmask de permisos efectivo del actor (el owner sigue
+ * pudiendo todo, pero cualquier miembro con `MANAGE_ROLES` via algun rol
+ * tambien) -- no es "ser el owner" a secas. Tampoco hay endpoint que exponga
+ * cual es el rol por defecto del servidor (`default_role_id` no viaja en
+ * `ServerSummary`), asi que el front puede *fijar* el default pero no puede
+ * mostrar de forma confiable cual es el actual.
  */
 
 interface CreateRoleInput {
