@@ -4,6 +4,8 @@ import {
   EMAIL_NOT_VERIFIED,
   hasErrors,
   type LoginErrors,
+  TWO_FACTOR_RECOVERY_CODE_USED,
+  twoFactorRecoveryCodesRemaining,
   validateLogin,
 } from "@discordia/client-shared";
 
@@ -18,7 +20,13 @@ import { TextField } from "@/components/ui/text-field";
 import { loginRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 
-export function LoginForm() {
+import { TwoFactorLoginStep } from "./two-factor-login-step";
+
+interface LoginFormProps {
+  onTwoFactorChallengeChange?: (active: boolean) => void;
+}
+
+export function LoginForm({ onTwoFactorChallengeChange }: LoginFormProps) {
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
@@ -26,6 +34,8 @@ export function LoginForm() {
   const [errors, setErrors] = useState<LoginErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [awaitingTwoFactor, setAwaitingTwoFactor] = useState(false);
+  const [challengeExpiresIn, setChallengeExpiresIn] = useState(0);
   const resetSuccess = searchParams.get("reset") === "success";
   const justRegistered = searchParams.get("registered") === "1";
 
@@ -50,8 +60,57 @@ export function LoginForm() {
       return;
     }
 
+    if (result.twoFactorRequired) {
+      setPassword("");
+      setChallengeExpiresIn(result.expiresIn);
+      setAwaitingTwoFactor(true);
+      onTwoFactorChallengeChange?.(true);
+      return;
+    }
+
+    goToNextPage();
+  }
+
+  function goToNextPage() {
     const next = searchParams.get("next");
     window.location.href = next && next.startsWith("/") ? next : ROUTES.home;
+  }
+
+  function handleVerified(result: {
+    recoveryCodeUsed: boolean;
+    recoveryCodesRemaining: number;
+  }) {
+    if (!result.recoveryCodeUsed) {
+      goToNextPage();
+      return;
+    }
+
+    const notice = `${TWO_FACTOR_RECOVERY_CODE_USED} ${twoFactorRecoveryCodesRemaining(result.recoveryCodesRemaining)}`;
+    window.location.href = `${ROUTES.home}?notice=${encodeURIComponent(notice)}`;
+  }
+
+  function handleChallengeLost(message: string) {
+    setAwaitingTwoFactor(false);
+    setPassword("");
+    setFormError(message);
+    onTwoFactorChallengeChange?.(false);
+  }
+
+  function handleBack() {
+    setAwaitingTwoFactor(false);
+    setPassword("");
+    onTwoFactorChallengeChange?.(false);
+  }
+
+  if (awaitingTwoFactor) {
+    return (
+      <TwoFactorLoginStep
+        expiresIn={challengeExpiresIn}
+        onBack={handleBack}
+        onChallengeLost={handleChallengeLost}
+        onVerified={handleVerified}
+      />
+    );
   }
 
   return (

@@ -373,6 +373,8 @@ export function OwnProfileModal({
             )}
           </div>
 
+          <div className="bg-line h-px" />
+
           <MemberSince isoDate={profile.created_at} />
 
           {serverId ? (

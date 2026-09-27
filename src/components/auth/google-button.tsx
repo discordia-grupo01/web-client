@@ -1,6 +1,10 @@
 "use client";
 
-import { GOOGLE_CONNECT_FAILED } from "@discordia/client-shared";
+import {
+  GOOGLE_CONNECT_FAILED,
+  TWO_FACTOR_RECOVERY_CODE_USED,
+  twoFactorRecoveryCodesRemaining,
+} from "@discordia/client-shared";
 
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useEffect, useRef, useState } from "react";
@@ -10,12 +14,18 @@ import { oauthGoogleLoginRequest } from "@/services/auth/client";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
+import { TwoFactorLoginStep } from "./two-factor-login-step";
+
 const CLIENT_SIDE_ERROR_MESSAGE = GOOGLE_CONNECT_FAILED;
 
 // Tamano con el que Google renderiza el boton (`size="large"`, ancho maximo
 // permitido 400px). Se escala via CSS para cubrir el boton visual.
 const GOOGLE_BUTTON_WIDTH = 400;
 const GOOGLE_BUTTON_HEIGHT = 40;
+
+interface GoogleButtonProps {
+  onTwoFactorChallengeChange?: (active: boolean) => void;
+}
 
 /**
  * Login federado con Google (CA1: cuenta nueva, CA2: cuenta existente por
@@ -26,11 +36,15 @@ const GOOGLE_BUTTON_HEIGHT = 40;
  * JWT via `onSuccess` (`credentialResponse.credential`), que es lo que el
  * backend espera como `id_token`.
  */
-export function GoogleButton() {
+export function GoogleButton({
+  onTwoFactorChallengeChange,
+}: GoogleButtonProps) {
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState({ x: 1, y: 1 });
+  const [awaitingTwoFactor, setAwaitingTwoFactor] = useState(false);
+  const [challengeExpiresIn, setChallengeExpiresIn] = useState(0);
 
   useEffect(() => {
     const container = containerRef.current;
@@ -65,6 +79,13 @@ export function GoogleButton() {
       return;
     }
 
+    if (result.twoFactorRequired) {
+      setChallengeExpiresIn(result.expiresIn);
+      setAwaitingTwoFactor(true);
+      onTwoFactorChallengeChange?.(true);
+      return;
+    }
+
     window.location.href = ROUTES.home;
   }
 
@@ -73,6 +94,41 @@ export function GoogleButton() {
     // lado del navegador (CA3, version cliente). El formulario de email y
     // contrasena sigue visible al lado, sin necesidad de tocar nada mas.
     setError(CLIENT_SIDE_ERROR_MESSAGE);
+  }
+
+  function handleVerified(result: {
+    recoveryCodeUsed: boolean;
+    recoveryCodesRemaining: number;
+  }) {
+    if (!result.recoveryCodeUsed) {
+      window.location.href = ROUTES.home;
+      return;
+    }
+
+    const notice = `${TWO_FACTOR_RECOVERY_CODE_USED} ${twoFactorRecoveryCodesRemaining(result.recoveryCodesRemaining)}`;
+    window.location.href = `${ROUTES.home}?notice=${encodeURIComponent(notice)}`;
+  }
+
+  function handleChallengeLost(message: string) {
+    setAwaitingTwoFactor(false);
+    setError(message);
+    onTwoFactorChallengeChange?.(false);
+  }
+
+  function handleBack() {
+    setAwaitingTwoFactor(false);
+    onTwoFactorChallengeChange?.(false);
+  }
+
+  if (awaitingTwoFactor) {
+    return (
+      <TwoFactorLoginStep
+        expiresIn={challengeExpiresIn}
+        onBack={handleBack}
+        onChallengeLost={handleChallengeLost}
+        onVerified={handleVerified}
+      />
+    );
   }
 
   return (

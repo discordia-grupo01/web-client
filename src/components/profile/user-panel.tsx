@@ -7,6 +7,7 @@ import { useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { LogoutConfirmModal } from "@/components/profile/logout-confirm-modal";
+import { AccountSettingsModal } from "@/components/settings/account-settings-modal";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 
 interface UserPanelProps {
@@ -14,16 +15,9 @@ interface UserPanelProps {
   onClick: () => void;
 }
 
-/**
- * Barra fija al pie de la lista de canales: avatar + nombre propios, con
- * acceso directo al perfil (CA1). El icono de edicion vive dentro del modal
- * de perfil (`OwnProfileModal`), no aca.
- *
- * Mic/headphones/settings son decorativos (igual que en el prototipo Figma):
- * todavia no hay voz ni tema claro implementados en la app.
- */
 export function UserPanel({ user, onClick }: UserPanelProps) {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
+  const [isSettingsOpen, setIsSettingsOpen] = useState(false);
 
   return (
     <>
@@ -82,6 +76,7 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
           <button
             type="button"
             title="Ajustes"
+            onClick={() => setIsSettingsOpen(true)}
             className="text-content-muted hover:bg-surface-hover flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors"
           >
             <Settings size={15} />
@@ -99,6 +94,10 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
 
       {isLogoutModalOpen ? (
         <LogoutConfirmModal onClose={() => setIsLogoutModalOpen(false)} />
+      ) : null}
+
+      {isSettingsOpen ? (
+        <AccountSettingsModal onClose={() => setIsSettingsOpen(false)} />
       ) : null}
     </>
   );

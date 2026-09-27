@@ -8,6 +8,8 @@ import {
   REQUEST_FAILED_MESSAGE,
   type ResetPasswordResult,
   type EmailConfirmationResult,
+  type SetPasswordResult,
+  type SetPasswordValues,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browser-api-client";
@@ -37,6 +39,23 @@ export async function oauthGoogleLoginRequest(
   try {
     const { data } = await api.post<LoginResult>("/auth/oauth/google", {
       idToken,
+    });
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: REQUEST_FAILED_MESSAGE,
+    };
+  }
+}
+
+export async function setPasswordRequest(
+  values: SetPasswordValues,
+): Promise<SetPasswordResult> {
+  try {
+    const { data } = await api.post<SetPasswordResult>("/auth/password", {
+      password: values.password,
+      confirmPassword: values.confirmPassword,
     });
     return data;
   } catch {

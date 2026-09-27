@@ -12,14 +12,6 @@ interface MutualServersListProps {
   serverIds: string[];
 }
 
-/**
- * Servidores en común con el usuario del perfil público (CA1 de
- * "Visualización de perfil público"). `mutual_server_ids` solo trae ids
- * (identify-service no conoce nombre/ícono de servidor); como por
- * definición el usuario autenticado es miembro de esos servidores, se
- * resuelven cruzando contra `listServersRequest` (ya usado por el rail de
- * servidores) en vez de agregar un endpoint nuevo.
- */
 export function MutualServersList({ serverIds }: MutualServersListProps) {
   const [servers, setServers] = useState<ServerSummary[] | null>(null);
 

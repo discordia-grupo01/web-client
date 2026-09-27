@@ -161,8 +161,12 @@ function InvitationRow({
  * Lista todas las invitaciones del server (GET /v1/servers/:id/invites) y
  * permite generar nuevas o revocar las activas. El back permite varias
  * invitaciones activas a la vez (no hay "la" invitacion actual), asi que
- * mostramos todo el historial en vez de fingir que hay una sola.
+ * mostramos todo el historial en vez de fingir que hay una sola -- separado
+ * en dos solapas (activas / inactivas) para no mezclar links que ya no
+ * sirven con los que si.
  */
+type InviteTab = "active" | "inactive";
+
 export function InviteModal({
   serverId,
   serverName,
@@ -172,6 +176,7 @@ export function InviteModal({
   const [maxUsesInput, setMaxUsesInput] = useState("");
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
+  const [activeTab, setActiveTab] = useState<InviteTab>("active");
 
   useEffect(() => {
     let cancelled = false;
@@ -221,6 +226,13 @@ export function InviteModal({
         ) ?? null,
     );
   }
+
+  const activeInvitations =
+    invitations?.filter((inv) => inviteStatus(inv) === "active") ?? [];
+  const inactiveInvitations =
+    invitations?.filter((inv) => inviteStatus(inv) !== "active") ?? [];
+  const visibleInvitations =
+    activeTab === "active" ? activeInvitations : inactiveInvitations;
 
   return (
     <div
@@ -297,8 +309,35 @@ export function InviteModal({
 
         <div className="flex-1 overflow-y-auto px-7 pb-7">
           <p className="text-content-subtle mb-2 text-xs font-bold tracking-wider uppercase">
-            Invitaciones {invitations !== null ? `— ${invitations.length}` : ""}
+            Invitaciones
           </p>
+
+          <div className="bg-surface-input mb-3 flex items-center gap-1 rounded-xl p-1">
+            <button
+              type="button"
+              onClick={() => setActiveTab("active")}
+              className={cn(
+                "flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+                activeTab === "active"
+                  ? "bg-accent text-white"
+                  : "text-content-muted hover:text-content",
+              )}
+            >
+              Activas ({activeInvitations.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab("inactive")}
+              className={cn(
+                "flex-1 cursor-pointer rounded-lg px-3 py-1.5 text-xs font-semibold transition-colors",
+                activeTab === "inactive"
+                  ? "bg-accent text-white"
+                  : "text-content-muted hover:text-content",
+              )}
+            >
+              Inactivas ({inactiveInvitations.length})
+            </button>
+          </div>
 
           {invitations === null ? (
             <div className="flex items-center justify-center py-8">
@@ -308,9 +347,15 @@ export function InviteModal({
             <p className="text-content-muted py-4 text-center text-sm">
               Todavía no hay invitaciones. Generá una arriba.
             </p>
+          ) : visibleInvitations.length === 0 ? (
+            <p className="text-content-muted py-4 text-center text-sm">
+              {activeTab === "active"
+                ? "No tenés invitaciones activas en este momento."
+                : "Todavía no hay invitaciones inactivas."}
+            </p>
           ) : (
             <div className="space-y-2.5">
-              {invitations.map((inv) => (
+              {visibleInvitations.map((inv) => (
                 <InvitationRow
                   key={inv.code}
                   invitation={inv}
