@@ -23,7 +23,7 @@ const REFRESH_COOKIE_NAME = "refresh_token";
  * Endpoints reales (ver identify-service/openapi.yaml):
  *   POST  /v1/users              -> 201 User (SIN token) | 400 | 409 (email en uso)
  *   POST  /v1/login               -> 200 { user, token } + Set-Cookie refresh_token | 400 | 401 INVALID_CREDENTIALS
- *   POST  /v1/oauth/google        -> 200 { user, token } + Set-Cookie refresh_token (idem /v1/login) | 400 INVALID_INPUT | 401 OAUTH_TOKEN_INVALID | 503 OAUTH_PROVIDER_UNAVAILABLE
+ *   POST  /v1/oauth/google        -> 200 { user, token } + Set-Cookie refresh_token, o 202 desafio de 2FA (idem /v1/login) | 400 INVALID_INPUT | 401 OAUTH_TOKEN_INVALID | 503 OAUTH_PROVIDER_UNAVAILABLE
  *   POST  /v1/refresh             -> 200 { user, token } + Set-Cookie refresh_token (rotado) | 401 SESSION_EXPIRED
  *   POST  /v1/logout              -> 204 (cookie refresh_token, ya no Bearer) | 401 SESSION_EXPIRED
  *   POST  /v1/password-recovery   -> 202 (siempre, exista o no el email) | 400 | 429 RECOVERY_RATE_LIMITED
@@ -70,15 +70,22 @@ export async function login(credentials: {
   };
 }
 
-/** Login federado con Google: el backend crea la cuenta (CA1) o vincula la identidad a una existente (CA2). */
-export async function loginWithGoogle(
-  idToken: string,
-): Promise<{ result: ApiResult<AuthResponse>; refreshToken: string | null }> {
-  const { result, setCookieHeader } =
-    await apiRequestWithSetCookie<AuthResponse>("/v1/oauth/google", {
-      method: "POST",
-      data: { id_token: idToken },
-    });
+/**
+ * Login federado con Google: el backend crea la cuenta (CA1) o vincula la
+ * identidad a una existente (CA2). El 200 trae la sesion, o un desafio de
+ * segundo factor (202) si la cuenta a la que se resolvio tiene 2FA activo:
+ * "Continuar con Google" no puede ser una forma de esquivarlo.
+ */
+export async function loginWithGoogle(idToken: string): Promise<{
+  result: ApiResult<AuthResponse | TwoFactorChallengePayload>;
+  refreshToken: string | null;
+}> {
+  const { result, setCookieHeader } = await apiRequestWithSetCookie<
+    AuthResponse | TwoFactorChallengePayload
+  >("/v1/oauth/google", {
+    method: "POST",
+    data: { id_token: idToken },
+  });
   return {
     result,
     refreshToken: extractCookieValue(setCookieHeader, REFRESH_COOKIE_NAME),

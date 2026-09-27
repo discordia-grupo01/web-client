@@ -2,6 +2,7 @@ import {
   GOOGLE_UNAVAILABLE,
   GOOGLE_VERIFY_FAILED,
   INVALID_DATA_MESSAGE,
+  isTwoFactorChallenge,
   LOGIN_UNAVAILABLE,
   type LoginResult,
   UNEXPECTED_ERROR_MESSAGE,
@@ -11,6 +12,10 @@ import { NextResponse } from "next/server";
 
 import { loginWithGoogle } from "@/services/auth/service";
 import { createSession } from "@/services/auth/session";
+import {
+  clearChallengeCookie,
+  setChallengeCookie,
+} from "@/services/two-factor/challenge-cookie";
 
 export async function POST(
   request: Request,
@@ -77,6 +82,16 @@ export async function POST(
       { status: 502 },
     );
   }
+
+  if (isTwoFactorChallenge(result.data)) {
+    setChallengeCookie(result.data.challenge_token);
+    return NextResponse.json(
+      { ok: true, twoFactorRequired: true, expiresIn: result.data.expires_in },
+      { status: 200 },
+    );
+  }
+
+  clearChallengeCookie();
 
   createSession({
     token: result.data.token,
