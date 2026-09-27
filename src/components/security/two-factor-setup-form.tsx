@@ -2,6 +2,7 @@
 
 import {
   hasErrors,
+  normalizeTotpCode,
   TOTP_CODE_LENGTH,
   TWO_FACTOR_SCAN_INSTRUCTIONS,
   type TwoFactorCodeErrors,
@@ -9,13 +10,12 @@ import {
   validateTwoFactorActivationCode,
 } from "@discordia/client-shared";
 
-import { KeyRound, Loader2 } from "lucide-react";
+import { Check, Copy, KeyRound, Loader2, Smartphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/button";
 import { FormAlert } from "@/components/ui/form-alert";
-import { SectionLabel } from "@/components/ui/section-label";
 import { TextField } from "@/components/ui/text-field";
 import {
   twoFactorActivateRequest,
@@ -37,6 +37,7 @@ export function TwoFactorSetupForm({
   const [formError, setFormError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [secretCopied, setSecretCopied] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -55,6 +56,18 @@ export function TwoFactorSetupForm({
       active = false;
     };
   }, []);
+
+  async function copySecret() {
+    if (!setup) return;
+    try {
+      await navigator.clipboard.writeText(setup.secret);
+      setSecretCopied(true);
+      window.setTimeout(() => setSecretCopied(false), 2000);
+    } catch {
+      // Sin permiso de portapapeles: la clave sigue disponible para
+      // seleccionar y copiar a mano.
+    }
+  }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -117,11 +130,26 @@ export function TwoFactorSetupForm({
           </div>
         </div>
 
-        <div className="space-y-1.5">
-          <SectionLabel>Clave para ingresar a mano</SectionLabel>
-          <p className="bg-surface-input border-line text-content rounded-xl border px-4 py-3 text-center font-mono text-sm break-all">
-            {setup.secret}
+        <div>
+          <div className="text-info mb-3 flex items-center gap-2">
+            <Smartphone size={18} />
+            <span className="text-sm font-semibold">¿No podés escanear?</span>
+          </div>
+          <p className="text-content-subtle mb-2 text-xs">
+            Ingresá esta clave manualmente. Si cerrás y volvés, seguirá siendo
+            la misma.
           </p>
+          <div className="bg-surface-input border-line text-content flex items-center justify-between gap-3 rounded-xl border px-3 py-3 font-mono text-sm">
+            <span className="break-all">{setup.secret}</span>
+            <button
+              type="button"
+              onClick={() => void copySecret()}
+              aria-label="Copiar clave"
+              className="text-info shrink-0 cursor-pointer"
+            >
+              {secretCopied ? <Check size={16} /> : <Copy size={16} />}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -134,7 +162,7 @@ export function TwoFactorSetupForm({
         maxLength={TOTP_CODE_LENGTH}
         icon={<KeyRound size={16} />}
         value={code}
-        onChange={(event) => setCode(event.target.value)}
+        onChange={(event) => setCode(normalizeTotpCode(event.target.value))}
         error={errors.code}
         className="tracking-[0.3em]"
       />

@@ -13,12 +13,19 @@ import {
   twoFactorStatusRequest,
 } from "@/services/two-factor/client";
 
+import { TwoFactorDisabledConfirmation } from "./two-factor-disabled-confirmation";
 import { TwoFactorOverview } from "./two-factor-overview";
 import { TwoFactorPasswordForm } from "./two-factor-password-form";
 import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
 import { TwoFactorSetupForm } from "./two-factor-setup-form";
 
-type View = "overview" | "setup" | "recovery" | "disable" | "regenerate";
+type View =
+  | "overview"
+  | "setup"
+  | "recovery"
+  | "disable"
+  | "regenerate"
+  | "disabled-confirmation";
 
 interface TwoFactorModalProps {
   initialStatus: TwoFactorStatus;
@@ -63,7 +70,7 @@ export function TwoFactorModal({
     if (!result.ok) return result.message;
 
     await loadStatus();
-    setView("overview");
+    setView("disabled-confirmation");
     return null;
   }
 
@@ -127,13 +134,18 @@ export function TwoFactorModal({
             onCancel={() => setView("overview")}
             onConfirm={handleDisable}
           />
-        ) : (
+        ) : view === "regenerate" ? (
           <TwoFactorPasswordForm
             title="Generar códigos nuevos"
             description="Reingresá tu contraseña. Los códigos que tengas anotados dejan de servir en cuanto se genere la lista nueva."
             confirmLabel="Generar"
             onCancel={() => setView("overview")}
             onConfirm={handleRegenerate}
+          />
+        ) : (
+          <TwoFactorDisabledConfirmation
+            onClose={handleClose}
+            onReactivate={() => setView("setup")}
           />
         )}
       </div>
