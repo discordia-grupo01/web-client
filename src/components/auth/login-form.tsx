@@ -20,9 +20,13 @@ import { TextField } from "@/components/ui/text-field";
 import { loginRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 
-import { TwoFactorVerifyForm } from "./two-factor-verify-form";
+import { TwoFactorLoginStep } from "./two-factor-login-step";
 
-export function LoginForm() {
+interface LoginFormProps {
+  onTwoFactorChallengeChange?: (active: boolean) => void;
+}
+
+export function LoginForm({ onTwoFactorChallengeChange }: LoginFormProps) {
   const searchParams = useSearchParams();
 
   const [email, setEmail] = useState("");
@@ -60,6 +64,7 @@ export function LoginForm() {
       setPassword("");
       setChallengeExpiresIn(result.expiresIn);
       setAwaitingTwoFactor(true);
+      onTwoFactorChallengeChange?.(true);
       return;
     }
 
@@ -88,12 +93,20 @@ export function LoginForm() {
     setAwaitingTwoFactor(false);
     setPassword("");
     setFormError(message);
+    onTwoFactorChallengeChange?.(false);
+  }
+
+  function handleBack() {
+    setAwaitingTwoFactor(false);
+    setPassword("");
+    onTwoFactorChallengeChange?.(false);
   }
 
   if (awaitingTwoFactor) {
     return (
-      <TwoFactorVerifyForm
+      <TwoFactorLoginStep
         expiresIn={challengeExpiresIn}
+        onBack={handleBack}
         onChallengeLost={handleChallengeLost}
         onVerified={handleVerified}
       />
