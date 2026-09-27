@@ -5,6 +5,8 @@ import {
   type Channel,
   CHANNEL_START_NOTICE,
   channelsOfCategory,
+  hasPermission,
+  type Role,
   type ServerSummary,
   sortByPosition,
   type User,
@@ -39,7 +41,7 @@ import {
   Trash2,
   Volume2,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { PublicProfileModal } from "@/components/profile/public-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
@@ -55,6 +57,7 @@ import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
 } from "@/services/channels/client";
+import { listMemberRolesRequest } from "@/services/roles/client";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./sidebar/server-sidebar-header";
@@ -82,14 +85,14 @@ interface ServerViewProps {
 function ChannelRow({
   channel,
   active,
-  isOwner,
+  canManage,
   onClick,
   onEdit,
   onDelete,
 }: {
   channel: Channel;
   active: boolean;
-  isOwner: boolean;
+  canManage: boolean;
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
@@ -116,7 +119,7 @@ function ChannelRow({
         <span className="truncate">{channel.name}</span>
       </button>
 
-      {isOwner ? (
+      {canManage ? (
         <>
           <button
             type="button"
@@ -170,12 +173,12 @@ function ChannelRow({
 function SortableChannelRow(props: {
   channel: Channel;
   active: boolean;
-  isOwner: boolean;
+  canManage: boolean;
   onClick: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }) {
-  const { channel, isOwner } = props;
+  const { channel, canManage } = props;
   const {
     attributes,
     listeners,
@@ -183,9 +186,9 @@ function SortableChannelRow(props: {
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: channel.id, disabled: !isOwner });
+  } = useSortable({ id: channel.id, disabled: !canManage });
 
-  if (!isOwner) return <ChannelRow {...props} />;
+  if (!canManage) return <ChannelRow {...props} />;
 
   return (
     <div
@@ -234,7 +237,7 @@ function CategorySectionHeader({
   label,
   isCollapsed,
   onToggle,
-  isOwner,
+  canManage,
   onAddChannel,
   onEdit,
   onDelete,
@@ -242,14 +245,14 @@ function CategorySectionHeader({
   label: string;
   isCollapsed: boolean;
   onToggle: () => void;
-  isOwner: boolean;
+  canManage: boolean;
   onAddChannel?: () => void;
   onEdit?: () => void;
   onDelete?: () => void;
 }) {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const Chevron = isCollapsed ? ChevronRight : ChevronDown;
-  const hasMenu = isOwner && (onAddChannel || onEdit || onDelete);
+  const hasMenu = canManage && (onAddChannel || onEdit || onDelete);
 
   return (
     <div className="group relative flex items-center gap-0.5 px-1">
@@ -343,6 +346,41 @@ export function ServerView({
 }: ServerViewProps) {
   const { user } = useAuth();
   const isOwner = user !== null && String(user.id) === server.owner_id;
+  const [myRoles, setMyRoles] = useState<Role[]>([]);
+
+  /**
+   * Roles asignados al usuario actual en este servidor
+   */
+  const fetchMyRoles = useCallback(() => {
+    if (!user) {
+      setMyRoles([]);
+      return;
+    }
+    let cancelled = false;
+    listMemberRolesRequest(server.id, String(user.id)).then((result) => {
+      if (cancelled) return;
+      setMyRoles(result.ok ? result.roles : []);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [server.id, user]);
+
+  useEffect(() => fetchMyRoles(), [fetchMyRoles]);
+
+  const canManageChannels = hasPermission(
+    { isOwner, roles: myRoles },
+    "MANAGE_CHANNELS",
+  );
+  const canManageRoles = hasPermission(
+    { isOwner, roles: myRoles },
+    "MANAGE_ROLES",
+  );
+  const canManageServer = hasPermission(
+    { isOwner, roles: myRoles },
+    "MANAGE_SERVER",
+  );
+
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
@@ -538,7 +576,7 @@ export function ServerView({
         key={channel.id}
         channel={channel}
         active={channel.id === activeChannelId}
-        isOwner={isOwner}
+        canManage={canManageChannels}
         onClick={() => setActiveChannelId(channel.id)}
         onEdit={() => setEditingChannel(channel)}
         onDelete={() => setDeletingChannel(channel)}
@@ -556,6 +594,9 @@ export function ServerView({
         <ServerSidebarHeader
           server={server}
           isBannerVisible={isBannerVisible}
+          canManageServer={canManageServer}
+          canManageChannels={canManageChannels}
+          canManageRoles={canManageRoles}
           onLeft={onLeft}
           onCreateChannel={() => {
             setCreateChannelDefaultCategoryId(null);
@@ -567,6 +608,7 @@ export function ServerView({
             if (!user) return;
             onServerUpdate({ ...server, owner_id: String(user.id) });
           }}
+          onPermissionsChanged={fetchMyRoles}
         />
 
         {dragError ? (
@@ -588,7 +630,7 @@ export function ServerView({
                   label="Sin categoría"
                   isCollapsed={collapsedIds.has("none")}
                   onToggle={() => toggleCollapsed("none")}
-                  isOwner={false}
+                  canManage={false}
                 />
                 {!collapsedIds.has("none") ? (
                   <CategoryDropZone
@@ -611,7 +653,7 @@ export function ServerView({
                     label={category.name}
                     isCollapsed={collapsed}
                     onToggle={() => toggleCollapsed(category.id)}
-                    isOwner={isOwner}
+                    canManage={canManageChannels}
                     onAddChannel={() => {
                       setCreateChannelDefaultCategoryId(category.id);
                       setIsCreateChannelOpen(true);
@@ -761,7 +803,7 @@ export function ServerView({
         <PublicProfileModal
           serverId={server.id}
           userId={viewingUserId}
-          canManageRoles={isOwner}
+          canManageRoles={canManageRoles}
           onClose={() => setViewingUserId(null)}
         />
       ) : null}
