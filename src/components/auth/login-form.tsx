@@ -31,6 +31,7 @@ export function LoginForm() {
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [awaitingTwoFactor, setAwaitingTwoFactor] = useState(false);
+  const [challengeExpiresIn, setChallengeExpiresIn] = useState(0);
   const resetSuccess = searchParams.get("reset") === "success";
   const justRegistered = searchParams.get("registered") === "1";
 
@@ -57,6 +58,7 @@ export function LoginForm() {
 
     if (result.twoFactorRequired) {
       setPassword("");
+      setChallengeExpiresIn(result.expiresIn);
       setAwaitingTwoFactor(true);
       return;
     }
@@ -91,6 +93,7 @@ export function LoginForm() {
   if (awaitingTwoFactor) {
     return (
       <TwoFactorVerifyForm
+        expiresIn={challengeExpiresIn}
         onChallengeLost={handleChallengeLost}
         onVerified={handleVerified}
       />

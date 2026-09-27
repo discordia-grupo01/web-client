@@ -91,7 +91,7 @@ export async function POST(
   if (isTwoFactorChallenge(result.data)) {
     setChallengeCookie(result.data.challenge_token);
     return NextResponse.json(
-      { ok: true, twoFactorRequired: true },
+      { ok: true, twoFactorRequired: true, expiresIn: result.data.expires_in },
       { status: 200 },
     );
   }

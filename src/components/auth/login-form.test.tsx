@@ -135,7 +135,11 @@ describe("<LoginForm />", () => {
   // CA2: con 2FA activo la contraseña correcta no entra a ningún lado; la
   // pantalla pasa al paso del código.
   it("con 2FA activo pasa al paso del codigo en vez de redirigir", async () => {
-    loginRequestMock.mockResolvedValue({ ok: true, twoFactorRequired: true });
+    loginRequestMock.mockResolvedValue({
+      ok: true,
+      twoFactorRequired: true,
+      expiresIn: 300,
+    });
     const user = userEvent.setup();
     render(<LoginForm />);
 
@@ -146,12 +150,18 @@ describe("<LoginForm />", () => {
     await user.type(screen.getByLabelText("Contraseña"), "Secure123");
     await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
-    expect(await screen.findByLabelText("Código")).toBeInTheDocument();
+    expect(
+      await screen.findByLabelText("Código de seguridad"),
+    ).toBeInTheDocument();
     expect(window.location.href).toBe("");
   });
 
   it("vuelve al paso de la contrasena cuando el desafio se vence", async () => {
-    loginRequestMock.mockResolvedValue({ ok: true, twoFactorRequired: true });
+    loginRequestMock.mockResolvedValue({
+      ok: true,
+      twoFactorRequired: true,
+      expiresIn: 300,
+    });
     twoFactorVerifyRequestMock.mockResolvedValue({
       ok: false,
       message: TWO_FACTOR_CHALLENGE_EXPIRED,
@@ -167,7 +177,10 @@ describe("<LoginForm />", () => {
     await user.type(screen.getByLabelText("Contraseña"), "Secure123");
     await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
-    await user.type(await screen.findByLabelText("Código"), "123456");
+    await user.type(
+      await screen.findByLabelText("Código de seguridad"),
+      "123456",
+    );
     await user.click(screen.getByRole("button", { name: /verificar/i }));
 
     expect(await screen.findByLabelText("Contraseña")).toBeInTheDocument();
@@ -179,7 +192,11 @@ describe("<LoginForm />", () => {
   // CA4: entrar con un código de recuperación arrastra el aviso de regenerar
   // la lista hasta la pantalla siguiente.
   it("tras usar un codigo de recuperacion redirige con el aviso de regenerar", async () => {
-    loginRequestMock.mockResolvedValue({ ok: true, twoFactorRequired: true });
+    loginRequestMock.mockResolvedValue({
+      ok: true,
+      twoFactorRequired: true,
+      expiresIn: 300,
+    });
     twoFactorVerifyRequestMock.mockResolvedValue({
       ok: true,
       user: {
@@ -205,7 +222,10 @@ describe("<LoginForm />", () => {
     await user.type(screen.getByLabelText("Contraseña"), "Secure123");
     await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
-    await user.type(await screen.findByLabelText("Código"), "123456");
+    await user.type(
+      await screen.findByLabelText("Código de seguridad"),
+      "123456",
+    );
     await user.click(screen.getByRole("button", { name: /verificar/i }));
 
     await waitFor(() => {
