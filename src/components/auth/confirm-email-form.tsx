@@ -1,9 +1,16 @@
 "use client";
 
 import { EMAIL_NOT_VERIFIED } from "@discordia/client-shared";
-import { CheckCircle2, Mail, RefreshCw, TriangleAlert } from "lucide-react";
+import {
+  ArrowLeft,
+  CheckCircle2,
+  Mail,
+  RefreshCw,
+  TriangleAlert,
+} from "lucide-react";
+import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ROUTES } from "@/lib/constants";
@@ -24,14 +31,20 @@ export function ConfirmEmailForm() {
   const [status, setStatus] = useState<"sent" | "confirmed" | "expired" | null>(
     sent ? "sent" : null,
   );
+  const confirmationRequestToken = useRef<string | null>(null);
+  const isMounted = useRef(false);
 
   useEffect(() => {
     if (!token) return;
+    isMounted.current = true;
+    if (confirmationRequestToken.current === token) return;
+    confirmationRequestToken.current = token;
 
-    let active = true;
     async function confirm() {
       const result = await confirmEmailRequest(token);
-      if (!active) return;
+      if (!isMounted.current || confirmationRequestToken.current !== token) {
+        return;
+      }
       setIsConfirming(false);
       if (result.ok) {
         setStatus("confirmed");
@@ -45,7 +58,7 @@ export function ConfirmEmailForm() {
 
     void confirm();
     return () => {
-      active = false;
+      isMounted.current = false;
     };
   }, [token]);
 
@@ -93,6 +106,14 @@ export function ConfirmEmailForm() {
 
   return (
     <section>
+      <Link
+        href={ROUTES.login}
+        className="text-content-subtle mb-6 flex items-center gap-1.5 text-sm transition-colors hover:opacity-80"
+      >
+        <ArrowLeft size={14} />
+        Volver al inicio de sesión
+      </Link>
+
       <div className="bg-accent/15 text-accent mb-5 flex size-16 items-center justify-center rounded-2xl">
         {status === "expired" ? (
           <TriangleAlert size={32} />

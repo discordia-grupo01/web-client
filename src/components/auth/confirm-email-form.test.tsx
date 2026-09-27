@@ -1,6 +1,7 @@
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { StrictMode } from "react";
 
 import {
   confirmEmailRequest,
@@ -35,10 +36,15 @@ describe("<ConfirmEmailForm />", () => {
     searchParams = new URLSearchParams("token=valid-token");
     confirmEmailRequestMock.mockResolvedValue({ ok: true });
 
-    render(<ConfirmEmailForm />);
+    render(
+      <StrictMode>
+        <ConfirmEmailForm />
+      </StrictMode>,
+    );
 
     expect(await screen.findByText(/correo confirmado/i)).toBeInTheDocument();
     expect(confirmEmailRequestMock).toHaveBeenCalledWith("valid-token");
+    expect(confirmEmailRequestMock).toHaveBeenCalledTimes(1);
   });
 
   it("no permite reenviar desde un enlace vencido", async () => {
@@ -62,6 +68,9 @@ describe("<ConfirmEmailForm />", () => {
     render(<ConfirmEmailForm />);
 
     expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
+    expect(
+      screen.getByRole("link", { name: /volver al inicio de sesión/i }),
+    ).toHaveAttribute("href", "/login");
     expect(
       screen.queryByRole("button", { name: /reenviar confirmación/i }),
     ).not.toBeInTheDocument();
