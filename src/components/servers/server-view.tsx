@@ -437,6 +437,7 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "MANAGE_SERVER",
   );
+  const canInvite = hasPermission({ isOwner, roles: myRoles }, "CREATE_INVITE");
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
@@ -717,6 +718,7 @@ export function ServerView({
           canManageServer={canManageServer}
           canManageChannels={canManageChannels}
           canManageRoles={canManageRoles}
+          canInvite={canInvite}
           onLeft={onLeft}
           onCreateChannel={() => {
             setCreateChannelDefaultCategoryId(null);
