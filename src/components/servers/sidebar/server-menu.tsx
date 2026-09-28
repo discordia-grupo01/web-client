@@ -16,6 +16,7 @@ interface ServerMenuProps {
   canManageServer: boolean;
   canManageChannels: boolean;
   canManageRoles: boolean;
+  canInvite: boolean;
   transferLabel: string | null;
   onClose: () => void;
   onInvite: () => void;
@@ -31,6 +32,7 @@ export function ServerMenu({
   canManageServer,
   canManageChannels,
   canManageRoles,
+  canInvite,
   transferLabel,
   onClose,
   onInvite,
@@ -58,11 +60,13 @@ export function ServerMenu({
         className="fixed inset-0 z-40 cursor-default"
       />
       <div className="bg-surface-raised border-line absolute top-full right-2 left-2 z-50 overflow-hidden rounded-xl border shadow-2xl">
-        <ServerMenuItem
-          icon={UserPlus}
-          label="Invitar miembros"
-          onClick={run(onInvite)}
-        />
+        {canInvite ? (
+          <ServerMenuItem
+            icon={UserPlus}
+            label="Invitar miembros"
+            onClick={run(onInvite)}
+          />
+        ) : null}
 
         {canManageServer ? (
           <ServerMenuItem
