@@ -584,7 +584,8 @@ export function ServerView({
     const reordered = arrayMove(sortedCategories, oldIndex, overIndex);
     const previousCategories = server.categories;
     const unassigned = previousCategories.find(
-      (category) => !sortedCategories.some((visible) => visible.id === category.id),
+      (category) =>
+        !sortedCategories.some((visible) => visible.id === category.id),
     );
     const categoryIds = unassigned
       ? [...reordered.map((c) => c.id), unassigned.id]
