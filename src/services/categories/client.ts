@@ -1,7 +1,9 @@
 import {
   CATEGORY_CREATE_FAILED,
+  CATEGORY_REORDER_FAILED,
   CATEGORY_UPDATE_FAILED,
   type CreateCategoryResult,
+  type ReorderCategoriesResult,
   type UpdateCategoryResult,
 } from "@discordia/client-shared";
 
@@ -45,6 +47,24 @@ export async function updateCategoryRequest(
     return {
       ok: false,
       message: CATEGORY_UPDATE_FAILED,
+    };
+  }
+}
+
+export async function reorderCategoriesRequest(
+  serverId: string,
+  categoryIds: string[],
+): Promise<ReorderCategoriesResult> {
+  try {
+    const { data } = await api.patch<ReorderCategoriesResult>(
+      `/servers/${serverId}/categories/reorder`,
+      { categoryIds },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: CATEGORY_REORDER_FAILED,
     };
   }
 }
