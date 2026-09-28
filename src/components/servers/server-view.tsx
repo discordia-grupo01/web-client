@@ -53,6 +53,7 @@ import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
 import { MembersSidebar } from "@/components/members/members-sidebar";
 import { useAuth } from "@/services/auth/auth-context";
+import { reorderCategoriesRequest } from "@/services/categories/client";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
@@ -331,6 +332,53 @@ function CategorySectionHeader({
   );
 }
 
+function SortableCategorySection({
+  category,
+  canManage,
+  isCollapsed,
+  onToggle,
+  onAddChannel,
+  onEdit,
+  children,
+}: {
+  category: Category;
+  canManage: boolean;
+  isCollapsed: boolean;
+  onToggle: () => void;
+  onAddChannel: () => void;
+  onEdit: () => void;
+  children: ReactNode;
+}) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+    useSortable({ id: category.id, disabled: !canManage });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    >
+      <div
+        {...(canManage ? { ...listeners, ...attributes } : {})}
+        className={canManage ? "touch-none" : undefined}
+      >
+        <CategorySectionHeader
+          label={category.name}
+          isCollapsed={isCollapsed}
+          onToggle={onToggle}
+          canManage={canManage}
+          onAddChannel={onAddChannel}
+          onEdit={onEdit}
+        />
+      </div>
+      {children}
+    </div>
+  );
+}
+
 /**
  * Vista de un servidor ya creado: header + canales reales agrupados por
  * categoria (con "sin categoria" como balde por default) y un placeholder de
@@ -391,6 +439,9 @@ export function ServerView({
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [draggingChannel, setDraggingChannel] = useState<Channel | null>(null);
+  const [draggingCategory, setDraggingCategory] = useState<Category | null>(
+    null,
+  );
   const [dragError, setDragError] = useState("");
   // Preferencias de la vista, desde la barra del canal.
   const [isBannerVisible, setIsBannerVisible] = useState(true);
@@ -488,14 +539,59 @@ export function ServerView({
 
   function handleDragStart(event: DragStartEvent) {
     setDragError("");
-    const channel = server.channels.find((c) => c.id === event.active.id);
+    const id = String(event.active.id);
+
+    const category = server.categories.find((c) => c.id === id);
+    if (category) {
+      setDraggingCategory(category);
+      setDraggingChannel(null);
+      return;
+    }
+
+    const channel = server.channels.find((c) => c.id === id);
     setDraggingChannel(channel ?? null);
+    setDraggingCategory(null);
+  }
+
+  /** Reordena las categorias del server en si (no los canales de adentro). */
+  async function handleCategoryReordered(activeId: string, overId: string) {
+    if (activeId === overId) return;
+
+    const oldIndex = sortedCategories.findIndex((c) => c.id === activeId);
+    const overIndex = sortedCategories.findIndex((c) => c.id === overId);
+    if (oldIndex === -1 || overIndex === -1 || oldIndex === overIndex) return;
+
+    const reordered = arrayMove(sortedCategories, oldIndex, overIndex);
+    const categoryIds = reordered.map((c) => c.id);
+    const previousCategories = server.categories;
+
+    onServerUpdate({
+      ...server,
+      categories: previousCategories.map((existing) => {
+        const position = categoryIds.indexOf(existing.id);
+        return position === -1 ? existing : { ...existing, position };
+      }),
+    });
+
+    const result = await reorderCategoriesRequest(server.id, categoryIds);
+    if (!result.ok) {
+      setDragError(result.message);
+      onServerUpdate({ ...server, categories: previousCategories });
+    }
   }
 
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setDraggingChannel(null);
+    setDraggingCategory(null);
     if (!over) return;
+
+    const activeId = String(active.id);
+    const activeCategory = server.categories.find((c) => c.id === activeId);
+    if (activeCategory) {
+      await handleCategoryReordered(activeId, String(over.id));
+      return;
+    }
 
     const channel = server.channels.find((c) => c.id === active.id);
     if (!channel) return;
@@ -643,34 +739,42 @@ export function ServerView({
               </div>
             ) : null}
 
-            {sortedCategories.map((category) => {
-              const channels = channelsOfCategory(server.channels, category.id);
-              const collapsed = collapsedIds.has(category.id);
+            <SortableContext
+              items={sortedCategories.map((category) => category.id)}
+              strategy={verticalListSortingStrategy}
+            >
+              {sortedCategories.map((category) => {
+                const channels = channelsOfCategory(
+                  server.channels,
+                  category.id,
+                );
+                const collapsed = collapsedIds.has(category.id);
 
-              return (
-                <div key={category.id}>
-                  <CategorySectionHeader
-                    label={category.name}
+                return (
+                  <SortableCategorySection
+                    key={category.id}
+                    category={category}
+                    canManage={canManageChannels}
                     isCollapsed={collapsed}
                     onToggle={() => toggleCollapsed(category.id)}
-                    canManage={canManageChannels}
                     onAddChannel={() => {
                       setCreateChannelDefaultCategoryId(category.id);
                       setIsCreateChannelOpen(true);
                     }}
                     onEdit={() => setEditingCategory(category)}
-                  />
-                  {!collapsed ? (
-                    <CategoryDropZone
-                      bucket={categoryBucket(category.id)}
-                      items={channels.map((channel) => channel.id)}
-                    >
-                      {renderChannelList(channels)}
-                    </CategoryDropZone>
-                  ) : null}
-                </div>
-              );
-            })}
+                  >
+                    {!collapsed ? (
+                      <CategoryDropZone
+                        bucket={categoryBucket(category.id)}
+                        items={channels.map((channel) => channel.id)}
+                      >
+                        {renderChannelList(channels)}
+                      </CategoryDropZone>
+                    ) : null}
+                  </SortableCategorySection>
+                );
+              })}
+            </SortableContext>
           </div>
 
           <DragOverlay>
@@ -682,6 +786,11 @@ export function ServerView({
                   <Volume2 size={16} className="text-content-subtle" />
                 )}
                 <span className="truncate">{draggingChannel.name}</span>
+              </div>
+            ) : null}
+            {draggingCategory ? (
+              <div className="bg-surface-raised border-line-strong text-content flex items-center rounded-md border px-2 py-1.5 text-[11px] font-semibold tracking-wider uppercase shadow-2xl">
+                <span className="truncate">{draggingCategory.name}</span>
               </div>
             ) : null}
           </DragOverlay>
