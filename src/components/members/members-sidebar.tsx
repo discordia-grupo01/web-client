@@ -1,6 +1,10 @@
 "use client";
 
-import { type Member, type PublicUser } from "@discordia/client-shared";
+import {
+  type Member,
+  type PublicUser,
+  type User,
+} from "@discordia/client-shared";
 
 import { Crown } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -12,15 +16,9 @@ import { listMembersRequest } from "@/services/members/client";
 
 interface MembersSidebarProps {
   serverId: string;
-  /** Id del usuario autenticado, para distinguir "yo" en la lista. */
   currentUserId: string | null;
-  /** Click en mi propia fila: abre el perfil propio (editable), no el público. */
+  ownProfile: User | null;
   onOpenOwnProfile: () => void;
-  /**
-   * Click en la fila de otro miembro: abre su perfil público (CA1 de
-   * "Visualización de perfil público"). La gestión de roles vive dentro de
-   * ese modal (`MemberRoleBadges`), no acá.
-   */
   onOpenPublicProfile: (userId: string) => void;
 }
 
@@ -53,12 +51,16 @@ function MemberAvatar({
 function MemberRow({
   member,
   profile,
+  statusText,
+  statusEmoji,
   isOwn,
   onOpenOwnProfile,
   onOpenPublicProfile,
 }: {
   member: Member;
   profile?: PublicUser;
+  statusText: string;
+  statusEmoji: string;
   isOwn: boolean;
   onOpenOwnProfile: () => void;
   onOpenPublicProfile: () => void;
@@ -72,13 +74,24 @@ function MemberRow({
       className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2 rounded-md px-1.5 py-1.5 text-left transition-colors"
     >
       <MemberAvatar profile={profile} userId={member.user_id} />
-      <span
-        className="text-content-muted min-w-0 flex-1 truncate text-sm"
-        title={member.user_id}
-      >
-        {displayName}
-        {isOwn ? " (vos)" : ""}
-      </span>
+      <div className="min-w-0 flex-1">
+        <span
+          className="text-content-muted block truncate text-sm"
+          title={member.user_id}
+        >
+          {displayName}
+          {isOwn ? " (vos)" : ""}
+        </span>
+        {statusText || statusEmoji ? (
+          <span
+            className="text-content-subtle block truncate text-xs"
+            title={statusText}
+          >
+            {statusEmoji ? `${statusEmoji} ` : ""}
+            {statusText}
+          </span>
+        ) : null}
+      </div>
       {member.is_owner ? (
         <Crown
           size={13}
@@ -95,6 +108,7 @@ function MemberGroup({
   members,
   profiles,
   currentUserId,
+  ownProfile,
   onOpenOwnProfile,
   onOpenPublicProfile,
 }: {
@@ -102,6 +116,7 @@ function MemberGroup({
   members: Member[];
   profiles: Record<string, PublicUser>;
   currentUserId: string | null;
+  ownProfile: User | null;
   onOpenOwnProfile: () => void;
   onOpenPublicProfile: (userId: string) => void;
 }) {
@@ -112,32 +127,32 @@ function MemberGroup({
         {label} — {members.length}
       </p>
       <div className="space-y-0.5">
-        {members.map((member) => (
-          <MemberRow
-            key={member.user_id}
-            member={member}
-            profile={profiles[member.user_id]}
-            isOwn={member.user_id === currentUserId}
-            onOpenOwnProfile={onOpenOwnProfile}
-            onOpenPublicProfile={() => onOpenPublicProfile(member.user_id)}
-          />
-        ))}
+        {members.map((member) => {
+          const isOwn = member.user_id === currentUserId;
+          const statusSource =
+            isOwn && ownProfile ? ownProfile : profiles[member.user_id];
+          return (
+            <MemberRow
+              key={member.user_id}
+              member={member}
+              profile={profiles[member.user_id]}
+              statusText={statusSource?.status_text ?? ""}
+              statusEmoji={statusSource?.status_emoji ?? ""}
+              isOwn={isOwn}
+              onOpenOwnProfile={onOpenOwnProfile}
+              onOpenPublicProfile={() => onOpenPublicProfile(member.user_id)}
+            />
+          );
+        })}
       </div>
     </div>
   );
 }
 
-/**
- * Panel de miembros del server activo. La lista (`user_id`, `is_owner`,
- * `joined_at`) viene de `servers`; el perfil público de cada uno (nombre,
- * avatar) se resuelve aparte contra identify-service (`GET /v1/users/:id`,
- * uno por miembro -- todavía no hay un endpoint batch). Si un lookup falla
- * (usuario borrado, error de red puntual) se muestra el `user_id` crudo como
- * respaldo en vez de romper toda la lista.
- */
 export function MembersSidebar({
   serverId,
   currentUserId,
+  ownProfile,
   onOpenOwnProfile,
   onOpenPublicProfile,
 }: MembersSidebarProps) {
@@ -152,26 +167,31 @@ export function MembersSidebar({
     setProfiles({});
     setErrorMessage("");
 
-    listMembersRequest(serverId).then((result) => {
+    async function load() {
+      const result = await listMembersRequest(serverId);
       if (cancelled) return;
       if (!result.ok) {
         setErrorMessage(result.message);
         setMembers([]);
         return;
       }
-      setMembers(result.members);
-      setTotal(result.total);
 
-      for (const member of result.members) {
-        getPublicProfileRequest(member.user_id).then((profile) => {
-          if (cancelled || !profile.ok) return;
-          setProfiles((prev) => ({
-            ...prev,
-            [member.user_id]: profile.user,
-          }));
-        });
-      }
-    });
+      const lookups = await Promise.all(
+        result.members.map((member) => getPublicProfileRequest(member.user_id)),
+      );
+      if (cancelled) return;
+
+      const loaded: Record<string, PublicUser> = {};
+      result.members.forEach((member, index) => {
+        const lookup = lookups[index];
+        if (lookup.ok) loaded[member.user_id] = lookup.user;
+      });
+      setProfiles(loaded);
+      setTotal(result.total);
+      setMembers(result.members);
+    }
+
+    void load();
 
     return () => {
       cancelled = true;
@@ -201,6 +221,7 @@ export function MembersSidebar({
             members={owners}
             profiles={profiles}
             currentUserId={currentUserId}
+            ownProfile={ownProfile}
             onOpenOwnProfile={onOpenOwnProfile}
             onOpenPublicProfile={onOpenPublicProfile}
           />
@@ -209,6 +230,7 @@ export function MembersSidebar({
             members={regulars}
             profiles={profiles}
             currentUserId={currentUserId}
+            ownProfile={ownProfile}
             onOpenOwnProfile={onOpenOwnProfile}
             onOpenPublicProfile={onOpenPublicProfile}
           />
