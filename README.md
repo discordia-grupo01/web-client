@@ -2,6 +2,14 @@
 
 Cliente web de Discordia (React + Next.js, App Router).
 
+## Stack
+
+- Next.js 14 (App Router) + React 18 + TypeScript estricto
+- Tailwind CSS v4 (`@tailwindcss/postcss`, sin archivo de config)
+- Formularios con `useState` + validacion en funciones propias (sin libreria)
+- axios para HTTP, lucide-react para iconos
+- Vitest + Testing Library para tests
+
 ## Setup local
 
 ```bash
@@ -10,13 +18,32 @@ npm install
 npm run dev
 ```
 
-Necesita el backend corriendo: `identify-service` en `http://localhost:8080` (ver su README).
+## Conectar con el backend real
+
+Pasos para levantar todo el backend y probar web-client conectado de verdad.
+
+**Requisito previo:** tener los repos `infrastructure`, `identify-service`, `servers` y `gateway` clonados. `infrastructure` levanta todo lo demás.
+
+1. **Levantar el backend:**
+
+   ```bash
+   cd infrastructure
+   cp .env.example .env
+   docker compose up --build
+   ```
+
+   Esperar a que las migraciones corran y los servicios queden arriba (logs de `identity`, `servers` y `gateway` sin errores).
+
+2. **Abrir web-client:** `docker compose` también levanta el front en `http://localhost:3000`. Si preferís correrlo por fuera de Docker, hacé el setup local de arriba y apuntalo al Gateway (`http://localhost:8000`) con `NEXT_PUBLIC_API_URL`.
+
+Las requests siempre van al Gateway (Kong), nunca directo a un microservicio: el Gateway valida el JWT y rutea cada path al servicio que corresponda.
 
 ## Variables de entorno
 
-| Variable            | Default               | Descripcion                              |
-| ------------------- | --------------------- | ---------------------------------------- |
-| NEXT_PUBLIC_API_URL | http://localhost:8080 | URL base del backend (identify-service). |
+| Variable                     | Default               | Descripcion                                                                                                                        |
+| ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| NEXT_PUBLIC_API_URL          | http://localhost:8000 | URL base del Gateway (Kong) al que le pega el servidor de Next.                                                                    |
+| NEXT_PUBLIC_GOOGLE_CLIENT_ID | (vacio)               | Client ID de Google (tipo "Web application"). Tiene que coincidir con el `GOOGLE_CLIENT_ID` que usa el backend (login con Google). |
 
 `.env.example` solo trae la estructura (sin valores sensibles). Los valores reales van en tu propio `.env`, que nunca se sube (ya esta en `.gitignore`).
 
@@ -39,7 +66,7 @@ discordia-web/
 │   ├── types/                   tipos por dominio: <dominio>.types.ts (Channel, Role, User, ...)
 │   ├── hooks/                   hooks de React reutilizables entre features
 │   └── lib/
-│       ├── api-client.ts         cliente HTTP hacia el backend (server-only)
+│       ├── api-client.ts         cliente HTTP hacia el Gateway (server-only)
 │       ├── browser-api-client.ts cliente HTTP compartido para navegador (BFF, `/api/*`)
 │       ├── constants.ts          constantes de la app (APP_NAME, rutas, ...)
 │       ├── env.ts                lectura centralizada de variables de entorno
@@ -80,9 +107,11 @@ con ruta relativa (`./channel.types`), no cruzando a `services/`.
 El navegador nunca habla directo con el backend. Pega contra los route handlers de
 `/api/*` (mismo origen) y Next hace de intermediario (patron BFF): reenvia la llamada
 y guarda la sesion en una cookie `httpOnly` que el JavaScript del navegador no puede leer.
+Next tampoco le pega a un microservicio directo: todo pasa por el Gateway (ADR-006), que
+valida el JWT y decide a que servicio va cada path.
 
 ```
-navegador ──► /api/... (Next) ──► backend
+navegador ──► /api/... (Next) ──► Gateway (Kong) ──► identify-service / servers
                   │
                   └─ sesion en cookie httpOnly
 ```
@@ -95,14 +124,6 @@ navegador ──► /api/... (Next) ──► backend
 
 El detalle fino del login (endpoints, forma del token, que falta del backend) esta en
 los comentarios de `src/services/auth/`.
-
-## Stack
-
-- Next.js 14 (App Router) + React 18 + TypeScript estricto
-- Tailwind CSS v4 (`@tailwindcss/postcss`, sin archivo de config)
-- Formularios con `useState` + validacion en funciones propias (sin libreria)
-- axios para HTTP, lucide-react para iconos
-- Vitest + Testing Library para tests
 
 ## Comandos
 
