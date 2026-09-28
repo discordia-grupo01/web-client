@@ -1,0 +1,58 @@
+name: Bump client-shared
+
+on:
+  repository_dispatch:
+    types: [client-shared-released]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout develop
+        uses: actions/checkout@v4
+        with:
+          ref: develop
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Configure git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Bump the pin and open a PR
+        # No mergea solo a develop -- abre un PR para que alguien lo revise
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          VERSION="${{ github.event.client_payload.version }}"
+          if [ -z "$VERSION" ]; then
+            echo "::error::No version in the dispatch payload"
+            exit 1
+          fi
+          BRANCH="chore/bump-client-shared-$VERSION"
+
+          if git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            echo "Branch $BRANCH already exists, nothing to do."
+            exit 0
+          fi
+
+          npm pkg set "dependencies.@discordia/client-shared=github:discordia-grupo01/client-shared#$VERSION"
+          npm install --package-lock-only
+
+          git checkout -b "$BRANCH"
+          git add package.json package-lock.json
+          git commit -m "chore: bump client-shared to $VERSION"
+          git push origin "$BRANCH"
+
+          gh pr create --base develop --head "$BRANCH" \
+            --title "chore: bump client-shared to $VERSION" \
+            --body "Automated bump triggered by a new client-shared release ($VERSION). Review before merging -- a version bump has broken a build here before."
