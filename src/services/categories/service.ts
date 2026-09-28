@@ -12,6 +12,7 @@ import { apiRequest, type ApiResult } from "@/lib/api-client";
  * Endpoints reales (ver servers/internal/handler):
  *   POST   /v1/servers/:id/categories              -> 201 Category | 400 | 401 | 403 | 404
  *   PATCH  /v1/categories/:id                     -> 200 Category | 400 | 401 | 403 | 404
+ *   PATCH  /v1/servers/:id/categories/reorder      -> 200 | 400 | 401 | 403 | 404
  */
 
 export function createCategory(
@@ -35,5 +36,17 @@ export function updateCategory(
     method: "PATCH",
     token,
     data: { name },
+  });
+}
+
+export function reorderCategories(
+  token: string,
+  serverId: string,
+  categoryIds: string[],
+): Promise<ApiResult<void>> {
+  return apiRequest<void>(`/v1/servers/${serverId}/categories/reorder`, {
+    method: "PATCH",
+    token,
+    data: { category_ids: categoryIds },
   });
 }

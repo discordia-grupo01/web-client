@@ -49,20 +49,22 @@ export function TwoFactorVerifyForm({
     onChallengeLostRef.current = onChallengeLost;
   }, [onChallengeLost]);
 
+  // El aviso al padre va afuera del updater de `setSecondsLeft` (no se puede
+  // notificar a un padre que desmonta este componente desde ahi adentro).
   useEffect(() => {
     if (expiresIn <= 0) {
       onChallengeLostRef.current(TWO_FACTOR_CHALLENGE_EXPIRED);
       return;
     }
+
+    let remaining = expiresIn;
     const interval = window.setInterval(() => {
-      setSecondsLeft((value) => {
-        if (value <= 1) {
-          window.clearInterval(interval);
-          onChallengeLostRef.current(TWO_FACTOR_CHALLENGE_EXPIRED);
-          return 0;
-        }
-        return value - 1;
-      });
+      remaining -= 1;
+      setSecondsLeft(Math.max(0, remaining));
+      if (remaining <= 0) {
+        window.clearInterval(interval);
+        onChallengeLostRef.current(TWO_FACTOR_CHALLENGE_EXPIRED);
+      }
     }, 1000);
     return () => window.clearInterval(interval);
     // eslint-disable-next-line react-hooks/exhaustive-deps
