@@ -349,8 +349,14 @@ function SortableCategorySection({
   onEdit: () => void;
   children: ReactNode;
 }) {
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
-    useSortable({ id: category.id, disabled: !canManage });
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id, disabled: !canManage });
 
   return (
     <div
