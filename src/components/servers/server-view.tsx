@@ -6,10 +6,13 @@ import {
   CHANNEL_START_NOTICE,
   channelsOfCategory,
   hasPermission,
+  isUnassignedCategory,
   type Role,
   type ServerSummary,
   sortByPosition,
+  topLevelChannels,
   type User,
+  visibleCategories,
   VOICE_NOT_IMPLEMENTED,
 } from "@discordia/client-shared";
 
@@ -465,8 +468,10 @@ export function ServerView({
     (channel) => channel.id === activeChannelId,
   );
 
-  const sortedCategories = sortByPosition(server.categories);
-  const uncategorized = channelsOfCategory(server.channels, null);
+  const sortedCategories = sortByPosition(visibleCategories(server.categories));
+  const uncategorized = topLevelChannels(server.channels, server.categories);
+  const unassignedCategory =
+    server.categories.find(isUnassignedCategory) ?? null;
 
   function toggleCollapsed(id: string) {
     setCollapsedIds((prev) => {
@@ -521,11 +526,19 @@ export function ServerView({
     });
   }
 
-  /** A que bucket pertenece hoy un canal. */
   function bucketOfChannel(channel: Channel): string {
-    return channel.category_id
-      ? categoryBucket(channel.category_id)
-      : UNCATEGORIZED_BUCKET;
+    if (
+      channel.category_id === null ||
+      channel.category_id === unassignedCategory?.id
+    ) {
+      return UNCATEGORIZED_BUCKET;
+    }
+    return categoryBucket(channel.category_id);
+  }
+
+  function resolveBucketCategoryId(bucket: string): string | null {
+    if (bucket === UNCATEGORIZED_BUCKET) return unassignedCategory?.id ?? null;
+    return bucketCategoryId(bucket);
   }
 
   /** Todos los canales que hoy estan en ese bucket, ordenados por posicion. */
@@ -569,8 +582,14 @@ export function ServerView({
     if (oldIndex === -1 || overIndex === -1 || oldIndex === overIndex) return;
 
     const reordered = arrayMove(sortedCategories, oldIndex, overIndex);
-    const categoryIds = reordered.map((c) => c.id);
     const previousCategories = server.categories;
+    const unassigned = previousCategories.find(
+      (category) =>
+        !sortedCategories.some((visible) => visible.id === category.id),
+    );
+    const categoryIds = unassigned
+      ? [...reordered.map((c) => c.id), unassigned.id]
+      : reordered.map((c) => c.id);
 
     onServerUpdate({
       ...server,
@@ -608,7 +627,7 @@ export function ServerView({
     if (!overBucket) return;
 
     if (overBucket !== activeBucket) {
-      const targetCategoryId = bucketCategoryId(overBucket);
+      const targetCategoryId = resolveBucketCategoryId(overBucket);
       if (targetCategoryId === channel.category_id) return;
 
       const previousChannels = server.channels;
@@ -651,7 +670,7 @@ export function ServerView({
     if (oldIndex === -1 || oldIndex === newIndex) return;
 
     const reordered = arrayMove(bucketChannels, oldIndex, newIndex);
-    const categoryId = bucketCategoryId(activeBucket);
+    const categoryId = resolveBucketCategoryId(activeBucket);
     const channelIds = reordered.map((c) => c.id);
 
     const result = await reorderChannelsRequest(
@@ -729,22 +748,12 @@ export function ServerView({
         >
           <div className="flex-1 space-y-3 overflow-y-auto px-2 py-1">
             {uncategorized.length > 0 ? (
-              <div>
-                <CategorySectionHeader
-                  label="Sin categoría"
-                  isCollapsed={collapsedIds.has("none")}
-                  onToggle={() => toggleCollapsed("none")}
-                  canManage={false}
-                />
-                {!collapsedIds.has("none") ? (
-                  <CategoryDropZone
-                    bucket={UNCATEGORIZED_BUCKET}
-                    items={uncategorized.map((channel) => channel.id)}
-                  >
-                    {renderChannelList(uncategorized)}
-                  </CategoryDropZone>
-                ) : null}
-              </div>
+              <CategoryDropZone
+                bucket={UNCATEGORIZED_BUCKET}
+                items={uncategorized.map((channel) => channel.id)}
+              >
+                {renderChannelList(uncategorized)}
+              </CategoryDropZone>
             ) : null}
 
             <SortableContext
