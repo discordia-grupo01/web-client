@@ -26,6 +26,7 @@ interface ServerSidebarHeaderProps {
   canManageServer: boolean;
   canManageChannels: boolean;
   canManageRoles: boolean;
+  canInvite: boolean;
   onLeft: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
@@ -42,6 +43,7 @@ export function ServerSidebarHeader({
   canManageServer,
   canManageChannels,
   canManageRoles,
+  canInvite,
   onLeft,
   onCreateChannel,
   onCreateCategory,
@@ -110,6 +112,7 @@ export function ServerSidebarHeader({
           canManageServer={canManageServer}
           canManageChannels={canManageChannels}
           canManageRoles={canManageRoles}
+          canInvite={canInvite}
           transferLabel={transferLabel}
           onClose={() => setIsMenuOpen(false)}
           onInvite={() => setOpenModal("invite")}
@@ -122,7 +125,7 @@ export function ServerSidebarHeader({
         />
       ) : null}
 
-      {openModal === "invite" ? (
+      {openModal === "invite" && canInvite ? (
         <InviteModal
           serverId={server.id}
           serverName={server.name}
