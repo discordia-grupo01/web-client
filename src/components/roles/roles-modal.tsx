@@ -63,12 +63,23 @@ function ColorPicker({
   const [custom, setCustom] = useState(
     COLOR_PALETTE.includes(value) ? "" : value,
   );
-  // El panel expandido (cuadro de saturacion + tono + hex) solo se abre si
-  // se presiona el swatch de "+" explicitamente -- nunca solo.
   const [showCustom, setShowCustom] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Click afuera cierra el panel.
+  useEffect(() => {
+    if (!showCustom) return;
+    function handlePointerDown(event: PointerEvent) {
+      if (!containerRef.current?.contains(event.target as Node)) {
+        setShowCustom(false);
+      }
+    }
+    document.addEventListener("pointerdown", handlePointerDown);
+    return () => document.removeEventListener("pointerdown", handlePointerDown);
+  }, [showCustom]);
 
   return (
-    <div className="relative">
+    <div ref={containerRef} className="relative">
       <div className="grid grid-cols-8 gap-2">
         {COLOR_PALETTE.map((swatch) => (
           <button
@@ -106,64 +117,56 @@ function ColorPicker({
       </div>
 
       {showCustom ? (
-        <>
-          <button
-            type="button"
-            aria-label="Cerrar selector de color"
-            onClick={() => setShowCustom(false)}
-            className="fixed inset-0 z-[60] cursor-default"
-          />
-          <div className="bg-surface-raised border-line-strong absolute top-full left-0 z-[70] mt-2 w-full rounded-xl border p-4 shadow-2xl">
-            <div className="mb-3 flex items-center justify-between">
-              <span className="text-content-subtle text-xs font-bold tracking-wider uppercase">
-                Color personalizado
-              </span>
-              <button
-                type="button"
-                onClick={() => setShowCustom(false)}
-                aria-label="Cerrar"
-                className="text-content-subtle hover:text-content cursor-pointer"
-              >
-                <X size={14} />
-              </button>
-            </div>
+        <div className="bg-surface-raised border-line-strong absolute top-full left-0 z-[70] mt-2 w-full rounded-xl border p-4 shadow-2xl">
+          <div className="mb-3 flex items-center justify-between">
+            <span className="text-content-subtle text-xs font-bold tracking-wider uppercase">
+              Color personalizado
+            </span>
+            <button
+              type="button"
+              onClick={() => setShowCustom(false)}
+              aria-label="Cerrar"
+              className="text-content-subtle hover:text-content cursor-pointer"
+            >
+              <X size={14} />
+            </button>
+          </div>
 
-            <div className="space-y-3">
-              <ColorPanel
-                hex={isValidHex(custom) ? custom : "#000000"}
-                onChange={(next) => {
-                  setCustom(next);
-                  onChange(next);
+          <div className="space-y-3">
+            <ColorPanel
+              hex={isValidHex(custom) ? custom : "#000000"}
+              onChange={(next) => {
+                setCustom(next);
+                onChange(next);
+              }}
+            />
+            <div className="flex items-center gap-2">
+              <div
+                className="border-line size-8 shrink-0 rounded-lg border"
+                style={{
+                  background: isValidHex(custom) ? custom : "var(--bg-input)",
                 }}
               />
-              <div className="flex items-center gap-2">
-                <div
-                  className="border-line size-8 shrink-0 rounded-lg border"
-                  style={{
-                    background: isValidHex(custom) ? custom : "var(--bg-input)",
+              <div className="bg-surface-input border-line flex flex-1 items-center rounded-xl border px-3 py-2">
+                <input
+                  type="text"
+                  value={custom}
+                  onChange={(event) => {
+                    const next = event.target.value;
+                    setCustom(next);
+                    if (isValidHex(next)) onChange(next);
                   }}
+                  placeholder="#3d9bb5"
+                  maxLength={7}
+                  className="text-content min-w-0 flex-1 border-none bg-transparent font-mono text-sm outline-none"
                 />
-                <div className="bg-surface-input border-line flex flex-1 items-center rounded-xl border px-3 py-2">
-                  <input
-                    type="text"
-                    value={custom}
-                    onChange={(event) => {
-                      const next = event.target.value;
-                      setCustom(next);
-                      if (isValidHex(next)) onChange(next);
-                    }}
-                    placeholder="#3d9bb5"
-                    maxLength={7}
-                    className="text-content min-w-0 flex-1 border-none bg-transparent font-mono text-sm outline-none"
-                  />
-                </div>
-                {isValidHex(custom) ? (
-                  <Check size={14} className="text-success shrink-0" />
-                ) : null}
               </div>
+              {isValidHex(custom) ? (
+                <Check size={14} className="text-success shrink-0" />
+              ) : null}
             </div>
           </div>
-        </>
+        </div>
       ) : null}
     </div>
   );

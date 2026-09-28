@@ -14,22 +14,15 @@ import { env } from "./env";
 
 export type { ApiResult };
 
-/**
- * Instancia de axios hacia identify-service. Solo corre en el servidor: el
- * navegador pega contra los Route Handlers de `/api/*`, que usan este cliente.
- */
 const http = axios.create({
   baseURL: env.apiUrl,
   headers: { "Content-Type": "application/json" },
   timeout: 10_000,
-  // No lanzar por status: mapeamos todo a ApiResult mas abajo.
   validateStatus: () => true,
 });
 
 interface RequestOptions extends Omit<AxiosRequestConfig, "url" | "data"> {
-  /** Token para el header `Authorization: Bearer`. */
   token?: string;
-  /** Valor del refresh token para el header `Cookie: refresh_token=<valor>`. */
   cookie?: string;
   data?: unknown;
 }

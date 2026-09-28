@@ -864,6 +864,7 @@ export function ServerView({
           key={`${server.id}:${server.owner_id}`}
           serverId={server.id}
           currentUserId={ownProfile?.id ?? user?.id ?? null}
+          ownProfile={ownProfile}
           onOpenOwnProfile={onOpenOwnProfile}
           onOpenPublicProfile={setViewingUserId}
         />
