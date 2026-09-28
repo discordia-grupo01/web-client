@@ -2,6 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 
 vi.mock("server-only", () => ({}));
 
+import { env } from "@/lib/env";
 import { getProfileImage } from "@/services/profile/service";
 
 describe("getProfileImage", () => {
@@ -9,7 +10,7 @@ describe("getProfileImage", () => {
     vi.restoreAllMocks();
   });
 
-  it("resolves local image paths against the identify service URL", async () => {
+  it("resolves local image paths against the API URL", async () => {
     const fetchMock = vi
       .spyOn(globalThis, "fetch")
       .mockResolvedValue(new Response("image", { status: 200 }));
@@ -17,7 +18,7 @@ describe("getProfileImage", () => {
     const result = await getProfileImage("/uploads/profile-images/user.jpg");
 
     expect(fetchMock).toHaveBeenCalledWith(
-      "http://localhost:8080/uploads/profile-images/user.jpg",
+      `${env.apiUrl}/uploads/profile-images/user.jpg`,
     );
     expect(result.ok).toBe(true);
   });
