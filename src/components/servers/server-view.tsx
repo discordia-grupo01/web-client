@@ -434,10 +434,7 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "MANAGE_SERVER",
   );
-  const canInvite = hasPermission(
-    { isOwner, roles: myRoles },
-    "CREATE_INVITE",
-  );
+  const canInvite = hasPermission({ isOwner, roles: myRoles }, "CREATE_INVITE");
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
