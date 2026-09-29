@@ -97,8 +97,8 @@ export function MessageComposer({
           className={cn(
             ICON_BUTTON,
             canSend
-              ? "text-accent hover:text-accent-strong cursor-pointer"
-              : "cursor-not-allowed",
+              ? "bg-accent text-on-accent hover:bg-accent-strong hover:text-on-accent cursor-pointer"
+              : "cursor-not-allowed opacity-60",
           )}
         >
           <SendHorizontal size={18} />
