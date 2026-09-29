@@ -2,21 +2,19 @@
 
 import { type ServerSummary, type User } from "@discordia/client-shared";
 
-import { Home as HomeIcon, Plus } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
-import { EmptyState } from "@/components/home/empty-state";
+import { HomeView } from "@/components/home/home-view";
+import { ServerRail } from "@/components/home/server-rail";
 import { JoinServerModal } from "@/components/invites/join-server-modal";
+import { DrawerBackdrop } from "@/components/layout/drawer-backdrop";
+import { MobilePanelsProvider } from "@/components/layout/mobile-panels-context";
 import { OwnProfileModal } from "@/components/profile/own-profile-modal";
-import { UserPanel } from "@/components/profile/user-panel";
 import { CreateServerModal } from "@/components/servers/create-server-modal";
 import { ServerView } from "@/components/servers/server-view";
-import { ServerAvatar } from "@/components/ui/server-avatar";
 import { useAuth } from "@/services/auth/auth-context";
 import { getOwnProfileRequest } from "@/services/profile/client";
-import { serverIconSrc } from "@/services/servers/image-urls";
-import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
 interface HomeShellProps {
@@ -88,150 +86,67 @@ export function HomeShell({
   }
 
   return (
-    <div
-      className="flex h-dvh w-full overflow-hidden"
-      style={{ background: "var(--bg-chat)" }}
-    >
-      {/* Server rail */}
+    <MobilePanelsProvider>
       <div
-        className="flex w-[72px] shrink-0 flex-col items-center gap-2 overflow-y-auto py-3"
-        style={{ background: "var(--bg-servers)" }}
+        className="relative flex h-dvh w-full overflow-hidden"
+        style={{ background: "var(--bg-chat)" }}
       >
-        <button
-          type="button"
-          onClick={() => setSelectedServerId(null)}
-          aria-label="Inicio"
-          className={cn(
-            "flex size-12 cursor-pointer items-center justify-center rounded-2xl transition-all",
-            selectedServerId === null
-              ? "bg-rail-active-bg text-rail-active-text"
-              : "bg-rail-surface text-on-accent/70 hover:bg-rail-surface-hover hover:text-on-accent",
-          )}
-        >
-          <HomeIcon size={20} />
-        </button>
+        <ServerRail
+          servers={servers}
+          selectedServerId={selectedServerId}
+          onSelect={setSelectedServerId}
+          onCreateClick={() => setIsCreateModalOpen(true)}
+        />
 
-        <div className="bg-line-strong h-px w-8 rounded-full" />
+        {selectedServer ? (
+          <ServerView
+            key={selectedServer.id}
+            server={selectedServer}
+            onLeft={() => removeServer(selectedServer.id)}
+            onServerUpdate={updateServer}
+            ownProfile={ownProfile}
+            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+          />
+        ) : (
+          <HomeView
+            hasServers={servers.length > 0}
+            userName={user?.name}
+            ownProfile={ownProfile}
+            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            onCreateClick={() => setIsCreateModalOpen(true)}
+            onJoinClick={() => setIsJoinModalOpen(true)}
+          />
+        )}
 
-        {servers.map((server) => {
-          const active = server.id === selectedServerId;
-          return (
-            <div key={server.id} className="relative">
-              {active ? (
-                <div className="bg-server-pill absolute top-1/2 -left-2 h-8 w-1 -translate-y-1/2 rounded-r-full" />
-              ) : null}
-              <button
-                type="button"
-                title={server.name}
-                onClick={() => setSelectedServerId(server.id)}
-                className="cursor-pointer overflow-hidden rounded-2xl"
-              >
-                <ServerAvatar
-                  name={server.name}
-                  src={serverIconSrc(server)}
-                  size={48}
-                />
-              </button>
-            </div>
-          );
-        })}
+        <DrawerBackdrop />
 
-        <button
-          type="button"
-          onClick={() => setIsCreateModalOpen(true)}
-          aria-label="Crear servidor"
-          className="bg-rail-surface text-success hover:bg-success/15 flex size-12 cursor-pointer items-center justify-center rounded-full transition-all hover:rounded-2xl"
-        >
-          <Plus size={22} />
-        </button>
+        {isCreateModalOpen ? (
+          <CreateServerModal
+            onClose={() => setIsCreateModalOpen(false)}
+            onCreated={addAndSelect}
+            onJoinClick={() => {
+              setIsCreateModalOpen(false);
+              setIsJoinModalOpen(true);
+            }}
+          />
+        ) : null}
+
+        {isJoinModalOpen ? (
+          <JoinServerModal
+            onClose={() => setIsJoinModalOpen(false)}
+            onJoined={addAndSelect}
+          />
+        ) : null}
+
+        {isOwnProfileOpen && ownProfile ? (
+          <OwnProfileModal
+            serverId={selectedServer?.id}
+            profile={ownProfile}
+            onClose={() => setIsOwnProfileOpen(false)}
+            onUpdated={setOwnProfile}
+          />
+        ) : null}
       </div>
-
-      {/* Main panel */}
-      {selectedServer ? (
-        <ServerView
-          key={selectedServer.id}
-          server={selectedServer}
-          onLeft={() => removeServer(selectedServer.id)}
-          onServerUpdate={updateServer}
-          ownProfile={ownProfile}
-          onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
-        />
-      ) : (
-        <div className="flex flex-1 overflow-hidden">
-          {/* Home sidebar: mismo ancho/columna que el sidebar de canales de
-              ServerView, para que el panel de usuario viva siempre en el
-              mismo lugar tenga o no un servidor seleccionado. */}
-          <div
-            className="flex w-60 shrink-0 flex-col overflow-hidden"
-            style={{ background: "var(--bg-channels)" }}
-          >
-            <div className="border-line flex h-12 shrink-0 items-center gap-2 border-b px-4">
-              <HomeIcon size={16} className="text-content-subtle" />
-              <span className="font-display text-content text-sm font-semibold">
-                Inicio
-              </span>
-            </div>
-
-            <div className="flex-1" />
-
-            {ownProfile ? (
-              <UserPanel
-                user={ownProfile}
-                onClick={() => setIsOwnProfileOpen(true)}
-              />
-            ) : null}
-          </div>
-
-          <div
-            className="flex flex-1 flex-col overflow-hidden"
-            style={{ background: "var(--bg-chat)" }}
-          >
-            {servers.length > 0 ? (
-              <div className="flex flex-1 flex-col items-center justify-center gap-4 px-6 text-center">
-                <p className="font-display text-content-subtle text-sm font-semibold tracking-wider uppercase">
-                  Tus servidores
-                </p>
-                <h1 className="font-display text-content text-2xl font-bold">
-                  Elegí un servidor de la barra lateral
-                </h1>
-              </div>
-            ) : (
-              <EmptyState
-                userName={user?.name}
-                onCreateClick={() => setIsCreateModalOpen(true)}
-                onJoinClick={() => setIsJoinModalOpen(true)}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {isCreateModalOpen ? (
-        <CreateServerModal
-          onClose={() => setIsCreateModalOpen(false)}
-          onCreated={addAndSelect}
-          onJoinClick={() => {
-            setIsCreateModalOpen(false);
-            setIsJoinModalOpen(true);
-          }}
-        />
-      ) : null}
-
-      {isJoinModalOpen ? (
-        <JoinServerModal
-          onClose={() => setIsJoinModalOpen(false)}
-          onJoined={addAndSelect}
-        />
-      ) : null}
-
-      {isOwnProfileOpen && ownProfile ? (
-        <OwnProfileModal
-          serverId={selectedServer?.id}
-          profile={ownProfile}
-          onClose={() => setIsOwnProfileOpen(false)}
-          onUpdated={setOwnProfile}
-        />
-      ) : null}
-    </div>
+    </MobilePanelsProvider>
   );
 }
