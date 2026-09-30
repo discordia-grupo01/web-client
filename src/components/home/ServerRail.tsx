@@ -13,14 +13,21 @@ import { cn } from "@/lib/cn";
 interface ServerRailProps {
   servers: ServerSummary[];
   selectedServerId: string | null;
+  /** El botón "Inicio" abre Mensajes Directos: se resalta cuando esa vista está activa. */
+  isDirectMessagesActive: boolean;
+  unreadDmCount: number;
   onSelect: (serverId: string | null) => void;
+  onOpenDirectMessages: () => void;
   onCreateClick: () => void;
 }
 
 export function ServerRail({
   servers,
   selectedServerId,
+  isDirectMessagesActive,
+  unreadDmCount,
   onSelect,
+  onOpenDirectMessages,
   onCreateClick,
 }: ServerRailProps) {
   const { openPanel } = useMobilePanels();
@@ -31,19 +38,30 @@ export function ServerRail({
         className="flex w-[72px] shrink-0 flex-col items-center gap-2 overflow-y-auto py-3"
         style={{ background: "var(--bg-servers)" }}
       >
-        <button
-          type="button"
-          onClick={() => onSelect(null)}
-          aria-label="Inicio"
-          className={cn(
-            "flex size-12 shrink-0 cursor-pointer items-center justify-center rounded-2xl transition-all",
-            selectedServerId === null
-              ? "bg-rail-active-bg text-rail-active-text"
-              : "bg-rail-surface text-on-accent/70 hover:bg-rail-surface-hover hover:text-on-accent",
-          )}
-        >
-          <HomeIcon size={20} />
-        </button>
+        <div className="relative shrink-0">
+          <button
+            type="button"
+            onClick={onOpenDirectMessages}
+            aria-label="Mensajes directos"
+            title="Mensajes directos"
+            className={cn(
+              "flex size-12 cursor-pointer items-center justify-center rounded-2xl transition-all",
+              isDirectMessagesActive
+                ? "bg-rail-active-bg text-rail-active-text"
+                : "bg-rail-surface text-on-accent/70 hover:bg-rail-surface-hover hover:text-on-accent",
+            )}
+          >
+            <HomeIcon size={20} />
+          </button>
+          {unreadDmCount > 0 && !isDirectMessagesActive ? (
+            <span
+              className="bg-danger border-rail-surface absolute -top-0.5 -right-0.5 flex min-w-[18px] items-center justify-center rounded-full border-2 px-1 text-[9px] font-bold text-white"
+              style={{ height: 18 }}
+            >
+              {unreadDmCount}
+            </span>
+          ) : null}
+        </div>
 
         <div className="bg-line-strong h-px w-8 shrink-0 rounded-full" />
 
@@ -51,7 +69,7 @@ export function ServerRail({
           <ServerRailItem
             key={server.id}
             server={server}
-            isActive={server.id === selectedServerId}
+            isActive={!isDirectMessagesActive && server.id === selectedServerId}
             onClick={() => onSelect(server.id)}
           />
         ))}

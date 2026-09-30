@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 
-import { HomeShell } from "@/components/home/home-shell";
+import { HomeShell } from "@/components/home/HomeShell";
 import { getSession } from "@/services/auth/session";
 import { listMyServers } from "@/services/servers/service";
 import { ROUTES } from "@/lib/constants";

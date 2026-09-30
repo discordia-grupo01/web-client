@@ -3,10 +3,11 @@
 import { type ServerSummary, type User } from "@discordia/client-shared";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
+import { DirectMessagesView } from "@/components/direct-messages/DirectMessagesView";
 import { HomeView } from "@/components/home/home-view";
-import { ServerRail } from "@/components/home/server-rail";
+import { ServerRail } from "@/components/home/ServerRail";
 import { JoinServerModal } from "@/components/invites/join-server-modal";
 import { DrawerBackdrop } from "@/components/layout/drawer-backdrop";
 import { MobilePanelsProvider } from "@/components/layout/mobile-panels-context";
@@ -14,8 +15,12 @@ import { OwnProfileModal } from "@/components/profile/own-profile-modal";
 import { CreateServerModal } from "@/components/servers/create-server-modal";
 import { ServerView } from "@/components/servers/server-view";
 import { useAuth } from "@/services/auth/auth-context";
+import { useDirectMessages } from "@/services/conversations/useDirectMessages";
+import { authorFromProfile } from "@/services/messages/author";
 import { getOwnProfileRequest } from "@/services/profile/client";
 import { ROUTES } from "@/lib/constants";
+
+type MainView = "servers" | "direct-messages";
 
 interface HomeShellProps {
   initialServers: ServerSummary[];
@@ -32,12 +37,24 @@ export function HomeShell({
   const [selectedServerId, setSelectedServerId] = useState<string | null>(
     initialSelectedServerId,
   );
+  const [view, setView] = useState<MainView>("servers");
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [ownProfile, setOwnProfile] = useState<User | null>(null);
   const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
+
+  // Se pide una sola vez y sobrevive a cambiar de vista, asi el contador de
+  // no leidos del riel no se resetea al entrar y salir de Mensajes Directos.
+  const currentAuthor = useMemo(
+    () => (ownProfile ? authorFromProfile(ownProfile) : null),
+    [ownProfile],
+  );
+  const directMessages = useDirectMessages(currentAuthor);
+  const unreadDmCount = directMessages.conversations.filter(
+    (c) => c.isUnread,
+  ).length;
 
   // Perfil propio: se pide una sola vez aca (no en `ServerView`) para no
   // refetchear cada vez que se cambia de servidor, y para que el panel de
@@ -94,11 +111,24 @@ export function HomeShell({
         <ServerRail
           servers={servers}
           selectedServerId={selectedServerId}
-          onSelect={setSelectedServerId}
+          isDirectMessagesActive={view === "direct-messages"}
+          unreadDmCount={unreadDmCount}
+          onSelect={(serverId) => {
+            setView("servers");
+            setSelectedServerId(serverId);
+          }}
+          onOpenDirectMessages={() => setView("direct-messages")}
           onCreateClick={() => setIsCreateModalOpen(true)}
         />
 
-        {selectedServer ? (
+        {view === "direct-messages" ? (
+          <DirectMessagesView
+            currentAuthor={currentAuthor}
+            ownProfile={ownProfile}
+            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            directMessages={directMessages}
+          />
+        ) : selectedServer ? (
           <ServerView
             key={selectedServer.id}
             server={selectedServer}

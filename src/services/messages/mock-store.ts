@@ -42,6 +42,8 @@ export function createLocalMessage(
     author_id: authorId,
     content: content.trim(),
     created_at: new Date().toISOString(),
+    edited_at: null,
+    deleted_at: null,
     reactions: [],
   };
 }
