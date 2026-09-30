@@ -7,8 +7,8 @@ import {
 
 import { SmilePlus } from "lucide-react";
 
-import { EmojiPicker } from "./emoji-picker";
-import { ReactionChip } from "./reaction-chip";
+import { EmojiPicker } from "./EmojiPicker";
+import { ReactionChip } from "./ReactionChip";
 
 interface MessageReactionsProps {
   reactions: MessageReaction[];

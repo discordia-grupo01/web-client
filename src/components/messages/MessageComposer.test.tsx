@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { MessageComposer } from "./message-composer";
+import { MessageComposer } from "./MessageComposer";
 
 function renderComposer(onSend = vi.fn()) {
   render(<MessageComposer channelName="general" onSend={onSend} />);
@@ -50,5 +50,32 @@ describe("MessageComposer", () => {
     );
 
     expect(onSend).toHaveBeenCalledWith("desde el boton");
+  });
+
+  it("bloquea @everyone sin el permiso y no envia", async () => {
+    const onSend = vi.fn();
+    render(<MessageComposer channelName="general" onSend={onSend} />);
+
+    await userEvent.type(screen.getByRole("textbox"), "@everyone hola{Enter}");
+
+    expect(onSend).not.toHaveBeenCalled();
+    expect(
+      screen.getByText("No tenés permiso para mencionar a todo el servidor."),
+    ).toBeInTheDocument();
+  });
+
+  it("permite @everyone con el permiso", async () => {
+    const onSend = vi.fn();
+    render(
+      <MessageComposer
+        channelName="general"
+        onSend={onSend}
+        canMentionEveryone
+      />,
+    );
+
+    await userEvent.type(screen.getByRole("textbox"), "@everyone hola{Enter}");
+
+    expect(onSend).toHaveBeenCalledWith("@everyone hola");
   });
 });

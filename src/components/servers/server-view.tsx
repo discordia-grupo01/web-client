@@ -63,7 +63,7 @@ import { MobileNavButton } from "@/components/layout/mobile-nav-button";
 import { useMobilePanels } from "@/components/layout/mobile-panels-context";
 import { SidePanel } from "@/components/layout/side-panel";
 import { MembersSidebar } from "@/components/members/members-sidebar";
-import { ChannelChat } from "@/components/messages/channel-chat";
+import { ChannelChat } from "@/components/messages/ChannelChat";
 import { useAuth } from "@/services/auth/auth-context";
 import { reorderCategoriesRequest } from "@/services/categories/client";
 import {
@@ -71,7 +71,10 @@ import {
   reorderChannelsRequest,
 } from "@/services/channels/client";
 import { authorFromProfile } from "@/services/messages/author";
-import { listMemberRolesRequest } from "@/services/roles/client";
+import {
+  listMemberRolesRequest,
+  listRolesRequest,
+} from "@/services/roles/client";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./sidebar/server-sidebar-header";
@@ -413,6 +416,7 @@ export function ServerView({
     [ownProfile],
   );
   const [myRoles, setMyRoles] = useState<Role[]>([]);
+  const [serverRoles, setServerRoles] = useState<Role[]>([]);
 
   /**
    * Roles asignados al usuario actual en este servidor
@@ -434,6 +438,17 @@ export function ServerView({
 
   useEffect(() => fetchMyRoles(), [fetchMyRoles]);
 
+  /** Catalogo completo de roles del server, para colorear menciones a `@Rol`. */
+  useEffect(() => {
+    let cancelled = false;
+    listRolesRequest(server.id).then((result) => {
+      if (!cancelled && result.ok) setServerRoles(result.roles);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [server.id]);
+
   const canManageChannels = hasPermission(
     { isOwner, roles: myRoles },
     "MANAGE_CHANNELS",
@@ -447,6 +462,14 @@ export function ServerView({
     "MANAGE_SERVER",
   );
   const canInvite = hasPermission({ isOwner, roles: myRoles }, "CREATE_INVITE");
+  const canManageMessages = hasPermission(
+    { isOwner, roles: myRoles },
+    "MANAGE_MESSAGES",
+  );
+  const canMentionEveryone = hasPermission(
+    { isOwner, roles: myRoles },
+    "MENTION_EVERYONE",
+  );
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
@@ -853,6 +876,9 @@ export function ServerView({
                 key={activeChannel.id}
                 channel={activeChannel}
                 currentAuthor={currentAuthor}
+                serverRoles={serverRoles}
+                canManageMessages={canManageMessages}
+                canMentionEveryone={canMentionEveryone}
               />
             ) : (
               <VoiceChannelPlaceholder name={activeChannel.name} />

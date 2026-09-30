@@ -7,6 +7,7 @@ import {
   MAX_MESSAGE_LENGTH,
   messageInputPlaceholder,
   SEND_MESSAGE_LABEL,
+  validateMentionEveryone,
   validateMessageContent,
 } from "@discordia/client-shared";
 
@@ -15,9 +16,10 @@ import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
 import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
 import { CharacterCounter } from "@/components/ui/character-counter";
+import { FieldError } from "@/components/ui/field-error";
 import { cn } from "@/lib/cn";
 
-import { EmojiPicker } from "./emoji-picker";
+import { EmojiPicker } from "./EmojiPicker";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 
@@ -28,14 +30,18 @@ interface MessageComposerProps {
   channelName: string;
   onSend: (content: string) => void;
   disabled?: boolean;
+  /** Puede usar `@everyone`/`@here`. Por defecto `false` (no gatea si nadie lo pasa, ej. en DMs). */
+  canMentionEveryone?: boolean;
 }
 
 export function MessageComposer({
   channelName,
   onSend,
   disabled = false,
+  canMentionEveryone = false,
 }: MessageComposerProps) {
   const [draft, setDraft] = useState("");
+  const [mentionError, setMentionError] = useState<string | undefined>();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const canSend = !disabled && validateMessageContent(draft) === undefined;
   const length = [...draft].length;
@@ -43,6 +49,12 @@ export function MessageComposer({
   function submit(event?: FormEvent) {
     event?.preventDefault();
     if (!canSend) return;
+    const mentionIssue = validateMentionEveryone(draft, canMentionEveryone);
+    if (mentionIssue) {
+      setMentionError(mentionIssue);
+      return;
+    }
+    setMentionError(undefined);
     onSend(draft);
     setDraft("");
   }
@@ -75,7 +87,10 @@ export function MessageComposer({
         <AutoGrowTextarea
           ref={textareaRef}
           value={draft}
-          onChange={(event) => setDraft(event.target.value)}
+          onChange={(event) => {
+            setDraft(event.target.value);
+            setMentionError(undefined);
+          }}
           onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder={messageInputPlaceholder(channelName)}
@@ -104,6 +119,8 @@ export function MessageComposer({
           <SendHorizontal size={18} />
         </button>
       </div>
+
+      <FieldError message={mentionError} />
 
       {length >= COUNTER_THRESHOLD ? (
         <div className="mt-1 flex justify-end">
