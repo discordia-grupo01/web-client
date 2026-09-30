@@ -50,6 +50,11 @@ import {
   type ReactNode,
 } from "react";
 
+import {
+  BanMemberModal,
+  type BanTarget,
+} from "@/components/bans/BanMemberModal";
+import { avatarSrcOf } from "@/components/bans/banDisplay";
 import { PublicProfileModal } from "@/components/profile/public-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
 import { CreateCategoryModal } from "@/components/categories/create-category-modal";
@@ -461,6 +466,10 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "MANAGE_SERVER",
   );
+  const canBanMembers = hasPermission(
+    { isOwner, roles: myRoles },
+    "BAN_MEMBERS",
+  );
   const canInvite = hasPermission({ isOwner, roles: myRoles }, "CREATE_INVITE");
   const canManageMessages = hasPermission(
     { isOwner, roles: myRoles },
@@ -472,6 +481,9 @@ export function ServerView({
   );
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
+  const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
+  /** Sube al banear a alguien: remonta la lista de miembros para que ya no aparezca. */
+  const [membersVersion, setMembersVersion] = useState(0);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
     useState<string | null>(null);
@@ -755,6 +767,7 @@ export function ServerView({
             canManageServer={canManageServer}
             canManageChannels={canManageChannels}
             canManageRoles={canManageRoles}
+            canBanMembers={canBanMembers}
             canInvite={canInvite}
             onLeft={onLeft}
             onCreateChannel={() => {
@@ -763,6 +776,9 @@ export function ServerView({
             }}
             onCreateCategory={() => setIsCreateCategoryOpen(true)}
             onServerUpdated={onServerUpdate}
+            onOpenMemberProfile={setViewingUserId}
+            onBanMember={setBanTarget}
+            bansVersion={membersVersion}
             onOwnershipAccepted={() => {
               if (!user) return;
               onServerUpdate({ ...server, owner_id: String(user.id) });
@@ -899,7 +915,7 @@ export function ServerView({
         className={isMembersVisible ? undefined : "md:hidden"}
       >
         <MembersSidebar
-          key={`${server.id}:${server.owner_id}`}
+          key={`${server.id}:${server.owner_id}:${membersVersion}`}
           serverId={server.id}
           currentUserId={ownProfile?.id ?? user?.id ?? null}
           ownProfile={ownProfile}
@@ -958,7 +974,31 @@ export function ServerView({
           serverId={server.id}
           userId={viewingUserId}
           canManageRoles={canManageRoles}
+          canBan={
+            canBanMembers &&
+            viewingUserId !== String(user?.id) &&
+            viewingUserId !== server.owner_id
+          }
+          onBan={(profile) => {
+            setViewingUserId(null);
+            setBanTarget({
+              userId: profile.id,
+              name: profile.name,
+              avatarSrc: avatarSrcOf(profile.id, profile),
+            });
+          }}
           onClose={() => setViewingUserId(null)}
+        />
+      ) : null}
+
+      {banTarget ? (
+        <BanMemberModal
+          serverId={server.id}
+          userId={banTarget.userId}
+          name={banTarget.name}
+          avatarSrc={banTarget.avatarSrc}
+          onClose={() => setBanTarget(null)}
+          onBanned={() => setMembersVersion((version) => version + 1)}
         />
       ) : null}
     </div>

@@ -1,4 +1,5 @@
 import { X } from "lucide-react";
+import type { ReactNode } from "react";
 
 export const PROFILE_BANNER_GRADIENT =
   "linear-gradient(135deg, #0f1f2e 0%, #1a3a4a 40%, #245C6B 70%, #1c293b 100%)";
@@ -8,6 +9,8 @@ interface ProfileBannerProps {
   gradient?: string;
   /** Portada atenuada para estados especiales (perfil suspendido). */
   dimmed?: boolean;
+  /** Acción de ícono que va a la izquierda del botón de cierre (ej. "Banear"). */
+  action?: ReactNode;
 }
 
 /** Portada con degradé + botón de cierre, compartida por los modales de perfil. */
@@ -15,6 +18,7 @@ export function ProfileBanner({
   onClose,
   gradient = PROFILE_BANNER_GRADIENT,
   dimmed = false,
+  action,
 }: ProfileBannerProps) {
   return (
     <div className="relative h-[100px]" style={{ background: gradient }}>
@@ -27,14 +31,17 @@ export function ProfileBanner({
           opacity: dimmed ? 1 : 0.3,
         }}
       />
-      <button
-        type="button"
-        onClick={onClose}
-        aria-label="Cerrar"
-        className="absolute top-3 right-3 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
-      >
-        <X size={14} className="text-white/80" />
-      </button>
+      <div className="absolute top-3 right-3 z-10 flex items-center gap-2">
+        {action}
+        <button
+          type="button"
+          onClick={onClose}
+          aria-label="Cerrar"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+        >
+          <X size={14} className="text-white/80" />
+        </button>
+      </div>
     </div>
   );
 }
