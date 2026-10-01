@@ -26,8 +26,8 @@ import {
 
 import { useMemo, useState } from "react";
 
-import { FormAlert } from "@/components/ui/form-alert";
-import { ModalShell } from "@/components/ui/modal-shell";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { ModalShell } from "@/components/ui/ModalShell";
 import { Pagination } from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";

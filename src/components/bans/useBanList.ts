@@ -4,30 +4,33 @@ import { type Ban, type UnbanMemberResult } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useState } from "react";
 
+import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { listBansRequest, unbanMemberRequest } from "@/services/bans/client";
 
 /**
- * Lista completa de baneados de un servidor (cada baneo trae el perfil del
- * usuario). `bans` es `null` mientras carga. La
- * busqueda y la paginacion las hace quien lo usa, sobre esta lista.
+ * Lista completa de baneados de un servidor, cada uno con el perfil del
+ * usuario (el del baneo, o `GET /users/:id` si todavia no se replico).
+ * `bans` es `null` mientras carga. La busqueda y la paginacion las hace quien
+ * lo usa, sobre esta lista.
  */
 export function useBanList(serverId: string) {
-  const [bans, setBans] = useState<Ban[] | null>(null);
+  const [loadedBans, setLoadedBans] = useState<Ban[] | null>(null);
+  const bans = useProfileFallback(loadedBans);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    setBans(null);
+    setLoadedBans(null);
     setErrorMessage("");
 
     listBansRequest(serverId).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
         setErrorMessage(result.message);
-        setBans([]);
+        setLoadedBans([]);
         return;
       }
-      setBans(result.bans);
+      setLoadedBans(result.bans);
     });
 
     return () => {
@@ -39,7 +42,7 @@ export function useBanList(serverId: string) {
     async (userId: string): Promise<UnbanMemberResult> => {
       const result = await unbanMemberRequest(serverId, userId);
       if (result.ok) {
-        setBans(
+        setLoadedBans(
           (prev) => prev?.filter((ban) => ban.user_id !== userId) ?? prev,
         );
       }

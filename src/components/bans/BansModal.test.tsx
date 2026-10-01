@@ -9,10 +9,15 @@ import { BansModal } from "./BansModal";
 const listBansRequest = vi.fn();
 const unbanMemberRequest = vi.fn();
 const listMembersRequest = vi.fn();
+const getPublicProfileRequest = vi.fn();
 
 vi.mock("@/services/bans/client", () => ({
   listBansRequest: (...args: unknown[]) => listBansRequest(...args),
   unbanMemberRequest: (...args: unknown[]) => unbanMemberRequest(...args),
+}));
+vi.mock("@/services/profile/client", () => ({
+  getPublicProfileRequest: (...args: unknown[]) =>
+    getPublicProfileRequest(...args),
 }));
 vi.mock("@/services/members/client", () => ({
   listMembersRequest: (...args: unknown[]) => listMembersRequest(...args),
@@ -263,7 +268,7 @@ describe("BansModal", () => {
   });
 
   describe("perfiles de los usuarios", () => {
-    it("muestra el nombre del perfil que viene con el baneo", async () => {
+    it("muestra el nombre del perfil que viene con el baneo, sin pedirlo aparte", async () => {
       listBansRequest.mockResolvedValue({
         ok: true,
         bans: [
@@ -277,9 +282,27 @@ describe("BansModal", () => {
       renderBansModal();
 
       expect(await screen.findByText("Nova")).toBeInTheDocument();
+      expect(getPublicProfileRequest).not.toHaveBeenCalled();
     });
 
-    it("si el perfil todavia no se replico, dice 'Usuario desconocido'", async () => {
+    it("si el perfil todavia no se replico, lo completa con GET /users/:id", async () => {
+      getPublicProfileRequest.mockResolvedValue({
+        ok: true,
+        user: { ...profileOf("u1"), id: "u1", name: "Nova" },
+      });
+      listBansRequest.mockResolvedValue({
+        ok: true,
+        bans: [{ ...makeBans(1)[0], profile: null }],
+        total: 1,
+      });
+      renderBansModal();
+
+      expect(await screen.findByText("Nova")).toBeInTheDocument();
+      expect(getPublicProfileRequest).toHaveBeenCalledWith("u1");
+    });
+
+    it("si ese pedido falla, dice 'Usuario desconocido'", async () => {
+      getPublicProfileRequest.mockResolvedValue({ ok: false, message: "x" });
       listBansRequest.mockResolvedValue({
         ok: true,
         bans: [{ ...makeBans(1)[0], profile: null }],
@@ -290,7 +313,7 @@ describe("BansModal", () => {
       expect(
         await screen.findByText("Usuario desconocido"),
       ).toBeInTheDocument();
-      expect(screen.queryByText("u1")).toBeNull();
+      expect(getPublicProfileRequest).toHaveBeenCalled();
     });
   });
 });

@@ -12,8 +12,8 @@ import {
 import { Paperclip, SendHorizontal, Smile } from "lucide-react";
 import { useRef, useState, type FormEvent, type KeyboardEvent } from "react";
 
-import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
-import { CharacterCounter } from "@/components/ui/character-counter";
+import { AutoGrowTextarea } from "@/components/ui/AutoGrowTextarea";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { EmojiPicker } from "@/components/messages/EmojiPicker";
 import type { SendDmResult } from "@/services/conversations/useDirectMessages";
 import { cn } from "@/lib/cn";

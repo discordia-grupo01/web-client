@@ -1,8 +1,8 @@
 import type { ReactNode } from "react";
 
-import { AuthBrandingPanel } from "@/components/auth/auth-branding-panel";
-import { AppGoogleOAuthProvider } from "@/components/auth/google-oauth-provider";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { AuthBrandingPanel } from "@/components/auth/AuthBrandingPanel";
+import { AppGoogleOAuthProvider } from "@/components/auth/GoogleOAuthProvider";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 /** Shell split-screen para las pantallas de autenticacion. */
 export default function AuthLayout({ children }: { children: ReactNode }) {

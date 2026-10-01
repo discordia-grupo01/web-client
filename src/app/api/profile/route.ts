@@ -7,7 +7,7 @@ import {
 
 import { NextResponse } from "next/server";
 
-import { unauthorizedResponse } from "@/lib/api-route";
+import { unauthorizedResponse } from "@/lib/apiRoute";
 import { createSession, getValidSession } from "@/services/auth/session";
 import { getOwnProfile, updateOwnProfile } from "@/services/profile/service";
 

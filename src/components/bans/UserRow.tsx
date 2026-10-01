@@ -1,5 +1,5 @@
-import { Button } from "@/components/ui/button";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { Button } from "@/components/ui/Button";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import {
   avatarSrcOf,
   displayNameOf,

@@ -8,8 +8,8 @@ import {
 import { Search } from "lucide-react";
 import { useState } from "react";
 
-import { ModalShell } from "@/components/ui/modal-shell";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ModalShell } from "@/components/ui/ModalShell";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 
 interface StartDmModalProps {
   partners: MessageAuthor[];

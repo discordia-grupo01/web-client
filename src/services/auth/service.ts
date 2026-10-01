@@ -10,8 +10,8 @@ import {
   apiRequest,
   apiRequestWithSetCookie,
   type ApiResult,
-} from "@/lib/api-client";
-import { extractCookieValue } from "@/lib/set-cookie";
+} from "@/lib/apiClient";
+import { extractCookieValue } from "@/lib/setCookie";
 
 const REFRESH_COOKIE_NAME = "refresh_token";
 

@@ -3,7 +3,7 @@ import {
   MEMBERS_LOAD_FAILED,
 } from "@discordia/client-shared";
 
-import { api } from "@/lib/browser-api-client";
+import { api } from "@/lib/browserApiClient";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/servers/:id/members`, mismo

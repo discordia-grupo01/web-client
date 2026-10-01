@@ -8,8 +8,8 @@ import {
 
 import { MessageCircle } from "lucide-react";
 
-import { MobileNavButton } from "@/components/layout/mobile-nav-button";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import type {
   ConversationSummary,
   SendDmResult,

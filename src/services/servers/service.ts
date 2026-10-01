@@ -6,7 +6,7 @@ import {
 
 import "server-only";
 
-import { apiRequest, type ApiResult } from "@/lib/api-client";
+import { apiRequest, type ApiResult } from "@/lib/apiClient";
 import { env } from "@/lib/env";
 
 /**

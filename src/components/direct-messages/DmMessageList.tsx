@@ -12,7 +12,7 @@ import {
 import { useEffect, useRef } from "react";
 
 import { MessageItem } from "@/components/messages/MessageItem";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 
 interface DmMessageListProps {
   partner: MessageAuthor;

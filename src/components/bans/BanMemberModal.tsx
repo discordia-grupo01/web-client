@@ -15,12 +15,12 @@ import {
 import { Check } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { AutoGrowTextarea } from "@/components/ui/auto-grow-textarea";
-import { Button } from "@/components/ui/button";
-import { CharacterCounter } from "@/components/ui/character-counter";
-import { FormAlert } from "@/components/ui/form-alert";
-import { ModalShell } from "@/components/ui/modal-shell";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { AutoGrowTextarea } from "@/components/ui/AutoGrowTextarea";
+import { Button } from "@/components/ui/Button";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { ModalShell } from "@/components/ui/ModalShell";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { banMemberRequest } from "@/services/bans/client";
 
 import { BanModalHeader } from "./BanModalHeader";
