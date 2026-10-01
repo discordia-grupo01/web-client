@@ -12,7 +12,7 @@ import {
   type SetPasswordValues,
 } from "@discordia/client-shared";
 
-import { api } from "@/lib/browser-api-client";
+import { api } from "@/lib/browserApiClient";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/auth/*`, mismo origen).

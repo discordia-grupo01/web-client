@@ -8,7 +8,7 @@ import {
   type UpdateServerResult,
 } from "@discordia/client-shared";
 
-import { api } from "@/lib/browser-api-client";
+import { api } from "@/lib/browserApiClient";
 
 type ListServersResult =
   { ok: true; servers: ServerSummary[] } | { ok: false; message: string };

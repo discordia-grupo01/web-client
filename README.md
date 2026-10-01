@@ -66,8 +66,8 @@ discordia-web/
 │   ├── types/                   tipos por dominio: <dominio>.types.ts (Channel, Role, User, ...)
 │   ├── hooks/                   hooks de React reutilizables entre features
 │   └── lib/
-│       ├── api-client.ts         cliente HTTP hacia el Gateway (server-only)
-│       ├── browser-api-client.ts cliente HTTP compartido para navegador (BFF, `/api/*`)
+│       ├── apiClient.ts          cliente HTTP hacia el Gateway (server-only)
+│       ├── browserApiClient.ts   cliente HTTP compartido para navegador (BFF, `/api/*`)
 │       ├── constants.ts          constantes de la app (APP_NAME, rutas, ...)
 │       ├── env.ts                lectura centralizada de variables de entorno
 │       └── cn.ts                 helper para componer clases de Tailwind

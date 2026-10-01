@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import { Suspense } from "react";
 
-import { ConfirmEmailForm } from "@/components/auth/confirm-email-form";
+import { ConfirmEmailForm } from "@/components/auth/ConfirmEmailForm";
 
 export const metadata: Metadata = {
   title: "Confirmar correo",

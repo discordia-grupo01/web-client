@@ -8,7 +8,7 @@ import {
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
-import { unauthorizedResponse } from "@/lib/api-route";
+import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
 import { updateCategory } from "@/services/categories/service";
 

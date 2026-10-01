@@ -18,7 +18,7 @@ import {
   type UpdateRoleResult,
 } from "@discordia/client-shared";
 
-import { api } from "@/lib/browser-api-client";
+import { api } from "@/lib/browserApiClient";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/roles`, `/api/servers/:id/roles`,

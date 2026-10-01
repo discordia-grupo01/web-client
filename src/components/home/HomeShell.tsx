@@ -1,0 +1,182 @@
+"use client";
+
+import { type ServerSummary, type User } from "@discordia/client-shared";
+
+import { useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
+
+import { DirectMessagesView } from "@/components/direct-messages/DirectMessagesView";
+import { HomeView } from "@/components/home/HomeView";
+import { ServerRail } from "@/components/home/ServerRail";
+import { JoinServerModal } from "@/components/invites/JoinServerModal";
+import { DrawerBackdrop } from "@/components/layout/DrawerBackdrop";
+import { MobilePanelsProvider } from "@/components/layout/MobilePanelsContext";
+import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
+import { CreateServerModal } from "@/components/servers/CreateServerModal";
+import { ServerView } from "@/components/servers/ServerView";
+import { useAuth } from "@/services/auth/auth-context";
+import { useDirectMessages } from "@/services/conversations/useDirectMessages";
+import { authorFromProfile } from "@/services/messages/author";
+import { getOwnProfileRequest } from "@/services/profile/client";
+import { ROUTES } from "@/lib/constants";
+
+type MainView = "servers" | "direct-messages";
+
+interface HomeShellProps {
+  initialServers: ServerSummary[];
+  initialSelectedServerId?: string | null;
+}
+
+export function HomeShell({
+  initialServers,
+  initialSelectedServerId = null,
+}: HomeShellProps) {
+  const router = useRouter();
+  const { user } = useAuth();
+  const [servers, setServers] = useState<ServerSummary[]>(initialServers);
+  const [selectedServerId, setSelectedServerId] = useState<string | null>(
+    initialSelectedServerId,
+  );
+  const [view, setView] = useState<MainView>("servers");
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [ownProfile, setOwnProfile] = useState<User | null>(null);
+  const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
+  const selectedServer =
+    servers.find((server) => server.id === selectedServerId) ?? null;
+
+  // Se pide una sola vez y sobrevive a cambiar de vista, asi el contador de
+  // no leidos del riel no se resetea al entrar y salir de Mensajes Directos.
+  const currentAuthor = useMemo(
+    () => (ownProfile ? authorFromProfile(ownProfile) : null),
+    [ownProfile],
+  );
+  const directMessages = useDirectMessages(currentAuthor);
+  const unreadDmCount = directMessages.conversations.filter(
+    (c) => c.isUnread,
+  ).length;
+
+  // Perfil propio: se pide una sola vez aca (no en `ServerView`) para no
+  // refetchear cada vez que se cambia de servidor, y para que el panel de
+  // usuario este disponible incluso sin servidor seleccionado.
+  useEffect(() => {
+    let cancelled = false;
+    getOwnProfileRequest().then((result) => {
+      if (!cancelled && result.ok) setOwnProfile(result.user);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // `?server=...` solo sirve para el estado inicial (arriba, al volver de
+  // aceptar una invitacion); lo sacamos de la URL para que un refresh no
+  // vuelva a "reseleccionar" el mismo server por las dudas.
+  useEffect(() => {
+    if (initialSelectedServerId !== null) {
+      router.replace(ROUTES.home);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  function addAndSelect(server: ServerSummary) {
+    setServers((prev) => {
+      const withoutDuplicate = prev.filter(
+        (existing) => existing.id !== server.id,
+      );
+      return [...withoutDuplicate, server];
+    });
+    setSelectedServerId(server.id);
+    setIsCreateModalOpen(false);
+    setIsJoinModalOpen(false);
+  }
+
+  function removeServer(serverId: string) {
+    setServers((prev) => prev.filter((server) => server.id !== serverId));
+    setSelectedServerId((prev) => (prev === serverId ? null : prev));
+  }
+
+  function updateServer(server: ServerSummary) {
+    setServers((prev) =>
+      prev.map((existing) => (existing.id === server.id ? server : existing)),
+    );
+  }
+
+  return (
+    <MobilePanelsProvider>
+      <div
+        className="relative flex h-dvh w-full overflow-hidden"
+        style={{ background: "var(--bg-chat)" }}
+      >
+        <ServerRail
+          servers={servers}
+          selectedServerId={selectedServerId}
+          isDirectMessagesActive={view === "direct-messages"}
+          unreadDmCount={unreadDmCount}
+          onSelect={(serverId) => {
+            setView("servers");
+            setSelectedServerId(serverId);
+          }}
+          onOpenDirectMessages={() => setView("direct-messages")}
+          onCreateClick={() => setIsCreateModalOpen(true)}
+        />
+
+        {view === "direct-messages" ? (
+          <DirectMessagesView
+            currentAuthor={currentAuthor}
+            ownProfile={ownProfile}
+            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            directMessages={directMessages}
+          />
+        ) : selectedServer ? (
+          <ServerView
+            key={selectedServer.id}
+            server={selectedServer}
+            onLeft={() => removeServer(selectedServer.id)}
+            onServerUpdate={updateServer}
+            ownProfile={ownProfile}
+            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+          />
+        ) : (
+          <HomeView
+            hasServers={servers.length > 0}
+            userName={user?.name}
+            ownProfile={ownProfile}
+            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            onCreateClick={() => setIsCreateModalOpen(true)}
+            onJoinClick={() => setIsJoinModalOpen(true)}
+          />
+        )}
+
+        <DrawerBackdrop />
+
+        {isCreateModalOpen ? (
+          <CreateServerModal
+            onClose={() => setIsCreateModalOpen(false)}
+            onCreated={addAndSelect}
+            onJoinClick={() => {
+              setIsCreateModalOpen(false);
+              setIsJoinModalOpen(true);
+            }}
+          />
+        ) : null}
+
+        {isJoinModalOpen ? (
+          <JoinServerModal
+            onClose={() => setIsJoinModalOpen(false)}
+            onJoined={addAndSelect}
+          />
+        ) : null}
+
+        {isOwnProfileOpen && ownProfile ? (
+          <OwnProfileModal
+            serverId={selectedServer?.id}
+            profile={ownProfile}
+            onClose={() => setIsOwnProfileOpen(false)}
+            onUpdated={setOwnProfile}
+          />
+        ) : null}
+      </div>
+    </MobilePanelsProvider>
+  );
+}
