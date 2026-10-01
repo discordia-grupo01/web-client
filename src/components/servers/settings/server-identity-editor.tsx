@@ -10,8 +10,8 @@ import {
 import { Camera, Image as ImageIcon, X } from "lucide-react";
 import { useRef, type RefObject } from "react";
 
-import { ServerAvatar } from "@/components/ui/server-avatar";
-import { ServerBanner } from "@/components/ui/server-banner";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { ServerBanner } from "@/components/ui/ServerBanner";
 
 const BANNER_HEIGHT = 120;
 const ICON_SIZE = 84;

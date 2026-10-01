@@ -8,7 +8,7 @@ import {
   type ReactNode,
 } from "react";
 
-import { TextField } from "./text-field";
+import { TextField } from "./TextField";
 
 interface PasswordFieldProps extends Omit<
   InputHTMLAttributes<HTMLInputElement>,

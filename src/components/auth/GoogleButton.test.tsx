@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { oauthGoogleLoginRequest } from "@/services/auth/client";
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
-import { GoogleButton } from "./google-button";
+import { GoogleButton } from "./GoogleButton";
 
 vi.mock("@react-oauth/google", () => ({
   GoogleLogin: ({

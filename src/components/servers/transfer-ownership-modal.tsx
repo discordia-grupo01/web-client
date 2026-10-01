@@ -13,8 +13,8 @@ import {
 import { AlertCircle, ArrowLeftRight, Check, Crown, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
-import { Button } from "@/components/ui/button";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { Button } from "@/components/ui/Button";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { getPublicProfileRequest } from "@/services/profile/client";

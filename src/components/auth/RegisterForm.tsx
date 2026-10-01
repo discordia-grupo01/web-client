@@ -10,9 +10,9 @@ import { ArrowRight, AtSign, Lock, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { PasswordField } from "@/components/ui/password-field";
-import { TextField } from "@/components/ui/text-field";
+import { Button } from "@/components/ui/Button";
+import { PasswordField } from "@/components/ui/PasswordField";
+import { TextField } from "@/components/ui/TextField";
 import { registerRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 

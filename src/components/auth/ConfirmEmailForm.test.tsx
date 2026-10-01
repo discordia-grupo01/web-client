@@ -8,7 +8,7 @@ import {
   requestEmailConfirmationRequest,
 } from "@/services/auth/client";
 
-import { ConfirmEmailForm } from "./confirm-email-form";
+import { ConfirmEmailForm } from "./ConfirmEmailForm";
 
 let searchParams = new URLSearchParams();
 

@@ -5,7 +5,7 @@ import {
   type ActivityStatus,
 } from "@discordia/client-shared";
 
-import { SectionLabel } from "@/components/ui/section-label";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
 import { ACTIVITY_STATUS_DOT_CLASS } from "./activity-status";

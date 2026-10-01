@@ -14,9 +14,9 @@ import { Check, Copy, KeyRound, Loader2, Smartphone } from "lucide-react";
 import { QRCodeSVG } from "qrcode.react";
 import { useCallback, useEffect, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { FormAlert } from "@/components/ui/form-alert";
-import { TextField } from "@/components/ui/text-field";
+import { Button } from "@/components/ui/Button";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { TextField } from "@/components/ui/TextField";
 import {
   twoFactorActivateRequest,
   twoFactorSetupRequest,

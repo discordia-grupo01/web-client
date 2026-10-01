@@ -16,8 +16,8 @@ import {
 import { AlertCircle, Camera, Check, Pencil, X } from "lucide-react";
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/Button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { MemberRoleBadges } from "@/components/roles/member-role-badges";
 import {
   clearCustomStatusRequest,

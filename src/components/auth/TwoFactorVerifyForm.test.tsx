@@ -9,7 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
-import { TwoFactorVerifyForm } from "./two-factor-verify-form";
+import { TwoFactorVerifyForm } from "./TwoFactorVerifyForm";
 
 vi.mock("@/services/two-factor/client", () => ({
   twoFactorVerifyRequest: vi.fn(),

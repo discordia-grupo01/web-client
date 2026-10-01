@@ -2,7 +2,7 @@
 
 import { CheckCircle } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 interface TwoFactorDisabledConfirmationProps {
   onClose: () => void;

@@ -7,7 +7,7 @@ import {
 } from "@discordia/client-shared";
 import { Check } from "lucide-react";
 
-import { SectionLabel } from "@/components/ui/section-label";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { presetBannerGradientCss } from "@/lib/preset-banner";
 import { cn } from "@/lib/cn";
 

@@ -14,7 +14,7 @@ import { oauthGoogleLoginRequest } from "@/services/auth/client";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";
 
-import { TwoFactorLoginStep } from "./two-factor-login-step";
+import { TwoFactorLoginStep } from "./TwoFactorLoginStep";
 
 const CLIENT_SIDE_ERROR_MESSAGE = GOOGLE_CONNECT_FAILED;
 

@@ -30,7 +30,7 @@ import {
   type FormEvent,
 } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { createServerRequest } from "@/services/servers/client";
 import { cn } from "@/lib/cn";
 

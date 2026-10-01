@@ -9,8 +9,8 @@ import {
 import { Pencil, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { Button } from "@/components/ui/button";
-import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/Button";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 
 interface CustomStatusEditorProps {
   statusText: string;

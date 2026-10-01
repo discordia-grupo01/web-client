@@ -5,8 +5,8 @@ import { Bell, Eye, EyeOff, Hash, Users, Volume2 } from "lucide-react";
 
 import { MobileNavButton } from "@/components/layout/mobile-nav-button";
 import { useMobilePanels } from "@/components/layout/mobile-panels-context";
-import { IconButton } from "@/components/ui/icon-button";
-import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { IconButton } from "@/components/ui/IconButton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
 import { ChannelSearchBox } from "./channel-search-box";
 

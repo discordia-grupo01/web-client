@@ -8,7 +8,7 @@ import { useState } from "react";
 import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { LogoutConfirmModal } from "@/components/profile/logout-confirm-modal";
 import { AccountSettingsModal } from "@/components/settings/account-settings-modal";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 
 interface UserPanelProps {
   user: User;

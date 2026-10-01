@@ -14,13 +14,13 @@ import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { PasswordField } from "@/components/ui/password-field";
-import { TextField } from "@/components/ui/text-field";
+import { Button } from "@/components/ui/Button";
+import { PasswordField } from "@/components/ui/PasswordField";
+import { TextField } from "@/components/ui/TextField";
 import { loginRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 
-import { TwoFactorLoginStep } from "./two-factor-login-step";
+import { TwoFactorLoginStep } from "./TwoFactorLoginStep";
 
 interface LoginFormProps {
   onTwoFactorChallengeChange?: (active: boolean) => void;

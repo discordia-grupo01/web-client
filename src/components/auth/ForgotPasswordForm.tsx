@@ -10,8 +10,8 @@ import { ArrowLeft, ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import Link from "next/link";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { TextField } from "@/components/ui/text-field";
+import { Button } from "@/components/ui/Button";
+import { TextField } from "@/components/ui/TextField";
 import { forgotPasswordRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 

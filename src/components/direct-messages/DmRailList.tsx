@@ -11,7 +11,7 @@ import { Plus } from "lucide-react";
 
 import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { UserPanel } from "@/components/profile/user-panel";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import type { ConversationSummary } from "@/services/conversations/useDirectMessages";
 import { cn } from "@/lib/cn";
 

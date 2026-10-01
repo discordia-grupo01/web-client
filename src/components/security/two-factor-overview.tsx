@@ -7,7 +7,7 @@ import {
 
 import { Download, KeyRound, Lock, ShieldCheck } from "lucide-react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
 interface TwoFactorOverviewProps {

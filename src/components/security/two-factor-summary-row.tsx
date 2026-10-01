@@ -5,7 +5,7 @@ import type { TwoFactorStatus } from "@discordia/client-shared";
 import { ChevronRight, Loader2, Shield } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
-import { FormAlert } from "@/components/ui/form-alert";
+import { FormAlert } from "@/components/ui/FormAlert";
 import { cn } from "@/lib/cn";
 import { twoFactorStatusRequest } from "@/services/two-factor/client";
 

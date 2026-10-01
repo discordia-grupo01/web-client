@@ -13,9 +13,9 @@ import {
 import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
 import { useEffect, useRef, useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { FormAlert } from "@/components/ui/form-alert";
-import { TextField } from "@/components/ui/text-field";
+import { Button } from "@/components/ui/Button";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { TextField } from "@/components/ui/TextField";
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
 interface TwoFactorVerifyFormProps {

@@ -5,8 +5,8 @@ import { BAN_ACTION_LABEL, type PublicUser } from "@discordia/client-shared";
 import { Gavel } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { SectionLabel } from "@/components/ui/section-label";
-import { Tooltip } from "@/components/ui/tooltip";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { MemberRoleBadges } from "@/components/roles/member-role-badges";
 import { getPublicProfileRequest } from "@/services/profile/client";
 

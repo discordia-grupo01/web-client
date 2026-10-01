@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { resetPasswordRequest } from "@/services/auth/client";
 
-import { ResetPasswordForm } from "./reset-password-form";
+import { ResetPasswordForm } from "./ResetPasswordForm";
 
 const replace = vi.fn();
 let searchParams = new URLSearchParams();

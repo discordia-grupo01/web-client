@@ -3,8 +3,8 @@
 import type { ServerSummary } from "@discordia/client-shared";
 import { ChevronDown } from "lucide-react";
 
-import { ServerAvatar } from "@/components/ui/server-avatar";
-import { ServerBanner } from "@/components/ui/server-banner";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { ServerBanner } from "@/components/ui/ServerBanner";
 import { serverBannerSrc, serverIconSrc } from "@/services/servers/image-urls";
 import { cn } from "@/lib/cn";
 

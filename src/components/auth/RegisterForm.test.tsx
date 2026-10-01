@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { registerRequest } from "@/services/auth/client";
 
-import { RegisterForm } from "./register-form";
+import { RegisterForm } from "./RegisterForm";
 
 const replace = vi.fn();
 const refresh = vi.fn();

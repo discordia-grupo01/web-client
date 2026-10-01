@@ -11,8 +11,8 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { PasswordField } from "@/components/ui/password-field";
+import { Button } from "@/components/ui/Button";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { resetPasswordRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 

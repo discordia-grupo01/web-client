@@ -6,7 +6,7 @@ import { Home as HomeIcon, Plus } from "lucide-react";
 
 import { SidePanel } from "@/components/layout/side-panel";
 import { useMobilePanels } from "@/components/layout/mobile-panels-context";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { serverIconSrc } from "@/services/servers/image-urls";
 import { cn } from "@/lib/cn";
 

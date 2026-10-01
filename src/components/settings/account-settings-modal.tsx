@@ -3,7 +3,7 @@
 import { ChevronLeft, ChevronRight, Moon, Shield } from "lucide-react";
 import { useState } from "react";
 
-import { ModalShell } from "@/components/ui/modal-shell";
+import { ModalShell } from "@/components/ui/ModalShell";
 import { TwoFactorSummaryRow } from "@/components/security/two-factor-summary-row";
 import { cn } from "@/lib/cn";
 

@@ -5,7 +5,7 @@ import { APP_NAME } from "@discordia/client-shared";
 import { Check, CheckCircle, Copy, Download } from "lucide-react";
 import { useState } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 
 interface TwoFactorRecoveryCodesProps {
   codes: string[];

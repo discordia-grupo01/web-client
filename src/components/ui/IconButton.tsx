@@ -2,7 +2,7 @@
 
 import type { LucideIcon } from "lucide-react";
 
-import { Tooltip } from "@/components/ui/tooltip";
+import { Tooltip } from "@/components/ui/Tooltip";
 import { cn } from "@/lib/cn";
 
 interface IconButtonProps {

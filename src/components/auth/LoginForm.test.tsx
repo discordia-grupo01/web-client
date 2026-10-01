@@ -7,7 +7,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { loginRequest } from "@/services/auth/client";
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
-import { LoginForm } from "./login-form";
+import { LoginForm } from "./LoginForm";
 
 let searchParams = new URLSearchParams();
 

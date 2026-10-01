@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { cn } from "@/lib/cn";
 
 interface ProfileAvatarFrameProps {

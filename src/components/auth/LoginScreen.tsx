@@ -3,10 +3,10 @@
 import Link from "next/link";
 import { Suspense, useState } from "react";
 
-import { AuthLogo } from "@/components/auth/auth-logo";
-import { AuthModeToggle } from "@/components/auth/auth-mode-toggle";
-import { GoogleButton } from "@/components/auth/google-button";
-import { LoginForm } from "@/components/auth/login-form";
+import { AuthLogo } from "@/components/auth/AuthLogo";
+import { AuthModeToggle } from "@/components/auth/AuthModeToggle";
+import { GoogleButton } from "@/components/auth/GoogleButton";
+import { LoginForm } from "@/components/auth/LoginForm";
 import { ROUTES } from "@/lib/constants";
 
 type ActiveChallenge = "login" | "google" | null;

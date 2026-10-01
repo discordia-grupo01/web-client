@@ -4,8 +4,8 @@ import { type ServerSummary } from "@discordia/client-shared";
 
 import { useEffect, useState } from "react";
 
-import { SectionLabel } from "@/components/ui/section-label";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { SectionLabel } from "@/components/ui/SectionLabel";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { listServersRequest } from "@/services/servers/client";
 
 interface MutualServersListProps {

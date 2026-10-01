@@ -9,7 +9,7 @@ import {
 import { AlertCircle, Hash, Volume2, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { updateChannelRequest } from "@/services/channels/client";
 import { cn } from "@/lib/cn";
 

@@ -9,7 +9,7 @@ import {
 import { AlertCircle, X } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
+import { Button } from "@/components/ui/Button";
 import { updateCategoryRequest } from "@/services/categories/client";
 import { cn } from "@/lib/cn";
 

@@ -9,9 +9,9 @@ import {
 import { ArrowRight, Lock } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { FormAlert } from "@/components/ui/form-alert";
-import { PasswordField } from "@/components/ui/password-field";
+import { Button } from "@/components/ui/Button";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { PasswordField } from "@/components/ui/PasswordField";
 import { setPasswordRequest } from "@/services/auth/client";
 
 interface SetPasswordStepProps {

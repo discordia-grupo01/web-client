@@ -26,7 +26,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
 import { getPublicProfileRequest } from "@/services/profile/client";

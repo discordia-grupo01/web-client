@@ -5,8 +5,8 @@ import { type Role } from "@discordia/client-shared";
 import { Plus, X } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { SearchableSelect } from "@/components/ui/searchable-select";
-import { SectionLabel } from "@/components/ui/section-label";
+import { SearchableSelect } from "@/components/ui/SearchableSelect";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import {
   assignRoleRequest,
   listMemberRolesRequest,

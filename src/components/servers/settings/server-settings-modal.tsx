@@ -11,12 +11,12 @@ import {
 } from "@discordia/client-shared";
 import { type FormEvent } from "react";
 
-import { Button } from "@/components/ui/button";
-import { CharacterCounter } from "@/components/ui/character-counter";
-import { FieldError } from "@/components/ui/field-error";
-import { FormAlert } from "@/components/ui/form-alert";
-import { ModalShell } from "@/components/ui/modal-shell";
-import { SectionLabel } from "@/components/ui/section-label";
+import { Button } from "@/components/ui/Button";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
+import { FieldError } from "@/components/ui/FieldError";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { ModalShell } from "@/components/ui/ModalShell";
+import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
 import { BannerPresetPicker } from "./banner-preset-picker";

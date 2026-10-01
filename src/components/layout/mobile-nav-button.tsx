@@ -2,7 +2,7 @@
 
 import { Menu } from "lucide-react";
 
-import { IconButton } from "@/components/ui/icon-button";
+import { IconButton } from "@/components/ui/IconButton";
 
 import { useMobilePanels } from "./mobile-panels-context";
 

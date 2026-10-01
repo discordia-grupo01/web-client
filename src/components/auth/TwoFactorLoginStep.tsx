@@ -2,7 +2,7 @@
 
 import { ArrowLeft } from "lucide-react";
 
-import { TwoFactorVerifyForm } from "./two-factor-verify-form";
+import { TwoFactorVerifyForm } from "./TwoFactorVerifyForm";
 
 interface TwoFactorLoginStepProps {
   expiresIn: number;

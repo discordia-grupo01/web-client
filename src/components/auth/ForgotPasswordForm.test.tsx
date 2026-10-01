@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { forgotPasswordRequest } from "@/services/auth/client";
 
-import { ForgotPasswordForm } from "./forgot-password-form";
+import { ForgotPasswordForm } from "./ForgotPasswordForm";
 
 vi.mock("@/services/auth/client", () => ({
   forgotPasswordRequest: vi.fn(),

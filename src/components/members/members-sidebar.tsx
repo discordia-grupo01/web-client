@@ -6,7 +6,7 @@ import { Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
-import { ServerAvatar } from "@/components/ui/server-avatar";
+import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
