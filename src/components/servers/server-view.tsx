@@ -54,7 +54,7 @@ import {
   BanMemberModal,
   type BanTarget,
 } from "@/components/bans/BanMemberModal";
-import { avatarSrcOf } from "@/components/bans/banDisplay";
+import { avatarSrcOf } from "@/lib/userProfile";
 import { PublicProfileModal } from "@/components/profile/public-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
 import { CreateCategoryModal } from "@/components/categories/create-category-modal";

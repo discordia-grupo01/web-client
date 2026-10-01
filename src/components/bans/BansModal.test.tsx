@@ -8,7 +8,6 @@ import { BansModal } from "./BansModal";
 
 const listBansRequest = vi.fn();
 const unbanMemberRequest = vi.fn();
-const getPublicProfileRequest = vi.fn();
 const listMembersRequest = vi.fn();
 
 vi.mock("@/services/bans/client", () => ({
@@ -18,10 +17,16 @@ vi.mock("@/services/bans/client", () => ({
 vi.mock("@/services/members/client", () => ({
   listMembersRequest: (...args: unknown[]) => listMembersRequest(...args),
 }));
-vi.mock("@/services/profile/client", () => ({
-  getPublicProfileRequest: (...args: unknown[]) =>
-    getPublicProfileRequest(...args),
-}));
+
+function profileOf(userId: string) {
+  return {
+    name: nameOf(userId),
+    avatar_url: "",
+    description: "",
+    status_text: "",
+    status_emoji: "",
+  };
+}
 
 function makeBans(count: number): Ban[] {
   return Array.from({ length: count }, (_, index) => ({
@@ -30,6 +35,7 @@ function makeBans(count: number): Ban[] {
     reason: index === 0 ? "Spam" : null,
     banned_by: "owner",
     banned_at: "2026-01-01T00:00:00Z",
+    profile: profileOf(`u${index + 1}`),
   }));
 }
 
@@ -39,12 +45,6 @@ function nameOf(userId: string): string {
 
 beforeEach(() => {
   vi.resetAllMocks();
-  getPublicProfileRequest.mockImplementation((userId: string) =>
-    Promise.resolve({
-      ok: true,
-      user: { id: userId, name: nameOf(userId), avatar_url: null },
-    }),
-  );
 });
 
 function renderBansModal(overrides: { onOpenProfile?: () => void } = {}) {
@@ -179,8 +179,18 @@ describe("BansModal", () => {
     const members = [
       { user_id: "owner", is_owner: true, joined_at: "" },
       { user_id: "me", is_owner: false, joined_at: "" },
-      { user_id: "u5", is_owner: false, joined_at: "" },
-      { user_id: "u6", is_owner: false, joined_at: "" },
+      {
+        user_id: "u5",
+        is_owner: false,
+        joined_at: "",
+        profile: profileOf("u5"),
+      },
+      {
+        user_id: "u6",
+        is_owner: false,
+        joined_at: "",
+        profile: profileOf("u6"),
+      },
     ];
 
     async function openMembersTab() {
@@ -249,6 +259,38 @@ describe("BansModal", () => {
 
       expect(screen.getAllByRole("listitem")).toHaveLength(1);
       expect(screen.getByText("1 resultado de 2 miembros")).toBeInTheDocument();
+    });
+  });
+
+  describe("perfiles de los usuarios", () => {
+    it("muestra el nombre del perfil que viene con el baneo", async () => {
+      listBansRequest.mockResolvedValue({
+        ok: true,
+        bans: [
+          {
+            ...makeBans(1)[0],
+            profile: { ...profileOf("u1"), name: "Nova" },
+          },
+        ],
+        total: 1,
+      });
+      renderBansModal();
+
+      expect(await screen.findByText("Nova")).toBeInTheDocument();
+    });
+
+    it("si el perfil todavia no se replico, dice 'Usuario desconocido'", async () => {
+      listBansRequest.mockResolvedValue({
+        ok: true,
+        bans: [{ ...makeBans(1)[0], profile: null }],
+        total: 1,
+      });
+      renderBansModal();
+
+      expect(
+        await screen.findByText("Usuario desconocido"),
+      ).toBeInTheDocument();
+      expect(screen.queryByText("u1")).toBeNull();
     });
   });
 });

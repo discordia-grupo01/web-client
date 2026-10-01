@@ -1,32 +1,29 @@
-import { type PublicUser } from "@discordia/client-shared";
-
 import { ShieldBan } from "lucide-react";
+
+import { type ProfileSummary } from "@/lib/userProfile";
 
 import { UserRow, type UserRowAction } from "./UserRow";
 
 export interface UserListItem {
   userId: string;
+  /** `null` si el back todavia no replico el perfil de este usuario. */
+  profile: ProfileSummary | null | undefined;
   subtitle?: string;
 }
 
 interface UserListProps {
   items: UserListItem[];
-  profiles: Record<string, PublicUser>;
-  /** Texto del estado vacio (sin baneados, sin resultados, sin miembros...). */
   emptyMessage: string;
-  /** Acciones de cada fila. `isLoading` lo completa la lista segun `busyUserId`. */
-  actionsFor: (userId: string) => UserRowAction[];
-  /** Usuario cuya accion esta en curso: su fila carga y los botones se bloquean. */
-  busyUserId?: string | null;
+  actionsFor: (item: UserListItem) => UserRowAction[];
+  disableActions?: boolean;
 }
 
 /** Los usuarios de la pagina actual, o el estado vacio. */
 export function UserList({
   items,
-  profiles,
   emptyMessage,
   actionsFor,
-  busyUserId = null,
+  disableActions = false,
 }: UserListProps) {
   if (items.length === 0) {
     return (
@@ -43,13 +40,10 @@ export function UserList({
         <UserRow
           key={item.userId}
           userId={item.userId}
-          profile={profiles[item.userId]}
+          profile={item.profile}
           subtitle={item.subtitle}
-          actions={actionsFor(item.userId).map((action) => ({
-            ...action,
-            isLoading: busyUserId === item.userId,
-          }))}
-          isDisabled={busyUserId !== null}
+          actions={actionsFor(item)}
+          isDisabled={disableActions}
         />
       ))}
     </ul>

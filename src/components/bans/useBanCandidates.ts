@@ -4,7 +4,6 @@ import { type Member } from "@discordia/client-shared";
 
 import { useEffect, useMemo, useState } from "react";
 
-import { useUserProfiles } from "@/hooks/useUserProfiles";
 import { listMembersRequest } from "@/services/members/client";
 
 interface UseBanCandidatesOptions {
@@ -59,11 +58,6 @@ export function useBanCandidates({
       ) ?? null,
     [members, ownerId, currentUserId],
   );
-  const userIds = useMemo(
-    () => candidates?.map((member) => member.user_id) ?? [],
-    [candidates],
-  );
-  const profiles = useUserProfiles(userIds);
 
-  return { candidates, profiles, errorMessage };
+  return { candidates, errorMessage };
 }

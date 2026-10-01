@@ -32,9 +32,9 @@ import { Pagination } from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { usePagination } from "@/hooks/usePagination";
+import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 
 import { BanModalHeader } from "./BanModalHeader";
-import { avatarSrcOf, displayNameOf } from "./banDisplay";
 import { type BanTarget } from "./BanMemberModal";
 import { UserList, type UserListItem } from "./UserList";
 import { type UserRowAction } from "./UserRow";
@@ -86,7 +86,6 @@ export function BansModal({
   });
 
   const isBans = tab === "bans";
-  const profiles = isBans ? banList.profiles : candidates.profiles;
   const errorMessage = isBans ? banList.errorMessage : candidates.errorMessage;
   const isSearching = search.trim() !== "";
 
@@ -95,6 +94,7 @@ export function BansModal({
       return (
         banList.bans?.map((ban) => ({
           userId: ban.user_id,
+          profile: ban.profile,
           subtitle: ban.reason || BAN_NO_REASON,
         })) ?? null
       );
@@ -102,6 +102,7 @@ export function BansModal({
     return (
       candidates.candidates?.map((member) => ({
         userId: member.user_id,
+        profile: member.profile,
       })) ?? null
     );
   }, [isBans, banList.bans, candidates.candidates]);
@@ -109,12 +110,9 @@ export function BansModal({
   const matches = useMemo(
     () =>
       (items ?? []).filter((item) =>
-        matchesSearch(
-          displayNameOf(item.userId, profiles[item.userId]),
-          search,
-        ),
+        matchesSearch(displayNameOf(item.profile), search),
       ),
-    [items, profiles, search],
+    [items, search],
   );
   const pagination = usePagination(matches);
 
@@ -136,9 +134,16 @@ export function BansModal({
     pagination.resetPage();
   }
 
-  function actionsFor(userId: string): UserRowAction[] {
+  function actionsFor(item: UserListItem): UserRowAction[] {
+    const { userId, profile } = item;
     if (isBans) {
-      return [{ label: BAN_REVOKE_LABEL, onClick: () => handleRevoke(userId) }];
+      return [
+        {
+          label: BAN_REVOKE_LABEL,
+          isLoading: revokingUserId === userId,
+          onClick: () => handleRevoke(item),
+        },
+      ];
     }
     return [
       { label: VIEW_PROFILE_LABEL, onClick: () => onOpenProfile(userId) },
@@ -148,8 +153,8 @@ export function BansModal({
         onClick: () =>
           onBanMember({
             userId,
-            name: displayNameOf(userId, profiles[userId]),
-            avatarSrc: avatarSrcOf(userId, profiles[userId]),
+            name: displayNameOf(profile),
+            avatarSrc: avatarSrcOf(userId, profile),
           }),
       },
     ];
@@ -160,7 +165,7 @@ export function BansModal({
     pagination.resetPage();
   }
 
-  async function handleRevoke(userId: string) {
+  async function handleRevoke({ userId, profile }: UserListItem) {
     setNotice("");
     setRevokeError("");
     setRevokingUserId(userId);
@@ -170,7 +175,7 @@ export function BansModal({
       setRevokeError(result.message);
       return;
     }
-    setNotice(unbanSuccessNotice(displayNameOf(userId, profiles[userId])));
+    setNotice(unbanSuccessNotice(displayNameOf(profile)));
   }
 
   return (
@@ -233,10 +238,9 @@ export function BansModal({
         ) : (
           <UserList
             items={pagination.pageItems}
-            profiles={profiles}
             emptyMessage={emptyMessage}
             actionsFor={actionsFor}
-            busyUserId={revokingUserId}
+            disableActions={revokingUserId !== null}
           />
         )}
       </div>

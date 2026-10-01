@@ -15,6 +15,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ServerAvatar } from "@/components/ui/server-avatar";
+import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
 import {
@@ -89,16 +90,14 @@ function ModalShell({
 
 function MemberOption({
   member,
-  profile,
   selected,
   onSelect,
 }: {
   member: Member;
-  profile?: PublicUser;
   selected: boolean;
   onSelect: () => void;
 }) {
-  const displayName = profile?.name ?? member.user_id;
+  const displayName = displayNameOf(member.profile);
   return (
     <button
       type="button"
@@ -111,7 +110,7 @@ function MemberOption({
     >
       <ServerAvatar
         name={displayName}
-        src={profile?.avatar_url ? `/api/users/${member.user_id}/avatar` : null}
+        src={avatarSrcOf(member.user_id, member.profile)}
         size={26}
         className="rounded-full"
       />
@@ -146,7 +145,6 @@ export function TransferOwnershipModal({
   onOwnershipAccepted,
 }: TransferOwnershipModalProps) {
   const [members, setMembers] = useState<Member[] | null>(null);
-  const [profiles, setProfiles] = useState<Record<string, PublicUser>>({});
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -181,12 +179,6 @@ export function TransferOwnershipModal({
       }
       const candidates = result.members.filter((member) => !member.is_owner);
       setMembers(candidates);
-      for (const member of candidates) {
-        getPublicProfileRequest(member.user_id).then((profile) => {
-          if (cancelled || !profile.ok) return;
-          setProfiles((prev) => ({ ...prev, [member.user_id]: profile.user }));
-        });
-      }
     });
     return () => {
       cancelled = true;
@@ -390,7 +382,6 @@ export function TransferOwnershipModal({
             <MemberOption
               key={member.user_id}
               member={member}
-              profile={profiles[member.user_id]}
               selected={selectedUserId === member.user_id}
               onSelect={() => setSelectedUserId(member.user_id)}
             />

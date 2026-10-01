@@ -2,21 +2,18 @@
 
 import { type Ban, type UnbanMemberResult } from "@discordia/client-shared";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
-import { useUserProfiles } from "@/hooks/useUserProfiles";
 import { listBansRequest, unbanMemberRequest } from "@/services/bans/client";
 
 /**
- * Lista completa de baneados de un servidor + los perfiles de esos usuarios
- * (el back solo devuelve el `user_id`). `bans` es `null` mientras carga. La
+ * Lista completa de baneados de un servidor (cada baneo trae el perfil del
+ * usuario). `bans` es `null` mientras carga. La
  * busqueda y la paginacion las hace quien lo usa, sobre esta lista.
  */
 export function useBanList(serverId: string) {
   const [bans, setBans] = useState<Ban[] | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
-  const userIds = useMemo(() => bans?.map((ban) => ban.user_id) ?? [], [bans]);
-  const profiles = useUserProfiles(userIds);
 
   useEffect(() => {
     let cancelled = false;
@@ -51,5 +48,5 @@ export function useBanList(serverId: string) {
     [serverId],
   );
 
-  return { bans, profiles, errorMessage, unban };
+  return { bans, errorMessage, unban };
 }

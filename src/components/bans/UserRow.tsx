@@ -1,10 +1,11 @@
-import { type PublicUser } from "@discordia/client-shared";
-
 import { Button } from "@/components/ui/button";
 import { ServerAvatar } from "@/components/ui/server-avatar";
+import {
+  avatarSrcOf,
+  displayNameOf,
+  type ProfileSummary,
+} from "@/lib/userProfile";
 import { cn } from "@/lib/cn";
-
-import { avatarSrcOf, displayNameOf } from "./banDisplay";
 
 export interface UserRowAction {
   label: string;
@@ -16,7 +17,7 @@ export interface UserRowAction {
 
 interface UserRowProps {
   userId: string;
-  profile: PublicUser | undefined;
+  profile: ProfileSummary | null | undefined;
   /** Segunda linea: el motivo del baneo, o nada en la lista de miembros. */
   subtitle?: string;
   actions: UserRowAction[];
@@ -32,7 +33,7 @@ export function UserRow({
   actions,
   isDisabled = false,
 }: UserRowProps) {
-  const name = displayNameOf(userId, profile);
+  const name = displayNameOf(profile);
 
   return (
     <li className="bg-surface-raised border-line flex min-w-0 flex-wrap items-center gap-3 rounded-xl border p-3 sm:flex-nowrap">
