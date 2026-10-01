@@ -3,7 +3,6 @@
 import {
   type Category,
   type Channel,
-  CHANNEL_START_NOTICE,
   channelsOfCategory,
   hasPermission,
   isUnassignedCategory,
@@ -13,7 +12,6 @@ import {
   topLevelChannels,
   type User,
   visibleCategories,
-  VOICE_NOT_IMPLEMENTED,
 } from "@discordia/client-shared";
 
 import {
@@ -44,8 +42,19 @@ import {
   Trash2,
   Volume2,
 } from "lucide-react";
-import { useCallback, useEffect, useState, type ReactNode } from "react";
+import {
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from "react";
 
+import {
+  BanMemberModal,
+  type BanTarget,
+} from "@/components/bans/BanMemberModal";
+import { avatarSrcOf } from "@/lib/userProfile";
 import { PublicProfileModal } from "@/components/profile/public-profile-modal";
 import { UserPanel } from "@/components/profile/user-panel";
 import { CreateCategoryModal } from "@/components/categories/create-category-modal";
@@ -54,14 +63,23 @@ import { ChannelHeader } from "@/components/channels/channel-header";
 import { CreateChannelModal } from "@/components/channels/create-channel-modal";
 import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
 import { EditChannelModal } from "@/components/channels/edit-channel-modal";
+import { VoiceChannelPlaceholder } from "@/components/channels/voice-channel-placeholder";
+import { MobileNavButton } from "@/components/layout/mobile-nav-button";
+import { useMobilePanels } from "@/components/layout/mobile-panels-context";
+import { SidePanel } from "@/components/layout/side-panel";
 import { MembersSidebar } from "@/components/members/members-sidebar";
+import { ChannelChat } from "@/components/messages/ChannelChat";
 import { useAuth } from "@/services/auth/auth-context";
 import { reorderCategoriesRequest } from "@/services/categories/client";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
 } from "@/services/channels/client";
-import { listMemberRolesRequest } from "@/services/roles/client";
+import { authorFromProfile } from "@/services/messages/author";
+import {
+  listMemberRolesRequest,
+  listRolesRequest,
+} from "@/services/roles/client";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./sidebar/server-sidebar-header";
@@ -388,12 +406,6 @@ function SortableCategorySection({
   );
 }
 
-/**
- * Vista de un servidor ya creado: header + canales reales agrupados por
- * categoria (con "sin categoria" como balde por default) y un placeholder de
- * "chat" -- todavia no hay servicio de mensajes, asi que no fingimos mensajes
- * reales, solo la estructura.
- */
 export function ServerView({
   server,
   onLeft,
@@ -402,8 +414,14 @@ export function ServerView({
   onOpenOwnProfile,
 }: ServerViewProps) {
   const { user } = useAuth();
+  const { openPanel, close: closeMobilePanel } = useMobilePanels();
   const isOwner = user !== null && String(user.id) === server.owner_id;
+  const currentAuthor = useMemo(
+    () => (ownProfile ? authorFromProfile(ownProfile) : null),
+    [ownProfile],
+  );
   const [myRoles, setMyRoles] = useState<Role[]>([]);
+  const [serverRoles, setServerRoles] = useState<Role[]>([]);
 
   /**
    * Roles asignados al usuario actual en este servidor
@@ -425,6 +443,17 @@ export function ServerView({
 
   useEffect(() => fetchMyRoles(), [fetchMyRoles]);
 
+  /** Catalogo completo de roles del server, para colorear menciones a `@Rol`. */
+  useEffect(() => {
+    let cancelled = false;
+    listRolesRequest(server.id).then((result) => {
+      if (!cancelled && result.ok) setServerRoles(result.roles);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [server.id]);
+
   const canManageChannels = hasPermission(
     { isOwner, roles: myRoles },
     "MANAGE_CHANNELS",
@@ -437,9 +466,24 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "MANAGE_SERVER",
   );
+  const canBanMembers = hasPermission(
+    { isOwner, roles: myRoles },
+    "BAN_MEMBERS",
+  );
   const canInvite = hasPermission({ isOwner, roles: myRoles }, "CREATE_INVITE");
+  const canManageMessages = hasPermission(
+    { isOwner, roles: myRoles },
+    "MANAGE_MESSAGES",
+  );
+  const canMentionEveryone = hasPermission(
+    { isOwner, roles: myRoles },
+    "MENTION_EVERYONE",
+  );
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
+  const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
+  /** Sube al banear a alguien: remonta la lista de miembros para que ya no aparezca. */
+  const [membersVersion, setMembersVersion] = useState(0);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
   const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
     useState<string | null>(null);
@@ -699,7 +743,10 @@ export function ServerView({
         channel={channel}
         active={channel.id === activeChannelId}
         canManage={canManageChannels}
-        onClick={() => setActiveChannelId(channel.id)}
+        onClick={() => {
+          setActiveChannelId(channel.id);
+          closeMobilePanel();
+        }}
         onEdit={() => setEditingChannel(channel)}
         onDelete={() => setDeletingChannel(channel)}
       />
@@ -707,120 +754,126 @@ export function ServerView({
   }
 
   return (
-    <div className="flex flex-1 overflow-hidden">
+    <div className="flex min-w-0 flex-1 overflow-hidden">
       {/* Channel sidebar */}
-      <div
-        className="flex w-60 shrink-0 flex-col overflow-hidden"
-        style={{ background: "var(--bg-channels)" }}
-      >
-        <ServerSidebarHeader
-          server={server}
-          isBannerVisible={isBannerVisible}
-          canManageServer={canManageServer}
-          canManageChannels={canManageChannels}
-          canManageRoles={canManageRoles}
-          canInvite={canInvite}
-          onLeft={onLeft}
-          onCreateChannel={() => {
-            setCreateChannelDefaultCategoryId(null);
-            setIsCreateChannelOpen(true);
-          }}
-          onCreateCategory={() => setIsCreateCategoryOpen(true)}
-          onServerUpdated={onServerUpdate}
-          onOwnershipAccepted={() => {
-            if (!user) return;
-            onServerUpdate({ ...server, owner_id: String(user.id) });
-          }}
-          onPermissionsChanged={fetchMyRoles}
-        />
-
-        {dragError ? (
-          <div className="text-danger mx-2 mb-1 rounded-md bg-black/20 px-2 py-1.5 text-xs">
-            {dragError}
-          </div>
-        ) : null}
-
-        <DndContext
-          sensors={sensors}
-          collisionDetection={closestCenter}
-          onDragStart={handleDragStart}
-          onDragEnd={handleDragEnd}
+      <SidePanel position="afterRail" isOpen={openPanel === "nav"}>
+        <div
+          className="flex w-60 shrink-0 flex-col overflow-hidden"
+          style={{ background: "var(--bg-channels)" }}
         >
-          <div className="flex-1 space-y-3 overflow-y-auto px-2 py-1">
-            {uncategorized.length > 0 ? (
-              <CategoryDropZone
-                bucket={UNCATEGORIZED_BUCKET}
-                items={uncategorized.map((channel) => channel.id)}
+          <ServerSidebarHeader
+            server={server}
+            isBannerVisible={isBannerVisible}
+            canManageServer={canManageServer}
+            canManageChannels={canManageChannels}
+            canManageRoles={canManageRoles}
+            canBanMembers={canBanMembers}
+            canInvite={canInvite}
+            onLeft={onLeft}
+            onCreateChannel={() => {
+              setCreateChannelDefaultCategoryId(null);
+              setIsCreateChannelOpen(true);
+            }}
+            onCreateCategory={() => setIsCreateCategoryOpen(true)}
+            onServerUpdated={onServerUpdate}
+            onOpenMemberProfile={setViewingUserId}
+            onBanMember={setBanTarget}
+            bansVersion={membersVersion}
+            onOwnershipAccepted={() => {
+              if (!user) return;
+              onServerUpdate({ ...server, owner_id: String(user.id) });
+            }}
+            onPermissionsChanged={fetchMyRoles}
+          />
+
+          {dragError ? (
+            <div className="text-danger mx-2 mb-1 rounded-md bg-black/20 px-2 py-1.5 text-xs">
+              {dragError}
+            </div>
+          ) : null}
+
+          <DndContext
+            sensors={sensors}
+            collisionDetection={closestCenter}
+            onDragStart={handleDragStart}
+            onDragEnd={handleDragEnd}
+          >
+            <div className="flex-1 space-y-3 overflow-y-auto px-2 py-1">
+              {uncategorized.length > 0 ? (
+                <CategoryDropZone
+                  bucket={UNCATEGORIZED_BUCKET}
+                  items={uncategorized.map((channel) => channel.id)}
+                >
+                  {renderChannelList(uncategorized)}
+                </CategoryDropZone>
+              ) : null}
+
+              <SortableContext
+                items={sortedCategories.map((category) => category.id)}
+                strategy={verticalListSortingStrategy}
               >
-                {renderChannelList(uncategorized)}
-              </CategoryDropZone>
-            ) : null}
+                {sortedCategories.map((category) => {
+                  const channels = channelsOfCategory(
+                    server.channels,
+                    category.id,
+                  );
+                  const collapsed = collapsedIds.has(category.id);
 
-            <SortableContext
-              items={sortedCategories.map((category) => category.id)}
-              strategy={verticalListSortingStrategy}
-            >
-              {sortedCategories.map((category) => {
-                const channels = channelsOfCategory(
-                  server.channels,
-                  category.id,
-                );
-                const collapsed = collapsedIds.has(category.id);
+                  return (
+                    <SortableCategorySection
+                      key={category.id}
+                      category={category}
+                      canManage={canManageChannels}
+                      isCollapsed={collapsed}
+                      onToggle={() => toggleCollapsed(category.id)}
+                      onAddChannel={() => {
+                        setCreateChannelDefaultCategoryId(category.id);
+                        setIsCreateChannelOpen(true);
+                      }}
+                      onEdit={() => setEditingCategory(category)}
+                    >
+                      {!collapsed ? (
+                        <CategoryDropZone
+                          bucket={categoryBucket(category.id)}
+                          items={channels.map((channel) => channel.id)}
+                        >
+                          {renderChannelList(channels)}
+                        </CategoryDropZone>
+                      ) : null}
+                    </SortableCategorySection>
+                  );
+                })}
+              </SortableContext>
+            </div>
 
-                return (
-                  <SortableCategorySection
-                    key={category.id}
-                    category={category}
-                    canManage={canManageChannels}
-                    isCollapsed={collapsed}
-                    onToggle={() => toggleCollapsed(category.id)}
-                    onAddChannel={() => {
-                      setCreateChannelDefaultCategoryId(category.id);
-                      setIsCreateChannelOpen(true);
-                    }}
-                    onEdit={() => setEditingCategory(category)}
-                  >
-                    {!collapsed ? (
-                      <CategoryDropZone
-                        bucket={categoryBucket(category.id)}
-                        items={channels.map((channel) => channel.id)}
-                      >
-                        {renderChannelList(channels)}
-                      </CategoryDropZone>
-                    ) : null}
-                  </SortableCategorySection>
-                );
-              })}
-            </SortableContext>
-          </div>
+            <DragOverlay>
+              {draggingChannel ? (
+                <div className="bg-surface-raised border-line-strong text-content flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm shadow-2xl">
+                  {draggingChannel.kind === "text" ? (
+                    <Hash size={16} className="text-content-subtle" />
+                  ) : (
+                    <Volume2 size={16} className="text-content-subtle" />
+                  )}
+                  <span className="truncate">{draggingChannel.name}</span>
+                </div>
+              ) : null}
+              {draggingCategory ? (
+                <div className="bg-surface-raised border-line-strong text-content flex items-center rounded-md border px-2 py-1.5 text-[11px] font-semibold tracking-wider uppercase shadow-2xl">
+                  <span className="truncate">{draggingCategory.name}</span>
+                </div>
+              ) : null}
+            </DragOverlay>
+          </DndContext>
 
-          <DragOverlay>
-            {draggingChannel ? (
-              <div className="bg-surface-raised border-line-strong text-content flex items-center gap-2 rounded-md border px-2 py-1.5 text-sm shadow-2xl">
-                {draggingChannel.kind === "text" ? (
-                  <Hash size={16} className="text-content-subtle" />
-                ) : (
-                  <Volume2 size={16} className="text-content-subtle" />
-                )}
-                <span className="truncate">{draggingChannel.name}</span>
-              </div>
-            ) : null}
-            {draggingCategory ? (
-              <div className="bg-surface-raised border-line-strong text-content flex items-center rounded-md border px-2 py-1.5 text-[11px] font-semibold tracking-wider uppercase shadow-2xl">
-                <span className="truncate">{draggingCategory.name}</span>
-              </div>
-            ) : null}
-          </DragOverlay>
-        </DndContext>
-
-        {ownProfile ? (
-          <UserPanel user={ownProfile} onClick={onOpenOwnProfile} />
-        ) : null}
-      </div>
+          {ownProfile ? (
+            <UserPanel user={ownProfile} onClick={onOpenOwnProfile} />
+          ) : null}
+        </div>
+      </SidePanel>
 
       {/* Content area */}
       <div
-        className="flex flex-1 flex-col overflow-hidden"
+        className="flex min-w-0 flex-1 flex-col overflow-hidden"
         style={{ background: "var(--bg-chat)" }}
       >
         {activeChannel ? (
@@ -834,52 +887,42 @@ export function ServerView({
               onToggleMembers={() => setIsMembersVisible((prev) => !prev)}
             />
 
-            <div className="flex flex-1 flex-col items-center justify-center gap-3 px-6 text-center">
-              <div className="from-accent-gradient-start to-accent-gradient-end flex size-14 items-center justify-center rounded-full bg-gradient-to-br">
-                {activeChannel.kind === "text" ? (
-                  <Hash size={26} className="text-white" />
-                ) : (
-                  <Volume2 size={26} className="text-white" />
-                )}
-              </div>
-              <div>
-                <h2 className="font-display text-content text-lg font-bold">
-                  {activeChannel.kind === "text"
-                    ? `Bienvenido a #${activeChannel.name}`
-                    : `Canal de voz: ${activeChannel.name}`}
-                </h2>
-                <p className="text-content-muted mt-1 max-w-sm text-sm leading-relaxed">
-                  {activeChannel.kind === "text"
-                    ? CHANNEL_START_NOTICE
-                    : VOICE_NOT_IMPLEMENTED}
-                </p>
-              </div>
-            </div>
-
             {activeChannel.kind === "text" ? (
-              <div className="px-4 pb-4">
-                <div
-                  className="bg-surface-input border-line text-content-subtle cursor-not-allowed rounded-lg border px-4 py-3 text-sm"
-                  title="El chat todavía no está disponible"
-                >
-                  El chat todavía no está disponible
-                </div>
-              </div>
-            ) : null}
+              <ChannelChat
+                key={activeChannel.id}
+                channel={activeChannel}
+                currentAuthor={currentAuthor}
+                serverRoles={serverRoles}
+                canManageMessages={canManageMessages}
+                canMentionEveryone={canMentionEveryone}
+              />
+            ) : (
+              <VoiceChannelPlaceholder name={activeChannel.name} />
+            )}
           </>
-        ) : null}
+        ) : (
+          <div className="p-2 md:hidden">
+            <MobileNavButton />
+          </div>
+        )}
       </div>
 
-      {isMembersVisible ? (
+      {/* En mobile es un drawer (siempre montado); en desktop se oculta con
+          el boton de miembros del header. */}
+      <SidePanel
+        position="right"
+        isOpen={openPanel === "members"}
+        className={isMembersVisible ? undefined : "md:hidden"}
+      >
         <MembersSidebar
-          key={`${server.id}:${server.owner_id}`}
+          key={`${server.id}:${server.owner_id}:${membersVersion}`}
           serverId={server.id}
           currentUserId={ownProfile?.id ?? user?.id ?? null}
           ownProfile={ownProfile}
           onOpenOwnProfile={onOpenOwnProfile}
           onOpenPublicProfile={setViewingUserId}
         />
-      ) : null}
+      </SidePanel>
 
       {isCreateChannelOpen ? (
         <CreateChannelModal
@@ -931,7 +974,31 @@ export function ServerView({
           serverId={server.id}
           userId={viewingUserId}
           canManageRoles={canManageRoles}
+          canBan={
+            canBanMembers &&
+            viewingUserId !== String(user?.id) &&
+            viewingUserId !== server.owner_id
+          }
+          onBan={(profile) => {
+            setViewingUserId(null);
+            setBanTarget({
+              userId: profile.id,
+              name: profile.name,
+              avatarSrc: avatarSrcOf(profile.id, profile),
+            });
+          }}
           onClose={() => setViewingUserId(null)}
+        />
+      ) : null}
+
+      {banTarget ? (
+        <BanMemberModal
+          serverId={server.id}
+          userId={banTarget.userId}
+          name={banTarget.name}
+          avatarSrc={banTarget.avatarSrc}
+          onClose={() => setBanTarget(null)}
+          onBanned={() => setMembersVersion((version) => version + 1)}
         />
       ) : null}
     </div>

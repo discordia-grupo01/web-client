@@ -1,10 +1,12 @@
 "use client";
 
-import { type PublicUser } from "@discordia/client-shared";
+import { BAN_ACTION_LABEL, type PublicUser } from "@discordia/client-shared";
 
+import { Gavel } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/section-label";
+import { Tooltip } from "@/components/ui/tooltip";
 import { MemberRoleBadges } from "@/components/roles/member-role-badges";
 import { getPublicProfileRequest } from "@/services/profile/client";
 
@@ -21,6 +23,9 @@ interface PublicProfileModalProps {
   userId: string;
   /** El owner del server puede agregar/quitar roles desde acá. */
   canManageRoles: boolean;
+  /** Puede banear (permiso) y el perfil no es el propio ni el del owner. */
+  canBan: boolean;
+  onBan: (profile: PublicUser) => void;
   onClose: () => void;
 }
 
@@ -38,6 +43,8 @@ export function PublicProfileModal({
   serverId,
   userId,
   canManageRoles,
+  canBan,
+  onBan,
   onClose,
 }: PublicProfileModalProps) {
   const [profile, setProfile] = useState<PublicUser | null>(null);
@@ -99,7 +106,23 @@ export function PublicProfileModal({
   return (
     <ProfileModalOverlay onClose={onClose}>
       <div className="relative shrink-0">
-        <ProfileBanner onClose={onClose} />
+        <ProfileBanner
+          onClose={onClose}
+          action={
+            canBan ? (
+              <Tooltip label={BAN_ACTION_LABEL}>
+                <button
+                  type="button"
+                  onClick={() => onBan(profile)}
+                  aria-label={BAN_ACTION_LABEL}
+                  className="text-danger flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+                >
+                  <Gavel size={14} aria-hidden="true" />
+                </button>
+              </Tooltip>
+            ) : null
+          }
+        />
         <ProfileAvatarFrame name={profile.name} src={avatarSrc}>
           {/* Estado de actividad mock: no hay presencia real en identify-service. */}
           <ActivityStatusDot

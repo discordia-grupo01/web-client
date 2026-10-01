@@ -1,5 +1,6 @@
 "use client";
 
+import { BANS_TITLE } from "@discordia/client-shared";
 import {
   ArrowLeftRight,
   FolderPlus,
@@ -7,6 +8,7 @@ import {
   Plus,
   Settings,
   Shield,
+  ShieldBan,
   UserPlus,
 } from "lucide-react";
 
@@ -16,6 +18,7 @@ interface ServerMenuProps {
   canManageServer: boolean;
   canManageChannels: boolean;
   canManageRoles: boolean;
+  canBanMembers: boolean;
   canInvite: boolean;
   transferLabel: string | null;
   onClose: () => void;
@@ -24,6 +27,7 @@ interface ServerMenuProps {
   onCreateChannel: () => void;
   onCreateCategory: () => void;
   onManageRoles: () => void;
+  onManageBans: () => void;
   onTransfer: () => void;
   onLeave: () => void;
 }
@@ -32,6 +36,7 @@ export function ServerMenu({
   canManageServer,
   canManageChannels,
   canManageRoles,
+  canBanMembers,
   canInvite,
   transferLabel,
   onClose,
@@ -40,6 +45,7 @@ export function ServerMenu({
   onCreateChannel,
   onCreateCategory,
   onManageRoles,
+  onManageBans,
   onTransfer,
   onLeave,
 }: ServerMenuProps) {
@@ -96,6 +102,14 @@ export function ServerMenu({
             icon={Shield}
             label="Gestionar roles"
             onClick={run(onManageRoles)}
+          />
+        ) : null}
+
+        {canBanMembers ? (
+          <ServerMenuItem
+            icon={ShieldBan}
+            label={BANS_TITLE}
+            onClick={run(onManageBans)}
           />
         ) : null}
 

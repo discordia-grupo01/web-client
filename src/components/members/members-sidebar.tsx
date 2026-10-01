@@ -1,17 +1,13 @@
 "use client";
 
-import {
-  type Member,
-  type PublicUser,
-  type User,
-} from "@discordia/client-shared";
+import { type Member, type User } from "@discordia/client-shared";
 
 import { Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { ServerAvatar } from "@/components/ui/server-avatar";
-import { getPublicProfileRequest } from "@/services/profile/client";
+import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
 
 interface MembersSidebarProps {
@@ -22,22 +18,15 @@ interface MembersSidebarProps {
   onOpenPublicProfile: (userId: string) => void;
 }
 
-function MemberAvatar({
-  profile,
-  userId,
-}: {
-  profile?: PublicUser;
-  userId: string;
-}) {
+function MemberAvatar({ member }: { member: Member }) {
   return (
     <div className="relative shrink-0">
       <ServerAvatar
-        name={profile?.name ?? userId}
-        src={profile?.avatar_url ? `/api/users/${userId}/avatar` : null}
+        name={displayNameOf(member.profile)}
+        src={avatarSrcOf(member.user_id, member.profile)}
         size={28}
         className="rounded-full"
       />
-      {/* Estado de actividad mock: no hay presencia real en identify-service. */}
       <ActivityStatusDot
         status="online"
         size={10}
@@ -50,7 +39,6 @@ function MemberAvatar({
 
 function MemberRow({
   member,
-  profile,
   statusText,
   statusEmoji,
   isOwn,
@@ -58,14 +46,13 @@ function MemberRow({
   onOpenPublicProfile,
 }: {
   member: Member;
-  profile?: PublicUser;
   statusText: string;
   statusEmoji: string;
   isOwn: boolean;
   onOpenOwnProfile: () => void;
   onOpenPublicProfile: () => void;
 }) {
-  const displayName = profile?.name ?? member.user_id;
+  const displayName = displayNameOf(member.profile);
 
   return (
     <button
@@ -73,7 +60,7 @@ function MemberRow({
       onClick={isOwn ? onOpenOwnProfile : onOpenPublicProfile}
       className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2 rounded-md px-1.5 py-1.5 text-left transition-colors"
     >
-      <MemberAvatar profile={profile} userId={member.user_id} />
+      <MemberAvatar member={member} />
       <div className="min-w-0 flex-1">
         <span
           className="text-content-muted block truncate text-sm"
@@ -106,7 +93,6 @@ function MemberRow({
 function MemberGroup({
   label,
   members,
-  profiles,
   currentUserId,
   ownProfile,
   onOpenOwnProfile,
@@ -114,7 +100,6 @@ function MemberGroup({
 }: {
   label: string;
   members: Member[];
-  profiles: Record<string, PublicUser>;
   currentUserId: string | null;
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
@@ -130,12 +115,11 @@ function MemberGroup({
         {members.map((member) => {
           const isOwn = member.user_id === currentUserId;
           const statusSource =
-            isOwn && ownProfile ? ownProfile : profiles[member.user_id];
+            isOwn && ownProfile ? ownProfile : member.profile;
           return (
             <MemberRow
               key={member.user_id}
               member={member}
-              profile={profiles[member.user_id]}
               statusText={statusSource?.status_text ?? ""}
               statusEmoji={statusSource?.status_emoji ?? ""}
               isOwn={isOwn}
@@ -157,41 +141,24 @@ export function MembersSidebar({
   onOpenPublicProfile,
 }: MembersSidebarProps) {
   const [members, setMembers] = useState<Member[] | null>(null);
-  const [profiles, setProfiles] = useState<Record<string, PublicUser>>({});
   const [total, setTotal] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
     setMembers(null);
-    setProfiles({});
     setErrorMessage("");
 
-    async function load() {
-      const result = await listMembersRequest(serverId);
+    listMembersRequest(serverId).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
         setErrorMessage(result.message);
         setMembers([]);
         return;
       }
-
-      const lookups = await Promise.all(
-        result.members.map((member) => getPublicProfileRequest(member.user_id)),
-      );
-      if (cancelled) return;
-
-      const loaded: Record<string, PublicUser> = {};
-      result.members.forEach((member, index) => {
-        const lookup = lookups[index];
-        if (lookup.ok) loaded[member.user_id] = lookup.user;
-      });
-      setProfiles(loaded);
       setTotal(result.total);
       setMembers(result.members);
-    }
-
-    void load();
+    });
 
     return () => {
       cancelled = true;
@@ -219,7 +186,6 @@ export function MembersSidebar({
           <MemberGroup
             label="Propietario"
             members={owners}
-            profiles={profiles}
             currentUserId={currentUserId}
             ownProfile={ownProfile}
             onOpenOwnProfile={onOpenOwnProfile}
@@ -228,7 +194,6 @@ export function MembersSidebar({
           <MemberGroup
             label="Miembros"
             members={regulars}
-            profiles={profiles}
             currentUserId={currentUserId}
             ownProfile={ownProfile}
             onOpenOwnProfile={onOpenOwnProfile}

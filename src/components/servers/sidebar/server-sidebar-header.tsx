@@ -6,6 +6,8 @@ import {
 } from "@discordia/client-shared";
 import { useEffect, useState } from "react";
 
+import { type BanTarget } from "@/components/bans/BanMemberModal";
+import { BansModal } from "@/components/bans/BansModal";
 import { InviteModal } from "@/components/invites/invite-modal";
 import { RolesModal } from "@/components/roles/roles-modal";
 import { LeaveServerModal } from "@/components/servers/leave-server-modal";
@@ -18,7 +20,8 @@ import { ServerHeaderTrigger } from "./server-header-trigger";
 import { ServerMenu } from "./server-menu";
 
 /** Que modal esta abierto. Nunca hay dos a la vez. */
-type OpenModal = null | "invite" | "settings" | "roles" | "leave" | "transfer";
+type OpenModal =
+  null | "invite" | "settings" | "roles" | "bans" | "leave" | "transfer";
 
 interface ServerSidebarHeaderProps {
   server: ServerSummary;
@@ -26,11 +29,18 @@ interface ServerSidebarHeaderProps {
   canManageServer: boolean;
   canManageChannels: boolean;
   canManageRoles: boolean;
+  canBanMembers: boolean;
   canInvite: boolean;
   onLeft: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
   onServerUpdated: (server: ServerSummary) => void;
+  /** Abre el perfil de un miembro. */
+  onOpenMemberProfile: (userId: string) => void;
+  /** Abre la confirmación de baneo de un miembro. */
+  onBanMember: (target: BanTarget) => void;
+  /** Cambia al banear a alguien: el modal de baneos se recarga para reflejarlo. */
+  bansVersion: number;
   /** Se dispara cuando YO acepto una transferencia: paso a ser el nuevo owner. */
   onOwnershipAccepted: () => void;
   /** Se dispara al cerrar el modal de roles: los permisos propios pudieron cambiar. */
@@ -43,11 +53,15 @@ export function ServerSidebarHeader({
   canManageServer,
   canManageChannels,
   canManageRoles,
+  canBanMembers,
   canInvite,
   onLeft,
   onCreateChannel,
   onCreateCategory,
   onServerUpdated,
+  onOpenMemberProfile,
+  onBanMember,
+  bansVersion,
   onOwnershipAccepted,
   onPermissionsChanged,
 }: ServerSidebarHeaderProps) {
@@ -112,6 +126,7 @@ export function ServerSidebarHeader({
           canManageServer={canManageServer}
           canManageChannels={canManageChannels}
           canManageRoles={canManageRoles}
+          canBanMembers={canBanMembers}
           canInvite={canInvite}
           transferLabel={transferLabel}
           onClose={() => setIsMenuOpen(false)}
@@ -120,6 +135,7 @@ export function ServerSidebarHeader({
           onCreateChannel={onCreateChannel}
           onCreateCategory={onCreateCategory}
           onManageRoles={() => setOpenModal("roles")}
+          onManageBans={() => setOpenModal("bans")}
           onTransfer={() => setOpenModal("transfer")}
           onLeave={() => setOpenModal("leave")}
         />
@@ -152,6 +168,18 @@ export function ServerSidebarHeader({
             closeModal();
             onPermissionsChanged();
           }}
+        />
+      ) : null}
+
+      {openModal === "bans" && canBanMembers ? (
+        <BansModal
+          key={bansVersion}
+          serverId={server.id}
+          ownerId={server.owner_id}
+          currentUserId={user ? String(user.id) : null}
+          onOpenProfile={onOpenMemberProfile}
+          onBanMember={onBanMember}
+          onClose={closeModal}
         />
       ) : null}
 

@@ -3,6 +3,8 @@
 import type { Channel } from "@discordia/client-shared";
 import { Bell, Eye, EyeOff, Hash, Users, Volume2 } from "lucide-react";
 
+import { MobileNavButton } from "@/components/layout/mobile-nav-button";
+import { useMobilePanels } from "@/components/layout/mobile-panels-context";
 import { IconButton } from "@/components/ui/icon-button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -27,21 +29,23 @@ export function ChannelHeader({
   onToggleMembers,
 }: ChannelHeaderProps) {
   const ChannelIcon = channel.kind === "text" ? Hash : Volume2;
+  const { openMembers } = useMobilePanels();
 
   return (
-    <div className="border-line flex h-12 shrink-0 items-center gap-2 border-b px-4">
+    <div className="border-line flex h-12 shrink-0 items-center gap-2 border-b px-2 md:px-4">
+      <MobileNavButton />
       <ChannelIcon size={18} className="text-content-subtle shrink-0" />
-      <span className="font-display text-content shrink-0 text-sm font-semibold">
+      <span className="font-display text-content min-w-0 truncate text-sm font-semibold md:shrink-0">
         {channel.name}
       </span>
 
       {channel.topic ? (
-        <>
+        <div className="hidden min-w-0 items-center gap-2 md:flex">
           <span className="bg-line-strong h-4 w-px shrink-0" />
           <span className="text-content-muted min-w-0 truncate text-xs">
             {channel.topic}
           </span>
-        </>
+        </div>
       ) : null}
 
       <div className="ml-auto flex shrink-0 items-center gap-1">
@@ -54,19 +58,28 @@ export function ChannelHeader({
           />
         ) : null}
 
-        <IconButton icon={Bell} label="Notificaciones" disabled />
+        <div className="hidden sm:flex">
+          <IconButton icon={Bell} label="Notificaciones" disabled />
+        </div>
 
-        <IconButton
-          icon={Users}
-          label={isMembersVisible ? "Ocultar miembros" : "Mostrar miembros"}
-          onClick={onToggleMembers}
-          isActive={isMembersVisible}
-          isPressed={isMembersVisible}
-        />
+        {/* En desktop muestra/oculta la columna; en mobile abre el drawer. */}
+        <div className="hidden md:flex">
+          <IconButton
+            icon={Users}
+            label={isMembersVisible ? "Ocultar miembros" : "Mostrar miembros"}
+            onClick={onToggleMembers}
+            isActive={isMembersVisible}
+            isPressed={isMembersVisible}
+          />
+        </div>
+        <div className="flex md:hidden">
+          <IconButton icon={Users} label="Ver miembros" onClick={openMembers} />
+        </div>
 
-        <ChannelSearchBox />
-
-        <span className="bg-line-strong mx-1 h-5 w-px" />
+        <div className="hidden items-center lg:flex">
+          <ChannelSearchBox />
+          <span className="bg-line-strong mx-2 h-5 w-px" />
+        </div>
 
         <ThemeToggle />
       </div>
