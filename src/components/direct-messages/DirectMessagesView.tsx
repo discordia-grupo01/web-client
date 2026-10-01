@@ -4,8 +4,8 @@ import type { MessageAuthor, User } from "@discordia/client-shared";
 
 import { useState } from "react";
 
-import { useMobilePanels } from "@/components/layout/mobile-panels-context";
-import { SidePanel } from "@/components/layout/side-panel";
+import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
+import { SidePanel } from "@/components/layout/SidePanel";
 import type { useDirectMessages } from "@/services/conversations/useDirectMessages";
 
 import { DmConversation } from "./DmConversation";

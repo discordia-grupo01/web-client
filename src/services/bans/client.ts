@@ -7,7 +7,7 @@ import {
   type UnbanMemberResult,
 } from "@discordia/client-shared";
 
-import { api } from "@/lib/browser-api-client";
+import { api } from "@/lib/browserApiClient";
 
 export async function listBansRequest(
   serverId: string,

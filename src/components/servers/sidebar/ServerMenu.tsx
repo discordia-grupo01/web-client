@@ -12,7 +12,7 @@ import {
   UserPlus,
 } from "lucide-react";
 
-import { ServerMenuItem } from "./server-menu-item";
+import { ServerMenuItem } from "./ServerMenuItem";
 
 interface ServerMenuProps {
   canManageServer: boolean;

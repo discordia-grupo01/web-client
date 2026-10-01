@@ -1,6 +1,6 @@
 "use client";
 
-import { useMobilePanels } from "./mobile-panels-context";
+import { useMobilePanels } from "./MobilePanelsContext";
 
 export function DrawerBackdrop() {
   const { openPanel, close } = useMobilePanels();

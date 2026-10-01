@@ -8,7 +8,7 @@ import {
 
 import { MessageCircle } from "lucide-react";
 
-import { MobileNavButton } from "@/components/layout/mobile-nav-button";
+import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import type {
   ConversationSummary,

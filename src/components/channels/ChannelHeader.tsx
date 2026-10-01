@@ -3,12 +3,12 @@
 import type { Channel } from "@discordia/client-shared";
 import { Bell, Eye, EyeOff, Hash, Users, Volume2 } from "lucide-react";
 
-import { MobileNavButton } from "@/components/layout/mobile-nav-button";
-import { useMobilePanels } from "@/components/layout/mobile-panels-context";
+import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
 import { IconButton } from "@/components/ui/IconButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 
-import { ChannelSearchBox } from "./channel-search-box";
+import { ChannelSearchBox } from "./ChannelSearchBox";
 
 interface ChannelHeaderProps {
   channel: Channel;

@@ -4,7 +4,7 @@ import { Search } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
-import { useFloatingPanel } from "@/hooks/use-floating-panel";
+import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { cn } from "@/lib/cn";
 
 export interface SearchableSelectOption {

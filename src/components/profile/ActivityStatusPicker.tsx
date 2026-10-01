@@ -8,7 +8,7 @@ import {
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
-import { ACTIVITY_STATUS_DOT_CLASS } from "./activity-status";
+import { ACTIVITY_STATUS_DOT_CLASS } from "./activityStatus";
 
 /** Solo presentacion: el resto del modelo vive en `client-shared`. */
 const ACTIVE_CLASS: Record<ActivityStatus, string> = {

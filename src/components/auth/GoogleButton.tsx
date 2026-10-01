@@ -9,7 +9,7 @@ import {
 import { GoogleLogin, type CredentialResponse } from "@react-oauth/google";
 import { useEffect, useRef, useState } from "react";
 
-import { GoogleIcon } from "@/components/icons/google-icon";
+import { GoogleIcon } from "@/components/icons/GoogleIcon";
 import { oauthGoogleLoginRequest } from "@/services/auth/client";
 import { cn } from "@/lib/cn";
 import { ROUTES } from "@/lib/constants";

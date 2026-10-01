@@ -3,7 +3,7 @@
 import { Moon, Sun } from "lucide-react";
 
 import { IconButton } from "@/components/ui/IconButton";
-import { useTheme } from "@/hooks/use-theme";
+import { useTheme } from "@/hooks/useTheme";
 
 export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme();

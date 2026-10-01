@@ -5,9 +5,9 @@ import { type User } from "@discordia/client-shared";
 import { Headphones, LogOut, Mic, Settings } from "lucide-react";
 import { useState } from "react";
 
-import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
-import { LogoutConfirmModal } from "@/components/profile/logout-confirm-modal";
-import { AccountSettingsModal } from "@/components/settings/account-settings-modal";
+import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
+import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
+import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
 
 interface UserPanelProps {

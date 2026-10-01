@@ -8,7 +8,7 @@ import {
   twoFactorSetupRequest,
 } from "@/services/two-factor/client";
 
-import { TwoFactorSetupForm } from "./two-factor-setup-form";
+import { TwoFactorSetupForm } from "./TwoFactorSetupForm";
 
 vi.mock("@/services/two-factor/client", () => ({
   twoFactorSetupRequest: vi.fn(),

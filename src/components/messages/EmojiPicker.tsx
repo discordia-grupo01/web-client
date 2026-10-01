@@ -6,7 +6,7 @@ import type { LucideIcon } from "lucide-react";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-import { useFloatingPanel } from "@/hooks/use-floating-panel";
+import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { cn } from "@/lib/cn";
 
 interface EmojiPickerProps {

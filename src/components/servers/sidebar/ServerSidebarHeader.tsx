@@ -8,16 +8,16 @@ import { useEffect, useState } from "react";
 
 import { type BanTarget } from "@/components/bans/BanMemberModal";
 import { BansModal } from "@/components/bans/BansModal";
-import { InviteModal } from "@/components/invites/invite-modal";
-import { RolesModal } from "@/components/roles/roles-modal";
-import { LeaveServerModal } from "@/components/servers/leave-server-modal";
-import { ServerSettingsModal } from "@/components/servers/settings/server-settings-modal";
-import { TransferOwnershipModal } from "@/components/servers/transfer-ownership-modal";
+import { InviteModal } from "@/components/invites/InviteModal";
+import { RolesModal } from "@/components/roles/RolesModal";
+import { LeaveServerModal } from "@/components/servers/LeaveServerModal";
+import { ServerSettingsModal } from "@/components/servers/settings/ServerSettingsModal";
+import { TransferOwnershipModal } from "@/components/servers/TransferOwnershipModal";
 import { useAuth } from "@/services/auth/auth-context";
 import { getPendingTransferRequest } from "@/services/ownership-transfers/client";
 
-import { ServerHeaderTrigger } from "./server-header-trigger";
-import { ServerMenu } from "./server-menu";
+import { ServerHeaderTrigger } from "./ServerHeaderTrigger";
+import { ServerMenu } from "./ServerMenu";
 
 /** Que modal esta abierto. Nunca hay dos a la vez. */
 type OpenModal =

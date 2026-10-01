@@ -9,7 +9,7 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { cn } from "@/lib/cn";
 import { twoFactorStatusRequest } from "@/services/two-factor/client";
 
-import { TwoFactorModal } from "./two-factor-modal";
+import { TwoFactorModal } from "./TwoFactorModal";
 
 export function TwoFactorSummaryRow() {
   const [status, setStatus] = useState<TwoFactorStatus | null>(null);

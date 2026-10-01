@@ -8,7 +8,7 @@ import {
 import { Check } from "lucide-react";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { presetBannerGradientCss } from "@/lib/preset-banner";
+import { presetBannerGradientCss } from "@/lib/presetBanner";
 import { cn } from "@/lib/cn";
 
 interface BannerPresetPickerProps {

@@ -9,7 +9,7 @@ import {
   type RevokeInviteResult,
 } from "@discordia/client-shared";
 
-import { api } from "@/lib/browser-api-client";
+import { api } from "@/lib/browserApiClient";
 
 /**
  * Llamadas del navegador hacia el BFF (`/api/invites`, `/api/servers/:id/invites`,

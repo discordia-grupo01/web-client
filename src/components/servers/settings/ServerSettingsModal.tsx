@@ -19,9 +19,9 @@ import { ModalShell } from "@/components/ui/ModalShell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
-import { BannerPresetPicker } from "./banner-preset-picker";
-import { ServerIdentityEditor } from "./server-identity-editor";
-import { useServerSettingsForm } from "./use-server-settings-form";
+import { BannerPresetPicker } from "./BannerPresetPicker";
+import { ServerIdentityEditor } from "./ServerIdentityEditor";
+import { useServerSettingsForm } from "./useServerSettingsForm";
 
 const TITLE_ID = "server-settings-title";
 const NAME_INPUT_ID = "server-settings-name";

@@ -4,7 +4,7 @@ import { Check, ChevronDown } from "lucide-react";
 import { createPortal } from "react-dom";
 import { useId, useRef, useState } from "react";
 
-import { useFloatingPanel } from "@/hooks/use-floating-panel";
+import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { cn } from "@/lib/cn";
 
 export interface SelectOption {

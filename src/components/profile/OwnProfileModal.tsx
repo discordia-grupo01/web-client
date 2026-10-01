@@ -18,7 +18,7 @@ import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { MemberRoleBadges } from "@/components/roles/member-role-badges";
+import { MemberRoleBadges } from "@/components/roles/MemberRoleBadges";
 import {
   clearCustomStatusRequest,
   updateCustomStatusRequest,
@@ -26,12 +26,12 @@ import {
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
 
-import { ActivityStatusPicker } from "./activity-status-picker";
-import { CustomStatusEditor } from "./custom-status-editor";
-import { MemberSince } from "./member-since";
-import { ProfileAvatarFrame } from "./profile-avatar-frame";
-import { ProfileBanner } from "./profile-banner";
-import { ProfileModalOverlay } from "./profile-modal-overlay";
+import { ActivityStatusPicker } from "./ActivityStatusPicker";
+import { CustomStatusEditor } from "./CustomStatusEditor";
+import { MemberSince } from "./MemberSince";
+import { ProfileAvatarFrame } from "./ProfileAvatarFrame";
+import { ProfileBanner } from "./ProfileBanner";
+import { ProfileModalOverlay } from "./ProfileModalOverlay";
 
 interface OwnProfileModalProps {
   /** Sin servidor seleccionado (p.ej. abierto desde el home) no hay roles que mostrar. */

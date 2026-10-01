@@ -4,7 +4,7 @@ import { Menu } from "lucide-react";
 
 import { IconButton } from "@/components/ui/IconButton";
 
-import { useMobilePanels } from "./mobile-panels-context";
+import { useMobilePanels } from "./MobilePanelsContext";
 
 export function MobileNavButton() {
   const { openNav } = useMobilePanels();

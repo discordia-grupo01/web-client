@@ -55,19 +55,19 @@ import {
   type BanTarget,
 } from "@/components/bans/BanMemberModal";
 import { avatarSrcOf } from "@/lib/userProfile";
-import { PublicProfileModal } from "@/components/profile/public-profile-modal";
-import { UserPanel } from "@/components/profile/user-panel";
-import { CreateCategoryModal } from "@/components/categories/create-category-modal";
-import { EditCategoryModal } from "@/components/categories/edit-category-modal";
-import { ChannelHeader } from "@/components/channels/channel-header";
-import { CreateChannelModal } from "@/components/channels/create-channel-modal";
-import { DeleteChannelModal } from "@/components/channels/delete-channel-modal";
-import { EditChannelModal } from "@/components/channels/edit-channel-modal";
-import { VoiceChannelPlaceholder } from "@/components/channels/voice-channel-placeholder";
-import { MobileNavButton } from "@/components/layout/mobile-nav-button";
-import { useMobilePanels } from "@/components/layout/mobile-panels-context";
-import { SidePanel } from "@/components/layout/side-panel";
-import { MembersSidebar } from "@/components/members/members-sidebar";
+import { PublicProfileModal } from "@/components/profile/PublicProfileModal";
+import { UserPanel } from "@/components/profile/UserPanel";
+import { CreateCategoryModal } from "@/components/categories/CreateCategoryModal";
+import { EditCategoryModal } from "@/components/categories/EditCategoryModal";
+import { ChannelHeader } from "@/components/channels/ChannelHeader";
+import { CreateChannelModal } from "@/components/channels/CreateChannelModal";
+import { DeleteChannelModal } from "@/components/channels/DeleteChannelModal";
+import { EditChannelModal } from "@/components/channels/EditChannelModal";
+import { VoiceChannelPlaceholder } from "@/components/channels/VoiceChannelPlaceholder";
+import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
+import { SidePanel } from "@/components/layout/SidePanel";
+import { MembersSidebar } from "@/components/members/MembersSidebar";
 import { ChannelChat } from "@/components/messages/ChannelChat";
 import { useAuth } from "@/services/auth/auth-context";
 import { reorderCategoriesRequest } from "@/services/categories/client";
@@ -82,7 +82,7 @@ import {
 } from "@/services/roles/client";
 import { cn } from "@/lib/cn";
 
-import { ServerSidebarHeader } from "./sidebar/server-sidebar-header";
+import { ServerSidebarHeader } from "./sidebar/ServerSidebarHeader";
 
 /** Id del "bucket" de canales sin categoria (`category_id: null`). */
 const UNCATEGORIZED_BUCKET = "none";

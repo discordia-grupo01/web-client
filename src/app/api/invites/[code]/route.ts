@@ -5,7 +5,7 @@ import {
 
 import { NextResponse } from "next/server";
 
-import { unauthorizedResponse } from "@/lib/api-route";
+import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
 import { revokeInvitation } from "@/services/invites/service";
 

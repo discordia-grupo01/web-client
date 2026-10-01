@@ -7,16 +7,16 @@ import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Tooltip } from "@/components/ui/Tooltip";
-import { MemberRoleBadges } from "@/components/roles/member-role-badges";
+import { MemberRoleBadges } from "@/components/roles/MemberRoleBadges";
 import { getPublicProfileRequest } from "@/services/profile/client";
 
-import { ActivityStatusDot } from "./activity-status-dot";
-import { CustomStatusBadge } from "./custom-status-badge";
-import { MutualServersList } from "./mutual-servers-list";
-import { ProfileAvatarFrame } from "./profile-avatar-frame";
-import { ProfileBanner } from "./profile-banner";
-import { ProfileModalOverlay } from "./profile-modal-overlay";
-import { SuspendedProfile } from "./suspended-profile";
+import { ActivityStatusDot } from "./ActivityStatusDot";
+import { CustomStatusBadge } from "./CustomStatusBadge";
+import { MutualServersList } from "./MutualServersList";
+import { ProfileAvatarFrame } from "./ProfileAvatarFrame";
+import { ProfileBanner } from "./ProfileBanner";
+import { ProfileModalOverlay } from "./ProfileModalOverlay";
+import { SuspendedProfile } from "./SuspendedProfile";
 
 interface PublicProfileModalProps {
   serverId: string;

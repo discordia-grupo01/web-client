@@ -3,7 +3,7 @@
 import { Check, Moon, Sun } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useTheme } from "@/hooks/use-theme";
+import { useTheme } from "@/hooks/useTheme";
 
 interface ThemeCardProps {
   active: boolean;

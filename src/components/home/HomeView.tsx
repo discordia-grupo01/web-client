@@ -4,11 +4,11 @@ import type { User } from "@discordia/client-shared";
 
 import { Home as HomeIcon } from "lucide-react";
 
-import { EmptyState } from "@/components/home/empty-state";
-import { MobileNavButton } from "@/components/layout/mobile-nav-button";
-import { useMobilePanels } from "@/components/layout/mobile-panels-context";
-import { SidePanel } from "@/components/layout/side-panel";
-import { UserPanel } from "@/components/profile/user-panel";
+import { EmptyState } from "@/components/home/EmptyState";
+import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
+import { SidePanel } from "@/components/layout/SidePanel";
+import { UserPanel } from "@/components/profile/UserPanel";
 
 interface HomeViewProps {
   hasServers: boolean;

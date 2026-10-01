@@ -5,7 +5,7 @@ import { type Member, type User } from "@discordia/client-shared";
 import { Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 
-import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
+import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";

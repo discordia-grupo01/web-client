@@ -2,7 +2,7 @@ import { AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 
-import { ProfileBanner } from "./profile-banner";
+import { ProfileBanner } from "./ProfileBanner";
 
 /**
  * "Perfil no disponible" (CA3 de "Visualización de perfil público"). Hoy

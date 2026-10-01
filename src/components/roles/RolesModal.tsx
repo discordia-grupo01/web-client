@@ -42,7 +42,7 @@ import {
 } from "@/services/roles/client";
 import { cn } from "@/lib/cn";
 
-import { ColorPanel } from "./color-panel";
+import { ColorPanel } from "./ColorPanel";
 
 function FieldError({ message }: { message?: string }) {
   if (!message) return null;

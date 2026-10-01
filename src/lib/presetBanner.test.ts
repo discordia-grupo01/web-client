@@ -1,7 +1,7 @@
 import { PRESET_BANNERS } from "@discordia/client-shared";
 import { describe, expect, it } from "vitest";
 
-import { presetBannerGradientCss } from "./preset-banner";
+import { presetBannerGradientCss } from "./presetBanner";
 
 describe("presetBannerGradientCss", () => {
   it("arma el degradado con las mismas paradas que describe el preset", () => {

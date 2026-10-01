@@ -22,7 +22,7 @@ import {
   twoFactorSetupRequest,
 } from "@/services/two-factor/client";
 
-import { SetPasswordStep } from "./set-password-step";
+import { SetPasswordStep } from "./SetPasswordStep";
 
 interface TwoFactorSetupFormProps {
   onCancel: () => void;

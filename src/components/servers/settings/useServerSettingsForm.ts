@@ -12,7 +12,7 @@ import {
 } from "@discordia/client-shared";
 import { useState } from "react";
 
-import { presetBannerFile, presetBannerGradientCss } from "@/lib/preset-banner";
+import { presetBannerFile, presetBannerGradientCss } from "@/lib/presetBanner";
 import { updateServerRequest } from "@/services/servers/client";
 import { serverBannerSrc, serverIconSrc } from "@/services/servers/image-urls";
 

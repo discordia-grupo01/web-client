@@ -13,11 +13,11 @@ import {
   twoFactorStatusRequest,
 } from "@/services/two-factor/client";
 
-import { TwoFactorDisabledConfirmation } from "./two-factor-disabled-confirmation";
-import { TwoFactorOverview } from "./two-factor-overview";
-import { TwoFactorPasswordForm } from "./two-factor-password-form";
-import { TwoFactorRecoveryCodes } from "./two-factor-recovery-codes";
-import { TwoFactorSetupForm } from "./two-factor-setup-form";
+import { TwoFactorDisabledConfirmation } from "./TwoFactorDisabledConfirmation";
+import { TwoFactorOverview } from "./TwoFactorOverview";
+import { TwoFactorPasswordForm } from "./TwoFactorPasswordForm";
+import { TwoFactorRecoveryCodes } from "./TwoFactorRecoveryCodes";
+import { TwoFactorSetupForm } from "./TwoFactorSetupForm";
 
 type View =
   | "overview"

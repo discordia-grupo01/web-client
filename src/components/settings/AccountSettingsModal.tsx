@@ -4,10 +4,10 @@ import { ChevronLeft, ChevronRight, Moon, Shield } from "lucide-react";
 import { useState } from "react";
 
 import { ModalShell } from "@/components/ui/ModalShell";
-import { TwoFactorSummaryRow } from "@/components/security/two-factor-summary-row";
+import { TwoFactorSummaryRow } from "@/components/security/TwoFactorSummaryRow";
 import { cn } from "@/lib/cn";
 
-import { AppearanceSettings } from "./appearance-settings";
+import { AppearanceSettings } from "./AppearanceSettings";
 
 type Section = "appearance" | "security";
 
