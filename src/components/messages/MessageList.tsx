@@ -69,8 +69,7 @@ export function MessageList({
               }
               isGroupStart={startsMessageGroup(messages[index - 1], message)}
               canEdit={
-                currentUserId !== null &&
-                canEditMessage(message, currentUserId)
+                currentUserId !== null && canEditMessage(message, currentUserId)
               }
               canDelete={
                 currentUserId !== null &&
