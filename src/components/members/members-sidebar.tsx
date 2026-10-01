@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/activity-status-dot";
 import { ServerAvatar } from "@/components/ui/server-avatar";
+import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
 
@@ -140,24 +141,25 @@ export function MembersSidebar({
   onOpenOwnProfile,
   onOpenPublicProfile,
 }: MembersSidebarProps) {
-  const [members, setMembers] = useState<Member[] | null>(null);
+  const [loadedMembers, setLoadedMembers] = useState<Member[] | null>(null);
+  const members = useProfileFallback(loadedMembers);
   const [total, setTotal] = useState(0);
   const [errorMessage, setErrorMessage] = useState("");
 
   useEffect(() => {
     let cancelled = false;
-    setMembers(null);
+    setLoadedMembers(null);
     setErrorMessage("");
 
     listMembersRequest(serverId).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
         setErrorMessage(result.message);
-        setMembers([]);
+        setLoadedMembers([]);
         return;
       }
       setTotal(result.total);
-      setMembers(result.members);
+      setLoadedMembers(result.members);
     });
 
     return () => {

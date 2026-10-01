@@ -4,6 +4,7 @@ import { type Member } from "@discordia/client-shared";
 
 import { useEffect, useMemo, useState } from "react";
 
+import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { listMembersRequest } from "@/services/members/client";
 
 interface UseBanCandidatesOptions {
@@ -50,7 +51,7 @@ export function useBanCandidates({
     };
   }, [serverId, enabled]);
 
-  const candidates = useMemo(
+  const eligible = useMemo(
     () =>
       members?.filter(
         (member) =>
@@ -58,6 +59,8 @@ export function useBanCandidates({
       ) ?? null,
     [members, ownerId, currentUserId],
   );
+
+  const candidates = useProfileFallback(eligible);
 
   return { candidates, errorMessage };
 }

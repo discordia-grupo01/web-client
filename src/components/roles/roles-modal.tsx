@@ -29,6 +29,7 @@ import { useEffect, useRef, useState } from "react";
 import { ServerAvatar } from "@/components/ui/server-avatar";
 import { displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
+import { getPublicProfileRequest } from "@/services/profile/client";
 import {
   assignRoleRequest,
   createRoleRequest,
@@ -368,13 +369,16 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
       }
       Promise.all(
         result.members.map(async (member) => {
-          const memberRoles = await listMemberRolesRequest(
-            serverId,
-            member.user_id,
-          );
+          const [fallbackProfile, memberRoles] = await Promise.all([
+            member.profile ? null : getPublicProfileRequest(member.user_id),
+            listMemberRolesRequest(serverId, member.user_id),
+          ]);
           return {
             user_id: member.user_id,
-            name: displayNameOf(member.profile),
+            name: displayNameOf(
+              member.profile ??
+                (fallbackProfile?.ok ? fallbackProfile.user : null),
+            ),
             roleIds: memberRoles.ok ? memberRoles.roles.map((r) => r.id) : [],
           };
         }),

@@ -15,6 +15,7 @@ import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/button";
 import { ServerAvatar } from "@/components/ui/server-avatar";
+import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
@@ -144,7 +145,8 @@ export function TransferOwnershipModal({
   onClose,
   onOwnershipAccepted,
 }: TransferOwnershipModalProps) {
-  const [members, setMembers] = useState<Member[] | null>(null);
+  const [loadedMembers, setLoadedMembers] = useState<Member[] | null>(null);
+  const members = useProfileFallback(loadedMembers);
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -174,11 +176,11 @@ export function TransferOwnershipModal({
       if (cancelled) return;
       if (!result.ok) {
         setErrorMessage(result.message);
-        setMembers([]);
+        setLoadedMembers([]);
         return;
       }
       const candidates = result.members.filter((member) => !member.is_owner);
-      setMembers(candidates);
+      setLoadedMembers(candidates);
     });
     return () => {
       cancelled = true;
