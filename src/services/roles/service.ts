@@ -14,6 +14,7 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  *   GET    /v1/servers/:id/roles                  -> 200 [Role] | 401 | 404
  *   PATCH  /v1/roles/:id                          -> 200 Role | 400 | 401 | 403 | 404
  *   DELETE /v1/roles/:id                          -> 204 | 401 | 403 | 404 | 409 (rol default)
+ *   PATCH  /v1/servers/:id/roles/reorder           -> 200 [Role] | 400 | 401 | 403 | 404
  *   PUT    /v1/servers/:id/default-role            -> 204 | 400 | 401 | 403 | 404
  *   POST   /v1/servers/:id/members/:userId/roles   -> 200 Role | 400 | 401 | 403 | 404
  *   DELETE /v1/servers/:id/members/:userId/roles/:roleId -> 204 | 401 | 403 | 404
@@ -87,6 +88,18 @@ export function deleteRole(
   return apiRequest<void>(`/v1/roles/${roleId}`, {
     method: "DELETE",
     token,
+  });
+}
+
+export function reorderRoles(
+  token: string,
+  serverId: string,
+  roleIds: string[],
+): Promise<ApiResult<Role[]>> {
+  return apiRequest<Role[]>(`/v1/servers/${serverId}/roles/reorder`, {
+    method: "PATCH",
+    token,
+    data: { role_ids: roleIds },
   });
 }
 
