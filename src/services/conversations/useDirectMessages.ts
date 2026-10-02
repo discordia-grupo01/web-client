@@ -4,10 +4,12 @@ import {
   deleteMessage as deleteMessageIn,
   editMessageContent,
   otherParticipantId,
+  toggleReaction as toggleReactionIn,
   validateMessageContent,
   type Conversation,
-  type DmMessage,
+  type DmMessage as BaseDmMessage,
   type MessageAuthor,
+  type MessageReaction,
 } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -26,6 +28,9 @@ import {
   loadConversations,
   saveConversationMessages,
 } from "./mock-store";
+
+/** Mensaje directo + reacciones (maquetadas, solo en memoria hasta que el back las soporte). */
+export type DmMessage = BaseDmMessage & { reactions?: MessageReaction[] };
 
 export interface ConversationSummary {
   conversation: Conversation;
@@ -57,6 +62,10 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
   const [messagesByConversation, setMessagesByConversation] = useState<
     Record<string, DmMessage[]>
   >({});
+  // Autores que no son de demo (ej. alguien al que se le escribe desde su perfil).
+  const [extraAuthors, setExtraAuthors] = useState<
+    Record<string, MessageAuthor>
+  >({});
   const [unreadIds, setUnreadIds] = useState<Set<string>>(new Set());
   const [activeConversationId, setActiveConversationId] = useState<
     string | null
@@ -84,14 +93,23 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
       const messages = messagesByConversation[conversation.id] ?? [];
       return {
         conversation,
-        partner: DEMO_AUTHORS[partnerId] ?? unknownAuthor(partnerId),
+        partner:
+          DEMO_AUTHORS[partnerId] ??
+          extraAuthors[partnerId] ??
+          unknownAuthor(partnerId),
         lastMessage: messages[messages.length - 1] ?? null,
         isUnread: unreadIds.has(conversation.id),
         blockedByMe: BLOCKED_BY_ME.has(partnerId),
         blocksMe: BLOCKS_ME.has(partnerId),
       };
     });
-  }, [conversations, messagesByConversation, currentUserId, unreadIds]);
+  }, [
+    conversations,
+    messagesByConversation,
+    currentUserId,
+    unreadIds,
+    extraAuthors,
+  ]);
 
   const activeMessages = activeConversationId
     ? (messagesByConversation[activeConversationId] ?? [])
@@ -110,8 +128,11 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
   }
 
   const startConversationWith = useCallback(
-    (partnerId: string) => {
+    (partnerId: string, partner?: MessageAuthor) => {
       if (!currentUserId) return;
+      if (partner) {
+        setExtraAuthors((prev) => ({ ...prev, [partnerId]: partner }));
+      }
       const conversation = findOrCreateConversationWith(
         currentUserId,
         partnerId,
@@ -166,6 +187,23 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
     [currentAuthor, activeConversationId, activeSummary],
   );
 
+  const toggleReaction = useCallback(
+    (messageId: string, emoji: string) => {
+      if (!activeConversationId) return;
+      updateConversationMessages(activeConversationId, (messages) =>
+        messages.map((message) =>
+          message.id === messageId
+            ? {
+                ...message,
+                reactions: toggleReactionIn(message.reactions, emoji),
+              }
+            : message,
+        ),
+      );
+    },
+    [activeConversationId],
+  );
+
   const editMessage = useCallback(
     (messageId: string, content: string) => {
       if (!activeConversationId || validateMessageContent(content)) return;
@@ -209,6 +247,7 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
     openConversation,
     startConversationWith,
     sendMessage,
+    toggleReaction,
     editMessage,
     deleteMessage,
   };

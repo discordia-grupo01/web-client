@@ -1,8 +1,12 @@
 "use client";
 
-import { BAN_ACTION_LABEL, type PublicUser } from "@discordia/client-shared";
+import {
+  BAN_ACTION_LABEL,
+  SEND_MESSAGE_LABEL,
+  type PublicUser,
+} from "@discordia/client-shared";
 
-import { Gavel } from "lucide-react";
+import { Gavel, MessageCircle } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -26,6 +30,8 @@ interface PublicProfileModalProps {
   /** Puede banear (permiso) y el perfil no es el propio ni el del owner. */
   canBan: boolean;
   onBan: (profile: PublicUser) => void;
+  /** Abre el mensaje directo con este usuario. Sin esto (perfil propio) no se muestra el botón. */
+  onSendMessage?: (profile: PublicUser) => void;
   onClose: () => void;
 }
 
@@ -45,6 +51,7 @@ export function PublicProfileModal({
   canManageRoles,
   canBan,
   onBan,
+  onSendMessage,
   onClose,
 }: PublicProfileModalProps) {
   const [profile, setProfile] = useState<PublicUser | null>(null);
@@ -143,6 +150,17 @@ export function PublicProfileModal({
               statusEmoji={profile.status_emoji}
             />
           </div>
+
+          {onSendMessage ? (
+            <button
+              type="button"
+              onClick={() => onSendMessage(profile)}
+              className="bg-accent text-on-accent hover:bg-accent-strong flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg py-2 text-sm font-semibold transition-colors"
+            >
+              <MessageCircle size={16} aria-hidden="true" />
+              {SEND_MESSAGE_LABEL}
+            </button>
+          ) : null}
 
           <div className="bg-line h-px" />
 

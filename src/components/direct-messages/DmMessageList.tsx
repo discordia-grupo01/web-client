@@ -5,7 +5,6 @@ import {
   canEditMessage,
   dmConversationStart,
   startsMessageGroup,
-  type DmMessage,
   type MessageAuthor,
 } from "@discordia/client-shared";
 
@@ -13,20 +12,23 @@ import { useEffect, useRef } from "react";
 
 import { MessageItem } from "@/components/messages/MessageItem";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import type { DmMessage } from "@/services/conversations/useDirectMessages";
 
 interface DmMessageListProps {
   partner: MessageAuthor;
   currentAuthor: MessageAuthor;
   messages: DmMessage[];
+  onToggleReaction: (messageId: string, emoji: string) => void;
   onEditMessage: (messageId: string, content: string) => void;
   onDeleteMessage: (messageId: string) => void;
 }
 
-/** Historial de una conversacion directa. Sin reacciones ni moderacion. */
+/** Historial de una conversacion directa. Sin moderacion. */
 export function DmMessageList({
   partner,
   currentAuthor,
   messages,
+  onToggleReaction,
   onEditMessage,
   onDeleteMessage,
 }: DmMessageListProps) {
@@ -59,12 +61,11 @@ export function DmMessageList({
           <li key={message.id}>
             <MessageItem
               message={message}
-              author={
-                message.author_id === partner.id ? partner : currentAuthor
-              }
+              author={message.user_id === partner.id ? partner : currentAuthor}
               isGroupStart={startsMessageGroup(messages[index - 1], message)}
               canEdit={canEditMessage(message, currentAuthor.id)}
               canDelete={canDeleteMessage(message, currentAuthor.id, false)}
+              onToggleReaction={(emoji) => onToggleReaction(message.id, emoji)}
               onEdit={(content) => onEditMessage(message.id, content)}
               onDelete={() => onDeleteMessage(message.id)}
             />

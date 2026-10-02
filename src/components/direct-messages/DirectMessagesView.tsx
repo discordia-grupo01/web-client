@@ -37,6 +37,7 @@ export function DirectMessagesView({
     openConversation,
     startConversationWith,
     sendMessage,
+    toggleReaction,
     editMessage,
     deleteMessage,
   } = directMessages;
@@ -63,6 +64,7 @@ export function DirectMessagesView({
           activeSummary={activeSummary}
           messages={activeMessages}
           onSend={sendMessage}
+          onToggleReaction={toggleReaction}
           onEditMessage={editMessage}
           onDeleteMessage={deleteMessage}
         />

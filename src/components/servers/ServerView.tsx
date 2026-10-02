@@ -6,6 +6,7 @@ import {
   channelsOfCategory,
   hasPermission,
   isUnassignedCategory,
+  type PublicUser,
   type Role,
   type ServerSummary,
   sortByPosition,
@@ -102,6 +103,8 @@ interface ServerViewProps {
   /** Levantado a `HomeShell`: se comparte con el estado "sin servidor". */
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
+  /** Abre un mensaje directo con alguien (desde su perfil). */
+  onMessageUser: (profile: PublicUser) => void;
 }
 
 function ChannelRow({
@@ -412,6 +415,7 @@ export function ServerView({
   onServerUpdate,
   ownProfile,
   onOpenOwnProfile,
+  onMessageUser,
 }: ServerViewProps) {
   const { user } = useAuth();
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
@@ -890,6 +894,7 @@ export function ServerView({
             {activeChannel.kind === "text" ? (
               <ChannelChat
                 key={activeChannel.id}
+                serverId={server.id}
                 channel={activeChannel}
                 currentAuthor={currentAuthor}
                 serverRoles={serverRoles}
@@ -987,6 +992,14 @@ export function ServerView({
               avatarSrc: avatarSrcOf(profile.id, profile),
             });
           }}
+          onSendMessage={
+            viewingUserId !== String(user?.id)
+              ? (profile) => {
+                  setViewingUserId(null);
+                  onMessageUser(profile);
+                }
+              : undefined
+          }
           onClose={() => setViewingUserId(null)}
         />
       ) : null}
