@@ -3,12 +3,14 @@
 import {
   canDeleteMessage,
   canEditMessage,
+  LOAD_OLDER_MESSAGES_LABEL,
+  LOADING_MESSAGES_LABEL,
   startsMessageGroup,
   type Message,
   type MessageAuthor,
 } from "@discordia/client-shared";
 
-import { useEffect, useRef } from "react";
+import { useLayoutEffect, useRef } from "react";
 
 import type { MentionResolver } from "./MessageContent";
 import { ChannelWelcome } from "./ChannelWelcome";
@@ -21,6 +23,10 @@ interface MessageListProps {
   currentUserId: string | null;
   canManageMessages: boolean;
   resolveMention?: MentionResolver;
+  /** Hay mensajes anteriores sin cargar (paginacion del historial). */
+  hasMore?: boolean;
+  isLoadingOlder?: boolean;
+  onLoadOlder?: () => void;
   onToggleReaction: (messageId: string, emoji: string) => void;
   onEditMessage: (messageId: string, content: string) => void;
   onDeleteMessage: (messageId: string) => void;
@@ -44,20 +50,76 @@ export function MessageList({
   currentUserId,
   canManageMessages,
   resolveMention,
+  hasMore = false,
+  isLoadingOlder = false,
+  onLoadOlder,
   onToggleReaction,
   onEditMessage,
   onDeleteMessage,
 }: MessageListProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const isNearBottom = useRef(true);
+  const previous = useRef<{
+    firstId: string | undefined;
+    lastId: string | undefined;
+    scrollHeight: number;
+  }>({ firstId: undefined, lastId: undefined, scrollHeight: 0 });
 
-  useEffect(() => {
+  // Que pasa con el scroll segun lo que cambio en la lista:
+  // - llegaron mensajes viejos arriba (cargar anteriores): se mantiene lo que
+  //   se estaba leyendo, sin saltar;
+  // - primera carga o mensaje nuevo al final: baja, salvo que se este leyendo
+  //   mas arriba (no se le quita el lugar a quien mira el historial).
+  useLayoutEffect(() => {
     const container = scrollRef.current;
-    if (container) container.scrollTop = container.scrollHeight;
-  }, [messages.length]);
+    if (!container) return;
+    const firstId = messages[0]?.id;
+    const lastId = messages[messages.length - 1]?.id;
+    const before = previous.current;
+
+    if (
+      before.firstId !== undefined &&
+      firstId !== before.firstId &&
+      lastId === before.lastId
+    ) {
+      container.scrollTop += container.scrollHeight - before.scrollHeight;
+    } else if (lastId !== before.lastId) {
+      if (before.lastId === undefined || isNearBottom.current) {
+        container.scrollTop = container.scrollHeight;
+      }
+    }
+    previous.current = {
+      firstId,
+      lastId,
+      scrollHeight: container.scrollHeight,
+    };
+  }, [messages]);
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto px-2 py-4 md:px-4">
-      <ChannelWelcome channelName={channelName} />
+    <div
+      ref={scrollRef}
+      onScroll={(event) => {
+        const { scrollHeight, scrollTop, clientHeight } = event.currentTarget;
+        isNearBottom.current = scrollHeight - scrollTop - clientHeight < 80;
+      }}
+      className="flex-1 overflow-y-auto px-2 py-4 md:px-4"
+    >
+      {hasMore && onLoadOlder ? (
+        <div className="mb-2 flex justify-center">
+          <button
+            type="button"
+            onClick={onLoadOlder}
+            disabled={isLoadingOlder}
+            className="text-content-muted hover:text-content cursor-pointer rounded-md px-3 py-1 text-xs disabled:cursor-wait disabled:opacity-60"
+          >
+            {isLoadingOlder
+              ? LOADING_MESSAGES_LABEL
+              : LOAD_OLDER_MESSAGES_LABEL}
+          </button>
+        </div>
+      ) : (
+        <ChannelWelcome channelName={channelName} />
+      )}
 
       <ol aria-label={`Mensajes de #${channelName}`}>
         {messages.map((message, index) => (
@@ -65,7 +127,7 @@ export function MessageList({
             <MessageItem
               message={message}
               author={
-                authors[message.author_id] ?? unknownAuthor(message.author_id)
+                authors[message.user_id] ?? unknownAuthor(message.user_id)
               }
               isGroupStart={startsMessageGroup(messages[index - 1], message)}
               canEdit={

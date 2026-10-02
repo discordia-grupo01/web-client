@@ -40,10 +40,11 @@ Las requests siempre van al Gateway (Kong), nunca directo a un microservicio: el
 
 ## Variables de entorno
 
-| Variable                     | Default               | Descripcion                                                                                                                        |
-| ---------------------------- | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| NEXT_PUBLIC_API_URL          | http://localhost:8000 | URL base del Gateway (Kong) al que le pega el servidor de Next.                                                                    |
-| NEXT_PUBLIC_GOOGLE_CLIENT_ID | (vacio)               | Client ID de Google (tipo "Web application"). Tiene que coincidir con el `GOOGLE_CLIENT_ID` que usa el backend (login con Google). |
+| Variable                     | Default                         | Descripcion                                                                                                                                                                                                                                                        |
+| ---------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| NEXT_PUBLIC_API_URL          | http://localhost:8000           | URL base del Gateway (Kong) al que le pega el servidor de Next.                                                                                                                                                                                                    |
+| NEXT_PUBLIC_WS_URL           | (sale de `NEXT_PUBLIC_API_URL`) | Opcional. URL del WebSocket de mensajes (`ws://host/socket`), el único acceso al Gateway que hace el navegador directo. Definirla si el navegador ve el Gateway en otra dirección que el servidor de Next (por ejemplo, con Docker: `ws://localhost:8000/socket`). |
+| NEXT_PUBLIC_GOOGLE_CLIENT_ID | (vacio)                         | Client ID de Google (tipo "Web application"). Tiene que coincidir con el `GOOGLE_CLIENT_ID` que usa el backend (login con Google).                                                                                                                                 |
 
 `.env.example` solo trae la estructura (sin valores sensibles). Los valores reales van en tu propio `.env`, que nunca se sube (ya esta en `.gitignore`).
 

@@ -19,6 +19,8 @@ import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FieldError } from "@/components/ui/FieldError";
 import { cn } from "@/lib/cn";
 
+import type { SendMessageResult } from "@/services/messages/useChannelMessages";
+
 import { EmojiPicker } from "./EmojiPicker";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
@@ -28,7 +30,12 @@ const ICON_BUTTON =
 
 interface MessageComposerProps {
   channelName: string;
-  onSend: (content: string) => void;
+  /**
+   * Si devuelve una promesa, el borrador se conserva hasta que el envio sale
+   * bien (un fallo lo deja para reintentar). Si devuelve `void`, se limpia al
+   * instante.
+   */
+  onSend: (content: string) => void | Promise<SendMessageResult>;
   disabled?: boolean;
   /** Puede usar `@everyone`/`@here`. Por defecto `false` (no gatea si nadie lo pasa, ej. en DMs). */
   canMentionEveryone?: boolean;
@@ -42,11 +49,14 @@ export function MessageComposer({
 }: MessageComposerProps) {
   const [draft, setDraft] = useState("");
   const [mentionError, setMentionError] = useState<string | undefined>();
+  const [sendError, setSendError] = useState<string | undefined>();
+  const [isSending, setIsSending] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const canSend = !disabled && validateMessageContent(draft) === undefined;
+  const canSend =
+    !disabled && !isSending && validateMessageContent(draft) === undefined;
   const length = [...draft].length;
 
-  function submit(event?: FormEvent) {
+  async function submit(event?: FormEvent) {
     event?.preventDefault();
     if (!canSend) return;
     const mentionIssue = validateMentionEveryone(draft, canMentionEveryone);
@@ -55,8 +65,20 @@ export function MessageComposer({
       return;
     }
     setMentionError(undefined);
-    onSend(draft);
-    setDraft("");
+    setSendError(undefined);
+
+    const outcome = onSend(draft);
+    if (outcome === undefined) {
+      setDraft("");
+      return;
+    }
+
+    setIsSending(true);
+    const result = await outcome;
+    setIsSending(false);
+    if (result.ok) setDraft("");
+    else setSendError(result.message);
+    textareaRef.current?.focus();
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
@@ -90,9 +112,10 @@ export function MessageComposer({
           onChange={(event) => {
             setDraft(event.target.value);
             setMentionError(undefined);
+            setSendError(undefined);
           }}
           onKeyDown={handleKeyDown}
-          disabled={disabled}
+          disabled={disabled || isSending}
           placeholder={messageInputPlaceholder(channelName)}
           aria-label={messageInputPlaceholder(channelName)}
           className="text-content placeholder:text-content-subtle min-w-0 flex-1 self-center border-none bg-transparent py-1.5 text-base outline-none placeholder:truncate md:text-sm"
@@ -120,7 +143,7 @@ export function MessageComposer({
         </button>
       </div>
 
-      <FieldError message={mentionError} />
+      <FieldError message={mentionError ?? sendError} />
 
       {length >= COUNTER_THRESHOLD ? (
         <div className="mt-1 flex justify-end">

@@ -21,6 +21,48 @@ const REFRESH_SKEW_SECONDS = 30;
 // token (que se renueva solo via refresh mientras el refresh token siga vivo).
 const DEFAULT_MAX_AGE_SECONDS = 30 * 24 * 60 * 60;
 
+// identify-service rota el refresh token: cada /v1/refresh revoca el que se
+// uso, y presentar uno ya revocado revoca TODA la familia (cierra la sesion).
+// Si dos requests llegan casi juntas con la misma cookie y el access token por
+// vencer, las dos refrescan con el mismo refresh token y la segunda lo
+// "reutiliza". Para evitarlo, el resultado de cada refresh se comparte por
+// refresh token durante unos segundos: la segunda request (mientras la primera
+// sigue en curso, o llega un instante despues con la cookie vieja que el
+// navegador todavia no actualizo) recibe la misma sesion nueva en vez de
+// volver a llamar al backend.
+const REFRESH_REUSE_WINDOW_MS = 30_000;
+
+type RefreshOutcome = Awaited<ReturnType<typeof refresh>>;
+
+// En `globalThis` porque Next puede empaquetar cada route handler por separado:
+// un `Map` de modulo no estaria compartido entre rutas. Solo vale dentro de un
+// mismo proceso de Node (varias instancias del front no lo comparten).
+const globalForRefresh = globalThis as typeof globalThis & {
+  __discordiaRefreshes?: Map<string, Promise<RefreshOutcome>>;
+};
+
+function recentRefreshes(): Map<string, Promise<RefreshOutcome>> {
+  globalForRefresh.__discordiaRefreshes ??= new Map();
+  return globalForRefresh.__discordiaRefreshes;
+}
+
+function refreshOnce(refreshToken: string): Promise<RefreshOutcome> {
+  const refreshes = recentRefreshes();
+  const existing = refreshes.get(refreshToken);
+  if (existing) return existing;
+
+  const outcome = refresh(refreshToken);
+  refreshes.set(refreshToken, outcome);
+
+  const forget = () => refreshes.delete(refreshToken);
+  outcome.then(({ result }) => {
+    // Un fallo no se reutiliza: no hay sesion nueva que compartir.
+    if (!result.ok) return forget();
+    setTimeout(forget, REFRESH_REUSE_WINDOW_MS).unref?.();
+  }, forget);
+  return outcome;
+}
+
 /**
  * Escribe la sesion en una cookie httpOnly. El JS del navegador no puede leerla
  * (mitiga XSS); solo el servidor de Next la ve. Se llama unicamente desde Route
@@ -71,7 +113,7 @@ export async function getValidSession(): Promise<Session | null> {
     typeof exp === "number" && exp - REFRESH_SKEW_SECONDS > Date.now() / 1000;
   if (stillValid) return session;
 
-  const { result, newRefreshToken } = await refresh(session.refreshToken);
+  const { result, newRefreshToken } = await refreshOnce(session.refreshToken);
   if (!result.ok) {
     destroySession();
     return null;
