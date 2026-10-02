@@ -9,8 +9,10 @@ import {
   MEMBER_ROLE_REMOVE_FAILED,
   MEMBER_ROLES_LOAD_FAILED,
   type RemoveRoleResult,
+  type ReorderRolesResult,
   ROLE_CREATE_FAILED,
   ROLE_DELETE_FAILED,
+  ROLE_REORDER_FAILED,
   ROLE_UPDATE_FAILED,
   type RolePermission,
   ROLES_LOAD_FAILED,
@@ -90,6 +92,24 @@ export async function deleteRoleRequest(
     return {
       ok: false,
       message: ROLE_DELETE_FAILED,
+    };
+  }
+}
+
+export async function reorderRolesRequest(
+  serverId: string,
+  roleIds: string[],
+): Promise<ReorderRolesResult> {
+  try {
+    const { data } = await api.patch<ReorderRolesResult>(
+      `/servers/${serverId}/roles/reorder`,
+      { roleIds },
+    );
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: ROLE_REORDER_FAILED,
     };
   }
 }

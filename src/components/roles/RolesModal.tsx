@@ -5,13 +5,30 @@ import {
   isValidHex,
   MAX_NAME,
   NO_ROLES_YET,
+  outranksRole,
   PERMISSION_COPY,
   type Role,
   ROLE_PERMISSIONS,
   type RolePermission,
+  sortByPosition,
   validateRole,
 } from "@discordia/client-shared";
 
+import {
+  closestCenter,
+  DndContext,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  type DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  arrayMove,
+  SortableContext,
+  useSortable,
+  verticalListSortingStrategy,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
   AlertCircle,
   Check,
@@ -37,6 +54,7 @@ import {
   listMemberRolesRequest,
   listRolesRequest,
   removeRoleRequest,
+  reorderRolesRequest,
   setDefaultRoleRequest,
   updateRoleRequest,
 } from "@/services/roles/client";
@@ -261,9 +279,85 @@ function MemberRoleRow({
   );
 }
 
+function SortableRoleRow({
+  role,
+  isSelected,
+  isDefault,
+  canReorder,
+  onSelect,
+}: {
+  role: Role;
+  isSelected: boolean;
+  isDefault: boolean;
+  canReorder: boolean;
+  onSelect: () => void;
+}) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: role.id, disabled: !canReorder });
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={{
+        transform: CSS.Transform.toString(transform),
+        transition,
+        opacity: isDragging ? 0.5 : 1,
+      }}
+      {...(canReorder ? { ...listeners, ...attributes } : {})}
+      className={canReorder ? "touch-none" : undefined}
+    >
+      <button
+        type="button"
+        onClick={onSelect}
+        className={cn(
+          "mb-1 flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all",
+          isSelected
+            ? "border-accent-strong/30 bg-accent/20"
+            : "hover:bg-surface-hover border-transparent",
+        )}
+      >
+        <span
+          className="size-3 shrink-0 rounded-full"
+          style={{ background: role.color }}
+        />
+        <span className="text-content font-display min-w-0 flex-1 truncate text-sm font-medium">
+          {role.name}
+        </span>
+        <span className="flex shrink-0 items-center gap-1.5">
+          <span
+            className="text-content-subtle font-mono text-[10px]"
+            title="Posición en la jerarquía"
+          >
+            #{role.position}
+          </span>
+          {isDefault ? (
+            <Star
+              size={11}
+              className="text-highlight"
+              fill="currentColor"
+              aria-label="Rol por defecto"
+            />
+          ) : null}
+          {isSelected ? (
+            <ChevronRight size={11} className="text-content" />
+          ) : null}
+        </span>
+      </button>
+    </div>
+  );
+}
+
 interface RolesModalProps {
   serverId: string;
   serverName: string;
+  isOwner: boolean;
+  myRoles: Role[];
   onClose: () => void;
 }
 
@@ -277,7 +371,13 @@ type RightView = "edit" | "members" | "create";
  * arranca en null y solo se conoce dentro de esta sesion si alguien lo fija
  * desde aca.
  */
-export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
+export function RolesModal({
+  serverId,
+  serverName,
+  isOwner,
+  myRoles,
+  onClose,
+}: RolesModalProps) {
   const [roles, setRoles] = useState<Role[] | null>(null);
   const [loadError, setLoadError] = useState("");
   const [selectedId, setSelectedId] = useState("");
@@ -317,6 +417,10 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
   // Toast
   const [toast, setToast] = useState<string | null>(null);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const dragSensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+  );
 
   function showToast(message: string) {
     if (toastTimer.current) clearTimeout(toastTimer.current);
@@ -556,6 +660,34 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
     showToast(`Rol "${trimmed}" creado`);
   }
 
+  const hierarchyCtx = { isOwner, roles: myRoles };
+  const sortedRoles = sortByPosition(roles ?? []);
+
+  async function handleRolesDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+
+    const oldIndex = sortedRoles.findIndex((role) => role.id === active.id);
+    const newIndex = sortedRoles.findIndex((role) => role.id === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+
+    const reordered = arrayMove(sortedRoles, oldIndex, newIndex);
+    const previousRoles = roles ?? [];
+    const roleIds = reordered.map((role) => role.id);
+
+    setRoles(
+      reordered.map((role, index) => ({ ...role, position: index + 1 })),
+    );
+
+    const result = await reorderRolesRequest(serverId, roleIds);
+    if (!result.ok) {
+      showToast(result.message);
+      setRoles(previousRoles);
+      return;
+    }
+    setRoles(result.roles);
+  }
+
   const isLoading = roles === null;
 
   return (
@@ -605,44 +737,29 @@ export function RolesModal({ serverId, serverName, onClose }: RolesModalProps) {
                 {NO_ROLES_YET}
               </p>
             ) : (
-              (roles ?? []).map((role) => {
-                const isSelected =
-                  role.id === selectedId && rightView !== "create";
-                return (
-                  <button
-                    key={role.id}
-                    type="button"
-                    onClick={() => selectRole(role.id)}
-                    className={cn(
-                      "mb-1 flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all",
-                      isSelected
-                        ? "border-accent-strong/30 bg-accent/20"
-                        : "hover:bg-surface-hover border-transparent",
-                    )}
-                  >
-                    <span
-                      className="size-3 shrink-0 rounded-full"
-                      style={{ background: role.color }}
+              <DndContext
+                sensors={dragSensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleRolesDragEnd}
+              >
+                <SortableContext
+                  items={sortedRoles.map((role) => role.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {sortedRoles.map((role) => (
+                    <SortableRoleRow
+                      key={role.id}
+                      role={role}
+                      isSelected={
+                        role.id === selectedId && rightView !== "create"
+                      }
+                      isDefault={role.id === defaultRoleId}
+                      canReorder={outranksRole(hierarchyCtx, role.position)}
+                      onSelect={() => selectRole(role.id)}
                     />
-                    <span className="text-content font-display min-w-0 flex-1 truncate text-sm font-medium">
-                      {role.name}
-                    </span>
-                    <span className="flex shrink-0 items-center gap-1">
-                      {role.id === defaultRoleId ? (
-                        <Star
-                          size={11}
-                          className="text-highlight"
-                          fill="currentColor"
-                          aria-label="Rol por defecto"
-                        />
-                      ) : null}
-                      {isSelected ? (
-                        <ChevronRight size={11} className="text-content" />
-                      ) : null}
-                    </span>
-                  </button>
-                );
-              })
+                  ))}
+                </SortableContext>
+              </DndContext>
             )}
           </div>
 

@@ -769,6 +769,7 @@ export function ServerView({
             canManageRoles={canManageRoles}
             canBanMembers={canBanMembers}
             canInvite={canInvite}
+            myRoles={myRoles}
             onLeft={onLeft}
             onCreateChannel={() => {
               setCreateChannelDefaultCategoryId(null);
