@@ -18,9 +18,10 @@ const ANA: MessageAuthor = {
 function mensaje(cambios: Partial<Message> & { id: string }): Message {
   return {
     channel_id: "ch1",
-    author_id: "u1",
+    server_id: "s1",
+    user_id: "u1",
     content: "hola",
-    created_at: "2026-09-29T15:00:00Z",
+    inserted_at: "2026-09-29T15:00:00Z",
     edited_at: null,
     deleted_at: null,
     reactions: [],
@@ -97,7 +98,7 @@ describe("MessageList", () => {
   it("editar un mensaje propio llama a onEditMessage con el nuevo contenido", async () => {
     const onEditMessage = vi.fn();
     renderList({
-      messages: [mensaje({ id: "1", author_id: "u1", content: "hola" })],
+      messages: [mensaje({ id: "1", user_id: "u1", content: "hola" })],
       currentUserId: "u1",
       onEditMessage,
     });
@@ -114,7 +115,7 @@ describe("MessageList", () => {
 
   it("no se puede editar un mensaje ajeno", () => {
     renderList({
-      messages: [mensaje({ id: "1", author_id: "otro", content: "hola" })],
+      messages: [mensaje({ id: "1", user_id: "otro", content: "hola" })],
       currentUserId: "u1",
     });
 
@@ -126,7 +127,7 @@ describe("MessageList", () => {
   it("eliminar un mensaje ajeno con permiso de moderacion llama a onDeleteMessage", async () => {
     const onDeleteMessage = vi.fn();
     renderList({
-      messages: [mensaje({ id: "1", author_id: "otro", content: "hola" })],
+      messages: [mensaje({ id: "1", user_id: "otro", content: "hola" })],
       currentUserId: "u1",
       canManageMessages: true,
       onDeleteMessage,
@@ -137,5 +138,62 @@ describe("MessageList", () => {
     );
 
     expect(onDeleteMessage).toHaveBeenCalledWith("1");
+  });
+
+  describe("cargar mensajes anteriores", () => {
+    it("muestra el boton cuando hay mas y lo dispara", async () => {
+      const onLoadOlder = vi.fn();
+      renderList({
+        messages: [mensaje({ id: "1" })],
+        hasMore: true,
+        onLoadOlder,
+      });
+
+      await userEvent.click(
+        screen.getByRole("button", { name: "Cargar mensajes anteriores" }),
+      );
+
+      expect(onLoadOlder).toHaveBeenCalledTimes(1);
+    });
+
+    it("mientras carga se deshabilita", () => {
+      renderList({
+        messages: [mensaje({ id: "1" })],
+        hasMore: true,
+        isLoadingOlder: true,
+        onLoadOlder: vi.fn(),
+      });
+
+      expect(
+        screen.getByRole("button", { name: "Cargando mensajes…" }),
+      ).toBeDisabled();
+    });
+
+    it("la bienvenida del canal solo aparece cuando ya no hay mas historial", () => {
+      const { rerender } = renderList({
+        messages: [mensaje({ id: "1" })],
+        hasMore: true,
+        onLoadOlder: vi.fn(),
+      });
+      expect(
+        screen.queryByText(/Bienvenido a #general/),
+      ).not.toBeInTheDocument();
+
+      rerender(
+        <MessageList
+          channelName="general"
+          messages={[mensaje({ id: "1" })]}
+          authors={{ u1: ANA }}
+          currentUserId="u1"
+          canManageMessages={false}
+          hasMore={false}
+          onToggleReaction={vi.fn()}
+          onEditMessage={vi.fn()}
+          onDeleteMessage={vi.fn()}
+        />,
+      );
+
+      expect(screen.getByText(/Bienvenido a #general/)).toBeInTheDocument();
+    });
   });
 });
