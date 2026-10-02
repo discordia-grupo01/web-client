@@ -2,7 +2,6 @@
 
 import {
   SELECT_CONVERSATION_NOTICE,
-  type DmMessage,
   type MessageAuthor,
 } from "@discordia/client-shared";
 
@@ -12,6 +11,7 @@ import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import type {
   ConversationSummary,
+  DmMessage,
   SendDmResult,
 } from "@/services/conversations/useDirectMessages";
 
@@ -23,6 +23,7 @@ interface DmConversationProps {
   activeSummary: ConversationSummary | null;
   messages: DmMessage[];
   onSend: (content: string) => SendDmResult;
+  onToggleReaction: (messageId: string, emoji: string) => void;
   onEditMessage: (messageId: string, content: string) => void;
   onDeleteMessage: (messageId: string) => void;
 }
@@ -32,6 +33,7 @@ export function DmConversation({
   activeSummary,
   messages,
   onSend,
+  onToggleReaction,
   onEditMessage,
   onDeleteMessage,
 }: DmConversationProps) {
@@ -88,6 +90,7 @@ export function DmConversation({
         partner={partner}
         currentAuthor={currentAuthor}
         messages={messages}
+        onToggleReaction={onToggleReaction}
         onEditMessage={onEditMessage}
         onDeleteMessage={onDeleteMessage}
       />

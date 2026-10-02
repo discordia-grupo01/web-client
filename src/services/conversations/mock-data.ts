@@ -80,9 +80,9 @@ export function createDemoDmMessages(
   return seed.map((entry, index) => ({
     id: `dm-seed-${conversation.id}-${index}`,
     conversation_id: conversation.id,
-    author_id: entry.from === "me" ? currentUserId : partnerId,
+    user_id: entry.from === "me" ? currentUserId : partnerId,
     content: entry.content,
-    created_at: minutesAgo(entry.minutesAgo),
+    inserted_at: minutesAgo(entry.minutesAgo),
     edited_at: null,
     deleted_at: null,
   }));

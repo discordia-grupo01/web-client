@@ -1,6 +1,10 @@
 "use client";
 
-import { type ServerSummary, type User } from "@discordia/client-shared";
+import {
+  type PublicUser,
+  type ServerSummary,
+  type User,
+} from "@discordia/client-shared";
 
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
@@ -79,6 +83,17 @@ export function HomeShell({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  function messageUser(profile: PublicUser) {
+    directMessages.startConversationWith(profile.id, {
+      id: profile.id,
+      name: profile.name,
+      avatarUrl: profile.avatar_url ? `/api/users/${profile.id}/avatar` : null,
+      roleName: null,
+      roleColor: null,
+    });
+    setView("direct-messages");
+  }
+
   function addAndSelect(server: ServerSummary) {
     setServers((prev) => {
       const withoutDuplicate = prev.filter(
@@ -136,6 +151,7 @@ export function HomeShell({
             onServerUpdate={updateServer}
             ownProfile={ownProfile}
             onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            onMessageUser={messageUser}
           />
         ) : (
           <HomeView

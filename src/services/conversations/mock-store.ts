@@ -49,9 +49,9 @@ export function createLocalDmMessage(
   return {
     id: `local-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
     conversation_id: conversationId,
-    author_id: authorId,
+    user_id: authorId,
     content: content.trim(),
-    created_at: new Date().toISOString(),
+    inserted_at: new Date().toISOString(),
     edited_at: null,
     deleted_at: null,
   };
