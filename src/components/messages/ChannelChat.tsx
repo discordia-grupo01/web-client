@@ -1,16 +1,25 @@
 "use client";
 
-import type { Channel, MessageAuthor, Role } from "@discordia/client-shared";
+import {
+  CHAT_RECONNECTING_NOTICE,
+  type Channel,
+  LOADING_MESSAGES_LABEL,
+  type MessageAuthor,
+  type Role,
+} from "@discordia/client-shared";
 
 import { useMemo } from "react";
 
 import { buildMentionResolver } from "@/services/messages/message-mentions";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
+import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
+import { ChatStatusNotice } from "./ChatStatusNotice";
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
 
 interface ChannelChatProps {
+  serverId: string;
   channel: Channel;
   currentAuthor: MessageAuthor | null;
   serverRoles: Role[];
@@ -19,6 +28,7 @@ interface ChannelChatProps {
 }
 
 export function ChannelChat({
+  serverId,
   channel,
   currentAuthor,
   serverRoles,
@@ -26,36 +36,67 @@ export function ChannelChat({
   canMentionEveryone,
 }: ChannelChatProps) {
   const {
+    status,
+    statusMessage,
     messages,
-    authors,
+    hasMore,
+    isLoadingOlder,
+    loadOlder,
+    retry,
     sendMessage,
     toggleReaction,
     editMessage,
     deleteMessage,
-  } = useChannelMessages(channel, currentAuthor);
+  } = useChannelMessages(channel);
+  const authors = useMessageAuthors(serverId, messages, currentAuthor);
 
   const resolveMention = useMemo(
     () => buildMentionResolver(authors, serverRoles),
     [authors, serverRoles],
   );
 
+  // Estados de los que no se sale solos: el canal no se puede mostrar.
+  if (statusMessage && status !== "ready") {
+    return (
+      <ChatStatusNotice
+        message={statusMessage}
+        onRetry={status === "error" ? retry : undefined}
+      />
+    );
+  }
+
   return (
     <>
-      <MessageList
-        channelName={channel.name}
-        messages={messages ?? []}
-        authors={authors}
-        currentUserId={currentAuthor?.id ?? null}
-        canManageMessages={canManageMessages}
-        resolveMention={resolveMention}
-        onToggleReaction={toggleReaction}
-        onEditMessage={editMessage}
-        onDeleteMessage={deleteMessage}
-      />
+      {messages === null ? (
+        <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+      ) : (
+        <MessageList
+          channelName={channel.name}
+          messages={messages}
+          authors={authors}
+          currentUserId={currentAuthor?.id ?? null}
+          canManageMessages={canManageMessages}
+          resolveMention={resolveMention}
+          hasMore={hasMore}
+          isLoadingOlder={isLoadingOlder}
+          onLoadOlder={loadOlder}
+          onToggleReaction={toggleReaction}
+          onEditMessage={editMessage}
+          onDeleteMessage={deleteMessage}
+        />
+      )}
+      {status === "reconnecting" ? (
+        <p
+          role="status"
+          className="bg-surface-hover text-content-muted shrink-0 px-4 py-1 text-center text-xs"
+        >
+          {CHAT_RECONNECTING_NOTICE}
+        </p>
+      ) : null}
       <MessageComposer
         channelName={channel.name}
         onSend={sendMessage}
-        disabled={!currentAuthor}
+        disabled={!currentAuthor || status !== "ready"}
         canMentionEveryone={canMentionEveryone}
       />
     </>

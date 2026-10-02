@@ -24,11 +24,11 @@ const AVATAR_SIZE = 38;
 /** Forma minima que necesita esta fila: sirve tanto para `Message` (canal) como para `DmMessage`. */
 export interface MessageItemMessage {
   id: string;
-  author_id: string;
+  user_id: string;
   content: string;
-  created_at: string;
-  edited_at: string | null;
-  deleted_at: string | null;
+  inserted_at: string;
+  edited_at?: string | null;
+  deleted_at?: string | null;
   reactions?: MessageReaction[];
 }
 
@@ -56,7 +56,7 @@ export function MessageItem({
   onDelete,
 }: MessageItemProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const isDeleted = message.deleted_at !== null;
+  const isDeleted = Boolean(message.deleted_at);
 
   function saveEdit(content: string) {
     onEdit(content);
@@ -80,16 +80,16 @@ export function MessageItem({
         />
       ) : (
         <time
-          dateTime={message.created_at}
+          dateTime={message.inserted_at}
           className="text-content-subtle w-[38px] shrink-0 pt-1 text-center text-[10px] opacity-0 group-hover/message:opacity-100"
         >
-          {formatMessageTime(message.created_at)}
+          {formatMessageTime(message.inserted_at)}
         </time>
       )}
 
       <div className="min-w-0 flex-1">
         {isGroupStart ? (
-          <MessageHeader author={author} createdAt={message.created_at} />
+          <MessageHeader author={author} createdAt={message.inserted_at} />
         ) : null}
 
         {isDeleted ? (
@@ -114,9 +114,9 @@ export function MessageItem({
           </>
         )}
 
-        {!isDeleted && !isEditing && message.reactions && onToggleReaction ? (
+        {!isDeleted && !isEditing && onToggleReaction ? (
           <MessageReactions
-            reactions={message.reactions}
+            reactions={message.reactions ?? []}
             onToggle={onToggleReaction}
           />
         ) : null}
@@ -126,7 +126,7 @@ export function MessageItem({
         <MessageActions
           canEdit={canEdit}
           canDelete={canDelete}
-          onToggleReaction={message.reactions ? onToggleReaction : undefined}
+          onToggleReaction={onToggleReaction}
           onEdit={() => setIsEditing(true)}
           onDelete={onDelete}
         />
