@@ -33,12 +33,13 @@ export async function fetchSocketTicketRequest(): Promise<SocketTicketResult> {
 }
 
 /**
- * Una pagina del historial del canal (mas nuevos primero). Para la pagina
- * anterior se pasa el `nextCursor` de la respuesta como `before`.
+ * Una pagina del historial del canal (de mas viejo a mas nuevo). Para la pagina
+ * anterior se pasa el `nextCursor` de la respuesta como `before`; para traer lo
+ * posterior a un mensaje, su id como `after`.
  */
 export async function fetchMessagesRequest(
   channelId: string,
-  options: { limit?: number; before?: string } = {},
+  options: { limit?: number; before?: string; after?: string } = {},
 ): Promise<ListMessagesResult> {
   try {
     const { data } = await api.get<ListMessagesResult>(
