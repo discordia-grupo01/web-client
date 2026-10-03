@@ -283,7 +283,7 @@ export function TransferOwnershipModal({
           </div>
           <p className="text-content-muted text-sm leading-relaxed">
             <strong className="text-content">
-              {counterpartProfile?.name ?? pendingTransfer.from_user_id}
+              {counterpartProfile?.name ?? "Cargando..."}
             </strong>{" "}
             quiere transferirte la propiedad de{" "}
             <strong className="text-content">{serverName}</strong>. Si aceptás,
@@ -324,7 +324,7 @@ export function TransferOwnershipModal({
             Le ofreciste la propiedad de{" "}
             <strong className="text-content">{serverName}</strong> a{" "}
             <strong className="text-content">
-              {counterpartProfile?.name ?? pendingTransfer.to_user_id}
+              {counterpartProfile?.name ?? "Cargando..."}
             </strong>
             . Todavía no respondió: podés cancelar la transferencia mientras
             esté pendiente.
