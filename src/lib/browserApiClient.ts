@@ -18,9 +18,19 @@ export const api = axios.create({
 // este corte cada chequeo dispararia otro chequeo, sin fin).
 const SESSION_CHECK_EXEMPT_PREFIX = "/auth/";
 
+// Cuanto confiar en un chequeo reciente antes de pedir otro. Tiene que ser
+// chico: el access token dura 15 minutos y el candado de
+// `services/auth/session.ts` ya cubre los 30s posteriores a un refresh, asi
+// que esta ventana no reemplaza esa proteccion -- solo evita pedir
+// `/api/auth/session` de nuevo para cada click suelto cuando el anterior
+// chequeo (de hace un instante) ya confirmo que la sesion estaba bien.
+const SESSION_CHECK_TTL_MS = 2_000;
+
 // Single-flight por pestaña: mientras un chequeo de sesion esta en vuelo,
 // cualquier otro request que dispare el interceptor reutiliza la MISMA
-// promesa en lugar de arrancar la suya.
+// promesa en lugar de arrancar la suya. Fuera de eso, `lastCheckedAt` evita
+// repetir el chequeo si el ultimo resultado (en vuelo o resuelto) es de hace
+// menos de `SESSION_CHECK_TTL_MS`.
 //
 // Por que hace falta esto ademas del candado que ya tiene
 // `services/auth/session.ts` (`globalThis.__discordiaRefreshes`): ese
@@ -42,15 +52,23 @@ const SESSION_CHECK_EXEMPT_PREFIX = "/auth/";
 // `GET /api/auth/session`, que adentro llama a `getValidSession()` y rota el
 // refresh token una sola vez si hacia falta.
 let pendingSessionCheck: Promise<void> | null = null;
+let lastCheckedAt = 0;
 
 function ensureFreshSession(): Promise<void> {
-  pendingSessionCheck ??= api
+  if (pendingSessionCheck) return pendingSessionCheck;
+
+  if (Date.now() - lastCheckedAt < SESSION_CHECK_TTL_MS) {
+    return Promise.resolve();
+  }
+
+  pendingSessionCheck = api
     .get("/auth/session")
     .then(
       () => undefined,
       () => undefined,
     )
     .finally(() => {
+      lastCheckedAt = Date.now();
       pendingSessionCheck = null;
     });
   return pendingSessionCheck;
