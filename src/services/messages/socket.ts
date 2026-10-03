@@ -20,7 +20,7 @@ import { fetchSocketTicketRequest } from "./client";
  * CADA conexion, incluidas las reconexiones, necesita un ticket nuevo, y Phoenix
  * no sirve para reconectar solo (reintentaria con el ticket ya gastado). La
  * reconexion la maneja este modulo: cuando el socket se cierra, pide un ticket
- * y vuelve a abrir. Los canales se vuelven a unir solos (con `since`) al abrirse.
+ * y vuelve a abrir. Los canales se vuelven a unir solos (con `last_message_id`) al abrirse.
  *
  * El JWT que messaging guarda con el ticket solo lo usa para consultar
  * permisos a `servers`, que no valida su expiracion (solo lee el `sub`), asi que
