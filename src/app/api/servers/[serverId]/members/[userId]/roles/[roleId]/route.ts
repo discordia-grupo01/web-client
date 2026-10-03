@@ -1,8 +1,10 @@
 import {
   MEMBER_ROLE_NOT_ASSIGNED,
   MEMBER_ROLE_REMOVE_FAILED,
+  messageFor,
   OWNER_ONLY_REMOVE_ROLE,
   type RemoveRoleResult,
+  ROLE_REASONS,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
@@ -14,7 +16,9 @@ import { removeRole } from "@/services/roles/service";
 /**
  * BFF de `DELETE /v1/servers/:id/members/:userId/roles/:roleId`. A
  * diferencia de asignar, esto NO es idempotente: el back devuelve 404 si el
- * miembro no tenia ese rol.
+ * miembro no tenia ese rol. Tambien devuelve 409 con
+ * `reason: "everyone_role_is_automatic"` si `roleId` es el @everyone del
+ * servidor (no se puede quitar a mano, lo tiene todo el mundo siempre).
  */
 export async function DELETE(
   _request: Request,
@@ -52,7 +56,10 @@ export async function DELETE(
       );
     }
     return NextResponse.json(
-      { ok: false, message: MEMBER_ROLE_REMOVE_FAILED },
+      {
+        ok: false,
+        message: messageFor(result, ROLE_REASONS, MEMBER_ROLE_REMOVE_FAILED),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,

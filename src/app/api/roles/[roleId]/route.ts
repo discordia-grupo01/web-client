@@ -128,6 +128,15 @@ export async function DELETE(
       );
     }
     if (result.status === 409) {
+      if (reasonOf(result.details) === "everyone_role_is_automatic") {
+        return NextResponse.json(
+          {
+            ok: false,
+            message: messageFor(result, ROLE_REASONS, ROLE_DELETE_FAILED),
+          },
+          { status: 409 },
+        );
+      }
       return NextResponse.json(
         {
           ok: false,

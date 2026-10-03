@@ -10,7 +10,7 @@ import {
   type Role,
   ROLE_PERMISSIONS,
   type RolePermission,
-  sortByPosition,
+  sortRolesByPosition,
   validateRole,
 } from "@discordia/client-shared";
 
@@ -353,6 +353,39 @@ function SortableRoleRow({
   );
 }
 
+function EveryoneRoleRow({
+  role,
+  isSelected,
+  onSelect,
+}: {
+  role: Role;
+  isSelected: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      title="@everyone lo tiene todo el mundo: siempre queda al final y no se puede reordenar"
+      className={cn(
+        "mb-1 flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all",
+        isSelected
+          ? "border-accent-strong/30 bg-accent/20"
+          : "hover:bg-surface-hover border-transparent",
+      )}
+    >
+      <span
+        className="size-3 shrink-0 rounded-full"
+        style={{ background: role.color }}
+      />
+      <span className="text-content font-display min-w-0 flex-1 truncate text-sm font-medium">
+        {role.name}
+      </span>
+      {isSelected ? <ChevronRight size={11} className="text-content" /> : null}
+    </button>
+  );
+}
+
 interface RolesModalProps {
   serverId: string;
   serverName: string;
@@ -447,6 +480,7 @@ export function RolesModal({
   }, [serverId]);
 
   const selectedRole = (roles ?? []).find((role) => role.id === selectedId);
+  const isEveryoneSelected = selectedRole?.is_everyone ?? false;
 
   useEffect(() => {
     if (!selectedRole) return;
@@ -557,6 +591,30 @@ export function RolesModal({
   async function handleSave() {
     setNameError("");
     setColorError("");
+
+    if (isEveryoneSelected) {
+      setSaving(true);
+      const result = await updateRoleRequest(selectedId, {
+        permissions: editPerms,
+      });
+      setSaving(false);
+
+      if (!result.ok) {
+        showToast(result.message);
+        return;
+      }
+
+      setRoles(
+        (prev) =>
+          prev?.map((r) => (r.id === result.role.id ? result.role : r)) ?? null,
+      );
+      setIsDirty(false);
+      setSavedOk(true);
+      showToast(`Permisos de "${result.role.name}" actualizados`);
+      setTimeout(() => setSavedOk(false), 2000);
+      return;
+    }
+
     const trimmed = editName.trim();
     const errors = validateRole(
       { name: trimmed, color: editColor },
@@ -661,22 +719,32 @@ export function RolesModal({
   }
 
   const hierarchyCtx = { isOwner, roles: myRoles };
-  const sortedRoles = sortByPosition(roles ?? []);
+  const sortedRoles = sortRolesByPosition(roles ?? []);
+  const draggableRoles = sortedRoles.filter((role) => !role.is_everyone);
+  const everyoneRole = sortedRoles.find((role) => role.is_everyone);
 
   async function handleRolesDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = sortedRoles.findIndex((role) => role.id === active.id);
-    const newIndex = sortedRoles.findIndex((role) => role.id === over.id);
+    const oldIndex = draggableRoles.findIndex((role) => role.id === active.id);
+    const newIndex = draggableRoles.findIndex((role) => role.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(sortedRoles, oldIndex, newIndex);
+    const reordered = arrayMove(draggableRoles, oldIndex, newIndex);
     const previousRoles = roles ?? [];
     const roleIds = reordered.map((role) => role.id);
+    const nextPositionById = new Map(
+      reordered.map((role, index) => [role.id, index + 1]),
+    );
 
     setRoles(
-      reordered.map((role, index) => ({ ...role, position: index + 1 })),
+      (prev) =>
+        prev?.map((role) =>
+          nextPositionById.has(role.id)
+            ? { ...role, position: nextPositionById.get(role.id)! }
+            : role,
+        ) ?? null,
     );
 
     const result = await reorderRolesRequest(serverId, roleIds);
@@ -737,29 +805,40 @@ export function RolesModal({
                 {NO_ROLES_YET}
               </p>
             ) : (
-              <DndContext
-                sensors={dragSensors}
-                collisionDetection={closestCenter}
-                onDragEnd={handleRolesDragEnd}
-              >
-                <SortableContext
-                  items={sortedRoles.map((role) => role.id)}
-                  strategy={verticalListSortingStrategy}
+              <>
+                <DndContext
+                  sensors={dragSensors}
+                  collisionDetection={closestCenter}
+                  onDragEnd={handleRolesDragEnd}
                 >
-                  {sortedRoles.map((role) => (
-                    <SortableRoleRow
-                      key={role.id}
-                      role={role}
-                      isSelected={
-                        role.id === selectedId && rightView !== "create"
-                      }
-                      isDefault={role.id === defaultRoleId}
-                      canReorder={outranksRole(hierarchyCtx, role.position)}
-                      onSelect={() => selectRole(role.id)}
-                    />
-                  ))}
-                </SortableContext>
-              </DndContext>
+                  <SortableContext
+                    items={draggableRoles.map((role) => role.id)}
+                    strategy={verticalListSortingStrategy}
+                  >
+                    {draggableRoles.map((role) => (
+                      <SortableRoleRow
+                        key={role.id}
+                        role={role}
+                        isSelected={
+                          role.id === selectedId && rightView !== "create"
+                        }
+                        isDefault={role.id === defaultRoleId}
+                        canReorder={outranksRole(hierarchyCtx, role.position)}
+                        onSelect={() => selectRole(role.id)}
+                      />
+                    ))}
+                  </SortableContext>
+                </DndContext>
+                {everyoneRole ? (
+                  <EveryoneRoleRow
+                    role={everyoneRole}
+                    isSelected={
+                      everyoneRole.id === selectedId && rightView !== "create"
+                    }
+                    onSelect={() => selectRole(everyoneRole.id)}
+                  />
+                ) : null}
+              </>
             )}
           </div>
 
@@ -905,8 +984,16 @@ export function RolesModal({
                         </span>
                       ) : null}
                       <span className="text-content-subtle text-xs">
-                        {membersWithRole.length}{" "}
-                        {membersWithRole.length === 1 ? "miembro" : "miembros"}
+                        {isEveryoneSelected ? (
+                          "Todos los miembros"
+                        ) : (
+                          <>
+                            {membersWithRole.length}{" "}
+                            {membersWithRole.length === 1
+                              ? "miembro"
+                              : "miembros"}
+                          </>
+                        )}
                       </span>
                     </div>
                   </div>
@@ -919,7 +1006,11 @@ export function RolesModal({
                       type="button"
                       onClick={() => {
                         setRightView(tab);
-                        if (tab === "members") loadMembers();
+                        // @everyone no tiene una lista de miembros para
+                        // cargar -- la tiene todo el mundo automaticamente.
+                        if (tab === "members" && !isEveryoneSelected) {
+                          loadMembers();
+                        }
                       }}
                       className={cn(
                         "-mb-px cursor-pointer px-4 py-2 text-xs font-semibold transition-all",
@@ -963,7 +1054,12 @@ export function RolesModal({
                         value={editName}
                         onChange={(event) => handleEditName(event.target.value)}
                         maxLength={MAX_NAME + 10}
-                        className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
+                        disabled={isEveryoneSelected}
+                        readOnly={isEveryoneSelected}
+                        className={cn(
+                          "text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none",
+                          isEveryoneSelected && "cursor-not-allowed opacity-70",
+                        )}
                       />
                       {editName.trim() && isValidHex(editColor) ? (
                         <div
@@ -987,14 +1083,42 @@ export function RolesModal({
                       ) : null}
                     </div>
                     <FieldError message={nameError} />
+                    {isEveryoneSelected ? (
+                      <p className="text-content-subtle mt-1.5 text-xs">
+                        @everyone es automático: lo tiene todo el mundo y no se
+                        puede renombrar.
+                      </p>
+                    ) : null}
                   </div>
 
                   <div>
                     <label className="text-content-subtle mb-3 block text-xs font-bold tracking-wider uppercase">
                       Color <span className="text-danger">*</span>
                     </label>
-                    <ColorPicker value={editColor} onChange={handleEditColor} />
-                    <FieldError message={colorError} />
+                    {isEveryoneSelected ? (
+                      <div className="bg-surface-input border-line flex items-center gap-3 rounded-xl border px-4 py-3">
+                        <span
+                          className="border-line size-8 shrink-0 rounded-lg border"
+                          style={{ background: selectedRole.color }}
+                        />
+                        <div className="min-w-0 flex-1">
+                          <p className="text-content text-sm font-medium">
+                            Color por defecto
+                          </p>
+                          <p className="text-content-subtle text-xs">
+                            No se puede personalizar.
+                          </p>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <ColorPicker
+                          value={editColor}
+                          onChange={handleEditColor}
+                        />
+                        <FieldError message={colorError} />
+                      </>
+                    )}
                   </div>
 
                   <div>
@@ -1013,87 +1137,89 @@ export function RolesModal({
                     </div>
                   </div>
 
-                  <div className="border-danger/20 bg-danger/[0.06] space-y-3 rounded-xl border p-4">
-                    <p className="text-danger text-[10px] font-bold tracking-widest uppercase">
-                      Zona peligrosa
-                    </p>
+                  {!isEveryoneSelected && (
+                    <div className="border-danger/20 bg-danger/[0.06] space-y-3 rounded-xl border p-4">
+                      <p className="text-danger text-[10px] font-bold tracking-widest uppercase">
+                        Zona peligrosa
+                      </p>
 
-                    {selectedRole.id !== defaultRoleId ? (
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <p className="text-content text-sm font-semibold">
-                            Definir como rol por defecto
-                          </p>
-                          <p className="text-content-subtle text-xs">
-                            Se asigna automáticamente a los nuevos miembros.
-                          </p>
+                      {selectedRole.id !== defaultRoleId ? (
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <p className="text-content text-sm font-semibold">
+                              Definir como rol por defecto
+                            </p>
+                            <p className="text-content-subtle text-xs">
+                              Se asigna automáticamente a los nuevos miembros.
+                            </p>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={handleSetDefault}
+                            disabled={settingDefault}
+                            className="text-highlight border-highlight/30 bg-highlight/10 ml-3 flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                          >
+                            <Star size={11} />
+                            {settingDefault ? "Definiendo..." : "Definir"}
+                          </button>
                         </div>
+                      ) : (
+                        <div className="text-content-subtle flex items-center gap-2 text-xs">
+                          <Star size={11} />
+                          <span>
+                            Este es el rol por defecto. Para eliminarlo, primero
+                            definí otro rol como predeterminado.
+                          </span>
+                        </div>
+                      )}
+
+                      {!deleteConfirm ? (
                         <button
                           type="button"
-                          onClick={handleSetDefault}
-                          disabled={settingDefault}
-                          className="text-highlight border-highlight/30 bg-highlight/10 ml-3 flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
+                          onClick={() => {
+                            setDeleteError("");
+                            setDeleteConfirm(true);
+                          }}
+                          className="text-danger border-danger/25 bg-danger/10 flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all hover:brightness-110"
                         >
-                          <Star size={11} />
-                          {settingDefault ? "Definiendo..." : "Definir"}
+                          <Trash2 size={12} /> Eliminar rol
                         </button>
-                      </div>
-                    ) : (
-                      <div className="text-content-subtle flex items-center gap-2 text-xs">
-                        <Star size={11} />
-                        <span>
-                          Este es el rol por defecto. Para eliminarlo, primero
-                          definí otro rol como predeterminado.
-                        </span>
-                      </div>
-                    )}
-
-                    {!deleteConfirm ? (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setDeleteError("");
-                          setDeleteConfirm(true);
-                        }}
-                        className="text-danger border-danger/25 bg-danger/10 flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all hover:brightness-110"
-                      >
-                        <Trash2 size={12} /> Eliminar rol
-                      </button>
-                    ) : (
-                      <div className="space-y-2">
-                        <p className="text-danger font-display text-xs font-semibold">
-                          ¿Confirmar eliminación de &quot;{selectedRole.name}
-                          &quot;?
-                        </p>
-                        {deleteError ? (
-                          <div className="text-danger border-danger/20 bg-danger/10 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs">
-                            <AlertCircle size={13} />
-                            <span>{deleteError}</span>
+                      ) : (
+                        <div className="space-y-2">
+                          <p className="text-danger font-display text-xs font-semibold">
+                            ¿Confirmar eliminación de &quot;{selectedRole.name}
+                            &quot;?
+                          </p>
+                          {deleteError ? (
+                            <div className="text-danger border-danger/20 bg-danger/10 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs">
+                              <AlertCircle size={13} />
+                              <span>{deleteError}</span>
+                            </div>
+                          ) : null}
+                          <div className="flex gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setDeleteConfirm(false);
+                                setDeleteError("");
+                              }}
+                              className="bg-surface-input border-line text-content-muted flex-1 cursor-pointer rounded-lg border py-2 text-xs font-semibold"
+                            >
+                              Cancelar
+                            </button>
+                            <button
+                              type="button"
+                              onClick={handleDelete}
+                              disabled={deleting}
+                              className="flex-1 cursor-pointer rounded-lg bg-gradient-to-br from-[#c0392b] to-[#922b21] py-2 text-xs font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
+                            >
+                              {deleting ? "Eliminando..." : "Eliminar"}
+                            </button>
                           </div>
-                        ) : null}
-                        <div className="flex gap-2">
-                          <button
-                            type="button"
-                            onClick={() => {
-                              setDeleteConfirm(false);
-                              setDeleteError("");
-                            }}
-                            className="bg-surface-input border-line text-content-muted flex-1 cursor-pointer rounded-lg border py-2 text-xs font-semibold"
-                          >
-                            Cancelar
-                          </button>
-                          <button
-                            type="button"
-                            onClick={handleDelete}
-                            disabled={deleting}
-                            className="flex-1 cursor-pointer rounded-lg bg-gradient-to-br from-[#c0392b] to-[#922b21] py-2 text-xs font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
-                          >
-                            {deleting ? "Eliminando..." : "Eliminar"}
-                          </button>
                         </div>
-                      </div>
-                    )}
-                  </div>
+                      )}
+                    </div>
+                  )}
 
                   {savedOk ? (
                     <div className="border-success/30 bg-success/10 text-success flex items-center gap-2 rounded-xl border px-4 py-2.5 text-sm">
@@ -1101,6 +1227,13 @@ export function RolesModal({
                       <span>Cambios guardados.</span>
                     </div>
                   ) : null}
+                </div>
+              ) : isEveryoneSelected ? (
+                <div className="flex-1 px-7 py-5">
+                  <p className="text-content-subtle text-sm">
+                    Todos los miembros del servidor tienen este rol
+                    automáticamente.
+                  </p>
                 </div>
               ) : (
                 <div className="flex-1 space-y-4 overflow-y-auto px-7 py-5">
