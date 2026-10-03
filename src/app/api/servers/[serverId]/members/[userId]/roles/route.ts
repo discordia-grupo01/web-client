@@ -4,7 +4,9 @@ import {
   MEMBER_OR_ROLE_NOT_FOUND,
   MEMBER_ROLE_ASSIGN_FAILED,
   MEMBER_ROLES_LOAD_FAILED,
+  messageFor,
   OWNER_ONLY_ASSIGN_ROLE,
+  ROLE_REASONS,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
@@ -52,7 +54,9 @@ export async function GET(
 /**
  * BFF de `POST /v1/servers/:id/members/:userId/roles`. Body JSON:
  * `{ roleId }`. Asignar un rol que el miembro ya tiene es idempotente (el
- * back no lo duplica ni rechaza).
+ * back no lo duplica ni rechaza). El back devuelve 409 con
+ * `reason: "everyone_role_is_automatic"` si `roleId` es el @everyone del
+ * servidor (nadie puede asignarlo a mano, lo tiene todo el mundo siempre).
  */
 export async function POST(
   request: Request,
@@ -93,7 +97,10 @@ export async function POST(
       );
     }
     return NextResponse.json(
-      { ok: false, message: MEMBER_ROLE_ASSIGN_FAILED },
+      {
+        ok: false,
+        message: messageFor(result, ROLE_REASONS, MEMBER_ROLE_ASSIGN_FAILED),
+      },
       {
         status:
           result.status >= 400 && result.status < 500 ? result.status : 502,
