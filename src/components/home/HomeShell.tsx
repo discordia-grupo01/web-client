@@ -22,6 +22,7 @@ import { useAuth } from "@/services/auth/auth-context";
 import { useDirectMessages } from "@/services/conversations/useDirectMessages";
 import { authorFromProfile } from "@/services/messages/author";
 import { getOwnProfileRequest } from "@/services/profile/client";
+import { listServersRequest } from "@/services/servers/client";
 import { ROUTES } from "@/lib/constants";
 
 type MainView = "servers" | "direct-messages";
@@ -67,6 +68,16 @@ export function HomeShell({
     let cancelled = false;
     getOwnProfileRequest().then((result) => {
       if (!cancelled && result.ok) setOwnProfile(result.user);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    listServersRequest().then((result) => {
+      if (!cancelled && result.ok) setServers(result.servers);
     });
     return () => {
       cancelled = true;
