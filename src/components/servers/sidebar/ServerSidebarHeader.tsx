@@ -2,6 +2,7 @@
 
 import {
   type OwnershipTransfer,
+  type Role,
   type ServerSummary,
 } from "@discordia/client-shared";
 import { useEffect, useState } from "react";
@@ -31,6 +32,7 @@ interface ServerSidebarHeaderProps {
   canManageRoles: boolean;
   canBanMembers: boolean;
   canInvite: boolean;
+  myRoles: Role[];
   onLeft: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
@@ -55,6 +57,7 @@ export function ServerSidebarHeader({
   canManageRoles,
   canBanMembers,
   canInvite,
+  myRoles,
   onLeft,
   onCreateChannel,
   onCreateCategory,
@@ -164,6 +167,8 @@ export function ServerSidebarHeader({
         <RolesModal
           serverId={server.id}
           serverName={server.name}
+          isOwner={isOwner}
+          myRoles={myRoles}
           onClose={() => {
             closeModal();
             onPermissionsChanged();

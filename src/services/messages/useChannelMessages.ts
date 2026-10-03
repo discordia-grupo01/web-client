@@ -63,23 +63,8 @@ interface ChannelMessages {
   deleteMessage: (messageId: string) => void;
 }
 
-/** Tras un corte el back devuelve como mucho 100 mensajes; si vienen 100, puede faltar mas. */
-const MISSED_MESSAGES_CAP = 100;
-/**
- * El `since` se corre un poco hacia atras: el back compara con `>` estricto y
- * en milisegundos, asi que un mensaje en el mismo milisegundo exacto se
- * perderia. Lo que se re-envie de mas se descarta por `id`.
- */
-const SINCE_OVERLAP_MS = 2_000;
 /** Un canal recien creado puede no estar todavia en la cache de messaging (llega por un evento). */
 const NOT_FOUND_ATTEMPTS = 3;
-
-function sinceOf(newest: Message | undefined): string | undefined {
-  if (!newest) return undefined;
-  return new Date(
-    Date.parse(newest.inserted_at) - SINCE_OVERLAP_MS,
-  ).toISOString();
-}
 
 export function useChannelMessages(
   channel: Pick<Channel, "id">,
@@ -92,7 +77,7 @@ export function useChannelMessages(
   const [attempt, setAttempt] = useState(0);
 
   const phoenixChannel = useRef<PhoenixChannel | null>(null);
-  const joinParams = useRef<{ since?: string }>({});
+  const joinParams = useRef<{ last_message_id?: string }>({});
   const statusRef = useRef<ChatStatus>("loading");
   const loadingOlderRef = useRef(false);
 
@@ -100,10 +85,10 @@ export function useChannelMessages(
     statusRef.current = status;
   }, [status]);
 
-  // El `since` de cada re-join es el mensaje mas nuevo que ya se vio. Phoenix
+  // El `last_message_id` de cada re-join es el mensaje mas nuevo que ya se vio. Phoenix
   // manda el mismo objeto de params en cada join, asi que alcanza con mutarlo.
   useEffect(() => {
-    joinParams.current.since = sinceOf(messages?.[messages.length - 1]);
+    joinParams.current.last_message_id = messages?.[messages.length - 1]?.id;
   }, [messages]);
 
   useEffect(() => {
@@ -121,7 +106,7 @@ export function useChannelMessages(
       setStatusMessage(message);
     }
 
-    async function loadLatest(isFirstLoad: boolean) {
+    async function loadLatest(isFirstLoad: boolean, replace = false) {
       const result = await fetchMessagesRequest(channel.id);
       if (cancelled) return;
       if (!result.ok) {
@@ -138,8 +123,23 @@ export function useChannelMessages(
         }
         return;
       }
-      setMessages((prev) => mergeMessages(prev ?? [], result.messages));
-      if (isFirstLoad) setNextCursor(result.nextCursor);
+      setMessages((prev) =>
+        mergeMessages(replace ? [] : (prev ?? []), result.messages),
+      );
+      if (isFirstLoad || replace) setNextCursor(result.nextCursor);
+    }
+
+    // Trae por REST lo posterior a `afterId` hasta que el back diga que no hay mas.
+    async function catchUp(afterId: string) {
+      let cursor: string | null = afterId;
+      while (cursor) {
+        const result = await fetchMessagesRequest(channel.id, {
+          after: cursor,
+        });
+        if (cancelled || !result.ok) return;
+        setMessages((prev) => mergeMessages(prev ?? [], result.messages));
+        cursor = result.nextCursor;
+      }
     }
 
     async function start() {
@@ -169,10 +169,11 @@ export function useChannelMessages(
       });
       room.on("missed_messages", (payload: MissedMessagesPayload) => {
         setMessages((prev) => mergeMessages(prev ?? [], payload.messages));
-        // Si se llego al tope pudo haber mas: se vuelve a pedir lo ultimo.
-        if (payload.messages.length >= MISSED_MESSAGES_CAP) {
-          void loadLatest(false);
-        }
+        if (payload.next_cursor) void catchUp(payload.next_cursor);
+      });
+      // El cursor del join ya no sirve: se descarta lo que hay y se recarga lo ultimo.
+      room.on("resync_required", () => {
+        void loadLatest(false, true);
       });
 
       // Corte de conexion o canal caido en el back: Phoenix re-une solo.

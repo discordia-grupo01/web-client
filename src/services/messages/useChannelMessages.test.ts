@@ -66,6 +66,7 @@ function message(id: string, insertedAt: string): Message {
 const M1 = message("m1", "2026-10-01T12:00:00.000Z");
 const M2 = message("m2", "2026-10-01T12:01:00.000Z");
 const M3 = message("m3", "2026-10-01T12:02:00.000Z");
+const M4 = message("m4", "2026-10-01T12:03:00.000Z");
 
 function history(
   messages: Message[],
@@ -142,7 +143,9 @@ describe("useChannelMessages: carga y tiempo real", () => {
   it("mezcla los missed_messages tras reconectar", async () => {
     const { result } = await mountAndJoin();
 
-    act(() => room.handlers.missed_messages({ messages: [M3] }));
+    act(() =>
+      room.handlers.missed_messages({ messages: [M3], next_cursor: null }),
+    );
 
     expect(result.current.messages?.map((m) => m.id)).toEqual([
       "m1",
@@ -151,34 +154,56 @@ describe("useChannelMessages: carga y tiempo real", () => {
     ]);
   });
 
-  it("si missed_messages llega al tope de 100 vuelve a pedir lo ultimo", async () => {
+  it("si missed_messages trae next_cursor sigue pidiendo con after hasta completar", async () => {
     await mountAndJoin();
     vi.mocked(fetchMessagesRequest).mockClear();
+    vi.mocked(fetchMessagesRequest)
+      .mockResolvedValueOnce({
+        ok: true,
+        messages: [M3],
+        nextCursor: "m3",
+      })
+      .mockResolvedValueOnce(history([M4]));
 
-    const lleno = Array.from({ length: 100 }, (_, i) =>
-      message(
-        `x${i}`,
-        `2026-10-01T13:${String(i % 60).padStart(2, "0")}:00.000Z`,
-      ),
+    act(() =>
+      room.handlers.missed_messages({ messages: [], next_cursor: "m2" }),
     );
-    act(() => room.handlers.missed_messages({ messages: lleno }));
 
-    await waitFor(() => expect(fetchMessagesRequest).toHaveBeenCalledTimes(1));
+    await waitFor(() => expect(fetchMessagesRequest).toHaveBeenCalledTimes(2));
+    expect(fetchMessagesRequest).toHaveBeenNthCalledWith(1, "ch1", {
+      after: "m2",
+    });
+    expect(fetchMessagesRequest).toHaveBeenNthCalledWith(2, "ch1", {
+      after: "m3",
+    });
   });
 
-  it("el since de cada join es el mensaje mas nuevo menos un margen", async () => {
+  it("resync_required descarta lo que habia y recarga lo ultimo", async () => {
+    const { result } = await mountAndJoin();
+    vi.mocked(fetchMessagesRequest).mockResolvedValue(history([M3]));
+
+    act(() => room.handlers.resync_required({}));
+
+    await waitFor(() =>
+      expect(result.current.messages?.map((m) => m.id)).toEqual(["m3"]),
+    );
+  });
+
+  it("el last_message_id de cada join es el id del mensaje mas nuevo", async () => {
     await mountAndJoin();
 
-    expect((channelParams as { since?: string }).since).toBe(
-      "2026-10-01T12:00:58.000Z", // M2 (12:01:00) - 2 s
-    );
+    expect(
+      (channelParams as { last_message_id?: string }).last_message_id,
+    ).toBe("m2");
   });
 
-  it("mientras no hay mensajes el join no manda since", async () => {
+  it("mientras no hay mensajes el join no manda last_message_id", async () => {
     vi.mocked(fetchMessagesRequest).mockResolvedValue(history([]));
     await mountAndJoin();
 
-    expect((channelParams as { since?: string }).since).toBeUndefined();
+    expect(
+      (channelParams as { last_message_id?: string }).last_message_id,
+    ).toBeUndefined();
   });
 
   it("un corte de conexion pasa a reconnecting y al re-unirse vuelve a ready", async () => {
@@ -367,7 +392,9 @@ describe("useChannelMessages: maqueta local (editar, borrar, reaccionar)", () =>
     const { result } = await mountAndJoin();
     act(() => result.current.editMessage("m1", "editado"));
 
-    act(() => room.handlers.missed_messages({ messages: [M1] }));
+    act(() =>
+      room.handlers.missed_messages({ messages: [M1], next_cursor: null }),
+    );
 
     expect(result.current.messages?.[0].content).toBe("editado");
   });

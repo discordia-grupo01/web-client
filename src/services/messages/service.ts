@@ -10,9 +10,9 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  * `socket.ts`); aca solo el historial y el ticket para abrir ese socket.
  *
  * Endpoints reales (ver messaging/openapi.yaml):
- *   GET  /v1/channels/:id/messages?limit=&before=
- *     -> 200 { messages, next_cursor } (mas nuevos primero)
- *      | 400 INVALID_CURSOR | 401 | 403 FORBIDDEN | 404 CHANNEL_NOT_FOUND
+ *   GET  /v1/channels/:id/messages?limit=&before=|after=
+ *     -> 200 { messages, next_cursor } (de mas viejo a mas nuevo)
+ *      | 400 INVALID_CURSOR (cursor invalido, de otro canal, o before+after) | 401 | 403 FORBIDDEN | 404 CHANNEL_NOT_FOUND
  *   POST /v1/socket-tickets
  *     -> 201 { ticket, expires_in } | 401 | 503 TICKET_UNAVAILABLE
  */
@@ -22,16 +22,19 @@ interface ListMessagesInput {
   limit?: number;
   /** `next_cursor` de la pagina anterior. */
   before?: string;
+  /** Id del ultimo mensaje que se tiene: devuelve los posteriores. Excluyente con `before`. */
+  after?: string;
 }
 
 export function listMessages(
   token: string,
   channelId: string,
-  { limit, before }: ListMessagesInput = {},
+  { limit, before, after }: ListMessagesInput = {},
 ): Promise<ApiResult<MessageHistory>> {
   const params = new URLSearchParams();
   if (limit !== undefined) params.set("limit", String(limit));
   if (before) params.set("before", before);
+  if (after) params.set("after", after);
   const query = params.size > 0 ? `?${params.toString()}` : "";
 
   return apiRequest<MessageHistory>(
