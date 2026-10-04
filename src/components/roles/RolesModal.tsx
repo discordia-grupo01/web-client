@@ -446,6 +446,7 @@ export function RolesModal({
   // Create form
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(COLOR_PALETTE[0]);
+  const [newPerms, setNewPerms] = useState<RolePermission[]>([]);
   const [newNameError, setNewNameError] = useState("");
   const [newColorError, setNewColorError] = useState("");
   const [creating, setCreating] = useState(false);
@@ -590,6 +591,15 @@ export function RolesModal({
     );
     setIsDirty(true);
   }
+  function handleToggleNewPerm(perm: RolePermission, on: boolean) {
+    setNewPerms((prev) =>
+      on ? [...prev, perm] : prev.filter((p) => p !== perm),
+    );
+  }
+  function openCreateForm() {
+    setNewPerms(everyoneRole ? [...everyoneRole.permissions] : []);
+    setRightView("create");
+  }
 
   function handleDiscard() {
     if (!selectedRole) return;
@@ -714,21 +724,35 @@ export function RolesModal({
       name: trimmed,
       color: newColor,
     });
-    setCreating(false);
 
     if (!result.ok) {
+      setCreating(false);
       if (result.fieldErrors?.name) setNewNameError(result.fieldErrors.name);
       if (result.fieldErrors?.color) setNewColorError(result.fieldErrors.color);
       if (!result.fieldErrors) showToast(result.message);
       return;
     }
 
-    setRoles((prev) => [...(prev ?? []), result.role]);
+    let createdRole = result.role;
+    let toastMessage = `Rol "${trimmed}" creado`;
+    if (newPerms.length > 0) {
+      const permsResult = await updateRoleRequest(createdRole.id, {
+        permissions: newPerms,
+      });
+      if (permsResult.ok) {
+        createdRole = permsResult.role;
+      } else {
+        toastMessage = `Rol "${trimmed}" creado, pero no se pudieron guardar los permisos: ${permsResult.message}`;
+      }
+    }
+
+    setCreating(false);
+    setRoles((prev) => [...(prev ?? []), createdRole]);
     setNewName("");
     setNewColor(COLOR_PALETTE[0]);
-    setSelectedId(result.role.id);
+    setSelectedId(createdRole.id);
     setRightView("edit");
-    showToast(`Rol "${trimmed}" creado`);
+    showToast(toastMessage);
   }
 
   const sortedRoles = sortRolesByPosition(roles ?? []);
@@ -797,7 +821,7 @@ export function RolesModal({
             </div>
             <button
               type="button"
-              onClick={() => setRightView("create")}
+              onClick={openCreateForm}
               className="from-accent-gradient-start to-accent-gradient-end text-on-accent flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-xl bg-gradient-to-br py-2 text-xs font-semibold transition-all hover:brightness-110"
             >
               <Plus size={12} />
@@ -874,8 +898,8 @@ export function RolesModal({
                   Crear rol
                 </h3>
                 <p className="text-content-subtle mt-0.5 text-xs">
-                  El nuevo rol se crea sin permisos. Podés configurarlos
-                  después.
+                  Arranca con los mismos permisos que @everyone. Podés
+                  ajustarlos antes de crear o después.
                 </p>
               </div>
               <div className="flex-1 space-y-6 overflow-y-auto px-7 py-6">
@@ -949,6 +973,22 @@ export function RolesModal({
                     }}
                   />
                   <FieldError message={newColorError} />
+                </div>
+
+                <div>
+                  <label className="text-content-subtle mb-3 block text-xs font-bold tracking-wider uppercase">
+                    Permisos
+                  </label>
+                  <div className="space-y-2">
+                    {ROLE_PERMISSIONS.map((perm) => (
+                      <PermissionToggle
+                        key={perm}
+                        perm={perm}
+                        enabled={newPerms.includes(perm)}
+                        onChange={(on) => handleToggleNewPerm(perm, on)}
+                      />
+                    ))}
+                  </div>
                 </div>
               </div>
 
