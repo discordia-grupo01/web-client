@@ -212,9 +212,7 @@ function PermissionToggle({
       aria-disabled={disabled}
       className={cn(
         "flex items-start justify-between gap-4 rounded-xl border px-4 py-3 transition-all",
-        disabled
-          ? "cursor-not-allowed opacity-50"
-          : "cursor-pointer",
+        disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer",
         enabled
           ? "border-accent-strong bg-accent/10"
           : "bg-surface-input border-line",
@@ -1203,8 +1201,7 @@ export function RolesModal({
                       </p>
                       {!canManageSelected ? (
                         <p className="text-content-subtle text-xs">
-                          No tenés jerarquía suficiente para gestionar este
-                          rol.
+                          No tenés jerarquía suficiente para gestionar este rol.
                         </p>
                       ) : null}
 
