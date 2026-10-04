@@ -194,18 +194,27 @@ function ColorPicker({
 function PermissionToggle({
   perm,
   enabled,
+  disabled = false,
   onChange,
 }: {
   perm: RolePermission;
   enabled: boolean;
+  disabled?: boolean;
   onChange: (value: boolean) => void;
 }) {
   const copy = PERMISSION_COPY[perm];
   return (
     <div
-      onClick={() => onChange(!enabled)}
+      onClick={() => {
+        if (disabled) return;
+        onChange(!enabled);
+      }}
+      aria-disabled={disabled}
       className={cn(
-        "flex cursor-pointer items-start justify-between gap-4 rounded-xl border px-4 py-3 transition-all",
+        "flex items-start justify-between gap-4 rounded-xl border px-4 py-3 transition-all",
+        disabled
+          ? "cursor-not-allowed opacity-50"
+          : "cursor-pointer",
         enabled
           ? "border-accent-strong bg-accent/10"
           : "bg-surface-input border-line",
@@ -480,6 +489,10 @@ export function RolesModal({
 
   const selectedRole = (roles ?? []).find((role) => role.id === selectedId);
   const isEveryoneSelected = selectedRole?.is_everyone ?? false;
+  const hierarchyCtx = { isOwner, roles: myRoles };
+  const canManageSelected = selectedRole
+    ? outranksRole(hierarchyCtx, selectedRole.position)
+    : false;
 
   useEffect(() => {
     if (!selectedRole) return;
@@ -571,6 +584,7 @@ export function RolesModal({
     setIsDirty(true);
   }
   function handleTogglePerm(perm: RolePermission, on: boolean) {
+    if (!canManageSelected) return;
     setEditPerms((prev) =>
       on ? [...prev, perm] : prev.filter((p) => p !== perm),
     );
@@ -651,7 +665,7 @@ export function RolesModal({
   }
 
   async function handleSetDefault() {
-    if (!selectedRole) return;
+    if (!selectedRole || !canManageSelected) return;
     setSettingDefault(true);
     const result = await setDefaultRoleRequest(serverId, selectedRole.id);
     setSettingDefault(false);
@@ -664,7 +678,7 @@ export function RolesModal({
   }
 
   async function handleDelete() {
-    if (!selectedRole) return;
+    if (!selectedRole || !canManageSelected) return;
     setDeleting(true);
     const result = await deleteRoleRequest(selectedRole.id);
     setDeleting(false);
@@ -717,7 +731,6 @@ export function RolesModal({
     showToast(`Rol "${trimmed}" creado`);
   }
 
-  const hierarchyCtx = { isOwner, roles: myRoles };
   const sortedRoles = sortRolesByPosition(roles ?? []);
   const draggableRoles = sortedRoles.filter((role) => !role.is_everyone);
   const everyoneRole = sortedRoles.find((role) => role.is_everyone);
@@ -1130,10 +1143,17 @@ export function RolesModal({
                           key={perm}
                           perm={perm}
                           enabled={editPerms.includes(perm)}
+                          disabled={!canManageSelected}
                           onChange={(on) => handleTogglePerm(perm, on)}
                         />
                       ))}
                     </div>
+                    {!canManageSelected ? (
+                      <p className="text-content-subtle mt-2 text-xs">
+                        No tenés jerarquía suficiente para gestionar los
+                        permisos de este rol.
+                      </p>
+                    ) : null}
                   </div>
 
                   {!isEveryoneSelected && (
@@ -1141,6 +1161,12 @@ export function RolesModal({
                       <p className="text-danger text-[10px] font-bold tracking-widest uppercase">
                         Zona peligrosa
                       </p>
+                      {!canManageSelected ? (
+                        <p className="text-content-subtle text-xs">
+                          No tenés jerarquía suficiente para gestionar este
+                          rol.
+                        </p>
+                      ) : null}
 
                       {selectedRole.id !== defaultRoleId ? (
                         <div className="flex items-center justify-between">
@@ -1155,7 +1181,7 @@ export function RolesModal({
                           <button
                             type="button"
                             onClick={handleSetDefault}
-                            disabled={settingDefault}
+                            disabled={settingDefault || !canManageSelected}
                             className="text-highlight border-highlight/30 bg-highlight/10 ml-3 flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-60"
                           >
                             <Star size={11} />
@@ -1179,7 +1205,8 @@ export function RolesModal({
                             setDeleteError("");
                             setDeleteConfirm(true);
                           }}
-                          className="text-danger border-danger/25 bg-danger/10 flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all hover:brightness-110"
+                          disabled={!canManageSelected}
+                          className="text-danger border-danger/25 bg-danger/10 flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-semibold transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-50"
                         >
                           <Trash2 size={12} /> Eliminar rol
                         </button>
@@ -1209,7 +1236,7 @@ export function RolesModal({
                             <button
                               type="button"
                               onClick={handleDelete}
-                              disabled={deleting}
+                              disabled={deleting || !canManageSelected}
                               className="flex-1 cursor-pointer rounded-lg bg-gradient-to-br from-[#c0392b] to-[#922b21] py-2 text-xs font-semibold text-white transition-all hover:brightness-110 disabled:cursor-not-allowed disabled:opacity-70"
                             >
                               {deleting ? "Eliminando..." : "Eliminar"}
