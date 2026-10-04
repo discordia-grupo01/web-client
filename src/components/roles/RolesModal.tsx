@@ -21,6 +21,7 @@ import {
   useSensor,
   useSensors,
   type DragEndEvent,
+  type Modifier,
 } from "@dnd-kit/core";
 import {
   arrayMove,
@@ -33,6 +34,7 @@ import {
   AlertCircle,
   Check,
   ChevronRight,
+  GripVertical,
   Minus,
   Pencil,
   Plus,
@@ -286,17 +288,106 @@ function MemberRoleRow({
   );
 }
 
-function SortableRoleRow({
+const restrictToRolesListBounds: Modifier = ({
+  containerNodeRect,
+  draggingNodeRect,
+  transform,
+}) => {
+  if (!draggingNodeRect || !containerNodeRect) {
+    return transform;
+  }
+
+  const minY = containerNodeRect.top - draggingNodeRect.top;
+  const maxY =
+    containerNodeRect.top + containerNodeRect.height - draggingNodeRect.bottom;
+  const minX = containerNodeRect.left - draggingNodeRect.left;
+  const maxX =
+    containerNodeRect.left + containerNodeRect.width - draggingNodeRect.right;
+
+  return {
+    ...transform,
+    x: Math.min(Math.max(transform.x, minX), maxX),
+    y: Math.min(Math.max(transform.y, minY), maxY),
+  };
+};
+
+function RoleGripHandle({ active }: { active: boolean }) {
+  return (
+    <span
+      className="flex size-6 shrink-0 items-center justify-center"
+      aria-hidden
+    >
+      <GripVertical
+        size={14}
+        className={active ? "text-content-subtle" : "text-content-subtle/35"}
+      />
+    </span>
+  );
+}
+
+function RoleRowButton({
   role,
   isSelected,
   isDefault,
-  canReorder,
   onSelect,
 }: {
   role: Role;
   isSelected: boolean;
   isDefault: boolean;
-  canReorder: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex flex-1 cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all",
+        isSelected
+          ? "border-accent-strong/30 bg-accent/20"
+          : "hover:bg-surface-hover border-transparent",
+      )}
+    >
+      <span
+        className="size-3 shrink-0 rounded-full"
+        style={{ background: role.color }}
+      />
+      <span className="text-content font-display min-w-0 flex-1 truncate text-sm font-medium">
+        {role.name}
+      </span>
+      <span className="flex shrink-0 items-center gap-1.5">
+        <span
+          className="text-content-subtle font-mono text-[10px]"
+          title="Posición en la jerarquía"
+        >
+          #{role.position}
+        </span>
+        {isDefault ? (
+          <Star
+            size={11}
+            className="text-highlight"
+            fill="currentColor"
+            aria-label="Rol por defecto"
+          />
+        ) : null}
+        {isSelected ? (
+          <ChevronRight size={11} className="text-content" />
+        ) : null}
+      </span>
+    </button>
+  );
+}
+
+function SortableRoleRow({
+  role,
+  isSelected,
+  isDefault,
+  showGripColumn,
+  onSelect,
+}: {
+  role: Role;
+  isSelected: boolean;
+  isDefault: boolean;
+  showGripColumn: boolean;
   onSelect: () => void;
 }) {
   const {
@@ -306,7 +397,7 @@ function SortableRoleRow({
     transform,
     transition,
     isDragging,
-  } = useSortable({ id: role.id, disabled: !canReorder });
+  } = useSortable({ id: role.id });
 
   return (
     <div
@@ -316,46 +407,43 @@ function SortableRoleRow({
         transition,
         opacity: isDragging ? 0.5 : 1,
       }}
-      {...(canReorder ? { ...listeners, ...attributes } : {})}
-      className={canReorder ? "touch-none" : undefined}
+      {...listeners}
+      {...attributes}
+      className="mb-1 flex touch-none items-center gap-1"
     >
-      <button
-        type="button"
-        onClick={onSelect}
-        className={cn(
-          "mb-1 flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all",
-          isSelected
-            ? "border-accent-strong/30 bg-accent/20"
-            : "hover:bg-surface-hover border-transparent",
-        )}
-      >
-        <span
-          className="size-3 shrink-0 rounded-full"
-          style={{ background: role.color }}
-        />
-        <span className="text-content font-display min-w-0 flex-1 truncate text-sm font-medium">
-          {role.name}
-        </span>
-        <span className="flex shrink-0 items-center gap-1.5">
-          <span
-            className="text-content-subtle font-mono text-[10px]"
-            title="Posición en la jerarquía"
-          >
-            #{role.position}
-          </span>
-          {isDefault ? (
-            <Star
-              size={11}
-              className="text-highlight"
-              fill="currentColor"
-              aria-label="Rol por defecto"
-            />
-          ) : null}
-          {isSelected ? (
-            <ChevronRight size={11} className="text-content" />
-          ) : null}
-        </span>
-      </button>
+      {showGripColumn ? <RoleGripHandle active /> : null}
+      <RoleRowButton
+        role={role}
+        isSelected={isSelected}
+        isDefault={isDefault}
+        onSelect={onSelect}
+      />
+    </div>
+  );
+}
+
+function ProtectedRoleRow({
+  role,
+  isSelected,
+  isDefault,
+  showGripColumn,
+  onSelect,
+}: {
+  role: Role;
+  isSelected: boolean;
+  isDefault: boolean;
+  showGripColumn: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <div className="mb-1 flex items-center gap-1">
+      {showGripColumn ? <RoleGripHandle active={false} /> : null}
+      <RoleRowButton
+        role={role}
+        isSelected={isSelected}
+        isDefault={isDefault}
+        onSelect={onSelect}
+      />
     </div>
   );
 }
@@ -756,16 +844,24 @@ export function RolesModal({
   const sortedRoles = sortRolesByPosition(roles ?? []);
   const draggableRoles = sortedRoles.filter((role) => !role.is_everyone);
   const everyoneRole = sortedRoles.find((role) => role.is_everyone);
+  const protectedRoles = draggableRoles.filter(
+    (role) => !outranksRole(hierarchyCtx, role.position),
+  );
+  const manageableRoles = draggableRoles.filter((role) =>
+    outranksRole(hierarchyCtx, role.position),
+  );
+  const showRoleGripColumn = draggableRoles.length > 1;
 
   async function handleRolesDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over || active.id === over.id) return;
 
-    const oldIndex = draggableRoles.findIndex((role) => role.id === active.id);
-    const newIndex = draggableRoles.findIndex((role) => role.id === over.id);
+    const oldIndex = manageableRoles.findIndex((role) => role.id === active.id);
+    const newIndex = manageableRoles.findIndex((role) => role.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
 
-    const reordered = arrayMove(draggableRoles, oldIndex, newIndex);
+    const reorderedManageable = arrayMove(manageableRoles, oldIndex, newIndex);
+    const reordered = [...protectedRoles, ...reorderedManageable];
     const previousRoles = roles ?? [];
     const roleIds = reordered.map((role) => role.id);
     const nextPositionById = new Map(
@@ -843,13 +939,26 @@ export function RolesModal({
                 <DndContext
                   sensors={dragSensors}
                   collisionDetection={closestCenter}
+                  modifiers={[restrictToRolesListBounds]}
                   onDragEnd={handleRolesDragEnd}
                 >
+                  {protectedRoles.map((role) => (
+                    <ProtectedRoleRow
+                      key={role.id}
+                      role={role}
+                      isSelected={
+                        role.id === selectedId && rightView !== "create"
+                      }
+                      isDefault={role.id === defaultRoleId}
+                      showGripColumn={showRoleGripColumn}
+                      onSelect={() => selectRole(role.id)}
+                    />
+                  ))}
                   <SortableContext
-                    items={draggableRoles.map((role) => role.id)}
+                    items={manageableRoles.map((role) => role.id)}
                     strategy={verticalListSortingStrategy}
                   >
-                    {draggableRoles.map((role) => (
+                    {manageableRoles.map((role) => (
                       <SortableRoleRow
                         key={role.id}
                         role={role}
@@ -857,7 +966,7 @@ export function RolesModal({
                           role.id === selectedId && rightView !== "create"
                         }
                         isDefault={role.id === defaultRoleId}
-                        canReorder={outranksRole(hierarchyCtx, role.position)}
+                        showGripColumn={showRoleGripColumn}
                         onSelect={() => selectRole(role.id)}
                       />
                     ))}
