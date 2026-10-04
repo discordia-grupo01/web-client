@@ -6,6 +6,8 @@ import {
   MEMBER_ROLES_LOAD_FAILED,
   messageFor,
   OWNER_ONLY_ASSIGN_ROLE,
+  permissionNotHeldMessage,
+  reasonOf,
   ROLE_REASONS,
 } from "@discordia/client-shared";
 
@@ -82,6 +84,18 @@ export async function POST(
       return unauthorizedResponse();
     }
     if (result.status === 403) {
+      const reason = reasonOf(result.details);
+      if (reason === "permission_not_held") {
+        const message = permissionNotHeldMessage(result.details?.permissions);
+        return NextResponse.json({ ok: false, message }, { status: 403 });
+      }
+      const friendly = reason ? ROLE_REASONS[reason] : undefined;
+      if (friendly) {
+        return NextResponse.json(
+          { ok: false, message: friendly },
+          { status: 403 },
+        );
+      }
       return NextResponse.json(
         {
           ok: false,

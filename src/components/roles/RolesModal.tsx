@@ -746,6 +746,9 @@ export function RolesModal({
     if (!result.ok) {
       if (result.fieldErrors?.name) setNameError(result.fieldErrors.name);
       if (result.fieldErrors?.color) setColorError(result.fieldErrors.color);
+      if (result.fieldErrors?.permissions) {
+        showToast(result.fieldErrors.permissions);
+      }
       if (!result.fieldErrors) showToast(result.message);
       return;
     }
