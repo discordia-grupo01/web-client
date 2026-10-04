@@ -45,8 +45,13 @@ jobs:
             exit 0
           fi
 
-          npm pkg set "dependencies.@discordia/client-shared=github:discordia-grupo01/client-shared#$VERSION"
-          npm install --package-lock-only
+          # npm install real (no --package-lock-only): actualiza package.json,
+          # package-lock.json Y node_modules/@discordia/client-shared/package.json,
+          # igual que el comando manual. Asi tambien falla rapido si el tag no existe.
+          npm install "@discordia/client-shared@github:discordia-grupo01/client-shared#$VERSION"
+
+          echo "Version instalada en node_modules:"
+          cat node_modules/@discordia/client-shared/package.json | grep '"version"'
 
           git checkout -b "$BRANCH"
           git add package.json package-lock.json
