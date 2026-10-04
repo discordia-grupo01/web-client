@@ -3,6 +3,7 @@ import {
   MEMBER_ROLE_REMOVE_FAILED,
   messageFor,
   OWNER_ONLY_REMOVE_ROLE,
+  reasonOf,
   type RemoveRoleResult,
   ROLE_REASONS,
 } from "@discordia/client-shared";
@@ -41,6 +42,14 @@ export async function DELETE(
       return unauthorizedResponse();
     }
     if (result.status === 403) {
+      const reason = reasonOf(result.details);
+      const friendly = reason ? ROLE_REASONS[reason] : undefined;
+      if (friendly) {
+        return NextResponse.json(
+          { ok: false, message: friendly },
+          { status: 403 },
+        );
+      }
       return NextResponse.json(
         {
           ok: false,
