@@ -366,7 +366,6 @@ function EveryoneRoleRow({
     <button
       type="button"
       onClick={onSelect}
-      title="@everyone lo tiene todo el mundo: siempre queda al final y no se puede reordenar"
       className={cn(
         "mb-1 flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-all",
         isSelected
