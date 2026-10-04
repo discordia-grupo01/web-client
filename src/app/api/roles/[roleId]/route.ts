@@ -5,6 +5,7 @@ import {
   messageFor,
   OWNER_ONLY_DELETE_ROLE,
   OWNER_ONLY_UPDATE_ROLE,
+  permissionNotHeldMessage,
   reasonOf,
   ROLE_DELETE_FAILED,
   ROLE_IS_DEFAULT,
@@ -69,6 +70,20 @@ export async function PATCH(
     if (result.status === 401) {
       return unauthorizedResponse();
     }
+
+    if (reason === "permission_not_held") {
+      const message = permissionNotHeldMessage(result.details?.permissions);
+      return NextResponse.json(
+        { ok: false, message, fieldErrors: { permissions: message } },
+        { status: result.status || 403 },
+      );
+    }
+    if (friendly) {
+      return NextResponse.json(
+        { ok: false, message: friendly },
+        { status: result.status || 403 },
+      );
+    }
     if (result.status === 403) {
       return NextResponse.json(
         {
@@ -119,6 +134,14 @@ export async function DELETE(
       return unauthorizedResponse();
     }
     if (result.status === 403) {
+      const reason = reasonOf(result.details);
+      const friendly = reason ? ROLE_REASONS[reason] : undefined;
+      if (friendly) {
+        return NextResponse.json(
+          { ok: false, message: friendly },
+          { status: 403 },
+        );
+      }
       return NextResponse.json(
         {
           ok: false,
