@@ -1,5 +1,6 @@
 import {
   type ApiErrorDetails,
+  type DeleteServerFieldErrors,
   fieldOf,
   reasonOf,
   SERVER_REASONS,
@@ -45,6 +46,42 @@ export function serverErrorResponse(
 
   // Un 5xx (o un 0 de "no hubo respuesta") no se reenvia tal cual: para el
   // navegador el BFF fue el que no pudo hablar con el backend.
+  const status =
+    failure.status >= 400 && failure.status < 500 ? failure.status : 502;
+  return { payload: { ok: false, message: fallback }, status };
+}
+
+export interface DeleteServerErrorPayload {
+  ok: false;
+  message: string;
+  fieldErrors?: DeleteServerFieldErrors;
+}
+
+function isDeleteServerField(
+  field: string | undefined,
+): field is keyof DeleteServerFieldErrors {
+  return field === "confirm_name";
+}
+
+export function deleteServerErrorResponse(
+  failure: ServerServiceFailure,
+  fallback: string,
+): { payload: DeleteServerErrorPayload; status: number } {
+  const reason = reasonOf(failure.details);
+  const friendly = reason ? SERVER_REASONS[reason] : undefined;
+  const field = fieldOf(failure.details);
+
+  if (friendly && isDeleteServerField(field)) {
+    return {
+      payload: {
+        ok: false,
+        message: friendly,
+        fieldErrors: { [field]: friendly },
+      },
+      status: failure.status || 400,
+    };
+  }
+
   const status =
     failure.status >= 400 && failure.status < 500 ? failure.status : 502;
   return { payload: { ok: false, message: fallback }, status };
