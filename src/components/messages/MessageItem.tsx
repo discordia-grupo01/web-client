@@ -31,6 +31,9 @@ export interface MessageItemMessage {
   reactions?: MessageReaction[];
 }
 
+/** `void` en los mensajes directos (maqueta local, no puede fallar). */
+export type MessageEditOutcome = { ok: true } | { ok: false; message: string };
+
 interface MessageItemProps {
   message: MessageItemMessage;
   author: MessageAuthor;
@@ -39,7 +42,7 @@ interface MessageItemProps {
   canDelete: boolean;
   resolveMention?: MentionResolver;
   onToggleReaction?: (emoji: string) => void;
-  onEdit: (content: string) => void;
+  onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
 }
 
@@ -55,11 +58,22 @@ export function MessageItem({
   onDelete,
 }: MessageItemProps) {
   const [isEditing, setIsEditing] = useState(false);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  function saveEdit(content: string) {
-    onEdit(content);
+  async function saveEdit(content: string) {
+    if (content === message.content) return stopEditing();
+    setIsSavingEdit(true);
+    const result = await onEdit(content);
+    setIsSavingEdit(false);
+    if (result && !result.ok) return setEditError(result.message);
+    stopEditing();
+  }
+
+  function stopEditing() {
     setIsEditing(false);
+    setEditError(null);
   }
 
   return (
@@ -95,7 +109,9 @@ export function MessageItem({
           <MessageEditForm
             initialContent={message.content}
             onSave={saveEdit}
-            onCancel={() => setIsEditing(false)}
+            onCancel={stopEditing}
+            isSaving={isSavingEdit}
+            error={editError}
           />
         ) : (
           <>

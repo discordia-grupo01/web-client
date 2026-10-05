@@ -24,6 +24,7 @@ interface ChannelChatProps {
   currentAuthor: MessageAuthor | null;
   serverRoles: Role[];
   canManageMessages: boolean;
+  canSendMessages: boolean;
   canMentionEveryone: boolean;
 }
 
@@ -33,6 +34,7 @@ export function ChannelChat({
   currentAuthor,
   serverRoles,
   canManageMessages,
+  canSendMessages,
   canMentionEveryone,
 }: ChannelChatProps) {
   const {
@@ -83,6 +85,7 @@ export function ChannelChat({
           authors={authors}
           currentUserId={currentAuthor?.id ?? null}
           canManageMessages={canManageMessages}
+          canSendMessages={canSendMessages}
           resolveMention={resolveMention}
           hasMore={hasMore}
           isLoadingOlder={isLoadingOlder}

@@ -479,6 +479,10 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "MANAGE_MESSAGES",
   );
+  const canSendMessages = hasPermission(
+    { isOwner, roles: myRoles },
+    "SEND_MESSAGES",
+  );
   const canMentionEveryone = hasPermission(
     { isOwner, roles: myRoles },
     "MENTION_EVERYONE",
@@ -900,6 +904,7 @@ export function ServerView({
                 currentAuthor={currentAuthor}
                 serverRoles={serverRoles}
                 canManageMessages={canManageMessages}
+                canSendMessages={canSendMessages}
                 canMentionEveryone={canMentionEveryone}
               />
             ) : (
