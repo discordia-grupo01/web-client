@@ -1,5 +1,6 @@
 import {
   type CreateServerResult,
+  type DeleteServerResult,
   type LeaveServerResult,
   REQUEST_FAILED_MESSAGE,
   SERVER_UPDATE_FAILED,
@@ -53,6 +54,24 @@ export async function createServerRequest(
     const { data } = await api.post<CreateServerResult>("/servers", formData, {
       headers: { "Content-Type": undefined },
     });
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: REQUEST_FAILED_MESSAGE,
+    };
+  }
+}
+
+export async function deleteServerRequest(
+  serverId: string,
+  confirmName: string,
+): Promise<DeleteServerResult> {
+  try {
+    const { data } = await api.delete<DeleteServerResult>(
+      `/servers/${serverId}`,
+      { data: { confirm_name: confirmName } },
+    );
     return data;
   } catch {
     return {
