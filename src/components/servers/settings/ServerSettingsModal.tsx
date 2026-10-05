@@ -53,7 +53,11 @@ export function ServerSettingsModal({
 
   return (
     <>
-      <ModalShell onClose={onClose} labelledBy={TITLE_ID} maxWidth={SETTINGS_MODAL_WIDTH}>
+      <ModalShell
+        onClose={onClose}
+        labelledBy={TITLE_ID}
+        maxWidth={SETTINGS_MODAL_WIDTH}
+      >
         <div className="flex max-h-[95dvh] flex-col sm:flex-row">
           <nav className="border-line bg-surface-raised flex shrink-0 flex-col border-b px-3 py-8 sm:w-56 sm:border-r sm:border-b-0">
             <p className="text-content-subtle mb-1 truncate px-3 text-xs font-bold tracking-wider uppercase">
