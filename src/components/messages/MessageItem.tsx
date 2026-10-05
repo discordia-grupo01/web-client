@@ -114,17 +114,17 @@ export function MessageItem({
             error={editError}
           />
         ) : (
-          <>
-            <MessageContent
-              content={message.content}
-              resolveMention={resolveMention}
-            />
-            {message.edited_at ? (
-              <span className="text-content-subtle ml-1 text-[10px]">
-                {MESSAGE_EDITED_LABEL}
-              </span>
-            ) : null}
-          </>
+          <MessageContent
+            content={message.content}
+            resolveMention={resolveMention}
+            suffix={
+              message.edited_at ? (
+                <span className="text-content-subtle ml-1 text-[10px]">
+                  {MESSAGE_EDITED_LABEL}
+                </span>
+              ) : null
+            }
+          />
         )}
 
         {!isEditing && onToggleReaction ? (
