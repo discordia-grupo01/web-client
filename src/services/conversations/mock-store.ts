@@ -53,7 +53,6 @@ export function createLocalDmMessage(
     content: content.trim(),
     inserted_at: new Date().toISOString(),
     edited_at: null,
-    deleted_at: null,
   };
 }
 

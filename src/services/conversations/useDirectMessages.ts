@@ -1,9 +1,9 @@
 "use client";
 
 import {
-  deleteMessage as deleteMessageIn,
   editMessageContent,
   otherParticipantId,
+  removeMessages,
   toggleReaction as toggleReactionIn,
   validateMessageContent,
   type Conversation,
@@ -222,9 +222,7 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
     (messageId: string) => {
       if (!activeConversationId) return;
       updateConversationMessages(activeConversationId, (messages) =>
-        messages.map((message) =>
-          message.id === messageId ? deleteMessageIn(message) : message,
-        ),
+        removeMessages(messages, [messageId]),
       );
     },
     [activeConversationId],

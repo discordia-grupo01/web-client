@@ -1,6 +1,6 @@
 import type { Message, MessageAuthor } from "@discordia/client-shared";
 
-import { render, screen } from "@testing-library/react";
+import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
@@ -23,7 +23,6 @@ function mensaje(cambios: Partial<Message> & { id: string }): Message {
     content: "hola",
     inserted_at: "2026-09-29T15:00:00Z",
     edited_at: null,
-    deleted_at: null,
     reactions: [],
     ...cambios,
   };
@@ -85,16 +84,6 @@ describe("MessageList", () => {
     expect(onToggleReaction).toHaveBeenCalledWith("1", "🔥");
   });
 
-  it("muestra el placeholder de un mensaje borrado", () => {
-    renderList({
-      messages: [
-        mensaje({ id: "1", content: "", deleted_at: "2026-09-29T16:00:00Z" }),
-      ],
-    });
-
-    expect(screen.getByText("Mensaje eliminado.")).toBeInTheDocument();
-  });
-
   it("editar un mensaje propio llama a onEditMessage con el nuevo contenido", async () => {
     const onEditMessage = vi.fn();
     renderList({
@@ -124,7 +113,7 @@ describe("MessageList", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("eliminar un mensaje ajeno con permiso de moderacion llama a onDeleteMessage", async () => {
+  it("eliminar pide confirmacion y recien al confirmar llama a onDeleteMessage", async () => {
     const onDeleteMessage = vi.fn();
     renderList({
       messages: [mensaje({ id: "1", user_id: "otro", content: "hola" })],
@@ -136,8 +125,31 @@ describe("MessageList", () => {
     await userEvent.click(
       screen.getByRole("button", { name: "Eliminar mensaje" }),
     );
+    expect(onDeleteMessage).not.toHaveBeenCalled();
+    const dialog = screen.getByRole("dialog", { name: "¿Eliminar mensaje?" });
+    expect(within(dialog).getByText("hola")).toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "Eliminar" }));
 
     expect(onDeleteMessage).toHaveBeenCalledWith("1");
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+  });
+
+  it("cancelar la confirmacion no elimina el mensaje", async () => {
+    const onDeleteMessage = vi.fn();
+    renderList({
+      messages: [mensaje({ id: "1", user_id: "u1", content: "hola" })],
+      currentUserId: "u1",
+      onDeleteMessage,
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Eliminar mensaje" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Cancelar" }));
+
+    expect(onDeleteMessage).not.toHaveBeenCalled();
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   describe("cargar mensajes anteriores", () => {

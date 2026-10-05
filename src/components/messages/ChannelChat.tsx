@@ -8,7 +8,7 @@ import {
   type Role,
 } from "@discordia/client-shared";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { buildMentionResolver } from "@/services/messages/message-mentions";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
@@ -49,6 +49,13 @@ export function ChannelChat({
     deleteMessage,
   } = useChannelMessages(channel);
   const authors = useMessageAuthors(serverId, messages, currentAuthor);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  async function handleDelete(messageId: string) {
+    setDeleteError(null);
+    const result = await deleteMessage(messageId);
+    if (!result.ok) setDeleteError(result.message);
+  }
 
   const resolveMention = useMemo(
     () => buildMentionResolver(authors, serverRoles),
@@ -82,9 +89,17 @@ export function ChannelChat({
           onLoadOlder={loadOlder}
           onToggleReaction={toggleReaction}
           onEditMessage={editMessage}
-          onDeleteMessage={deleteMessage}
+          onDeleteMessage={handleDelete}
         />
       )}
+      {deleteError ? (
+        <p
+          role="alert"
+          className="bg-danger/10 text-danger shrink-0 px-4 py-1 text-center text-xs"
+        >
+          {deleteError}
+        </p>
+      ) : null}
       {status === "reconnecting" ? (
         <p
           role="status"

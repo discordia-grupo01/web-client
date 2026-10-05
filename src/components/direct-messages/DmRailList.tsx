@@ -133,7 +133,7 @@ export function DmRailList({
                         </span>
                       ) : null}
                     </div>
-                    {lastMessage && !lastMessage.deleted_at ? (
+                    {lastMessage ? (
                       <p className="text-content-subtle truncate text-[11px]">
                         {lastMessage.content}
                       </p>
