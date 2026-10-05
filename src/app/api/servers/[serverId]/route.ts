@@ -1,14 +1,20 @@
 import {
+  SERVER_DELETE_FAILED,
+  SERVER_DELETE_FORBIDDEN,
   SERVER_UPDATE_FAILED,
   SERVER_UPDATE_FORBIDDEN,
+  type DeleteServerResult,
   type UpdateServerResult,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
-import { serverErrorResponse } from "@/services/servers/error-payload";
-import { updateServer } from "@/services/servers/service";
+import {
+  deleteServerErrorResponse,
+  serverErrorResponse,
+} from "@/services/servers/error-payload";
+import { deleteServer, updateServer } from "@/services/servers/service";
 
 /**
  * BFF de `PATCH /v1/servers/:serverId`. Recibe el FormData tal cual llega del
@@ -58,4 +64,55 @@ export async function PATCH(
   }
 
   return NextResponse.json({ ok: true, server: result.data }, { status: 200 });
+}
+
+/**
+ * BFF de `DELETE /v1/servers/:serverId`
+ */
+export async function DELETE(
+  request: Request,
+  { params }: { params: { serverId: string } },
+): Promise<NextResponse<DeleteServerResult>> {
+  const session = await getValidSession();
+  if (!session) {
+    return unauthorizedResponse();
+  }
+
+  let confirmName = "";
+  try {
+    const body = (await request.json()) as { confirm_name?: unknown };
+    confirmName =
+      typeof body.confirm_name === "string" ? body.confirm_name : "";
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: SERVER_DELETE_FAILED },
+      { status: 400 },
+    );
+  }
+
+  const result = await deleteServer(
+    session.token,
+    params.serverId,
+    confirmName,
+  );
+
+  if (!result.ok) {
+    if (result.status === 401) {
+      return unauthorizedResponse();
+    }
+    if (result.status === 403) {
+      return NextResponse.json(
+        { ok: false, message: SERVER_DELETE_FORBIDDEN },
+        { status: 403 },
+      );
+    }
+
+    const { payload, status } = deleteServerErrorResponse(
+      result,
+      SERVER_DELETE_FAILED,
+    );
+    return NextResponse.json(payload, { status });
+  }
+
+  return NextResponse.json({ ok: true }, { status: 200 });
 }

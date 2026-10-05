@@ -155,10 +155,15 @@ export function ServerSidebarHeader({
       {openModal === "settings" && canManageServer ? (
         <ServerSettingsModal
           server={server}
+          isOwner={isOwner}
           onClose={closeModal}
           onUpdated={(updated) => {
             closeModal();
             onServerUpdated(updated);
+          }}
+          onDeleted={() => {
+            closeModal();
+            onLeft();
           }}
         />
       ) : null}
