@@ -84,6 +84,5 @@ export function createDemoDmMessages(
     content: entry.content,
     inserted_at: minutesAgo(entry.minutesAgo),
     edited_at: null,
-    deleted_at: null,
   }));
 }

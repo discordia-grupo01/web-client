@@ -14,7 +14,7 @@ import { cn } from "@/lib/cn";
 
 import { MessageActions } from "./MessageActions";
 import { MessageContent, type MentionResolver } from "./MessageContent";
-import { MessageDeletedNotice } from "./MessageDeletedNotice";
+import { DeleteMessageModal } from "./DeleteMessageModal";
 import { MessageEditForm } from "./MessageEditForm";
 import { MessageHeader } from "./MessageHeader";
 import { MessageReactions } from "./MessageReactions";
@@ -28,9 +28,11 @@ export interface MessageItemMessage {
   content: string;
   inserted_at: string;
   edited_at?: string | null;
-  deleted_at?: string | null;
   reactions?: MessageReaction[];
 }
+
+/** `void` en los mensajes directos (maqueta local, no puede fallar). */
+export type MessageEditOutcome = { ok: true } | { ok: false; message: string };
 
 interface MessageItemProps {
   message: MessageItemMessage;
@@ -40,7 +42,7 @@ interface MessageItemProps {
   canDelete: boolean;
   resolveMention?: MentionResolver;
   onToggleReaction?: (emoji: string) => void;
-  onEdit: (content: string) => void;
+  onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
 }
 
@@ -56,11 +58,22 @@ export function MessageItem({
   onDelete,
 }: MessageItemProps) {
   const [isEditing, setIsEditing] = useState(false);
-  const isDeleted = Boolean(message.deleted_at);
+  const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+  const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
-  function saveEdit(content: string) {
-    onEdit(content);
+  async function saveEdit(content: string) {
+    if (content === message.content) return stopEditing();
+    setIsSavingEdit(true);
+    const result = await onEdit(content);
+    setIsSavingEdit(false);
+    if (result && !result.ok) return setEditError(result.message);
+    stopEditing();
+  }
+
+  function stopEditing() {
     setIsEditing(false);
+    setEditError(null);
   }
 
   return (
@@ -92,29 +105,29 @@ export function MessageItem({
           <MessageHeader author={author} createdAt={message.inserted_at} />
         ) : null}
 
-        {isDeleted ? (
-          <MessageDeletedNotice />
-        ) : isEditing ? (
+        {isEditing ? (
           <MessageEditForm
             initialContent={message.content}
             onSave={saveEdit}
-            onCancel={() => setIsEditing(false)}
+            onCancel={stopEditing}
+            isSaving={isSavingEdit}
+            error={editError}
           />
         ) : (
-          <>
-            <MessageContent
-              content={message.content}
-              resolveMention={resolveMention}
-            />
-            {message.edited_at ? (
-              <span className="text-content-subtle ml-1 text-[10px]">
-                {MESSAGE_EDITED_LABEL}
-              </span>
-            ) : null}
-          </>
+          <MessageContent
+            content={message.content}
+            resolveMention={resolveMention}
+            suffix={
+              message.edited_at ? (
+                <span className="text-content-subtle ml-1 text-[10px]">
+                  {MESSAGE_EDITED_LABEL}
+                </span>
+              ) : null
+            }
+          />
         )}
 
-        {!isDeleted && !isEditing && onToggleReaction ? (
+        {!isEditing && onToggleReaction ? (
           <MessageReactions
             reactions={message.reactions ?? []}
             onToggle={onToggleReaction}
@@ -122,13 +135,26 @@ export function MessageItem({
         ) : null}
       </div>
 
-      {!isDeleted && !isEditing ? (
+      {!isEditing ? (
         <MessageActions
           canEdit={canEdit}
           canDelete={canDelete}
           onToggleReaction={onToggleReaction}
           onEdit={() => setIsEditing(true)}
-          onDelete={onDelete}
+          onDelete={() => setIsConfirmingDelete(true)}
+        />
+      ) : null}
+
+      {isConfirmingDelete ? (
+        <DeleteMessageModal
+          message={message}
+          author={author}
+          resolveMention={resolveMention}
+          onConfirm={() => {
+            setIsConfirmingDelete(false);
+            onDelete();
+          }}
+          onCancel={() => setIsConfirmingDelete(false)}
         />
       ) : null}
     </article>

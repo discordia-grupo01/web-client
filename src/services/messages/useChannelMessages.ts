@@ -1,15 +1,20 @@
 "use client";
 
 import {
+  applyMessageUpdates,
   type Channel,
-  deleteMessage as deleteMessageIn,
-  editMessageContent,
+  type ChangedMessagesPayload,
   isMessageErrorCode,
+  MESSAGE_DELETE_FAILED,
+  MESSAGE_EDIT_FAILED,
   MESSAGE_SEND_FAILED,
   type Message,
+  type MessageDeletedPayload,
+  type MessageUpdatedPayload,
   messageErrorFor,
   type MissedMessagesPayload,
   mergeMessages,
+  removeMessages,
   SESSION_EXPIRED_MESSAGE,
   toggleReaction as toggleReactionIn,
   validateMessageContent,
@@ -38,6 +43,8 @@ const TERMINAL: ReadonlySet<ChatStatus> = new Set([
 ]);
 
 export type SendMessageResult = { ok: true } | { ok: false; message: string };
+export type DeleteMessageResult = SendMessageResult;
+export type EditMessageResult = SendMessageResult;
 
 interface ChannelMessages {
   status: ChatStatus;
@@ -55,12 +62,22 @@ interface ChannelMessages {
    * socket (`new_message`) igual que a los demas, y de ahi llega a `messages`.
    */
   sendMessage: (content: string) => Promise<SendMessageResult>;
-  // Editar, borrar y reaccionar: todavia no existen en el back. La UI esta
-  // maquetada y estas tres funciones cambian solo el estado local (se pierden
-  // al recargar). Cuando el back las tenga, se reemplazan por llamadas.
+  /**
+   * Elimina el mensaje (autor o `MANAGE_MESSAGES`, lo valida el back). Al
+   * confirmarse se saca de la lista; a los demas les llega por `message_deleted`.
+   */
+  deleteMessage: (messageId: string) => Promise<DeleteMessageResult>;
+  /**
+   * Edita el mensaje (solo el autor, lo valida el back). Al confirmarse se
+   * actualiza en la lista; a los demas les llega por `message_updated`.
+   */
+  editMessage: (
+    messageId: string,
+    content: string,
+  ) => Promise<EditMessageResult>;
+  // Reaccionar todavia no existe en el back: la UI esta maquetada y esta
+  // funcion cambia solo el estado local (se pierde al recargar).
   toggleReaction: (messageId: string, emoji: string) => void;
-  editMessage: (messageId: string, content: string) => void;
-  deleteMessage: (messageId: string) => void;
 }
 
 /** Un canal recien creado puede no estar todavia en la cache de messaging (llega por un evento). */
@@ -77,7 +94,10 @@ export function useChannelMessages(
   const [attempt, setAttempt] = useState(0);
 
   const phoenixChannel = useRef<PhoenixChannel | null>(null);
-  const joinParams = useRef<{ last_message_id?: string }>({});
+  const joinParams = useRef<{
+    last_message_id?: string;
+    changes_since?: string;
+  }>({});
   const statusRef = useRef<ChatStatus>("loading");
   const loadingOlderRef = useRef(false);
 
@@ -171,6 +191,21 @@ export function useChannelMessages(
         setMessages((prev) => mergeMessages(prev ?? [], payload.messages));
         if (payload.next_cursor) void catchUp(payload.next_cursor);
       });
+      room.on("message_updated", (message: MessageUpdatedPayload) => {
+        setMessages((prev) => applyMessageUpdates(prev ?? [], [message]));
+      });
+      room.on("message_deleted", (payload: MessageDeletedPayload) => {
+        setMessages((prev) => removeMessages(prev ?? [], [payload.id]));
+      });
+      // Lo editado o eliminado mientras no estabamos conectados (ver `changes_since`).
+      room.on("changed_messages", (payload: ChangedMessagesPayload) => {
+        setMessages((prev) =>
+          removeMessages(
+            applyMessageUpdates(prev ?? [], payload.messages),
+            payload.deleted_ids,
+          ),
+        );
+      });
       // El cursor del join ya no sirve: se descarta lo que hay y se recarga lo ultimo.
       room.on("resync_required", () => {
         void loadLatest(false, true);
@@ -184,7 +219,9 @@ export function useChannelMessages(
       let isFirstJoin = true;
       room
         .join()
-        .receive("ok", () => {
+        .receive("ok", (response?: { server_time?: string }) => {
+          // Desde este instante, en el proximo join el back informa lo que cambio.
+          joinParams.current.changes_since = response?.server_time;
           setStatus("ready");
           setStatusMessage(null);
           if (isFirstJoin) {
@@ -291,26 +328,75 @@ export function useChannelMessages(
     );
   }, []);
 
-  const editMessage = useCallback((messageId: string, content: string) => {
-    if (validateMessageContent(content)) return;
-    setMessages(
-      (prev) =>
-        prev?.map((message) =>
-          message.id === messageId
-            ? editMessageContent(message, content.trim())
-            : message,
-        ) ?? null,
-    );
-  }, []);
+  const editMessage = useCallback(
+    (messageId: string, content: string): Promise<EditMessageResult> =>
+      new Promise((resolve) => {
+        const room = phoenixChannel.current;
+        const invalid = validateMessageContent(content);
+        if (invalid) return resolve({ ok: false, message: invalid });
+        if (!room || statusRef.current !== "ready") {
+          return resolve({ ok: false, message: MESSAGE_EDIT_FAILED });
+        }
+        room
+          .push("edit_message", { id: messageId, content })
+          .receive("ok", (message?: MessageUpdatedPayload) => {
+            if (message) {
+              setMessages((prev) => applyMessageUpdates(prev ?? [], [message]));
+            }
+            resolve({ ok: true });
+          })
+          .receive("error", (response?: { error?: { code?: unknown } }) => {
+            // Si ya no existe, el resultado es el que se queria: que no se vea.
+            if (response?.error?.code === "MESSAGE_NOT_FOUND") {
+              setMessages((prev) => removeMessages(prev ?? [], [messageId]));
+            }
+            resolve({
+              ok: false,
+              message: messageErrorFor(
+                response?.error?.code,
+                MESSAGE_EDIT_FAILED,
+              ),
+            });
+          })
+          .receive("timeout", () =>
+            resolve({ ok: false, message: MESSAGE_EDIT_FAILED }),
+          );
+      }),
+    [],
+  );
 
-  const deleteMessage = useCallback((messageId: string) => {
-    setMessages(
-      (prev) =>
-        prev?.map((message) =>
-          message.id === messageId ? deleteMessageIn(message) : message,
-        ) ?? null,
-    );
-  }, []);
+  const deleteMessage = useCallback(
+    (messageId: string): Promise<DeleteMessageResult> =>
+      new Promise((resolve) => {
+        const room = phoenixChannel.current;
+        if (!room || statusRef.current !== "ready") {
+          return resolve({ ok: false, message: MESSAGE_DELETE_FAILED });
+        }
+        room
+          .push("delete_message", { id: messageId })
+          .receive("ok", () => {
+            setMessages((prev) => removeMessages(prev ?? [], [messageId]));
+            resolve({ ok: true });
+          })
+          .receive("error", (response?: { error?: { code?: unknown } }) => {
+            // Si ya no existe, el resultado es el que se queria: que no se vea.
+            if (response?.error?.code === "MESSAGE_NOT_FOUND") {
+              setMessages((prev) => removeMessages(prev ?? [], [messageId]));
+            }
+            resolve({
+              ok: false,
+              message: messageErrorFor(
+                response?.error?.code,
+                MESSAGE_DELETE_FAILED,
+              ),
+            });
+          })
+          .receive("timeout", () =>
+            resolve({ ok: false, message: MESSAGE_DELETE_FAILED }),
+          );
+      }),
+    [],
+  );
 
   return {
     status,

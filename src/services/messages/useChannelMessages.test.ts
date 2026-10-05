@@ -362,22 +362,239 @@ describe("useChannelMessages: enviar", () => {
   });
 });
 
-describe("useChannelMessages: maqueta local (editar, borrar, reaccionar)", () => {
-  it("editar y borrar cambian solo el estado local", async () => {
+describe("useChannelMessages: eliminar", () => {
+  it("manda delete_message y saca el mensaje al confirmarse", async () => {
     const { result } = await mountAndJoin();
 
-    act(() => result.current.editMessage("m1", "editado"));
-    expect(result.current.messages?.[0]).toMatchObject({
-      content: "editado",
+    let outcome: unknown;
+    act(() => {
+      void result.current.deleteMessage("m2").then((r) => (outcome = r));
     });
-    expect(result.current.messages?.[0].edited_at).toBeTruthy();
+    expect(room.pushes[0]).toMatchObject({
+      event: "delete_message",
+      payload: { id: "m2" },
+    });
+    await act(async () => room.pushes[0].push.fire("ok"));
 
-    act(() => result.current.deleteMessage("m2"));
-    expect(result.current.messages?.[1]).toMatchObject({ content: "" });
-    expect(result.current.messages?.[1].deleted_at).toBeTruthy();
+    expect(outcome).toEqual({ ok: true });
+    expect(result.current.messages?.map((m) => m.id)).toEqual(["m1"]);
+  });
+
+  it("sin permiso traduce el error y deja el mensaje", async () => {
+    const { result } = await mountAndJoin();
+
+    let outcome: { ok: boolean; message?: string } | undefined;
+    act(() => {
+      void result.current.deleteMessage("m2").then((r) => (outcome = r));
+    });
+    await act(async () =>
+      room.pushes[0].push.fire("error", {
+        error: { code: "MESSAGE_DELETE_DENIED" },
+      }),
+    );
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "No tenés permiso para eliminar este mensaje.",
+    });
+    expect(result.current.messages).toHaveLength(2);
+  });
+
+  it("si el mensaje ya no existe lo saca igual", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() => {
+      void result.current.deleteMessage("m2");
+    });
+    await act(async () =>
+      room.pushes[0].push.fire("error", {
+        error: { code: "MESSAGE_NOT_FOUND" },
+      }),
+    );
+
+    expect(result.current.messages?.map((m) => m.id)).toEqual(["m1"]);
+  });
+
+  it("un timeout da el mensaje generico", async () => {
+    const { result } = await mountAndJoin();
+
+    let outcome: unknown;
+    act(() => {
+      void result.current.deleteMessage("m2").then((r) => (outcome = r));
+    });
+    await act(async () => room.pushes[0].push.fire("timeout"));
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "No pudimos eliminar el mensaje. Intentá de nuevo.",
+    });
+  });
+
+  it("no manda si el canal no esta unido", async () => {
+    const { result } = await mountAndJoin();
+    act(() => room.errorHandler?.());
+
+    const outcome = await result.current.deleteMessage("m2");
+
+    expect(outcome.ok).toBe(false);
     expect(room.push).not.toHaveBeenCalled();
   });
 
+  it("message_deleted de otro miembro saca el mensaje", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() =>
+      room.handlers.message_deleted({
+        id: "m1",
+        channel_id: "ch1",
+        server_id: "s1",
+        deleted_at: "2026-10-01T12:05:00.000Z",
+      }),
+    );
+
+    expect(result.current.messages?.map((m) => m.id)).toEqual(["m2"]);
+  });
+
+  it("changed_messages saca lo eliminado durante la desconexion", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() =>
+      room.handlers.changed_messages({
+        messages: [],
+        deleted_ids: ["m1", "m2"],
+      }),
+    );
+
+    expect(result.current.messages).toEqual([]);
+  });
+
+  it("pide los cambios desde el ultimo join al re-unirse", async () => {
+    await renderHookAndJoinWithServerTime();
+
+    expect(channelParams).toMatchObject({
+      changes_since: "2026-10-01T12:10:00.000Z",
+    });
+  });
+});
+
+async function renderHookAndJoinWithServerTime() {
+  const view = renderHook(() => useChannelMessages({ id: "ch1" }));
+  await waitFor(() => expect(room.join).toHaveBeenCalled());
+  act(() =>
+    room.joinPush.fire("ok", { server_time: "2026-10-01T12:10:00.000Z" }),
+  );
+  await waitFor(() => expect(view.result.current.messages).not.toBeNull());
+  return view;
+}
+
+describe("useChannelMessages: editar", () => {
+  const EDITED: Message = {
+    ...M1,
+    content: "editado",
+    edited: true,
+    edited_at: "2026-10-01T12:05:00.000Z",
+  };
+
+  it("manda edit_message y al confirmarse actualiza el mensaje como editado", async () => {
+    const { result } = await mountAndJoin();
+
+    let outcome: unknown;
+    act(() => {
+      void result.current
+        .editMessage("m1", "  editado  ")
+        .then((r) => (outcome = r));
+    });
+    expect(room.pushes[0]).toMatchObject({
+      event: "edit_message",
+      payload: { id: "m1", content: "  editado  " },
+    });
+    await act(async () => room.pushes[0].push.fire("ok", EDITED));
+
+    expect(outcome).toEqual({ ok: true });
+    expect(result.current.messages?.[0]).toMatchObject({
+      content: "editado",
+      edited: true,
+    });
+  });
+
+  it("no manda un contenido vacio", async () => {
+    const { result } = await mountAndJoin();
+
+    const outcome = await result.current.editMessage("m1", "   ");
+
+    expect(outcome.ok).toBe(false);
+    expect(room.push).not.toHaveBeenCalled();
+  });
+
+  it("si no es el autor traduce el error y deja el mensaje igual", async () => {
+    const { result } = await mountAndJoin();
+
+    let outcome: unknown;
+    act(() => {
+      void result.current.editMessage("m1", "x").then((r) => (outcome = r));
+    });
+    await act(async () =>
+      room.pushes[0].push.fire("error", {
+        error: { code: "NOT_MESSAGE_AUTHOR" },
+      }),
+    );
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "Solo el autor de un mensaje puede editarlo.",
+    });
+    expect(result.current.messages?.[0].content).toBe("mensaje m1");
+  });
+
+  it("un timeout da el mensaje generico", async () => {
+    const { result } = await mountAndJoin();
+
+    let outcome: unknown;
+    act(() => {
+      void result.current.editMessage("m1", "x").then((r) => (outcome = r));
+    });
+    await act(async () => room.pushes[0].push.fire("timeout"));
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "No pudimos editar el mensaje. Intentá de nuevo.",
+    });
+  });
+
+  it("no manda si el canal no esta unido", async () => {
+    const { result } = await mountAndJoin();
+    act(() => room.errorHandler?.());
+
+    const outcome = await result.current.editMessage("m1", "x");
+
+    expect(outcome.ok).toBe(false);
+    expect(room.push).not.toHaveBeenCalled();
+  });
+
+  it("message_updated de otro miembro actualiza el mensaje sin recargar", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() => room.handlers.message_updated(EDITED));
+
+    expect(result.current.messages?.[0]).toMatchObject({
+      content: "editado",
+      edited: true,
+    });
+    expect(result.current.messages?.[1].content).toBe("mensaje m2");
+  });
+
+  it("changed_messages aplica lo editado durante la desconexion", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() =>
+      room.handlers.changed_messages({ messages: [EDITED], deleted_ids: [] }),
+    );
+
+    expect(result.current.messages?.[0].content).toBe("editado");
+  });
+});
+
+describe("useChannelMessages: maqueta local (reaccionar)", () => {
   it("reaccionar funciona aunque el mensaje real no traiga reactions", async () => {
     const { result } = await mountAndJoin();
 
@@ -386,17 +603,6 @@ describe("useChannelMessages: maqueta local (editar, borrar, reaccionar)", () =>
     expect(result.current.messages?.[0].reactions).toEqual([
       { emoji: "🔥", count: 1, reacted_by_me: true },
     ]);
-  });
-
-  it("una edicion local no se pierde cuando el mismo mensaje vuelve a llegar", async () => {
-    const { result } = await mountAndJoin();
-    act(() => result.current.editMessage("m1", "editado"));
-
-    act(() =>
-      room.handlers.missed_messages({ messages: [M1], next_cursor: null }),
-    );
-
-    expect(result.current.messages?.[0].content).toBe("editado");
   });
 });
 
