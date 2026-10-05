@@ -14,7 +14,7 @@ import { useLayoutEffect, useRef } from "react";
 
 import type { MentionResolver } from "./MessageContent";
 import { ChannelWelcome } from "./ChannelWelcome";
-import { MessageItem } from "./MessageItem";
+import { MessageItem, type MessageEditOutcome } from "./MessageItem";
 
 interface MessageListProps {
   channelName: string;
@@ -22,13 +22,17 @@ interface MessageListProps {
   authors: Record<string, MessageAuthor>;
   currentUserId: string | null;
   canManageMessages: boolean;
+  canSendMessages: boolean;
   resolveMention?: MentionResolver;
   /** Hay mensajes anteriores sin cargar (paginacion del historial). */
   hasMore?: boolean;
   isLoadingOlder?: boolean;
   onLoadOlder?: () => void;
   onToggleReaction: (messageId: string, emoji: string) => void;
-  onEditMessage: (messageId: string, content: string) => void;
+  onEditMessage: (
+    messageId: string,
+    content: string,
+  ) => void | Promise<MessageEditOutcome>;
   onDeleteMessage: (messageId: string) => void;
 }
 
@@ -49,6 +53,7 @@ export function MessageList({
   authors,
   currentUserId,
   canManageMessages,
+  canSendMessages,
   resolveMention,
   hasMore = false,
   isLoadingOlder = false,
@@ -131,7 +136,8 @@ export function MessageList({
               }
               isGroupStart={startsMessageGroup(messages[index - 1], message)}
               canEdit={
-                currentUserId !== null && canEditMessage(message, currentUserId)
+                currentUserId !== null &&
+                canEditMessage(message, currentUserId, canSendMessages)
               }
               canDelete={
                 currentUserId !== null &&

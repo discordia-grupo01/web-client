@@ -36,6 +36,7 @@ function renderList(props: Partial<ComponentProps<typeof MessageList>>) {
       authors={{ u1: ANA }}
       currentUserId="u1"
       canManageMessages={false}
+      canSendMessages
       onToggleReaction={vi.fn()}
       onEditMessage={vi.fn()}
       onDeleteMessage={vi.fn()}
@@ -100,6 +101,37 @@ describe("MessageList", () => {
     await userEvent.type(textarea, "chau{Enter}");
 
     expect(onEditMessage).toHaveBeenCalledWith("1", "chau");
+  });
+
+  it("si la edicion falla muestra el motivo y deja el formulario abierto", async () => {
+    const onEditMessage = vi
+      .fn()
+      .mockResolvedValue({ ok: false, message: "No pudimos editar" });
+    renderList({
+      messages: [mensaje({ id: "1", user_id: "u1", content: "hola" })],
+      onEditMessage,
+    });
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Editar mensaje" }),
+    );
+    await userEvent.type(screen.getByRole("textbox"), "!{Enter}");
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "No pudimos editar",
+    );
+    expect(screen.getByRole("textbox")).toHaveValue("hola!");
+  });
+
+  it("no se puede editar el propio si ya no tiene SEND_MESSAGES", () => {
+    renderList({
+      messages: [mensaje({ id: "1", user_id: "u1" })],
+      canSendMessages: false,
+    });
+
+    expect(
+      screen.queryByRole("button", { name: "Editar mensaje" }),
+    ).not.toBeInTheDocument();
   });
 
   it("no se puede editar un mensaje ajeno", () => {
@@ -198,6 +230,7 @@ describe("MessageList", () => {
           authors={{ u1: ANA }}
           currentUserId="u1"
           canManageMessages={false}
+          canSendMessages
           hasMore={false}
           onToggleReaction={vi.fn()}
           onEditMessage={vi.fn()}
