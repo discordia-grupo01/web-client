@@ -22,12 +22,10 @@ import { env } from "@/lib/env";
  *   GET    /v1/servers/:id                      -> 200 Server | 400 | 404
  *   POST   /v1/servers                           -> 201 Server | 400 | 401 | 409 (nombre repetido)
  *   PATCH  /v1/servers/:id                       -> 200 Server | 400 | 401 | 403 (no owner) | 404
+ *   DELETE /v1/servers/:id                       -> 204 | 400 (confirm_name) | 401 | 403 (no owner) | 404
  *   DELETE /v1/servers/:id/members/:userId       -> 204 | 401 | 403 | 404 | 409 (owner)
  *   GET    /v1/servers/:id/icon                  -> binario | 401 | 404
  *   GET    /v1/servers/:id/banner                -> binario | 401 | 404
- *
- * Todavia NO existe: borrar servidor. Ver la referencia de la API para
- * transferencia de ownership.
  */
 
 export function listMyServers(
@@ -62,6 +60,18 @@ export function leaveServer(
   return apiRequest<void>(`/v1/servers/${serverId}/members/${userId}`, {
     method: "DELETE",
     token,
+  });
+}
+
+export function deleteServer(
+  token: string,
+  serverId: string,
+  confirmName: string,
+): Promise<ApiResult<void>> {
+  return apiRequest<void>(`/v1/servers/${serverId}`, {
+    method: "DELETE",
+    token,
+    data: { confirm_name: confirmName },
   });
 }
 
