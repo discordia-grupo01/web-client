@@ -4,6 +4,7 @@ import {
   ADD_REACTION_LABEL,
   DELETE_MESSAGE_LABEL,
   EDIT_MESSAGE_LABEL,
+  QUICK_REACTIONS,
 } from "@discordia/client-shared";
 
 import { Pencil, SmilePlus, Trash2 } from "lucide-react";
@@ -20,6 +21,8 @@ interface MessageActionsProps {
   onDelete: () => void;
 }
 
+const BAR_REACTIONS = QUICK_REACTIONS.slice(0, 3);
+
 const ACTION_BUTTON =
   "text-content-subtle hover:text-content flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors";
 
@@ -34,7 +37,20 @@ export function MessageActions({
   if (!onToggleReaction && !canEdit && !canDelete) return null;
 
   return (
-    <div className="bg-surface-raised border-line absolute -top-3 right-2 flex rounded-lg border opacity-0 shadow-md transition-opacity group-focus-within/message:opacity-100 group-hover/message:opacity-100">
+    <div className="bg-surface-raised border-line absolute -top-3 right-2 flex rounded-lg border opacity-0 shadow-md transition-opacity group-hover/message:opacity-100 group-focus-visible/message:opacity-100 group-has-[:focus-visible]/message:opacity-100">
+      {onToggleReaction
+        ? BAR_REACTIONS.map((emoji) => (
+            <button
+              key={emoji}
+              type="button"
+              onClick={() => onToggleReaction(emoji)}
+              aria-label={emoji}
+              className="hover:bg-surface-hover flex size-8 cursor-pointer items-center justify-center rounded-lg text-lg transition-colors"
+            >
+              {emoji}
+            </button>
+          ))
+        : null}
       {onToggleReaction ? (
         <EmojiPicker
           icon={SmilePlus}
