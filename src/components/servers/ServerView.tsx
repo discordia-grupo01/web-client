@@ -70,7 +70,7 @@ import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { MembersSidebar } from "@/components/members/MembersSidebar";
 import { ChannelChat } from "@/components/messages/ChannelChat";
-import { useAuth } from "@/services/auth/auth-context";
+import { useAuth } from "@/services/auth/AuthContext";
 import { reorderCategoriesRequest } from "@/services/categories/client";
 import {
   moveChannelToCategoryRequest,
@@ -990,6 +990,7 @@ export function ServerView({
             viewingUserId !== String(user?.id) &&
             viewingUserId !== server.owner_id
           }
+          canBlock={viewingUserId !== String(user?.id)}
           onBan={(profile) => {
             setViewingUserId(null);
             setBanTarget({

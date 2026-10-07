@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 
 import { DEFAULT_THEME, themeToCss } from "@discordia/client-shared";
 
-import { AuthProvider } from "@/services/auth/auth-context";
+import { AuthProvider } from "@/services/auth/AuthContext";
 import { getCurrentUser } from "@/services/auth/session";
 import { APP_NAME, THEME_STORAGE_KEY } from "@/lib/constants";
 

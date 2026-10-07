@@ -14,7 +14,7 @@ import { RolesModal } from "@/components/roles/RolesModal";
 import { LeaveServerModal } from "@/components/servers/LeaveServerModal";
 import { ServerSettingsModal } from "@/components/servers/settings/ServerSettingsModal";
 import { TransferOwnershipModal } from "@/components/servers/TransferOwnershipModal";
-import { useAuth } from "@/services/auth/auth-context";
+import { useAuth } from "@/services/auth/AuthContext";
 import { getPendingTransferRequest } from "@/services/ownership-transfers/client";
 
 import { ServerHeaderTrigger } from "./ServerHeaderTrigger";

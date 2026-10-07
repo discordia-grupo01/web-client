@@ -18,7 +18,8 @@ import { MobilePanelsProvider } from "@/components/layout/MobilePanelsContext";
 import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
 import { CreateServerModal } from "@/components/servers/CreateServerModal";
 import { ServerView } from "@/components/servers/ServerView";
-import { useAuth } from "@/services/auth/auth-context";
+import { useAuth } from "@/services/auth/AuthContext";
+import { BlockedUsersProvider } from "@/services/blocks/BlockedUsersContext";
 import { useDirectMessages } from "@/services/conversations/useDirectMessages";
 import { authorFromProfile } from "@/services/messages/author";
 import { getOwnProfileRequest } from "@/services/profile/client";
@@ -32,7 +33,7 @@ interface HomeShellProps {
   initialSelectedServerId?: string | null;
 }
 
-export function HomeShell({
+function HomeShellContent({
   initialServers,
   initialSelectedServerId = null,
 }: HomeShellProps) {
@@ -205,5 +206,13 @@ export function HomeShell({
         ) : null}
       </div>
     </MobilePanelsProvider>
+  );
+}
+
+export function HomeShell(props: HomeShellProps) {
+  return (
+    <BlockedUsersProvider>
+      <HomeShellContent {...props} />
+    </BlockedUsersProvider>
   );
 }
