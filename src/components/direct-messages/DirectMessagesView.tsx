@@ -6,6 +6,7 @@ import { useState } from "react";
 
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
+import { PublicProfileModal } from "@/components/profile/PublicProfileModal";
 import type { useDirectMessages } from "@/services/conversations/useDirectMessages";
 
 import { DmConversation } from "./DmConversation";
@@ -28,6 +29,7 @@ export function DirectMessagesView({
 }: DirectMessagesViewProps) {
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
+  const [profileUserId, setProfileUserId] = useState<string | null>(null);
   const {
     conversations,
     activeConversationId,
@@ -67,6 +69,15 @@ export function DirectMessagesView({
           onToggleReaction={toggleReaction}
           onEditMessage={editMessage}
           onDeleteMessage={deleteMessage}
+          onOpenPartnerProfile={setProfileUserId}
+        />
+      ) : null}
+
+      {profileUserId ? (
+        <PublicProfileModal
+          userId={profileUserId}
+          canBlock
+          onClose={() => setProfileUserId(null)}
         />
       ) : null}
 

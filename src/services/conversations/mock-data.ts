@@ -14,8 +14,6 @@ import { DEMO_AUTHORS } from "@/services/messages/mock-data";
 /** Partners demo con los que ya hay una conversacion iniciada. */
 const DEMO_PARTNER_IDS = Object.keys(DEMO_AUTHORS);
 
-/** Yo bloqueé a este partner: no le puedo escribir. */
-export const BLOCKED_BY_ME = new Set<string>(["demo-night"]);
 /** Este partner me bloqueó a mí: mis envíos no se entregan. */
 export const BLOCKS_ME = new Set<string>(["demo-pixel"]);
 
