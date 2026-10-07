@@ -1,11 +1,16 @@
 "use client";
 
 import {
+  BLOCK_USER_LABEL,
+  BLOCKED_BADGE_LABEL,
+  type BlockUserResult,
   SELECT_CONVERSATION_NOTICE,
   type MessageAuthor,
+  UNBLOCK_USER_LABEL,
 } from "@discordia/client-shared";
 
-import { MessageCircle } from "lucide-react";
+import { Ban, MessageCircle, ShieldCheck } from "lucide-react";
+import { useState } from "react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
@@ -15,6 +20,7 @@ import type {
   SendDmResult,
 } from "@/services/conversations/useDirectMessages";
 
+import { BlockUserModal } from "./BlockUserModal";
 import { DmComposer } from "./DmComposer";
 import { DmMessageList } from "./DmMessageList";
 
@@ -26,6 +32,8 @@ interface DmConversationProps {
   onToggleReaction: (messageId: string, emoji: string) => void;
   onEditMessage: (messageId: string, content: string) => void;
   onDeleteMessage: (messageId: string) => void;
+  onBlock: (userId: string) => Promise<BlockUserResult>;
+  onUnblock: (userId: string) => Promise<BlockUserResult>;
 }
 
 export function DmConversation({
@@ -36,7 +44,11 @@ export function DmConversation({
   onToggleReaction,
   onEditMessage,
   onDeleteMessage,
+  onBlock,
+  onUnblock,
 }: DmConversationProps) {
+  const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
+
   if (!activeSummary) {
     return (
       <div
@@ -81,9 +93,17 @@ export function DmConversation({
         </span>
         {blockedByMe || blocksMe ? (
           <span className="bg-danger/15 text-danger rounded-full px-2 py-0.5 text-[10px]">
-            {blockedByMe ? "bloqueado" : "te bloqueó"}
+            {blockedByMe ? BLOCKED_BADGE_LABEL : "te bloqueó"}
           </span>
         ) : null}
+        <button
+          type="button"
+          onClick={() => setIsBlockModalOpen(true)}
+          className="text-content-subtle hover:text-content ml-auto flex cursor-pointer items-center gap-1.5 rounded-md px-2 py-1 text-xs"
+        >
+          {blockedByMe ? <ShieldCheck size={14} /> : <Ban size={14} />}
+          {blockedByMe ? UNBLOCK_USER_LABEL : BLOCK_USER_LABEL}
+        </button>
       </div>
 
       <DmMessageList
@@ -100,6 +120,17 @@ export function DmConversation({
         blockedByMe={blockedByMe}
         onSend={onSend}
       />
+
+      {isBlockModalOpen ? (
+        <BlockUserModal
+          userName={partner.name}
+          isBlocked={blockedByMe}
+          onConfirm={() =>
+            blockedByMe ? onUnblock(partner.id) : onBlock(partner.id)
+          }
+          onClose={() => setIsBlockModalOpen(false)}
+        />
+      ) : null}
     </div>
   );
 }

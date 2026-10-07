@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BLOCKED_BADGE_LABEL,
   DIRECT_MESSAGES_TITLE,
   NEW_DIRECT_MESSAGE_LABEL,
   NO_CONVERSATIONS_YET,
@@ -129,7 +130,7 @@ export function DmRailList({
                       </span>
                       {blockedByMe || blocksMe ? (
                         <span className="bg-danger/15 text-danger shrink-0 rounded px-1 py-px text-[9px]">
-                          bloqueado
+                          {BLOCKED_BADGE_LABEL}
                         </span>
                       ) : null}
                     </div>

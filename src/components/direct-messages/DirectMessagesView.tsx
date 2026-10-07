@@ -40,6 +40,8 @@ export function DirectMessagesView({
     toggleReaction,
     editMessage,
     deleteMessage,
+    blockUser,
+    unblockUser,
   } = directMessages;
 
   return (
@@ -67,6 +69,8 @@ export function DirectMessagesView({
           onToggleReaction={toggleReaction}
           onEditMessage={editMessage}
           onDeleteMessage={deleteMessage}
+          onBlock={blockUser}
+          onUnblock={unblockUser}
         />
       ) : null}
 

@@ -16,11 +16,9 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { DEMO_AUTHORS } from "@/services/messages/mock-data";
 
-import {
-  BLOCKED_BY_ME,
-  BLOCKS_ME,
-  INITIALLY_UNREAD_CONVERSATION_IDS,
-} from "./mock-data";
+import { useBlockedUsers } from "@/services/blocks/useBlockedUsers";
+
+import { BLOCKS_ME, INITIALLY_UNREAD_CONVERSATION_IDS } from "./mock-data";
 import {
   createLocalDmMessage,
   findOrCreateConversationWith,
@@ -58,6 +56,7 @@ function unknownAuthor(id: string): MessageAuthor {
 /** Mensajes directos de la sesion actual: lista de conversaciones + la activa. */
 export function useDirectMessages(currentAuthor: MessageAuthor | null) {
   const currentUserId = currentAuthor?.id ?? null;
+  const { blockedIds, blockUser, unblockUser } = useBlockedUsers(currentUserId);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [messagesByConversation, setMessagesByConversation] = useState<
     Record<string, DmMessage[]>
@@ -99,7 +98,7 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
           unknownAuthor(partnerId),
         lastMessage: messages[messages.length - 1] ?? null,
         isUnread: unreadIds.has(conversation.id),
-        blockedByMe: BLOCKED_BY_ME.has(partnerId),
+        blockedByMe: blockedIds.has(partnerId),
         blocksMe: BLOCKS_ME.has(partnerId),
       };
     });
@@ -109,6 +108,7 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
     currentUserId,
     unreadIds,
     extraAuthors,
+    blockedIds,
   ]);
 
   const activeMessages = activeConversationId
@@ -248,5 +248,7 @@ export function useDirectMessages(currentAuthor: MessageAuthor | null) {
     toggleReaction,
     editMessage,
     deleteMessage,
+    blockUser,
+    unblockUser,
   };
 }
