@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BLOCKED_BADGE_LABEL,
   SELECT_CONVERSATION_NOTICE,
   type MessageAuthor,
 } from "@discordia/client-shared";
@@ -26,6 +27,7 @@ interface DmConversationProps {
   onToggleReaction: (messageId: string, emoji: string) => void;
   onEditMessage: (messageId: string, content: string) => void;
   onDeleteMessage: (messageId: string) => void;
+  onOpenPartnerProfile: (partnerId: string) => void;
 }
 
 export function DmConversation({
@@ -36,6 +38,7 @@ export function DmConversation({
   onToggleReaction,
   onEditMessage,
   onDeleteMessage,
+  onOpenPartnerProfile,
 }: DmConversationProps) {
   if (!activeSummary) {
     return (
@@ -70,18 +73,25 @@ export function DmConversation({
         style={{ borderBottom: "1px solid var(--border)" }}
       >
         <MobileNavButton />
-        <ServerAvatar
-          name={partner.name}
-          src={partner.avatarUrl}
-          size={24}
-          className="rounded-full"
-        />
-        <span className="font-display text-content truncate text-sm font-semibold">
-          {partner.name}
-        </span>
+        <button
+          type="button"
+          onClick={() => onOpenPartnerProfile(partner.id)}
+          aria-label={`Ver perfil de ${partner.name}`}
+          className="hover:bg-surface-hover flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 transition-colors"
+        >
+          <ServerAvatar
+            name={partner.name}
+            src={partner.avatarUrl}
+            size={24}
+            className="rounded-full"
+          />
+          <span className="font-display text-content truncate text-sm font-semibold">
+            {partner.name}
+          </span>
+        </button>
         {blockedByMe || blocksMe ? (
           <span className="bg-danger/15 text-danger rounded-full px-2 py-0.5 text-[10px]">
-            {blockedByMe ? "bloqueado" : "te bloqueó"}
+            {blockedByMe ? BLOCKED_BADGE_LABEL : "te bloqueó"}
           </span>
         ) : null}
       </div>

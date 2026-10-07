@@ -80,7 +80,7 @@ export function MessageItem({
     <article
       tabIndex={0}
       className={cn(
-        "group/message hover:bg-surface-hover focus-within:bg-surface-hover relative flex gap-3 rounded-md px-2 py-0.5 outline-none",
+        "group/message hover:bg-surface-hover focus-visible:bg-surface-hover has-[:focus-visible]:bg-surface-hover relative flex gap-3 rounded-md px-2 py-0.5 outline-none",
         isGroupStart && "mt-4",
       )}
     >

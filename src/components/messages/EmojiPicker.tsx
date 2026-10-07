@@ -1,13 +1,16 @@
 "use client";
 
-import { QUICK_REACTIONS } from "@discordia/client-shared";
-
 import type { LucideIcon } from "lucide-react";
+import dynamic from "next/dynamic";
 import { useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { cn } from "@/lib/cn";
+
+const EmojiPickerPanel = dynamic(() => import("./EmojiPickerPanel"), {
+  ssr: false,
+});
 
 interface EmojiPickerProps {
   icon: LucideIcon;
@@ -55,9 +58,10 @@ export function EmojiPicker({
         ? createPortal(
             <div
               ref={panelRef}
-              role="menu"
+              role="dialog"
+              aria-label={label}
               className={cn(
-                "bg-surface-raised border-line-strong fixed z-50 flex gap-0.5 rounded-xl border p-1 shadow-2xl",
+                "fixed z-50 h-[435px] w-[352px]",
                 !position && "invisible",
               )}
               style={{
@@ -66,20 +70,12 @@ export function EmojiPicker({
                 right: position?.right,
               }}
             >
-              {QUICK_REACTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  role="menuitem"
-                  onClick={() => {
-                    onPick(emoji);
-                    close();
-                  }}
-                  className="hover:bg-surface-hover flex size-9 cursor-pointer items-center justify-center rounded-lg text-lg transition-colors"
-                >
-                  {emoji}
-                </button>
-              ))}
+              <EmojiPickerPanel
+                onPick={(emoji) => {
+                  onPick(emoji);
+                  close();
+                }}
+              />
             </div>,
             document.body,
           )
