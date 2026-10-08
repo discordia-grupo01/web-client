@@ -1,9 +1,10 @@
-import { hexToRgba, tokenizeMessageContent } from "@discordia/client-shared";
+import {
+  hexToRgba,
+  tokenizeMessageContent,
+  type MentionResolver,
+} from "@discordia/client-shared";
 
 import { Fragment, type ReactNode } from "react";
-
-/** Color a usar para un `@usuario` o `@rol` mencionado, o `null` si no se reconoce. */
-export type MentionResolver = (name: string) => { color: string } | null;
 
 const GENERIC_MENTION_CLASS = "bg-highlight/15 text-highlight rounded px-0.5";
 const EVERYONE_NAMES = new Set(["everyone", "here"]);

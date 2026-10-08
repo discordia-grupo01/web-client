@@ -2,9 +2,8 @@ import {
   otherParticipantId,
   type Conversation,
   type DmMessage,
+  DEMO_AUTHORS,
 } from "@discordia/client-shared";
-
-import { DEMO_AUTHORS } from "@/services/messages/mock-data";
 
 /**
  * Datos de demo para maquetar Mensajes Directos mientras no exista el

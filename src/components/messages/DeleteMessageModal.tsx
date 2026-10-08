@@ -6,6 +6,7 @@ import {
   DELETE_MESSAGE_CONFIRM_BODY,
   DELETE_MESSAGE_CONFIRM_TITLE,
   type MessageAuthor,
+  type MentionResolver,
 } from "@discordia/client-shared";
 
 import { Trash2 } from "lucide-react";
@@ -14,7 +15,7 @@ import { Button } from "@/components/ui/Button";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
 
-import { MessageContent, type MentionResolver } from "./MessageContent";
+import { MessageContent } from "./MessageContent";
 import { MessageHeader } from "./MessageHeader";
 
 interface DeleteMessageModalProps {

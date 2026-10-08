@@ -8,11 +8,11 @@ import {
   startsMessageGroup,
   type Message,
   type MessageAuthor,
+  type MentionResolver,
 } from "@discordia/client-shared";
 
 import { useLayoutEffect, useRef } from "react";
 
-import type { MentionResolver } from "./MessageContent";
 import { ChannelWelcome } from "./ChannelWelcome";
 import { MessageItem, type MessageEditOutcome } from "./MessageItem";
 

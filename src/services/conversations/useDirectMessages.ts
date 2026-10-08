@@ -10,11 +10,10 @@ import {
   type DmMessage as BaseDmMessage,
   type MessageAuthor,
   type MessageReaction,
+  DEMO_AUTHORS,
 } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
-
-import { DEMO_AUTHORS } from "@/services/messages/mock-data";
 
 import { useBlockedUsersContext } from "@/services/blocks/BlockedUsersContext";
 

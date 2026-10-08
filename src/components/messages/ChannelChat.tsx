@@ -6,11 +6,11 @@ import {
   LOADING_MESSAGES_LABEL,
   type MessageAuthor,
   type Role,
+  buildMentionResolver,
 } from "@discordia/client-shared";
 
 import { useMemo, useState } from "react";
 
-import { buildMentionResolver } from "@/services/messages/message-mentions";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
 import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
