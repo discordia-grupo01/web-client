@@ -5,7 +5,7 @@ import { type ServerSummary } from "@discordia/client-shared";
 import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { listServersRequest } from "@/services/servers/client";
 
 interface MutualServersListProps {
@@ -40,7 +40,7 @@ export function MutualServersList({ serverIds }: MutualServersListProps) {
         <div className="mt-1.5 flex flex-col gap-1.5">
           {mutualServers.map((server) => (
             <div key={server.id} className="flex items-center gap-2.5 py-0.5">
-              <ServerAvatar
+              <Avatar
                 name={server.name}
                 src={`/api/servers/${server.id}/icon`}
                 size={32}

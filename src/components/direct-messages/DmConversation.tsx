@@ -13,7 +13,7 @@ import { MessageCircle } from "lucide-react";
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageComposer } from "@/components/messages/MessageComposer";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import type {
   ConversationSummary,
   SendDmResult,
@@ -74,7 +74,7 @@ export function DmConversation({
           aria-label={`Ver perfil de ${partner.name}`}
           className="hover:bg-surface-hover flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 transition-colors"
         >
-          <ServerAvatar
+          <Avatar
             name={partner.name}
             src={partner.avatarUrl}
             size={24}

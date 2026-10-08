@@ -10,7 +10,7 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 
 import { ModalShell } from "@/components/ui/ModalShell";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface StartDmModalProps {
   partners: MessageAuthor[];
@@ -70,7 +70,7 @@ export function StartDmModal({
               onClick={() => onStart(partner)}
               className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left transition-colors"
             >
-              <ServerAvatar
+              <Avatar
                 name={partner.name}
                 src={partner.avatarUrl}
                 size={32}

@@ -12,7 +12,7 @@ import { Plus } from "lucide-react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { UserPanel } from "@/components/profile/UserPanel";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import type { ConversationSummary } from "@/services/conversations/useDirectMessages";
 import { cn } from "@/lib/cn";
 
@@ -34,12 +34,7 @@ function DmPartnerAvatar({
 }) {
   return (
     <div className="relative shrink-0">
-      <ServerAvatar
-        name={name}
-        src={avatarUrl}
-        size={32}
-        className="rounded-full"
-      />
+      <Avatar name={name} src={avatarUrl} size={32} className="rounded-full" />
       {/* Presencia mock: no hay estado de actividad real para otros usuarios. */}
       <ActivityStatusDot
         status="online"

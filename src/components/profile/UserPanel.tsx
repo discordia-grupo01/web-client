@@ -8,7 +8,7 @@ import { useState } from "react";
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface UserPanelProps {
   user: User;
@@ -34,7 +34,7 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
           className="hover:bg-surface-hover flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md py-1 pl-1 text-left transition-colors"
         >
           <div className="relative shrink-0">
-            <ServerAvatar
+            <Avatar
               name={user.name}
               src={user.avatar_url ? "/api/profile/avatar" : null}
               size={32}

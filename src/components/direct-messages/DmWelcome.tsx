@@ -3,13 +3,13 @@ import {
   type MessageAuthor,
 } from "@discordia/client-shared";
 
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 
 /** Comienzo del historial de una conversacion directa. */
 export function DmWelcome({ partner }: { partner: MessageAuthor }) {
   return (
     <div className="mb-6 flex flex-col items-start px-2">
-      <ServerAvatar
+      <Avatar
         name={partner.name}
         src={partner.avatarUrl}
         size={56}

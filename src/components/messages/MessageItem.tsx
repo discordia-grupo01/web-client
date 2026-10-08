@@ -10,7 +10,7 @@ import {
 
 import { useState } from "react";
 
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 
 import { MessageActions } from "./MessageActions";
@@ -86,7 +86,7 @@ export function MessageItem({
       )}
     >
       {isGroupStart ? (
-        <ServerAvatar
+        <Avatar
           name={author.name}
           src={author.avatarUrl}
           size={AVATAR_SIZE}
