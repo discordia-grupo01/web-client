@@ -1,12 +1,17 @@
 "use client";
 
-import type { MessageAuthor, User } from "@discordia/client-shared";
+import type {
+  MessageAuthor,
+  ServerSummary,
+  User,
+} from "@discordia/client-shared";
 
 import { useState } from "react";
 
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { PublicProfileModal } from "@/components/profile/PublicProfileModal";
+import { useDmCandidates } from "@/services/conversations/useDmCandidates";
 import type { useDirectMessages } from "@/services/conversations/useDirectMessages";
 
 import { DmConversation } from "./DmConversation";
@@ -17,6 +22,7 @@ interface DirectMessagesViewProps {
   currentAuthor: MessageAuthor | null;
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
+  servers: ServerSummary[];
   directMessages: ReturnType<typeof useDirectMessages>;
 }
 
@@ -25,31 +31,26 @@ export function DirectMessagesView({
   currentAuthor,
   ownProfile,
   onOpenOwnProfile,
+  servers,
   directMessages,
 }: DirectMessagesViewProps) {
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
-  const {
-    conversations,
-    activeConversationId,
-    activeMessages,
-    activeSummary,
-    knownPartners,
-    openConversation,
-    startConversationWith,
-    sendMessage,
-    toggleReaction,
-    editMessage,
-    deleteMessage,
-  } = directMessages;
+  const { conversations, activeSummary, openConversation, sendMessage } =
+    directMessages;
+  const { candidates, isLoading: isLoadingCandidates } = useDmCandidates(
+    servers,
+    currentAuthor?.id ?? null,
+    isStartModalOpen,
+  );
 
   return (
     <div className="flex min-w-0 flex-1 overflow-hidden">
       <SidePanel position="afterRail" isOpen={openPanel === "nav"}>
         <DmRailList
           conversations={conversations}
-          activeConversationId={activeConversationId}
+          activePartnerId={activeSummary?.partner.id ?? null}
           onSelect={(id) => {
             openConversation(id);
             closeMobilePanel();
@@ -64,11 +65,7 @@ export function DirectMessagesView({
         <DmConversation
           currentAuthor={currentAuthor}
           activeSummary={activeSummary}
-          messages={activeMessages}
           onSend={sendMessage}
-          onToggleReaction={toggleReaction}
-          onEditMessage={editMessage}
-          onDeleteMessage={deleteMessage}
           onOpenPartnerProfile={setProfileUserId}
         />
       ) : null}
@@ -83,10 +80,11 @@ export function DirectMessagesView({
 
       {isStartModalOpen ? (
         <StartDmModal
-          partners={knownPartners}
+          partners={candidates}
+          isLoading={isLoadingCandidates}
           onClose={() => setIsStartModalOpen(false)}
-          onStart={(partnerId) => {
-            startConversationWith(partnerId);
+          onStart={(partner) => {
+            openConversation(partner.id, partner);
             setIsStartModalOpen(false);
           }}
         />

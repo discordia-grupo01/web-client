@@ -6,15 +6,16 @@ import {
   DELETE_MESSAGE_CONFIRM_BODY,
   DELETE_MESSAGE_CONFIRM_TITLE,
   type MessageAuthor,
+  type MentionResolver,
 } from "@discordia/client-shared";
 
 import { Trash2 } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 import { ModalShell } from "@/components/ui/ModalShell";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 
-import { MessageContent, type MentionResolver } from "./MessageContent";
+import { MessageContent } from "./MessageContent";
 import { MessageHeader } from "./MessageHeader";
 
 interface DeleteMessageModalProps {
@@ -56,7 +57,7 @@ export function DeleteMessageModal({
           </p>
         </div>
         <div className="border-line bg-surface-input flex max-h-48 w-full gap-3 overflow-y-auto rounded-xl border px-3 py-2.5 text-left">
-          <ServerAvatar
+          <Avatar
             name={author.name}
             src={author.avatarUrl}
             size={32}

@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  LOADING_DM_CANDIDATES_LABEL,
   NEW_DIRECT_MESSAGE_LABEL,
   type MessageAuthor,
 } from "@discordia/client-shared";
@@ -9,18 +10,20 @@ import { Search } from "lucide-react";
 import { useState } from "react";
 
 import { ModalShell } from "@/components/ui/ModalShell";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 
 interface StartDmModalProps {
   partners: MessageAuthor[];
   onClose: () => void;
-  onStart: (partnerId: string) => void;
+  isLoading?: boolean;
+  onStart: (partner: MessageAuthor) => void;
 }
 
 const TITLE_ID = "start-dm-modal-title";
 
 export function StartDmModal({
   partners,
+  isLoading = false,
   onClose,
   onStart,
 }: StartDmModalProps) {
@@ -51,7 +54,11 @@ export function StartDmModal({
       </div>
 
       <div className="max-h-80 overflow-y-auto p-2">
-        {filtered.length === 0 ? (
+        {isLoading ? (
+          <p className="text-content-subtle px-3 py-4 text-center text-sm">
+            {LOADING_DM_CANDIDATES_LABEL}
+          </p>
+        ) : filtered.length === 0 ? (
           <p className="text-content-subtle px-3 py-4 text-center text-sm">
             Sin resultados
           </p>
@@ -60,10 +67,10 @@ export function StartDmModal({
             <button
               key={partner.id}
               type="button"
-              onClick={() => onStart(partner.id)}
+              onClick={() => onStart(partner)}
               className="hover:bg-surface-hover flex w-full cursor-pointer items-center gap-3 rounded-md px-3 py-2 text-left transition-colors"
             >
-              <ServerAvatar
+              <Avatar
                 name={partner.name}
                 src={partner.avatarUrl}
                 size={32}

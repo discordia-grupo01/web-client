@@ -3,7 +3,7 @@
 import type { ServerSummary } from "@discordia/client-shared";
 import { ChevronDown } from "lucide-react";
 
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { ServerBanner } from "@/components/ui/ServerBanner";
 import { serverBannerSrc, serverIconSrc } from "@/services/servers/image-urls";
 import { cn } from "@/lib/cn";
@@ -37,7 +37,7 @@ export function ServerHeaderTrigger({
         aria-expanded={isMenuOpen}
         className="hover:bg-surface-hover flex h-12 w-full cursor-pointer items-center gap-2 px-4 transition-colors"
       >
-        <ServerAvatar
+        <Avatar
           name={server.name}
           src={serverIconSrc(server)}
           size={24}

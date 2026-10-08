@@ -6,7 +6,7 @@ import { Home as HomeIcon, Plus } from "lucide-react";
 
 import { SidePanel } from "@/components/layout/SidePanel";
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { serverIconSrc } from "@/services/servers/image-urls";
 import { cn } from "@/lib/cn";
 
@@ -107,11 +107,7 @@ function ServerRailItem({
         onClick={onClick}
         className="cursor-pointer overflow-hidden rounded-2xl"
       >
-        <ServerAvatar
-          name={server.name}
-          src={serverIconSrc(server)}
-          size={48}
-        />
+        <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
       </button>
     </div>
   );

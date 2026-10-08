@@ -5,7 +5,6 @@ import {
   CHAT_FEATURE_NOT_AVAILABLE,
   EMOJI_PICKER_LABEL,
   MAX_MESSAGE_LENGTH,
-  messageInputPlaceholder,
   SEND_MESSAGE_LABEL,
   validateMentionEveryone,
   validateMessageContent,
@@ -29,7 +28,8 @@ const ICON_BUTTON =
   "text-content-subtle hover:text-content-muted flex size-9 shrink-0 items-center justify-center rounded-md";
 
 interface MessageComposerProps {
-  channelName: string;
+  /** Texto del campo vacio (ej. `messageInputPlaceholder(canal)` o `dmInputPlaceholder(nombre)`). */
+  placeholder: string;
   /**
    * Si devuelve una promesa, el borrador se conserva hasta que el envio sale
    * bien (un fallo lo deja para reintentar). Si devuelve `void`, se limpia al
@@ -42,7 +42,7 @@ interface MessageComposerProps {
 }
 
 export function MessageComposer({
-  channelName,
+  placeholder,
   onSend,
   disabled = false,
   canMentionEveryone = false,
@@ -116,8 +116,8 @@ export function MessageComposer({
           }}
           onKeyDown={handleKeyDown}
           disabled={disabled || isSending}
-          placeholder={messageInputPlaceholder(channelName)}
-          aria-label={messageInputPlaceholder(channelName)}
+          placeholder={placeholder}
+          aria-label={placeholder}
           className="text-content placeholder:text-content-subtle min-w-0 flex-1 self-center border-none bg-transparent py-1.5 text-base outline-none placeholder:truncate md:text-sm"
         />
 
