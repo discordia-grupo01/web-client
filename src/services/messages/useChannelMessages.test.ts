@@ -226,6 +226,52 @@ describe("useChannelMessages: carga y tiempo real", () => {
   });
 });
 
+describe("useChannelMessages: acceso revocado", () => {
+  it("access_revoked por member_left deja el chat sin acceso", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() =>
+      room.handlers.access_revoked({
+        channel_id: "ch1",
+        reason: "member_left",
+      }),
+    );
+
+    expect(result.current.status).toBe("forbidden");
+    expect(result.current.statusMessage).toBe(
+      "Ya no sos miembro de este servidor.",
+    );
+  });
+
+  it("access_revoked por canal borrado lo marca como inexistente", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() =>
+      room.handlers.access_revoked({
+        channel_id: "ch1",
+        reason: "channel_deleted",
+      }),
+    );
+
+    expect(result.current.status).toBe("notFound");
+    expect(result.current.statusMessage).toBe("Este canal ya no existe.");
+  });
+
+  it("tras revocarse, un corte de conexion no lo pisa", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() =>
+      room.handlers.access_revoked({
+        channel_id: "ch1",
+        reason: "member_left",
+      }),
+    );
+    act(() => room.errorHandler?.());
+
+    expect(result.current.status).toBe("forbidden");
+  });
+});
+
 describe("useChannelMessages: join rechazado", () => {
   it("FORBIDDEN corta los reintentos (leave) y muestra el motivo", async () => {
     const view = renderHook(() => useChannelMessages({ id: "ch1" }));

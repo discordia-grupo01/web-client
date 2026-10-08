@@ -132,6 +132,7 @@ export function useChannelMessages(
           if (isFirstJoin) void loadLatest(true);
         },
         rejected: fail,
+        accessRevoked: fail,
       });
     }
 
