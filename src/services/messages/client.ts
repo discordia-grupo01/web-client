@@ -1,6 +1,7 @@
 import {
   type ListMessagesResult,
   MESSAGES_LOAD_FAILED,
+  type SocketTicketResult,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browserApiClient";
@@ -8,9 +9,6 @@ import { api } from "@/lib/browserApiClient";
 /**
  * Llamadas del navegador hacia el BFF de mensajes (`/api/*`, mismo origen).
  */
-
-export type SocketTicketResult =
-  { ok: true; ticket: string } | { ok: false; sessionExpired: boolean };
 
 /**
  * Pide un ticket de un solo uso (vence a los 30 s) para abrir el WebSocket
