@@ -7,7 +7,7 @@ import { describe, expect, it, vi } from "vitest";
 import { MessageComposer } from "./MessageComposer";
 
 function renderComposer(onSend = vi.fn()) {
-  render(<MessageComposer channelName="general" onSend={onSend} />);
+  render(<MessageComposer placeholder="Mensaje en #general" onSend={onSend} />);
   return { onSend, input: screen.getByRole("textbox") };
 }
 
@@ -54,7 +54,9 @@ describe("MessageComposer", () => {
 
   it("bloquea @everyone sin el permiso y no envia", async () => {
     const onSend = vi.fn();
-    render(<MessageComposer channelName="general" onSend={onSend} />);
+    render(
+      <MessageComposer placeholder="Mensaje en #general" onSend={onSend} />,
+    );
 
     await userEvent.type(screen.getByRole("textbox"), "@everyone hola{Enter}");
 
@@ -68,7 +70,7 @@ describe("MessageComposer", () => {
     const onSend = vi.fn();
     render(
       <MessageComposer
-        channelName="general"
+        placeholder="Mensaje en #general"
         onSend={onSend}
         canMentionEveryone
       />,

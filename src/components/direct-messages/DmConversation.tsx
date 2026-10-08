@@ -2,6 +2,8 @@
 
 import {
   BLOCKED_BADGE_LABEL,
+  DM_BLOCKED_CANNOT_SEND,
+  dmInputPlaceholder,
   SELECT_CONVERSATION_NOTICE,
   type MessageAuthor,
 } from "@discordia/client-shared";
@@ -9,35 +11,28 @@ import {
 import { MessageCircle } from "lucide-react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { MessageList } from "@/components/messages/MessageList";
+import { MessageComposer } from "@/components/messages/MessageComposer";
 import { ServerAvatar } from "@/components/ui/ServerAvatar";
 import type {
   ConversationSummary,
-  DmMessage,
   SendDmResult,
 } from "@/services/conversations/useDirectMessages";
 
-import { DmComposer } from "./DmComposer";
-import { DmMessageList } from "./DmMessageList";
+import { DmHistory } from "./DmHistory";
+import { DmWelcome } from "./DmWelcome";
 
 interface DmConversationProps {
   currentAuthor: MessageAuthor;
   activeSummary: ConversationSummary | null;
-  messages: DmMessage[];
-  onSend: (content: string) => SendDmResult;
-  onToggleReaction: (messageId: string, emoji: string) => void;
-  onEditMessage: (messageId: string, content: string) => void;
-  onDeleteMessage: (messageId: string) => void;
+  onSend: (content: string) => Promise<SendDmResult>;
   onOpenPartnerProfile: (partnerId: string) => void;
 }
 
 export function DmConversation({
   currentAuthor,
   activeSummary,
-  messages,
   onSend,
-  onToggleReaction,
-  onEditMessage,
-  onDeleteMessage,
   onOpenPartnerProfile,
 }: DmConversationProps) {
   if (!activeSummary) {
@@ -61,7 +56,7 @@ export function DmConversation({
     );
   }
 
-  const { partner, blockedByMe, blocksMe } = activeSummary;
+  const { partner, blockedByMe, conversationId } = activeSummary;
 
   return (
     <div
@@ -89,26 +84,45 @@ export function DmConversation({
             {partner.name}
           </span>
         </button>
-        {blockedByMe || blocksMe ? (
+        {blockedByMe ? (
           <span className="bg-danger/15 text-danger rounded-full px-2 py-0.5 text-[10px]">
-            {blockedByMe ? BLOCKED_BADGE_LABEL : "te bloqueó"}
+            {BLOCKED_BADGE_LABEL}
           </span>
         ) : null}
       </div>
 
-      <DmMessageList
-        partner={partner}
-        currentAuthor={currentAuthor}
-        messages={messages}
-        onToggleReaction={onToggleReaction}
-        onEditMessage={onEditMessage}
-        onDeleteMessage={onDeleteMessage}
-      />
+      {conversationId ? (
+        <DmHistory
+          key={conversationId}
+          conversationId={conversationId}
+          partner={partner}
+          currentAuthor={currentAuthor}
+        />
+      ) : (
+        // Borrador: nadie escribio todavia, no hay nada que pedirle al back.
+        <MessageList
+          welcome={<DmWelcome partner={partner} />}
+          label={`Conversación con ${partner.name}`}
+          messages={[]}
+          authors={{}}
+          currentUserId={currentAuthor.id}
+          canManageMessages={false}
+          canSendMessages
+          onToggleReaction={() => {}}
+          onEditMessage={() => {}}
+          onDeleteMessage={() => {}}
+        />
+      )}
 
-      <DmComposer
-        partnerName={partner.name}
-        blockedByMe={blockedByMe}
+      {blockedByMe ? (
+        <p className="border-danger/20 bg-danger/10 text-danger mx-2 mb-2 rounded-lg border px-3 py-2 text-sm md:mx-4">
+          {DM_BLOCKED_CANNOT_SEND}
+        </p>
+      ) : null}
+      <MessageComposer
+        placeholder={dmInputPlaceholder(partner.name)}
         onSend={onSend}
+        disabled={blockedByMe}
       />
     </div>
   );
