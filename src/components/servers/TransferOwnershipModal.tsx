@@ -14,7 +14,7 @@ import { AlertCircle, ArrowLeftRight, Check, Crown, X } from "lucide-react";
 import { useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { getPublicProfileRequest } from "@/services/profile/client";
@@ -109,7 +109,7 @@ function MemberOption({
           : "border-line hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 rounded-xl border px-3 py-2.5 text-left transition-colors"
       }
     >
-      <ServerAvatar
+      <Avatar
         name={displayName}
         src={avatarSrcOf(member.user_id, member.profile)}
         size={26}

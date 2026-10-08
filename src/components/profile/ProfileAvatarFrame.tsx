@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 
 interface ProfileAvatarFrameProps {
@@ -30,12 +30,7 @@ export function ProfileAvatarFrame({
 }: ProfileAvatarFrameProps) {
   const avatar = (
     <>
-      <ServerAvatar
-        name={name}
-        src={src}
-        size={size}
-        className="rounded-full"
-      />
+      <Avatar name={name} src={src} size={size} className="rounded-full" />
       <span
         className="absolute inset-0 rounded-full border-4"
         style={{ borderColor: "var(--bg-modal)" }}

@@ -45,7 +45,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
 import { getPublicProfileRequest } from "@/services/profile/client";
@@ -255,11 +255,7 @@ function MemberRoleRow({
 }) {
   return (
     <div className="bg-surface-input border-line flex items-center gap-3 rounded-xl border px-3 py-2.5">
-      <ServerAvatar
-        name={member.name}
-        size={32}
-        className="shrink-0 rounded-full"
-      />
+      <Avatar name={member.name} size={32} className="shrink-0 rounded-full" />
       <span className="text-content min-w-0 flex-1 truncate text-sm font-medium">
         {member.name}
       </span>

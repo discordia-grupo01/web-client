@@ -20,7 +20,7 @@ import { Button } from "@/components/ui/Button";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { ModalShell } from "@/components/ui/ModalShell";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { banMemberRequest } from "@/services/bans/client";
 
 import { BanModalHeader } from "./BanModalHeader";
@@ -106,7 +106,7 @@ export function BanMemberModal({
           className="min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7"
         >
           <div className="bg-surface-raised flex items-center gap-3 rounded-xl p-3">
-            <ServerAvatar
+            <Avatar
               name={name}
               src={avatarSrc}
               size={40}

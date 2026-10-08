@@ -2,43 +2,35 @@
 
 import {
   CHAT_RECONNECTING_NOTICE,
-  type Channel,
   LOADING_MESSAGES_LABEL,
-  messageInputPlaceholder,
   type MessageAuthor,
-  type Role,
-  buildMentionResolver,
 } from "@discordia/client-shared";
 
 import { useMemo, useState } from "react";
 
+import { ChatStatusNotice } from "@/components/messages/ChatStatusNotice";
+import { MessageList } from "@/components/messages/MessageList";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
-import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
-import { ChannelWelcome } from "./ChannelWelcome";
-import { ChatStatusNotice } from "./ChatStatusNotice";
-import { MessageComposer } from "./MessageComposer";
-import { MessageList } from "./MessageList";
+import { DmWelcome } from "./DmWelcome";
 
-interface ChannelChatProps {
-  serverId: string;
-  channel: Channel;
-  currentAuthor: MessageAuthor | null;
-  serverRoles: Role[];
-  canManageMessages: boolean;
-  canSendMessages: boolean;
-  canMentionEveryone: boolean;
+interface DmHistoryProps {
+  conversationId: string;
+  partner: MessageAuthor;
+  currentAuthor: MessageAuthor;
 }
 
-export function ChannelChat({
-  serverId,
-  channel,
+/**
+ * Historial en vivo de una conversacion que ya existe. Una conversacion es un
+ * canal para el back, asi que historial, editar, borrar y tiempo real son los
+ * de `useChannelMessages`. Lo unico que no se usa es su `sendMessage`: en un DM
+ * se envia con `send_dm` (ver `useDirectMessages`).
+ */
+export function DmHistory({
+  conversationId,
+  partner,
   currentAuthor,
-  serverRoles,
-  canManageMessages,
-  canSendMessages,
-  canMentionEveryone,
-}: ChannelChatProps) {
+}: DmHistoryProps) {
   const {
     status,
     statusMessage,
@@ -47,13 +39,15 @@ export function ChannelChat({
     isLoadingOlder,
     loadOlder,
     retry,
-    sendMessage,
     toggleReaction,
     editMessage,
     deleteMessage,
-  } = useChannelMessages(channel);
-  const authors = useMessageAuthors(serverId, messages, currentAuthor);
+  } = useChannelMessages({ id: conversationId });
   const [deleteError, setDeleteError] = useState<string | null>(null);
+  const authors = useMemo(
+    () => ({ [partner.id]: partner, [currentAuthor.id]: currentAuthor }),
+    [partner, currentAuthor],
+  );
 
   async function handleDelete(messageId: string) {
     setDeleteError(null);
@@ -61,12 +55,6 @@ export function ChannelChat({
     if (!result.ok) setDeleteError(result.message);
   }
 
-  const resolveMention = useMemo(
-    () => buildMentionResolver(authors, serverRoles),
-    [authors, serverRoles],
-  );
-
-  // Estados de los que no se sale solos: el canal no se puede mostrar.
   if (statusMessage && status !== "ready") {
     return (
       <ChatStatusNotice
@@ -82,14 +70,13 @@ export function ChannelChat({
         <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
       ) : (
         <MessageList
-          welcome={<ChannelWelcome channelName={channel.name} />}
-          label={`Mensajes de #${channel.name}`}
+          welcome={<DmWelcome partner={partner} />}
+          label={`Conversación con ${partner.name}`}
           messages={messages}
           authors={authors}
-          currentUserId={currentAuthor?.id ?? null}
-          canManageMessages={canManageMessages}
-          canSendMessages={canSendMessages}
-          resolveMention={resolveMention}
+          currentUserId={currentAuthor.id}
+          canManageMessages={false}
+          canSendMessages
           hasMore={hasMore}
           isLoadingOlder={isLoadingOlder}
           onLoadOlder={loadOlder}
@@ -114,12 +101,6 @@ export function ChannelChat({
           {CHAT_RECONNECTING_NOTICE}
         </p>
       ) : null}
-      <MessageComposer
-        placeholder={messageInputPlaceholder(channel.name)}
-        onSend={sendMessage}
-        disabled={!currentAuthor || status !== "ready"}
-        canMentionEveryone={canMentionEveryone}
-      />
     </>
   );
 }

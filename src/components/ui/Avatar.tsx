@@ -2,7 +2,7 @@ import { getInitial } from "@discordia/client-shared";
 
 import { cn } from "@/lib/cn";
 
-interface ServerAvatarProps {
+interface AvatarProps {
   name: string;
   /** URL de un ícono real. Si es `null`/`undefined`, se muestra el degradado con la inicial. */
   src?: string | null;
@@ -10,12 +10,7 @@ interface ServerAvatarProps {
   className?: string;
 }
 
-export function ServerAvatar({
-  name,
-  src,
-  size = 48,
-  className,
-}: ServerAvatarProps) {
+export function Avatar({ name, src, size = 48, className }: AvatarProps) {
   if (src) {
     return (
       // eslint-disable-next-line @next/next/no-img-element

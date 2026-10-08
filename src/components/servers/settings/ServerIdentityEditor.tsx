@@ -10,7 +10,7 @@ import {
 import { Camera, Image as ImageIcon, X } from "lucide-react";
 import { useRef, type RefObject } from "react";
 
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { ServerBanner } from "@/components/ui/ServerBanner";
 
 const BANNER_HEIGHT = 120;
@@ -128,7 +128,7 @@ export function ServerIdentityEditor({
           background: "var(--bg-modal)",
         }}
       >
-        <ServerAvatar
+        <Avatar
           name={serverName}
           src={iconSrc}
           size={ICON_SIZE}

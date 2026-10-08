@@ -12,14 +12,14 @@ import { Plus } from "lucide-react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { UserPanel } from "@/components/profile/UserPanel";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import type { ConversationSummary } from "@/services/conversations/useDirectMessages";
 import { cn } from "@/lib/cn";
 
 interface DmRailListProps {
   conversations: ConversationSummary[];
-  activeConversationId: string | null;
-  onSelect: (conversationId: string) => void;
+  activePartnerId: string | null;
+  onSelect: (partnerId: string) => void;
   onStartNew: () => void;
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
@@ -34,12 +34,7 @@ function DmPartnerAvatar({
 }) {
   return (
     <div className="relative shrink-0">
-      <ServerAvatar
-        name={name}
-        src={avatarUrl}
-        size={32}
-        className="rounded-full"
-      />
+      <Avatar name={name} src={avatarUrl} size={32} className="rounded-full" />
       {/* Presencia mock: no hay estado de actividad real para otros usuarios. */}
       <ActivityStatusDot
         status="online"
@@ -53,7 +48,7 @@ function DmPartnerAvatar({
 
 export function DmRailList({
   conversations,
-  activeConversationId,
+  activePartnerId,
   onSelect,
   onStartNew,
   ownProfile,
@@ -96,19 +91,18 @@ export function DmRailList({
         ) : (
           conversations.map(
             ({
-              conversation,
+              conversationId,
               partner,
               lastMessage,
               isUnread,
               blockedByMe,
-              blocksMe,
             }) => {
-              const isActive = conversation.id === activeConversationId;
+              const isActive = partner.id === activePartnerId;
               return (
                 <button
-                  key={conversation.id}
+                  key={conversationId}
                   type="button"
-                  onClick={() => onSelect(conversation.id)}
+                  onClick={() => onSelect(partner.id)}
                   className={cn(
                     "mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors",
                     isActive ? "bg-accent/20" : "hover:bg-surface-hover",
@@ -128,7 +122,7 @@ export function DmRailList({
                       >
                         {partner.name}
                       </span>
-                      {blockedByMe || blocksMe ? (
+                      {blockedByMe ? (
                         <span className="bg-danger/15 text-danger shrink-0 rounded px-1 py-px text-[9px]">
                           {BLOCKED_BADGE_LABEL}
                         </span>

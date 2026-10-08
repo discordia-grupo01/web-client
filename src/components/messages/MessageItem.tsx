@@ -5,15 +5,16 @@ import {
   MESSAGE_EDITED_LABEL,
   type MessageAuthor,
   type MessageReaction,
+  type MentionResolver,
 } from "@discordia/client-shared";
 
 import { useState } from "react";
 
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 
 import { MessageActions } from "./MessageActions";
-import { MessageContent, type MentionResolver } from "./MessageContent";
+import { MessageContent } from "./MessageContent";
 import { DeleteMessageModal } from "./DeleteMessageModal";
 import { MessageEditForm } from "./MessageEditForm";
 import { MessageHeader } from "./MessageHeader";
@@ -85,7 +86,7 @@ export function MessageItem({
       )}
     >
       {isGroupStart ? (
-        <ServerAvatar
+        <Avatar
           name={author.name}
           src={author.avatarUrl}
           size={AVATAR_SIZE}

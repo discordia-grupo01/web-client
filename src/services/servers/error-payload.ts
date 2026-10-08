@@ -63,6 +63,7 @@ function isDeleteServerField(
   return field === "confirm_name";
 }
 
+// TODO: refactorizar, usar directamente serverErrorResponse
 export function deleteServerErrorResponse(
   failure: ServerServiceFailure,
   fallback: string,

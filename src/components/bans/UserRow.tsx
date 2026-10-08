@@ -1,5 +1,5 @@
 import { Button } from "@/components/ui/Button";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import {
   avatarSrcOf,
   displayNameOf,
@@ -37,7 +37,7 @@ export function UserRow({
 
   return (
     <li className="bg-surface-raised border-line flex min-w-0 flex-wrap items-center gap-3 rounded-xl border p-3 sm:flex-nowrap">
-      <ServerAvatar
+      <Avatar
         name={name}
         src={avatarSrcOf(userId, profile)}
         size={40}

@@ -6,7 +6,7 @@ import { Crown } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
@@ -22,7 +22,7 @@ interface MembersSidebarProps {
 function MemberAvatar({ member }: { member: Member }) {
   return (
     <div className="relative shrink-0">
-      <ServerAvatar
+      <Avatar
         name={displayNameOf(member.profile)}
         src={avatarSrcOf(member.user_id, member.profile)}
         size={28}

@@ -31,7 +31,8 @@ function mensaje(cambios: Partial<Message> & { id: string }): Message {
 function renderList(props: Partial<ComponentProps<typeof MessageList>>) {
   return render(
     <MessageList
-      channelName="general"
+      welcome={<h2>Bienvenido a #general</h2>}
+      label="Mensajes de #general"
       messages={[]}
       authors={{ u1: ANA }}
       currentUserId="u1"
@@ -225,7 +226,8 @@ describe("MessageList", () => {
 
       rerender(
         <MessageList
-          channelName="general"
+          welcome={<h2>Bienvenido a #general</h2>}
+          label="Mensajes de #general"
           messages={[mensaje({ id: "1" })]}
           authors={{ u1: ANA }}
           currentUserId="u1"

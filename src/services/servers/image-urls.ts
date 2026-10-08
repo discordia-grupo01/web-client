@@ -21,7 +21,7 @@ function versionQuery(imageUrl: string | null): string {
 type ServerImages = Pick<ServerSummary, "id" | "icon_url" | "banner_url">;
 
 /**
- * `null` cuando el servidor no tiene icono: asi `ServerAvatar` dibuja el
+ * `null` cuando el servidor no tiene icono: asi `Avatar` dibuja el
  * degradado con la inicial en vez de pedir una imagen que da 404 (el
  * navegador mostraria el icono de "imagen rota").
  */

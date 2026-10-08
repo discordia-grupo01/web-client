@@ -12,7 +12,7 @@ import { AlertCircle, ArrowRight, Check, Link2, X } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
-import { ServerAvatar } from "@/components/ui/ServerAvatar";
+import { Avatar } from "@/components/ui/Avatar";
 import { joinServerRequest } from "@/services/invites/client";
 
 interface JoinServerModalProps {
@@ -82,7 +82,7 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
         <div className="flex-1 overflow-y-auto">
           {joined ? (
             <div className="flex flex-col items-center gap-6 px-6 py-8 text-center">
-              <ServerAvatar
+              <Avatar
                 name={joined.server.name}
                 src={`/api/servers/${joined.server.id}/icon`}
                 size={64}

@@ -1,252 +1,240 @@
 "use client";
 
 import {
-  editMessageContent,
-  otherParticipantId,
-  removeMessages,
-  toggleReaction as toggleReactionIn,
-  validateMessageContent,
-  type Conversation,
-  type DmMessage as BaseDmMessage,
+  activeConversationSummary,
+  applyNewDm,
+  conversationReadKey,
+  conversationSummaries,
+  DM_SEND_FAILED,
+  type DirectConversation,
+  type ListConversationsResult,
+  joinUserChannel,
   type MessageAuthor,
-  type MessageReaction,
+  messageAuthorOf,
+  type NewDmPayload,
+  partnerIdsMissingProfile,
+  sendDirectMessage,
+  type SendDmResult,
+  withLocalReads,
 } from "@discordia/client-shared";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import type { Channel as PhoenixChannel } from "phoenix";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
-import { DEMO_AUTHORS } from "@/services/messages/mock-data";
-
+import { avatarSrcOf } from "@/lib/userProfile";
 import { useBlockedUsersContext } from "@/services/blocks/BlockedUsersContext";
+import { acquireSocket } from "@/services/messages/socket";
+import { getPublicProfileRequest } from "@/services/profile/client";
 
-import { BLOCKS_ME, INITIALLY_UNREAD_CONVERSATION_IDS } from "./mock-data";
 import {
-  createLocalDmMessage,
-  findOrCreateConversationWith,
-  loadConversationMessages,
-  loadConversations,
-  saveConversationMessages,
-} from "./mock-store";
+  listConversationsRequest,
+  markConversationReadRequest,
+} from "./client";
 
-/** Mensaje directo + reacciones (maquetadas, solo en memoria hasta que el back las soporte). */
-export type DmMessage = BaseDmMessage & { reactions?: MessageReaction[] };
+export type {
+  ConversationSummary,
+  SendDmResult,
+} from "@discordia/client-shared";
 
-export interface ConversationSummary {
-  conversation: Conversation;
-  partner: MessageAuthor;
-  lastMessage: DmMessage | null;
-  isUnread: boolean;
-  /** Yo bloqueé al partner: no le puedo escribir. */
-  blockedByMe: boolean;
-  /** El partner me bloqueó a mí: mis envíos no se entregan. */
-  blocksMe: boolean;
-}
-
-export type SendDmResult = "sent" | "blocked" | "invalid";
-
-function unknownAuthor(id: string): MessageAuthor {
-  return {
-    id,
-    name: "Usuario desconocido",
-    avatarUrl: null,
-    roleName: null,
-    roleColor: null,
-  };
-}
-
-/** Mensajes directos de la sesion actual: lista de conversaciones + la activa. */
-export function useDirectMessages(currentAuthor: MessageAuthor | null) {
+/**
+ * Mensajes directos de la sesion actual: la lista de conversaciones, la
+ * conversacion abierta y el envio.
+ *
+ * - La lista sale de `GET /v1/conversations` y se mantiene viva con el evento
+ *   `new_dm` de la sala personal `user:<id>` (tambien llega a quien todavia no
+ *   tenia la conversacion). Al re-unirse tras un corte se vuelve a pedir, que es
+ *   como se ven los mensajes recibidos sin conexion.
+ * - El historial, editar y borrar de la conversacion abierta son los de un canal
+ *   (`useChannelMessages` con el id de la conversacion), en `DmHistory`.
+ * - Enviar es `send_dm` por la sala personal (`sendDirectMessage`).
+ * - "Bloqueado" sale de los bloqueos del usuario (`BlockedUsersContext`).
+ *
+ * `isViewActive`: solo con la vista de mensajes directos a la vista se marca
+ * como leida la conversacion abierta.
+ */
+export function useDirectMessages(
+  currentAuthor: MessageAuthor | null,
+  isViewActive: boolean,
+) {
   const currentUserId = currentAuthor?.id ?? null;
   const { blockedIds } = useBlockedUsersContext();
-  const [conversations, setConversations] = useState<Conversation[]>([]);
-  const [messagesByConversation, setMessagesByConversation] = useState<
-    Record<string, DmMessage[]>
-  >({});
-  // Autores que no son de demo (ej. alguien al que se le escribe desde su perfil).
-  const [extraAuthors, setExtraAuthors] = useState<
-    Record<string, MessageAuthor>
-  >({});
-  const [unreadIds, setUnreadIds] = useState<Set<string>>(new Set());
-  const [activeConversationId, setActiveConversationId] = useState<
-    string | null
-  >(null);
+  const [conversations, setConversations] = useState<DirectConversation[]>([]);
+  const [loadError, setLoadError] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [partners, setPartners] = useState<Record<string, MessageAuthor>>({});
+  const [activePartnerId, setActivePartnerId] = useState<string | null>(null);
+
+  const userRoom = useRef<PhoenixChannel | null>(null);
+  const isJoined = useRef(false);
+  const requestedProfiles = useRef(new Set<string>());
+
+  const applyList = useCallback((result: ListConversationsResult) => {
+    if (result.ok) setConversations(result.conversations);
+    setLoadError(result.ok ? null : result.message);
+    setIsLoading(false);
+  }, []);
+
+  const reload = useCallback(
+    () => listConversationsRequest().then(applyList),
+    [applyList],
+  );
+
+  const applyDm = useCallback(
+    (payload: NewDmPayload) =>
+      setConversations((prev) => applyNewDm(prev, payload, currentUserId)),
+    [currentUserId],
+  );
 
   useEffect(() => {
     if (!currentUserId) return;
-    const loaded = loadConversations(currentUserId);
-    setConversations(loaded);
-    setUnreadIds(new Set(INITIALLY_UNREAD_CONVERSATION_IDS));
-    setMessagesByConversation(
-      Object.fromEntries(
-        loaded.map((conversation) => [
-          conversation.id,
-          loadConversationMessages(conversation.id),
-        ]),
-      ),
-    );
-  }, [currentUserId]);
+    let cancelled = false;
+    let release: (() => void) | null = null;
+    let room: PhoenixChannel | null = null;
 
-  const summaries: ConversationSummary[] = useMemo(() => {
-    if (!currentUserId) return [];
-    return conversations.map((conversation) => {
-      const partnerId = otherParticipantId(conversation, currentUserId);
-      const messages = messagesByConversation[conversation.id] ?? [];
-      return {
-        conversation,
-        partner:
-          DEMO_AUTHORS[partnerId] ??
-          extraAuthors[partnerId] ??
-          unknownAuthor(partnerId),
-        lastMessage: messages[messages.length - 1] ?? null,
-        isUnread: unreadIds.has(conversation.id),
-        blockedByMe: blockedIds.has(partnerId),
-        blocksMe: BLOCKS_ME.has(partnerId),
-      };
-    });
-  }, [
-    conversations,
-    messagesByConversation,
-    currentUserId,
-    unreadIds,
-    extraAuthors,
-    blockedIds,
-  ]);
+    void listConversationsRequest().then(applyList);
 
-  const activeMessages = activeConversationId
-    ? (messagesByConversation[activeConversationId] ?? [])
-    : [];
-  const activeSummary =
-    summaries.find((s) => s.conversation.id === activeConversationId) ?? null;
-
-  function openConversation(conversationId: string) {
-    setActiveConversationId(conversationId);
-    setUnreadIds((prev) => {
-      if (!prev.has(conversationId)) return prev;
-      const next = new Set(prev);
-      next.delete(conversationId);
-      return next;
-    });
-  }
-
-  const startConversationWith = useCallback(
-    (partnerId: string, partner?: MessageAuthor) => {
-      if (!currentUserId) return;
-      if (partner) {
-        setExtraAuthors((prev) => ({ ...prev, [partnerId]: partner }));
+    async function start() {
+      const acquired = await acquireSocket();
+      if (cancelled) {
+        if (acquired.ok) acquired.release();
+        return;
       }
-      const conversation = findOrCreateConversationWith(
-        currentUserId,
-        partnerId,
-      );
-      setConversations((prev) =>
-        prev.some((c) => c.id === conversation.id)
-          ? prev
-          : [...prev, conversation],
-      );
-      setMessagesByConversation((prev) => ({
-        ...prev,
-        [conversation.id]:
-          prev[conversation.id] ?? loadConversationMessages(conversation.id),
-      }));
-      openConversation(conversation.id);
-    },
-    [currentUserId],
+      // Sin socket la lista igual se ve (REST), pero no se puede enviar.
+      if (!acquired.ok) return;
+      release = acquired.release;
+
+      room = acquired.socket.channel(`user:${currentUserId}`);
+      userRoom.current = room;
+      joinUserChannel(room, {
+        newDm: applyDm,
+        connectionLost: () => {
+          isJoined.current = false;
+        },
+        // La primera carga ya se pidio arriba; las siguientes son re-uniones.
+        joined: (isFirstJoin) => {
+          isJoined.current = true;
+          if (!isFirstJoin) void reload();
+        },
+      });
+    }
+    void start();
+
+    return () => {
+      cancelled = true;
+      isJoined.current = false;
+      userRoom.current = null;
+      room?.leave();
+      release?.();
+    };
+  }, [currentUserId, reload, applyList, applyDm]);
+
+  // El back solo devuelve ids: nombre y foto se piden una vez por usuario.
+  useEffect(() => {
+    const missing = partnerIdsMissingProfile(
+      conversations,
+      partners,
+      requestedProfiles.current,
+    );
+    missing.forEach((id) => requestedProfiles.current.add(id));
+
+    for (const id of missing) {
+      void getPublicProfileRequest(id).then((result) => {
+        if (!result.ok) return;
+        const { name, avatar_url } = result.user;
+        setPartners((prev) => ({
+          ...prev,
+          [id]: messageAuthorOf(
+            id,
+            name,
+            avatarSrcOf(id, { name, avatar_url }),
+          ),
+        }));
+      });
+    }
+  }, [conversations, partners]);
+
+  const [readKeys, setReadKeys] = useState<ReadonlySet<string>>(new Set());
+
+  const summaries = useMemo(
+    () =>
+      withLocalReads(
+        conversationSummaries(conversations, partners, blockedIds),
+        readKeys,
+      ),
+    [conversations, partners, blockedIds, readKeys],
   );
 
-  function updateConversationMessages(
-    conversationId: string,
-    updater: (messages: DmMessage[]) => DmMessage[],
-  ) {
-    setMessagesByConversation((prev) => {
-      const updated = updater(prev[conversationId] ?? []);
-      saveConversationMessages(conversationId, updated);
-      return { ...prev, [conversationId]: updated };
+  const activeSummary = useMemo(
+    () =>
+      activePartnerId
+        ? activeConversationSummary(
+            activePartnerId,
+            summaries,
+            partners,
+            blockedIds,
+          )
+        : null,
+    [activePartnerId, summaries, partners, blockedIds],
+  );
+
+  // Abrir una conversacion (o recibir un mensaje con ella abierta) la marca leida.
+  const activeUnreadId =
+    isViewActive && activeSummary?.isUnread === true
+      ? activeSummary.conversationId
+      : null;
+  const activeLastMessageId = activeSummary?.lastMessage?.id;
+  useEffect(() => {
+    if (!activeUnreadId) return;
+    void markConversationReadRequest(activeUnreadId).then((result) => {
+      if (!result.ok) return;
+      const key = conversationReadKey(activeUnreadId, activeLastMessageId);
+      setReadKeys((prev) => new Set(prev).add(key));
     });
-  }
+  }, [activeUnreadId, activeLastMessageId]);
+
+  /**
+   * Abre la conversacion con `partnerId`. Si nunca hablaron no se crea nada
+   * todavia: queda un borrador que el back convierte en conversacion con el
+   * primer mensaje. `partner` evita pedir el perfil de quien se eligio de la lista.
+   */
+  const openConversation = useCallback(
+    (partnerId: string, partner?: MessageAuthor) => {
+      if (partner) {
+        setPartners((prev) => ({ ...prev, [partnerId]: partner }));
+      }
+      setActivePartnerId(partnerId);
+    },
+    [],
+  );
 
   const sendMessage = useCallback(
-    (content: string): SendDmResult => {
-      if (!currentAuthor || !activeConversationId || !activeSummary) {
-        return "invalid";
+    (content: string): Promise<SendDmResult> => {
+      if (!activePartnerId) {
+        return Promise.resolve({ ok: false, message: DM_SEND_FAILED });
       }
-      if (validateMessageContent(content)) return "invalid";
-      if (activeSummary.blockedByMe || activeSummary.blocksMe) {
-        return "blocked";
-      }
-
-      const message = createLocalDmMessage(
-        activeConversationId,
-        currentAuthor.id,
+      return sendDirectMessage(
+        userRoom.current,
+        isJoined.current,
+        activePartnerId,
         content,
-      );
-      updateConversationMessages(activeConversationId, (messages) => [
-        ...messages,
-        message,
-      ]);
-      return "sent";
-    },
-    [currentAuthor, activeConversationId, activeSummary],
-  );
-
-  const toggleReaction = useCallback(
-    (messageId: string, emoji: string) => {
-      if (!activeConversationId) return;
-      updateConversationMessages(activeConversationId, (messages) =>
-        messages.map((message) =>
-          message.id === messageId
-            ? {
-                ...message,
-                reactions: toggleReactionIn(message.reactions, emoji),
-              }
-            : message,
-        ),
+        (sent) =>
+          applyDm({
+            conversation_id: sent.conversation_id,
+            partner_id: activePartnerId,
+            message: sent.message,
+          }),
       );
     },
-    [activeConversationId],
-  );
-
-  const editMessage = useCallback(
-    (messageId: string, content: string) => {
-      if (!activeConversationId || validateMessageContent(content)) return;
-      updateConversationMessages(activeConversationId, (messages) =>
-        messages.map((message) =>
-          message.id === messageId
-            ? editMessageContent(message, content.trim())
-            : message,
-        ),
-      );
-    },
-    [activeConversationId],
-  );
-
-  const deleteMessage = useCallback(
-    (messageId: string) => {
-      if (!activeConversationId) return;
-      updateConversationMessages(activeConversationId, (messages) =>
-        removeMessages(messages, [messageId]),
-      );
-    },
-    [activeConversationId],
-  );
-
-  const knownPartners = useMemo(
-    () =>
-      Object.values(DEMO_AUTHORS).filter(
-        (author) => author.id !== currentUserId,
-      ),
-    [currentUserId],
+    [activePartnerId, applyDm],
   );
 
   return {
     conversations: summaries,
-    activeConversationId,
-    activeMessages,
+    isLoading,
+    loadError,
+    reload,
     activeSummary,
-    knownPartners,
     openConversation,
-    startConversationWith,
     sendMessage,
-    toggleReaction,
-    editMessage,
-    deleteMessage,
   };
 }

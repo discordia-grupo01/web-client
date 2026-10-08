@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  messageAuthorOf,
   type PublicUser,
   type ServerSummary,
   type User,
@@ -24,6 +25,7 @@ import { useDirectMessages } from "@/services/conversations/useDirectMessages";
 import { authorFromProfile } from "@/services/messages/author";
 import { getOwnProfileRequest } from "@/services/profile/client";
 import { listServersRequest } from "@/services/servers/client";
+import { avatarSrcOf } from "@/lib/userProfile";
 import { ROUTES } from "@/lib/constants";
 
 type MainView = "servers" | "direct-messages";
@@ -57,7 +59,10 @@ function HomeShellContent({
     () => (ownProfile ? authorFromProfile(ownProfile) : null),
     [ownProfile],
   );
-  const directMessages = useDirectMessages(currentAuthor);
+  const directMessages = useDirectMessages(
+    currentAuthor,
+    view === "direct-messages",
+  );
   const unreadDmCount = directMessages.conversations.filter(
     (c) => c.isUnread,
   ).length;
@@ -96,13 +101,14 @@ function HomeShellContent({
   }, []);
 
   function messageUser(profile: PublicUser) {
-    directMessages.startConversationWith(profile.id, {
-      id: profile.id,
-      name: profile.name,
-      avatarUrl: profile.avatar_url ? `/api/users/${profile.id}/avatar` : null,
-      roleName: null,
-      roleColor: null,
-    });
+    directMessages.openConversation(
+      profile.id,
+      messageAuthorOf(
+        profile.id,
+        profile.name,
+        avatarSrcOf(profile.id, profile),
+      ),
+    );
     setView("direct-messages");
   }
 
@@ -153,6 +159,7 @@ function HomeShellContent({
             currentAuthor={currentAuthor}
             ownProfile={ownProfile}
             onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            servers={servers}
             directMessages={directMessages}
           />
         ) : selectedServer ? (
