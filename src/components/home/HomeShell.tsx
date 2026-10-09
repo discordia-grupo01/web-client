@@ -28,6 +28,7 @@ import { getOwnProfileRequest } from "@/services/profile/client";
 import { listServersRequest } from "@/services/servers/client";
 import { avatarSrcOf } from "@/lib/userProfile";
 import { ROUTES } from "@/lib/constants";
+import { readLastLocation, writeLastLocation } from "@/lib/lastLocation";
 
 type MainView = "servers" | "direct-messages";
 
@@ -46,7 +47,15 @@ function HomeShellContent({
   const [selectedServerId, setSelectedServerId] = useState<string | null>(
     initialSelectedServerId,
   );
-  const [view, setView] = useState<MainView>("servers");
+  // Se entra en Mensajes Directos: si no, el login cae en "Inicio" sin lista y
+  // parece que los DMs no funcionan. Venir de una invitacion abre el servidor.
+  const [view, setView] = useState<MainView>(
+    initialSelectedServerId ? "servers" : "direct-messages",
+  );
+  const [lastChannelId, setLastChannelId] = useState<string | null>(null);
+  const [isRestored, setIsRestored] = useState(
+    initialSelectedServerId !== null,
+  );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [ownProfile, setOwnProfile] = useState<User | null>(null);
@@ -69,6 +78,43 @@ function HomeShellContent({
   const unreadDmCount = directMessages.conversations.filter(
     (c) => c.isUnread,
   ).length;
+
+  // Al recargar se vuelve a donde se estaba (servidor + canal, o un DM). Se lee
+  // despues de montar porque localStorage no existe en el render del servidor.
+  const userId = user ? String(user.id) : null;
+  const openConversation = directMessages.openConversation;
+  useEffect(() => {
+    if (isRestored || !userId) return;
+    const stored = readLastLocation(userId);
+    if (stored?.view === "servers" && stored.serverId) {
+      if (initialServers.some((server) => server.id === stored.serverId)) {
+        setView("servers");
+        setSelectedServerId(stored.serverId);
+        setLastChannelId(stored.channelId);
+      }
+    } else if (stored?.partnerId) {
+      openConversation(stored.partnerId);
+    }
+    setIsRestored(true);
+  }, [isRestored, userId, initialServers, openConversation]);
+
+  const activePartnerId = directMessages.activeSummary?.partner.id ?? null;
+  useEffect(() => {
+    if (!isRestored || !userId) return;
+    writeLastLocation(userId, {
+      view,
+      serverId: selectedServerId,
+      channelId: view === "servers" ? lastChannelId : null,
+      partnerId: activePartnerId,
+    });
+  }, [
+    isRestored,
+    userId,
+    view,
+    selectedServerId,
+    lastChannelId,
+    activePartnerId,
+  ]);
 
   // Perfil propio: se pide una sola vez aca (no en `ServerView`) para no
   // refetchear cada vez que se cambia de servidor, y para que el panel de
@@ -153,12 +199,13 @@ function HomeShellContent({
           onSelect={(serverId) => {
             setView("servers");
             setSelectedServerId(serverId);
+            setLastChannelId(null);
           }}
           onOpenDirectMessages={() => setView("direct-messages")}
           onCreateClick={() => setIsCreateModalOpen(true)}
         />
 
-        {view === "direct-messages" ? (
+        {!isRestored ? null : view === "direct-messages" ? (
           <DirectMessagesView
             currentAuthor={currentAuthor}
             ownProfile={ownProfile}
@@ -177,6 +224,8 @@ function HomeShellContent({
             onMessageUser={messageUser}
             unreadMentionsByChannel={mentions.byChannel}
             onChannelRead={mentions.markChannelRead}
+            initialChannelId={lastChannelId}
+            onChannelChange={setLastChannelId}
           />
         ) : (
           <HomeView
