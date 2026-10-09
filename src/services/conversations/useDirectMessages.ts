@@ -16,6 +16,7 @@ import {
   sendDirectMessage,
   type SendDmResult,
   type UserRoomCallbacks,
+  unknownAuthor,
   withLocalReads,
 } from "@discordia/client-shared";
 
@@ -152,16 +153,18 @@ export function useDirectMessages(
 
     for (const id of missing) {
       void getPublicProfileRequest(id).then((result) => {
-        if (!result.ok) return;
-        const { name, avatar_url } = result.user;
-        setPartners((prev) => ({
-          ...prev,
-          [id]: messageAuthorOf(
-            id,
-            name,
-            avatarSrcOf(id, { name, avatar_url }),
-          ),
-        }));
+        // Si falla igual se da por resuelto: sin esto el spinner no termina.
+        const author = result.ok
+          ? messageAuthorOf(
+              id,
+              result.user.name,
+              avatarSrcOf(id, {
+                name: result.user.name,
+                avatar_url: result.user.avatar_url,
+              }),
+            )
+          : unknownAuthor(id);
+        setPartners((prev) => ({ ...prev, [id]: author }));
       });
     }
   }, [conversations, partners]);
@@ -241,9 +244,15 @@ export function useDirectMessages(
     [activePartnerId, applyDm],
   );
 
+  // Con la lista cargada faltan nombre y foto de cada contacto: hasta tenerlos
+  // se muestra el spinner, para no pasar por "Usuario desconocido".
+  const isResolvingPartners = conversations.some(
+    (conversation) => !partners[conversation.partner_id],
+  );
+
   return {
     conversations: summaries,
-    isLoading,
+    isLoading: isLoading || isResolvingPartners,
     loadError,
     reload,
     activeSummary,

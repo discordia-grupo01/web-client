@@ -8,7 +8,7 @@ import {
   type User,
 } from "@discordia/client-shared";
 
-import { Plus } from "lucide-react";
+import { Loader2, Plus } from "lucide-react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { UserPanel } from "@/components/profile/UserPanel";
@@ -18,6 +18,7 @@ import { cn } from "@/lib/cn";
 
 interface DmRailListProps {
   conversations: ConversationSummary[];
+  isLoading: boolean;
   activePartnerId: string | null;
   onSelect: (partnerId: string) => void;
   onStartNew: () => void;
@@ -48,6 +49,7 @@ function DmPartnerAvatar({
 
 export function DmRailList({
   conversations,
+  isLoading,
   activePartnerId,
   onSelect,
   onStartNew,
@@ -84,7 +86,15 @@ export function DmRailList({
           </button>
         </div>
 
-        {conversations.length === 0 ? (
+        {isLoading ? (
+          <div className="flex justify-center py-6" role="status">
+            <Loader2
+              size={18}
+              className="text-content-subtle animate-spin"
+              aria-label="Cargando conversaciones"
+            />
+          </div>
+        ) : conversations.length === 0 ? (
           <p className="text-content-subtle px-2 text-xs">
             {NO_CONVERSATIONS_YET}
           </p>

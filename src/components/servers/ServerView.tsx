@@ -110,6 +110,10 @@ interface ServerViewProps {
   unreadMentionsByChannel: Record<string, number>;
   /** Se abrio un canal con menciones sin leer: hay que marcarlas como leidas. */
   onChannelRead: (channelId: string) => void;
+  /** Canal a abrir al montar (el ultimo visitado); si ya no existe, el primero. */
+  initialChannelId?: string | null;
+  /** Avisa el canal abierto, para recordarlo entre recargas. */
+  onChannelChange?: (channelId: string) => void;
 }
 
 function CategoryDropZone({
@@ -298,6 +302,8 @@ export function ServerView({
   onMessageUser,
   unreadMentionsByChannel,
   onChannelRead,
+  initialChannelId = null,
+  onChannelChange,
 }: ServerViewProps) {
   const { user } = useAuth();
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
@@ -397,8 +403,14 @@ export function ServerView({
   );
 
   const [activeChannelId, setActiveChannelId] = useState(
-    () => server.channels[0]?.id ?? "",
+    () =>
+      server.channels.find((channel) => channel.id === initialChannelId)?.id ??
+      server.channels[0]?.id ??
+      "",
   );
+  useEffect(() => {
+    if (activeChannelId) onChannelChange?.(activeChannelId);
+  }, [activeChannelId, onChannelChange]);
   const activeChannel = server.channels.find(
     (channel) => channel.id === activeChannelId,
   );
