@@ -2,7 +2,6 @@
 
 import {
   ATTACH_FILE_LABEL,
-  CHAT_FEATURE_NOT_AVAILABLE,
   EMOJI_PICKER_LABEL,
   MAX_MESSAGE_LENGTH,
   SEND_MESSAGE_LABEL,
@@ -25,6 +24,7 @@ import { cn } from "@/lib/cn";
 import type { SendMessageResult } from "@/services/messages/useChannelMessages";
 import { useMentionDraft } from "@/services/messages/useMentionDraft";
 
+import { AttachmentChips, type PendingAttachment } from "./AttachmentChips";
 import { EmojiPicker } from "./EmojiPicker";
 import { MentionSuggestions } from "./MentionSuggestions";
 import { MentionTextarea } from "./MentionTextarea";
@@ -58,6 +58,8 @@ export function MessageComposer({
   const draft = useMentionDraft({ textareaRef, sources });
   const [sendError, setSendError] = useState<string | undefined>();
   const [isSending, setIsSending] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   // El limite del back cuenta el texto con los tokens `<@id>`, no lo visible.
   const canSend =
     !disabled &&
@@ -73,14 +75,17 @@ export function MessageComposer({
     const outcome = onSend(draft.encoded);
     if (outcome === undefined) {
       draft.reset();
+      setAttachments([]);
       return;
     }
 
     setIsSending(true);
     const result = await outcome;
     setIsSending(false);
-    if (result.ok) draft.reset();
-    else setSendError(result.message);
+    if (result.ok) {
+      draft.reset();
+      setAttachments([]);
+    } else setSendError(result.message);
     textareaRef.current?.focus();
   }
 
@@ -92,6 +97,15 @@ export function MessageComposer({
     if (event.key !== "Enter" || event.shiftKey) return;
     event.preventDefault();
     submit();
+  }
+
+  function addFiles(files: FileList | null) {
+    if (!files) return;
+    const added = Array.from(files, (file) => ({
+      id: crypto.randomUUID(),
+      file,
+    }));
+    setAttachments((prev) => [...prev, ...added]);
   }
 
   function insertEmoji(emoji: string) {
@@ -114,13 +128,31 @@ export function MessageComposer({
           className="inset-x-2 md:inset-x-4"
         />
       ) : null}
+      <AttachmentChips
+        attachments={attachments}
+        onRemove={(id) =>
+          setAttachments((prev) => prev.filter((item) => item.id !== id))
+        }
+      />
+      <input
+        ref={fileInputRef}
+        type="file"
+        multiple
+        hidden
+        onChange={(event) => {
+          addFiles(event.target.files);
+          // Permite volver a elegir el mismo archivo despues de quitarlo.
+          event.target.value = "";
+        }}
+      />
       <div className="bg-surface-input border-line focus-within:border-accent flex items-end gap-1 rounded-lg border px-1.5 py-1 transition-colors">
         <button
           type="button"
-          disabled
+          disabled={disabled || isSending}
+          onClick={() => fileInputRef.current?.click()}
           aria-label={ATTACH_FILE_LABEL}
-          title={CHAT_FEATURE_NOT_AVAILABLE}
-          className={cn(ICON_BUTTON, "cursor-not-allowed opacity-60")}
+          title={ATTACH_FILE_LABEL}
+          className={cn(ICON_BUTTON, "cursor-pointer")}
         >
           <Paperclip size={18} />
         </button>
