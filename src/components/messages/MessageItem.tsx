@@ -3,9 +3,10 @@
 import {
   formatMessageTime,
   MESSAGE_EDITED_LABEL,
+  mentionsPerson,
   type MessageAuthor,
+  type MessageMentions,
   type MessageReaction,
-  type MentionResolver,
 } from "@discordia/client-shared";
 
 import { useState } from "react";
@@ -14,6 +15,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 
 import { MessageActions } from "./MessageActions";
+import { useMessageMentions } from "./MentionsContext";
 import { MessageContent } from "./MessageContent";
 import { DeleteMessageModal } from "./DeleteMessageModal";
 import { MessageEditForm } from "./MessageEditForm";
@@ -23,7 +25,7 @@ import { MessageReactions } from "./MessageReactions";
 const AVATAR_SIZE = 38;
 
 /** Forma minima que necesita esta fila: sirve tanto para `Message` (canal) como para `DmMessage`. */
-export interface MessageItemMessage {
+export interface MessageItemMessage extends MessageMentions {
   id: string;
   user_id: string;
   content: string;
@@ -41,7 +43,6 @@ interface MessageItemProps {
   isGroupStart: boolean;
   canEdit: boolean;
   canDelete: boolean;
-  resolveMention?: MentionResolver;
   onToggleReaction?: (emoji: string) => void;
   onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
@@ -53,11 +54,13 @@ export function MessageItem({
   isGroupStart,
   canEdit,
   canDelete,
-  resolveMention,
   onToggleReaction,
   onEdit,
   onDelete,
 }: MessageItemProps) {
+  const { me } = useMessageMentions();
+  const isMentioningMe =
+    me.userId !== null && mentionsPerson(message, me.userId, me.roleIds);
   const [isEditing, setIsEditing] = useState(false);
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
@@ -81,7 +84,10 @@ export function MessageItem({
     <article
       tabIndex={0}
       className={cn(
-        "group/message hover:bg-surface-hover focus-visible:bg-surface-hover has-[:focus-visible]:bg-surface-hover relative flex gap-3 rounded-md px-2 py-0.5 outline-none",
+        "group/message focus-visible:bg-surface-hover has-[:focus-visible]:bg-surface-hover relative flex gap-3 rounded-md px-2 py-0.5 outline-none",
+        isMentioningMe
+          ? "bg-highlight/10 hover:bg-highlight/15 border-highlight rounded-none border-l-2"
+          : "hover:bg-surface-hover",
         isGroupStart && "mt-4",
       )}
     >
@@ -117,7 +123,7 @@ export function MessageItem({
         ) : (
           <MessageContent
             content={message.content}
-            resolveMention={resolveMention}
+            mentions={message}
             suffix={
               message.edited_at ? (
                 <span className="text-content-subtle ml-1 text-[10px]">
@@ -150,7 +156,6 @@ export function MessageItem({
         <DeleteMessageModal
           message={message}
           author={author}
-          resolveMention={resolveMention}
           onConfirm={() => {
             setIsConfirmingDelete(false);
             onDelete();

@@ -22,6 +22,7 @@ import { ServerView } from "@/components/servers/ServerView";
 import { useAuth } from "@/services/auth/AuthContext";
 import { BlockedUsersProvider } from "@/services/blocks/BlockedUsersContext";
 import { useDirectMessages } from "@/services/conversations/useDirectMessages";
+import { useMentions } from "@/services/mentions/useMentions";
 import { authorFromProfile } from "@/services/messages/author";
 import { getOwnProfileRequest } from "@/services/profile/client";
 import { listServersRequest } from "@/services/servers/client";
@@ -59,9 +60,11 @@ function HomeShellContent({
     () => (ownProfile ? authorFromProfile(ownProfile) : null),
     [ownProfile],
   );
+  const mentions = useMentions(currentAuthor?.id ?? null);
   const directMessages = useDirectMessages(
     currentAuthor,
     view === "direct-messages",
+    { onMention: mentions.receive, onRejoined: mentions.reload },
   );
   const unreadDmCount = directMessages.conversations.filter(
     (c) => c.isUnread,
@@ -146,6 +149,7 @@ function HomeShellContent({
           selectedServerId={selectedServerId}
           isDirectMessagesActive={view === "direct-messages"}
           unreadDmCount={unreadDmCount}
+          unreadMentionsByServer={mentions.byServer}
           onSelect={(serverId) => {
             setView("servers");
             setSelectedServerId(serverId);
@@ -171,6 +175,8 @@ function HomeShellContent({
             ownProfile={ownProfile}
             onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
             onMessageUser={messageUser}
+            unreadMentionsByChannel={mentions.byChannel}
+            onChannelRead={mentions.markChannelRead}
           />
         ) : (
           <HomeView

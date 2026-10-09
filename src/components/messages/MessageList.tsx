@@ -8,7 +8,6 @@ import {
   startsMessageGroup,
   type Message,
   type MessageAuthor,
-  type MentionResolver,
   unknownAuthor,
 } from "@discordia/client-shared";
 
@@ -28,7 +27,6 @@ interface MessageListProps {
   currentUserId: string | null;
   canManageMessages: boolean;
   canSendMessages: boolean;
-  resolveMention?: MentionResolver;
   /** Hay mensajes anteriores sin cargar (paginacion del historial). */
   hasMore?: boolean;
   isLoadingOlder?: boolean;
@@ -50,7 +48,6 @@ export function MessageList({
   currentUserId,
   canManageMessages,
   canSendMessages,
-  resolveMention,
   hasMore = false,
   isLoadingOlder = false,
   onLoadOlder,
@@ -96,7 +93,6 @@ export function MessageList({
                 currentUserId !== null &&
                 canDeleteMessage(message, currentUserId, canManageMessages)
               }
-              resolveMention={resolveMention}
               onToggleReaction={(emoji) => onToggleReaction(message.id, emoji)}
               onEdit={(content) => onEditMessage(message.id, content)}
               onDelete={() => onDeleteMessage(message.id)}
