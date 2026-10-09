@@ -7,6 +7,7 @@ import { Home as HomeIcon, Plus } from "lucide-react";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
 import { Avatar } from "@/components/ui/Avatar";
+import { CountBadge } from "@/components/ui/CountBadge";
 import { serverIconSrc } from "@/services/servers/image-urls";
 import { cn } from "@/lib/cn";
 
@@ -16,6 +17,8 @@ interface ServerRailProps {
   /** El botón "Inicio" abre Mensajes Directos: se resalta cuando esa vista está activa. */
   isDirectMessagesActive: boolean;
   unreadDmCount: number;
+  /** Menciones sin leer por servidor. */
+  unreadMentionsByServer: Record<string, number>;
   onSelect: (serverId: string | null) => void;
   onOpenDirectMessages: () => void;
   onCreateClick: () => void;
@@ -26,6 +29,7 @@ export function ServerRail({
   selectedServerId,
   isDirectMessagesActive,
   unreadDmCount,
+  unreadMentionsByServer,
   onSelect,
   onOpenDirectMessages,
   onCreateClick,
@@ -54,12 +58,11 @@ export function ServerRail({
             <HomeIcon size={20} />
           </button>
           {unreadDmCount > 0 && !isDirectMessagesActive ? (
-            <span
-              className="bg-danger border-rail-surface absolute -top-0.5 -right-0.5 flex min-w-[18px] items-center justify-center rounded-full border-2 px-1 text-[9px] font-bold text-white"
-              style={{ height: 18 }}
-            >
-              {unreadDmCount}
-            </span>
+            <CountBadge
+              count={unreadDmCount}
+              label={`${unreadDmCount} conversaciones sin leer`}
+              className="border-rail-surface absolute -top-0.5 -right-0.5 border-2"
+            />
           ) : null}
         </div>
 
@@ -70,6 +73,7 @@ export function ServerRail({
             key={server.id}
             server={server}
             isActive={!isDirectMessagesActive && server.id === selectedServerId}
+            unreadMentions={unreadMentionsByServer[server.id] ?? 0}
             onClick={() => onSelect(server.id)}
           />
         ))}
@@ -90,10 +94,12 @@ export function ServerRail({
 function ServerRailItem({
   server,
   isActive,
+  unreadMentions,
   onClick,
 }: {
   server: ServerSummary;
   isActive: boolean;
+  unreadMentions: number;
   onClick: () => void;
 }) {
   return (
@@ -109,6 +115,13 @@ function ServerRailItem({
       >
         <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
       </button>
+      {unreadMentions > 0 ? (
+        <CountBadge
+          count={unreadMentions}
+          label={`${unreadMentions} menciones sin leer en ${server.name}`}
+          className="border-rail-surface absolute -right-0.5 -bottom-0.5 border-2"
+        />
+      ) : null}
     </div>
   );
 }

@@ -1,9 +1,13 @@
-import { SEND_MESSAGE_LABEL } from "@discordia/client-shared";
+import {
+  type MentionSources,
+  SEND_MESSAGE_LABEL,
+} from "@discordia/client-shared";
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
+import { MessageMentionsProvider } from "./MentionsContext";
 import { MessageComposer } from "./MessageComposer";
 
 function renderComposer(onSend = vi.fn()) {
@@ -52,33 +56,120 @@ describe("MessageComposer", () => {
     expect(onSend).toHaveBeenCalledWith("desde el boton");
   });
 
-  it("bloquea @everyone sin el permiso y no envia", async () => {
-    const onSend = vi.fn();
-    render(
-      <MessageComposer placeholder="Mensaje en #general" onSend={onSend} />,
-    );
+  it("@everyone sin selector (sin permiso o en un DM) se envia tal cual, como texto", async () => {
+    const { onSend, input } = renderComposer();
 
-    await userEvent.type(screen.getByRole("textbox"), "@everyone hola{Enter}");
-
-    expect(onSend).not.toHaveBeenCalled();
-    expect(
-      screen.getByText("No tenés permiso para mencionar a todo el servidor."),
-    ).toBeInTheDocument();
-  });
-
-  it("permite @everyone con el permiso", async () => {
-    const onSend = vi.fn();
-    render(
-      <MessageComposer
-        placeholder="Mensaje en #general"
-        onSend={onSend}
-        canMentionEveryone
-      />,
-    );
-
-    await userEvent.type(screen.getByRole("textbox"), "@everyone hola{Enter}");
+    await userEvent.type(input, "@everyone hola{Enter}");
 
     expect(onSend).toHaveBeenCalledWith("@everyone hola");
+  });
+
+  describe("menciones", () => {
+    function renderWithMentions(canMentionEveryone: boolean) {
+      const onSend = vi.fn();
+      const sources: MentionSources = {
+        members: [
+          {
+            id: "u_beto",
+            name: "Beto",
+            avatarUrl: null,
+            roleName: null,
+            roleColor: null,
+          },
+          {
+            id: "u_ana",
+            name: "Ana",
+            avatarUrl: null,
+            roleName: null,
+            roleColor: null,
+          },
+        ],
+        roles: [
+          { id: "r1", name: "Diseño", color: "#111111", is_everyone: false },
+        ],
+        canMentionEveryone,
+      };
+      render(
+        <MessageMentionsProvider
+          value={{ sources, me: { userId: "u_ana", roleIds: [] } }}
+        >
+          <MessageComposer placeholder="Mensaje en #general" onSend={onSend} />
+        </MessageMentionsProvider>,
+      );
+      return { onSend, input: screen.getByRole("textbox") };
+    }
+
+    it("al escribir @ ofrece miembros, y roles y @everyone solo con permiso", async () => {
+      const { input } = renderWithMentions(true);
+
+      await userEvent.type(input, "@");
+
+      expect(screen.getByRole("option", { name: /Beto/ })).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: /Diseño/ }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("option", { name: /everyone/ }),
+      ).toBeInTheDocument();
+    });
+
+    it("sin el permiso solo ofrece miembros", async () => {
+      const { input } = renderWithMentions(false);
+
+      await userEvent.type(input, "@");
+
+      expect(screen.getByRole("option", { name: /Beto/ })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: /Diseño/ })).toBeNull();
+      expect(screen.queryByRole("option", { name: /everyone/ })).toBeNull();
+    });
+
+    it("filtra mientras se escribe", async () => {
+      const { input } = renderWithMentions(true);
+
+      await userEvent.type(input, "@be");
+
+      expect(screen.getByRole("option", { name: /Beto/ })).toBeInTheDocument();
+      expect(screen.queryByRole("option", { name: /Ana/ })).toBeNull();
+    });
+
+    it("elegir con Enter inserta @Nombre y se envia el token con el id", async () => {
+      const { onSend, input } = renderWithMentions(true);
+
+      await userEvent.type(input, "Hola @be{Enter}");
+      expect(input).toHaveValue("Hola @Beto ");
+      expect(onSend).not.toHaveBeenCalled();
+
+      await userEvent.type(input, "mirá esto{Enter}");
+
+      expect(onSend).toHaveBeenCalledWith("Hola <@u_beto> mirá esto");
+    });
+
+    it("elegir con un clic tambien funciona", async () => {
+      const { onSend, input } = renderWithMentions(true);
+
+      await userEvent.type(input, "@dis");
+      await userEvent.click(screen.getByRole("option", { name: /Diseño/ }));
+      await userEvent.type(input, "hola{Enter}");
+
+      expect(onSend).toHaveBeenCalledWith("<@&r1> hola");
+    });
+
+    it("Esc cierra la lista sin elegir nada", async () => {
+      const { input } = renderWithMentions(true);
+
+      await userEvent.type(input, "@be{Escape}");
+
+      expect(screen.queryByRole("listbox")).toBeNull();
+      expect(input).toHaveValue("@be");
+    });
+
+    it("un @Nombre escrito a mano sin elegirlo se envia como texto", async () => {
+      const { onSend, input } = renderWithMentions(true);
+
+      await userEvent.type(input, "hola @Beto{Escape}{Enter}");
+
+      expect(onSend).toHaveBeenCalledWith("hola @Beto");
+    });
   });
 
   describe("envio asincrono", () => {

@@ -6,7 +6,7 @@ import {
   DELETE_MESSAGE_CONFIRM_BODY,
   DELETE_MESSAGE_CONFIRM_TITLE,
   type MessageAuthor,
-  type MentionResolver,
+  type MessageMentions,
 } from "@discordia/client-shared";
 
 import { Trash2 } from "lucide-react";
@@ -20,9 +20,8 @@ import { MessageHeader } from "./MessageHeader";
 
 interface DeleteMessageModalProps {
   /** El mensaje que se va a eliminar, completo, para que se vea cual es. */
-  message: { content: string; inserted_at: string };
+  message: { content: string; inserted_at: string } & MessageMentions;
   author: MessageAuthor;
-  resolveMention?: MentionResolver;
   onConfirm: () => void;
   onCancel: () => void;
 }
@@ -31,7 +30,6 @@ interface DeleteMessageModalProps {
 export function DeleteMessageModal({
   message,
   author,
-  resolveMention,
   onConfirm,
   onCancel,
 }: DeleteMessageModalProps) {
@@ -65,10 +63,7 @@ export function DeleteMessageModal({
           />
           <div className="min-w-0 flex-1 break-words">
             <MessageHeader author={author} createdAt={message.inserted_at} />
-            <MessageContent
-              content={message.content}
-              resolveMention={resolveMention}
-            />
+            <MessageContent content={message.content} mentions={message} />
           </div>
         </div>
         <div className="flex w-full gap-3">
