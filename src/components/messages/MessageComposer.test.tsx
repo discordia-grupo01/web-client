@@ -154,6 +154,44 @@ describe("MessageComposer", () => {
       expect(onSend).toHaveBeenCalledWith("<@&r1> hola");
     });
 
+    it("la mencion elegida se resalta en el cuadro de texto", async () => {
+      const { input } = renderWithMentions(true);
+
+      await userEvent.type(input, "@be{Enter}sigo");
+
+      const chip = screen.getByText("@Beto");
+      expect(chip.tagName).toBe("SPAN");
+      expect(chip.getAttribute("style")).toContain("background-color");
+    });
+
+    it("@everyone se resalta solo con permiso", async () => {
+      const withPermission = renderWithMentions(true);
+      await userEvent.type(withPermission.input, "hola @everyone ");
+      const highlighted = screen
+        .getAllByText("@everyone")
+        .some((element) =>
+          element.getAttribute("style")?.includes("background-color"),
+        );
+      expect(highlighted).toBe(true);
+    });
+
+    it("sin permiso @everyone queda sin resaltar, como texto comun", async () => {
+      const { input } = renderWithMentions(false);
+      await userEvent.type(input, "hola @everyone ");
+      const highlighted = screen
+        .queryAllByText("@everyone")
+        .some((element) =>
+          element.getAttribute("style")?.includes("background-color"),
+        );
+      expect(highlighted).toBe(false);
+    });
+
+    it("un @Nombre escrito a mano no se resalta", async () => {
+      const { input } = renderWithMentions(true);
+      await userEvent.type(input, "hola @Beto{Escape} ");
+      expect(screen.queryByText("@Beto")).toBeNull();
+    });
+
     it("Esc cierra la lista sin elegir nada", async () => {
       const { input } = renderWithMentions(true);
 

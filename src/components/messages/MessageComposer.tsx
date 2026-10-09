@@ -18,7 +18,6 @@ import {
   type KeyboardEvent,
 } from "react";
 
-import { AutoGrowTextarea } from "@/components/ui/AutoGrowTextarea";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FieldError } from "@/components/ui/FieldError";
 import { cn } from "@/lib/cn";
@@ -28,6 +27,7 @@ import { useMentionDraft } from "@/services/messages/useMentionDraft";
 
 import { EmojiPicker } from "./EmojiPicker";
 import { MentionSuggestions } from "./MentionSuggestions";
+import { MentionTextarea } from "./MentionTextarea";
 import { useMessageMentions } from "./MentionsContext";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
@@ -125,9 +125,11 @@ export function MessageComposer({
           <Paperclip size={18} />
         </button>
 
-        <AutoGrowTextarea
+        <MentionTextarea
           ref={textareaRef}
           value={draft.text}
+          segments={draft.segments}
+          wrapperClassName="min-w-0 flex-1 self-center"
           onChange={(event) => {
             draft.handleChange(event);
             setSendError(undefined);
@@ -139,7 +141,7 @@ export function MessageComposer({
           disabled={disabled || isSending}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="text-content placeholder:text-content-subtle min-w-0 flex-1 self-center border-none bg-transparent py-1.5 text-base outline-none placeholder:truncate md:text-sm"
+          className="text-content placeholder:text-content-subtle w-full border-none bg-transparent py-1.5 text-base outline-none placeholder:truncate md:text-sm"
         />
 
         <EmojiPicker
