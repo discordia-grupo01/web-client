@@ -11,28 +11,23 @@ import {
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
-import { useProfileFallback } from "@/hooks/useProfileFallback";
 import { avatarSrcOf } from "@/lib/userProfile";
-import { listMembersRequest } from "@/services/members/client";
 import { getPublicProfileRequest } from "@/services/profile/client";
 
 /**
- * `user_id` -> autor listo para pintar. El mensaje solo trae el `user_id`, asi
- * que se cruza con los miembros del servidor (nombre y avatar). Quien ya no es
- * miembro, o no entro en la primera pagina de miembros, se pide como perfil
- * publico, una sola vez por id; mientras tanto (o si falla) la lista muestra
- * "Usuario desconocido".
+ * `user_id` -> autor listo para pintar. El mensaje solo trae el `user_id` (del
+ * autor y de los mencionados), asi que se cruza con los miembros del servidor
+ * (nombre y avatar). Quien ya no es miembro se pide como perfil publico, una
+ * sola vez por id; mientras tanto (o si falla) se muestra "Usuario desconocido".
  *
  * `currentAuthor` pisa a los demas: es el perfil propio, siempre mas fresco que
  * la copia del miembro.
  */
 export function useMessageAuthors(
-  serverId: string,
+  members: Member[] | null,
   messages: Message[] | null,
   currentAuthor: MessageAuthor | null,
 ): Record<string, MessageAuthor> {
-  const [loadedMembers, setLoadedMembers] = useState<Member[] | null>(null);
-  const members = useProfileFallback(loadedMembers);
   const [extra, setExtra] = useState<Record<string, MessageAuthor>>({});
   const requested = useRef(new Set<string>());
   const isMounted = useRef(true);
@@ -43,16 +38,6 @@ export function useMessageAuthors(
       isMounted.current = false;
     };
   }, []);
-
-  useEffect(() => {
-    let cancelled = false;
-    listMembersRequest(serverId).then((result) => {
-      if (!cancelled) setLoadedMembers(result.ok ? result.members : []);
-    });
-    return () => {
-      cancelled = true;
-    };
-  }, [serverId]);
 
   const base = useMemo(() => {
     const byId: Record<string, MessageAuthor> = { ...extra };
@@ -69,10 +54,15 @@ export function useMessageAuthors(
   // Se espera a tener los miembros: antes de eso todo autor "falta" y se
   // pediria un perfil por cada uno sin necesidad.
   useEffect(() => {
-    if (!messages || loadedMembers === null) return;
+    if (!messages || members === null) return;
 
     const queue = [
-      ...new Set(messages.map((message) => message.user_id)),
+      ...new Set(
+        messages.flatMap((message) => [
+          message.user_id,
+          ...(message.mentions ?? []),
+        ]),
+      ),
     ].filter((id) => !base[id] && !requested.current.has(id));
     queue.forEach((id) => requested.current.add(id));
 
@@ -95,7 +85,7 @@ export function useMessageAuthors(
     void Promise.all(
       Array.from({ length: PROFILE_FALLBACK_CONCURRENCY }, worker),
     );
-  }, [messages, loadedMembers, base]);
+  }, [messages, members, base]);
 
   return base;
 }

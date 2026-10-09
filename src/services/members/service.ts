@@ -10,7 +10,7 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  * de `servers` y las notas generales sobre el back.
  *
  * Endpoints reales (ver servers/internal/handler):
- *   GET    /v1/servers/:id/members               -> 200 { members, total, limit, offset } | 401
+ *   GET    /v1/servers/:id/members?limit&offset  -> 200 { members, total, limit, offset } | 401
  */
 
 interface MemberListResult {
@@ -20,13 +20,14 @@ interface MemberListResult {
   offset: number;
 }
 
-/** Trae hasta 100 miembros (el maximo que acepta el back) en una sola pagina. */
+/** Una pagina de hasta 100 miembros (el maximo que acepta el back), desde `offset`. */
 export function listMembers(
   token: string,
   serverId: string,
+  offset = 0,
 ): Promise<ApiResult<MemberListResult>> {
   return apiRequest<MemberListResult>(
-    `/v1/servers/${serverId}/members?limit=${MEMBER_PAGE_LIMIT}`,
+    `/v1/servers/${serverId}/members?limit=${MEMBER_PAGE_LIMIT}&offset=${offset}`,
     { method: "GET", token },
   );
 }

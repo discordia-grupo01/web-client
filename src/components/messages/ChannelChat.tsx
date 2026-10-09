@@ -1,22 +1,30 @@
 "use client";
 
 import {
+  authorFromMember,
+  buildMentionResolver,
   CHAT_RECONNECTING_NOTICE,
   type Channel,
   LOADING_MESSAGES_LABEL,
+  type MentionSources,
   messageInputPlaceholder,
   type MessageAuthor,
   type Role,
-  buildMentionResolver,
 } from "@discordia/client-shared";
 
 import { useMemo, useState } from "react";
 
+import { avatarSrcOf } from "@/lib/userProfile";
+import { useServerMembers } from "@/services/members/useServerMembers";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
 import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
 import { ChatStatusNotice } from "./ChatStatusNotice";
+import {
+  MessageMentionsProvider,
+  type MessageMentionsValue,
+} from "./MentionsContext";
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
 
@@ -25,6 +33,8 @@ interface ChannelChatProps {
   channel: Channel;
   currentAuthor: MessageAuthor | null;
   serverRoles: Role[];
+  /** Ids de los roles del usuario actual, para resaltar los mensajes que lo mencionan. */
+  myRoleIds: string[];
   canManageMessages: boolean;
   canSendMessages: boolean;
   canMentionEveryone: boolean;
@@ -35,6 +45,7 @@ export function ChannelChat({
   channel,
   currentAuthor,
   serverRoles,
+  myRoleIds,
   canManageMessages,
   canSendMessages,
   canMentionEveryone,
@@ -52,7 +63,8 @@ export function ChannelChat({
     editMessage,
     deleteMessage,
   } = useChannelMessages(channel);
-  const authors = useMessageAuthors(serverId, messages, currentAuthor);
+  const members = useServerMembers(serverId);
+  const authors = useMessageAuthors(members, messages, currentAuthor);
   const [deleteError, setDeleteError] = useState<string | null>(null);
 
   async function handleDelete(messageId: string) {
@@ -61,10 +73,28 @@ export function ChannelChat({
     if (!result.ok) setDeleteError(result.message);
   }
 
-  const resolveMention = useMemo(
-    () => buildMentionResolver(authors, serverRoles),
-    [authors, serverRoles],
-  );
+  const currentUserId = currentAuthor?.id ?? null;
+  const mentions = useMemo<MessageMentionsValue>(() => {
+    const sources: MentionSources = {
+      members: (members ?? []).map((member) =>
+        authorFromMember(member, avatarSrcOf(member.user_id, member.profile)),
+      ),
+      roles: serverRoles,
+      canMentionEveryone,
+    };
+    return {
+      resolveMention: buildMentionResolver(authors, serverRoles),
+      sources,
+      me: { userId: currentUserId, roleIds: myRoleIds },
+    };
+  }, [
+    authors,
+    members,
+    serverRoles,
+    canMentionEveryone,
+    currentUserId,
+    myRoleIds,
+  ]);
 
   // Estados de los que no se sale solos: el canal no se puede mostrar.
   if (statusMessage && status !== "ready") {
@@ -77,7 +107,7 @@ export function ChannelChat({
   }
 
   return (
-    <>
+    <MessageMentionsProvider value={mentions}>
       {messages === null ? (
         <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
       ) : (
@@ -89,7 +119,6 @@ export function ChannelChat({
           currentUserId={currentAuthor?.id ?? null}
           canManageMessages={canManageMessages}
           canSendMessages={canSendMessages}
-          resolveMention={resolveMention}
           hasMore={hasMore}
           isLoadingOlder={isLoadingOlder}
           onLoadOlder={loadOlder}
@@ -118,8 +147,7 @@ export function ChannelChat({
         placeholder={messageInputPlaceholder(channel.name)}
         onSend={sendMessage}
         disabled={!currentAuthor || status !== "ready"}
-        canMentionEveryone={canMentionEveryone}
       />
-    </>
+    </MessageMentionsProvider>
   );
 }

@@ -1,10 +1,15 @@
-import type { Message, MessageAuthor } from "@discordia/client-shared";
+import type {
+  MentionResolver,
+  Message,
+  MessageAuthor,
+} from "@discordia/client-shared";
 
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
 import { describe, expect, it, vi } from "vitest";
 
+import { MessageMentionsProvider } from "./MentionsContext";
 import { MessageList } from "./MessageList";
 
 const ANA: MessageAuthor = {
@@ -61,12 +66,178 @@ describe("MessageList", () => {
     expect(screen.getByText("Moderador")).toBeInTheDocument();
   });
 
-  it("resalta las menciones sin resolver como genericas", () => {
-    renderList({
-      messages: [mensaje({ id: "1", content: "hola @Beto" })],
+  describe("menciones", () => {
+    const ROLE_ID = "3b1c2d4e-1111-4222-8333-444455556666";
+    const resolveMention: MentionResolver = (kind, id) => {
+      if (kind === "user" && id === "u2") return { name: "Beto", color: null };
+      if (kind === "role" && id === ROLE_ID) {
+        return { name: "Diseño", color: "#111111" };
+      }
+      return null;
+    };
+
+    function renderWithMentions(
+      messages: Message[],
+      me = { userId: "u1", roleIds: [] as string[] },
+    ) {
+      return render(
+        <MessageMentionsProvider value={{ resolveMention, sources: null, me }}>
+          <MessageList
+            welcome={null}
+            label="Mensajes"
+            messages={messages}
+            authors={{ u1: ANA }}
+            currentUserId="u1"
+            canManageMessages={false}
+            canSendMessages
+            onToggleReaction={vi.fn()}
+            onEditMessage={vi.fn()}
+            onDeleteMessage={vi.fn()}
+          />
+        </MessageMentionsProvider>,
+      );
+    }
+
+    it("dibuja una mencion de usuario con el nombre actual, no con el id", () => {
+      renderWithMentions([
+        mensaje({ id: "1", content: "hola <@u2>", mentions: ["u2"] }),
+      ]);
+
+      expect(screen.getByText("@Beto")).toHaveClass("text-highlight");
+      expect(screen.queryByText(/<@u2>/)).toBeNull();
     });
 
-    expect(screen.getByText("@Beto")).toHaveClass("text-highlight");
+    it("dibuja una mencion de rol con el color del rol", () => {
+      renderWithMentions([
+        mensaje({
+          id: "1",
+          content: `<@&${ROLE_ID}> reunion`,
+          mention_roles: [ROLE_ID],
+        }),
+      ]);
+
+      expect(screen.getByText("@Diseño")).toHaveStyle({ color: "#111111" });
+    });
+
+    it("un usuario que no se conoce se muestra como desconocido", () => {
+      renderWithMentions([
+        mensaje({ id: "1", content: "hola <@u9>", mentions: ["u9"] }),
+      ]);
+
+      expect(screen.getByText("@Usuario desconocido")).toBeInTheDocument();
+    });
+
+    it("@everyone con permiso se resalta", () => {
+      renderWithMentions([
+        mensaje({ id: "1", content: "@everyone hola", mention_everyone: true }),
+      ]);
+
+      expect(screen.getByText("@everyone")).toHaveClass("text-highlight");
+    });
+
+    it("@everyone que el back dejo como texto no se resalta", () => {
+      renderWithMentions([
+        mensaje({
+          id: "1",
+          content: "@everyone hola",
+          mention_everyone: false,
+        }),
+      ]);
+
+      expect(screen.queryByText("@everyone")).toBeNull();
+      expect(screen.getByText(/@everyone hola/)).toBeInTheDocument();
+    });
+
+    it("un @Nombre escrito a mano es texto comun", () => {
+      renderWithMentions([mensaje({ id: "1", content: "hola @Beto" })]);
+
+      expect(screen.getByText("hola @Beto")).toBeInTheDocument();
+    });
+
+    it("resalta el mensaje donde me mencionan", () => {
+      renderWithMentions(
+        [
+          mensaje({
+            id: "1",
+            user_id: "u2",
+            content: "ey <@u1>",
+            mentions: ["u1"],
+          }),
+        ],
+        { userId: "u1", roleIds: [] },
+      );
+
+      expect(screen.getByRole("article")).toHaveClass(
+        "border-highlight",
+        "rounded-none",
+      );
+    });
+
+    it("tambien me resalta por un rol mio o por @everyone", () => {
+      renderWithMentions(
+        [
+          mensaje({
+            id: "1",
+            user_id: "u2",
+            content: `<@&${ROLE_ID}>`,
+            mention_roles: [ROLE_ID],
+          }),
+          mensaje({
+            id: "2",
+            user_id: "u3",
+            content: "@everyone",
+            mention_everyone: true,
+          }),
+        ],
+        { userId: "u1", roleIds: [ROLE_ID] },
+      );
+
+      for (const article of screen.getAllByRole("article")) {
+        expect(article).toHaveClass("border-highlight");
+      }
+    });
+
+    it("resalta mi propio mensaje si me incluye (@everyone o un rol mio)", () => {
+      renderWithMentions(
+        [
+          mensaje({ id: "1", content: "@everyone", mention_everyone: true }),
+          mensaje({
+            id: "2",
+            content: `<@&${ROLE_ID}>`,
+            mention_roles: [ROLE_ID],
+          }),
+        ],
+        { userId: "u1", roleIds: [ROLE_ID] },
+      );
+
+      for (const article of screen.getAllByRole("article")) {
+        expect(article).toHaveClass("border-highlight");
+      }
+    });
+
+    it("no resalta los mensajes que no me nombran", () => {
+      renderWithMentions(
+        [
+          mensaje({
+            id: "1",
+            user_id: "u2",
+            content: "<@u3>",
+            mentions: ["u3"],
+          }),
+          mensaje({
+            id: "2",
+            user_id: "u2",
+            content: `<@&${ROLE_ID}>`,
+            mention_roles: [ROLE_ID],
+          }),
+        ],
+        { userId: "u1", roleIds: [] },
+      );
+
+      for (const article of screen.getAllByRole("article")) {
+        expect(article).not.toHaveClass("border-highlight");
+      }
+    });
   });
 
   it("tocar una reaccion la alterna en ese mensaje", async () => {

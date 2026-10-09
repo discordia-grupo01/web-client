@@ -14,7 +14,7 @@ import { listMembers } from "@/services/members/service";
  * origen); reenvia el JWT de la cookie httpOnly, nunca lo expone.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<ListMembersResult>> {
   const session = await getValidSession();
@@ -22,7 +22,8 @@ export async function GET(
     return unauthorizedResponse();
   }
 
-  const result = await listMembers(session.token, params.serverId);
+  const offset = Number(new URL(request.url).searchParams.get("offset")) || 0;
+  const result = await listMembers(session.token, params.serverId, offset);
   if (!result.ok) {
     if (result.status === 401) {
       return unauthorizedResponse();
