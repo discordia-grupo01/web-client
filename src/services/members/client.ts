@@ -13,10 +13,12 @@ import { api } from "@/lib/browserApiClient";
 
 export async function listMembersRequest(
   serverId: string,
+  offset = 0,
 ): Promise<ListMembersResult> {
   try {
     const { data } = await api.get<ListMembersResult>(
       `/servers/${serverId}/members`,
+      { params: offset > 0 ? { offset } : undefined },
     );
     return data;
   } catch {
