@@ -37,8 +37,13 @@ export function DirectMessagesView({
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
   const [isStartModalOpen, setIsStartModalOpen] = useState(false);
   const [profileUserId, setProfileUserId] = useState<string | null>(null);
-  const { conversations, activeSummary, openConversation, sendMessage } =
-    directMessages;
+  const {
+    conversations,
+    isLoading,
+    activeSummary,
+    openConversation,
+    sendMessage,
+  } = directMessages;
   const { candidates, isLoading: isLoadingCandidates } = useDmCandidates(
     servers,
     currentAuthor?.id ?? null,
@@ -50,6 +55,7 @@ export function DirectMessagesView({
       <SidePanel position="afterRail" isOpen={openPanel === "nav"}>
         <DmRailList
           conversations={conversations}
+          isLoading={isLoading}
           activePartnerId={activeSummary?.partner.id ?? null}
           onSelect={(id) => {
             openConversation(id);
