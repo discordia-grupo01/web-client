@@ -90,7 +90,7 @@ export function MessageList({
               {newDay ? (
                 <div
                   role="separator"
-                  className="text-content-muted my-3 flex items-center gap-3 px-2 text-xs font-semibold"
+                  className="text-content-muted mt-3 flex items-center gap-3 px-2 text-xs font-semibold"
                 >
                   <span className="bg-line h-px flex-1" />
                   <span>{formatMemberSince(message.inserted_at)}</span>
