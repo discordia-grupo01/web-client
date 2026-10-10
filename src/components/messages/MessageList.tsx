@@ -5,7 +5,9 @@ import {
   canEditMessage,
   LOAD_OLDER_MESSAGES_LABEL,
   LOADING_MESSAGES_LABEL,
+  formatMemberSince,
   startsMessageGroup,
+  startsNewDay,
   type Message,
   type MessageAuthor,
   unknownAuthor,
@@ -77,28 +79,47 @@ export function MessageList({
       )}
 
       <ol aria-label={label}>
-        {messages.map((message, index) => (
-          <li key={message.id}>
-            <MessageItem
-              message={message}
-              author={
-                authors[message.user_id] ?? unknownAuthor(message.user_id)
-              }
-              isGroupStart={startsMessageGroup(messages[index - 1], message)}
-              canEdit={
-                currentUserId !== null &&
-                canEditMessage(message, currentUserId, canSendMessages)
-              }
-              canDelete={
-                currentUserId !== null &&
-                canDeleteMessage(message, currentUserId, canManageMessages)
-              }
-              onToggleReaction={(emoji) => onToggleReaction(message.id, emoji)}
-              onEdit={(content) => onEditMessage(message.id, content)}
-              onDelete={() => onDeleteMessage(message.id)}
-            />
-          </li>
-        ))}
+        {messages.map((message, index) => {
+          const previous = messages[index - 1];
+          const newDay = startsNewDay(
+            previous?.inserted_at,
+            message.inserted_at,
+          );
+          return (
+            <li key={message.id}>
+              {newDay ? (
+                <div
+                  role="separator"
+                  className="text-content-muted my-3 flex items-center gap-3 px-2 text-xs font-semibold"
+                >
+                  <span className="bg-line h-px flex-1" />
+                  <span>{formatMemberSince(message.inserted_at)}</span>
+                  <span className="bg-line h-px flex-1" />
+                </div>
+              ) : null}
+              <MessageItem
+                message={message}
+                author={
+                  authors[message.user_id] ?? unknownAuthor(message.user_id)
+                }
+                isGroupStart={newDay || startsMessageGroup(previous, message)}
+                canEdit={
+                  currentUserId !== null &&
+                  canEditMessage(message, currentUserId, canSendMessages)
+                }
+                canDelete={
+                  currentUserId !== null &&
+                  canDeleteMessage(message, currentUserId, canManageMessages)
+                }
+                onToggleReaction={(emoji) =>
+                  onToggleReaction(message.id, emoji)
+                }
+                onEdit={(content) => onEditMessage(message.id, content)}
+                onDelete={() => onDeleteMessage(message.id)}
+              />
+            </li>
+          );
+        })}
       </ol>
     </div>
   );
