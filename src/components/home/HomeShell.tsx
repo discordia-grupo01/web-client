@@ -12,6 +12,7 @@ import { useEffect, useMemo, useState } from "react";
 
 import { DirectMessagesView } from "@/components/direct-messages/DirectMessagesView";
 import { HomeView } from "@/components/home/HomeView";
+import { LoadingScreen } from "@/components/home/LoadingScreen";
 import { ServerRail } from "@/components/home/ServerRail";
 import { JoinServerModal } from "@/components/invites/JoinServerModal";
 import { DrawerBackdrop } from "@/components/layout/DrawerBackdrop";
@@ -19,6 +20,7 @@ import { MobilePanelsProvider } from "@/components/layout/MobilePanelsContext";
 import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
 import { CreateServerModal } from "@/components/servers/CreateServerModal";
 import { ServerView } from "@/components/servers/ServerView";
+import { useLoadingGate } from "@/hooks/useLoadingGate";
 import { useAuth } from "@/services/auth/AuthContext";
 import { BlockedUsersProvider } from "@/services/blocks/BlockedUsersContext";
 import { useDirectMessages } from "@/services/conversations/useDirectMessages";
@@ -59,6 +61,8 @@ function HomeShellContent({
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
   const [ownProfile, setOwnProfile] = useState<User | null>(null);
+  const [isProfileLoaded, setIsProfileLoaded] = useState(false);
+  const [areServersLoaded, setAreServersLoaded] = useState(false);
   const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
@@ -122,7 +126,9 @@ function HomeShellContent({
   useEffect(() => {
     let cancelled = false;
     getOwnProfileRequest().then((result) => {
-      if (!cancelled && result.ok) setOwnProfile(result.user);
+      if (cancelled) return;
+      if (result.ok) setOwnProfile(result.user);
+      setIsProfileLoaded(true);
     });
     return () => {
       cancelled = true;
@@ -132,7 +138,9 @@ function HomeShellContent({
   useEffect(() => {
     let cancelled = false;
     listServersRequest().then((result) => {
-      if (!cancelled && result.ok) setServers(result.servers);
+      if (cancelled) return;
+      if (result.ok) setServers(result.servers);
+      setAreServersLoaded(true);
     });
     return () => {
       cancelled = true;
@@ -148,6 +156,20 @@ function HomeShellContent({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  const isReady =
+    isProfileLoaded &&
+    areServersLoaded &&
+    (!currentAuthor || (mentions.isLoaded && !directMessages.isLoading));
+  const gate = useLoadingGate(isReady);
+  if (gate === "waiting") {
+    return (
+      <div className="h-dvh w-full" style={{ background: "var(--bg-chat)" }} />
+    );
+  }
+  if (gate === "loading" || gate === "leaving") {
+    return <LoadingScreen isLeaving={gate === "leaving"} />;
+  }
 
   function messageUser(profile: PublicUser) {
     directMessages.openConversation(
