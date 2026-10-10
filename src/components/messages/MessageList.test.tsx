@@ -4,6 +4,7 @@ import type {
   MessageAuthor,
 } from "@discordia/client-shared";
 
+import { ADD_REACTION_LABEL } from "@discordia/client-shared";
 import { render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import type { ComponentProps } from "react";
@@ -255,6 +256,31 @@ describe("MessageList", () => {
     await userEvent.click(screen.getByRole("button", { name: "🔥 2" }));
 
     expect(onToggleReaction).toHaveBeenCalledWith("1", "🔥");
+  });
+
+  it("sin ADD_REACTIONS solo deja sacar la reaccion propia y no ofrece reaccionar", async () => {
+    const onToggleReaction = vi.fn();
+    renderList({
+      messages: [
+        mensaje({
+          id: "1",
+          reactions: [
+            { emoji: "🔥", count: 2, reacted_by_me: false },
+            { emoji: "👍", count: 1, reacted_by_me: true },
+          ],
+        }),
+      ],
+      canAddReactions: false,
+      onToggleReaction,
+    });
+
+    expect(screen.getByRole("button", { name: "🔥 2" })).toBeDisabled();
+    expect(
+      screen.queryByRole("button", { name: ADD_REACTION_LABEL }),
+    ).not.toBeInTheDocument();
+
+    await userEvent.click(screen.getByRole("button", { name: "👍 1" }));
+    expect(onToggleReaction).toHaveBeenCalledWith("1", "👍");
   });
 
   it("editar un mensaje propio llama a onEditMessage con el nuevo contenido", async () => {

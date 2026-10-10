@@ -376,6 +376,10 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "MENTION_EVERYONE",
   );
+  const canAddReactions = hasPermission(
+    { isOwner, roles: myRoles },
+    "ADD_REACTIONS",
+  );
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
@@ -809,6 +813,7 @@ export function ServerView({
                 canManageMessages={canManageMessages}
                 canSendMessages={canSendMessages}
                 canMentionEveryone={canMentionEveryone}
+                canAddReactions={canAddReactions}
               />
             ) : (
               <VoiceChannelPlaceholder name={activeChannel.name} />
