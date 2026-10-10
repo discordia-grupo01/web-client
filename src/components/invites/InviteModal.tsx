@@ -25,6 +25,7 @@ import {
 import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { NumberField } from "@/components/ui/NumberField";
 import {
   createInviteRequest,
   listInvitationsRequest,
@@ -280,14 +281,12 @@ export function InviteModal({
             Generar invitación (vence en 7 días)
           </label>
           <div className="flex items-center gap-2">
-            <input
+            <NumberField
               id="invite-max-uses"
-              type="number"
-              min={1}
               value={maxUsesInput}
-              onChange={(event) => setMaxUsesInput(event.target.value)}
+              onValueChange={setMaxUsesInput}
               placeholder={MAX_USES_LABEL}
-              className="bg-surface-input border-line text-content min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm outline-none"
+              className="flex-1"
             />
             <Button
               type="button"
