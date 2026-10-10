@@ -6,20 +6,24 @@ type Phase = "waiting" | "loading" | "leaving" | "done";
 
 const { showDelayMs, minVisibleMs, fadeOutMs } = LOADING_SCREEN;
 
-/**
- * Evita el destello de una pantalla de carga: no aparece si todo estaba
- * listo antes de `showDelayMs`, y una vez visible dura al menos
- * `minVisibleMs` y se desvanece en vez de cortarse.
- */
-export function useLoadingGate(isReady: boolean): Phase {
-  const [delayElapsed, setDelayElapsed] = useState(false);
+export function useLoadingGate(
+  isReady: boolean,
+  { showImmediately = false } = {},
+): Phase {
+  const [delayElapsed, setDelayElapsed] = useState(showImmediately);
   const [minElapsed, setMinElapsed] = useState(false);
   const [faded, setFaded] = useState(false);
+  const [wasReady, setWasReady] = useState(false);
+  const [isFinished, setIsFinished] = useState(false);
+
+  if (isReady && !wasReady) setWasReady(true);
+  const ready = isReady || wasReady;
 
   useEffect(() => {
+    if (showImmediately) return;
     const timer = setTimeout(() => setDelayElapsed(true), showDelayMs);
     return () => clearTimeout(timer);
-  }, []);
+  }, [showImmediately]);
 
   useEffect(() => {
     if (!delayElapsed) return;
@@ -27,14 +31,18 @@ export function useLoadingGate(isReady: boolean): Phase {
     return () => clearTimeout(timer);
   }, [delayElapsed]);
 
-  const isLeaving = delayElapsed && minElapsed && isReady;
+  const isLeaving = delayElapsed && minElapsed && ready;
   useEffect(() => {
     if (!isLeaving) return;
     const timer = setTimeout(() => setFaded(true), fadeOutMs);
     return () => clearTimeout(timer);
   }, [isLeaving]);
 
-  if (!delayElapsed) return isReady ? "done" : "waiting";
-  if (faded) return "done";
-  return isLeaving ? "leaving" : "loading";
+  let phase: Phase;
+  if (!delayElapsed) phase = ready ? "done" : "waiting";
+  else if (faded) phase = "done";
+  else phase = isLeaving ? "leaving" : "loading";
+
+  if (phase === "done" && !isFinished) setIsFinished(true);
+  return isFinished ? "done" : phase;
 }
