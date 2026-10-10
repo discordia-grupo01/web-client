@@ -44,6 +44,8 @@ interface MessageItemProps {
   canEdit: boolean;
   canDelete: boolean;
   onToggleReaction?: (emoji: string) => void;
+  /** `false` sin `ADD_REACTIONS`: no se ofrece reaccionar, solo sacar la propia. */
+  canAddReactions?: boolean;
   onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
 }
@@ -55,6 +57,7 @@ export function MessageItem({
   canEdit,
   canDelete,
   onToggleReaction,
+  canAddReactions = true,
   onEdit,
   onDelete,
 }: MessageItemProps) {
@@ -138,6 +141,7 @@ export function MessageItem({
           <MessageReactions
             reactions={message.reactions ?? []}
             onToggle={onToggleReaction}
+            canAdd={canAddReactions}
           />
         ) : null}
       </div>
@@ -146,7 +150,7 @@ export function MessageItem({
         <MessageActions
           canEdit={canEdit}
           canDelete={canDelete}
-          onToggleReaction={onToggleReaction}
+          onToggleReaction={canAddReactions ? onToggleReaction : undefined}
           onEdit={() => setIsEditing(true)}
           onDelete={() => setIsConfirmingDelete(true)}
         />

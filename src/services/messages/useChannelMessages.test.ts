@@ -640,14 +640,91 @@ describe("useChannelMessages: editar", () => {
   });
 });
 
-describe("useChannelMessages: maqueta local (reaccionar)", () => {
-  it("reaccionar funciona aunque el mensaje real no traiga reactions", async () => {
+describe("useChannelMessages: reacciones", () => {
+  it("CA1: manda add_reaction y aplica lo que confirma el back", async () => {
     const { result } = await mountAndJoin();
 
-    act(() => result.current.toggleReaction("m1", "🔥"));
+    let outcome: unknown;
+    act(() => {
+      void result.current.toggleReaction("m1", "🔥").then((r) => (outcome = r));
+    });
+    expect(room.pushes[0]).toMatchObject({
+      event: "add_reaction",
+      payload: { message_id: "m1", emoji: "🔥" },
+    });
+    await act(async () =>
+      room.pushes[0].push.fire("ok", {
+        emoji: "🔥",
+        count: 1,
+        reacted_by_me: true,
+      }),
+    );
 
+    expect(outcome).toEqual({ ok: true });
     expect(result.current.messages?.[0].reactions).toEqual([
       { emoji: "🔥", count: 1, reacted_by_me: true },
+    ]);
+  });
+
+  it("CA2: si ya habia reaccionado con ese emoji, manda remove_reaction", async () => {
+    vi.mocked(fetchMessagesRequest).mockResolvedValueOnce(
+      history([
+        { ...M1, reactions: [{ emoji: "👍", count: 2, reacted_by_me: true }] },
+      ]),
+    );
+    const { result } = await mountAndJoin();
+
+    act(() => {
+      void result.current.toggleReaction("m1", "👍");
+    });
+    expect(room.pushes[0].event).toBe("remove_reaction");
+    await act(async () =>
+      room.pushes[0].push.fire("ok", {
+        emoji: "👍",
+        count: 1,
+        reacted_by_me: false,
+      }),
+    );
+
+    expect(result.current.messages?.[0].reactions).toEqual([
+      { emoji: "👍", count: 1, reacted_by_me: false },
+    ]);
+  });
+
+  it("CA3: sin permiso devuelve el motivo y no cambia nada", async () => {
+    const { result } = await mountAndJoin();
+
+    let outcome: unknown;
+    act(() => {
+      void result.current.toggleReaction("m1", "🔥").then((r) => (outcome = r));
+    });
+    await act(async () =>
+      room.pushes[0].push.fire("error", { error: { code: "FORBIDDEN" } }),
+    );
+
+    expect(outcome).toEqual({
+      ok: false,
+      message: "No tenés permiso para reaccionar en este canal.",
+    });
+    expect(result.current.messages?.[0].reactions).toBeUndefined();
+  });
+
+  it("reaction_updated de otro miembro actualiza el contador en tiempo real", async () => {
+    const { result } = await mountAndJoin();
+
+    act(() =>
+      room.handlers.reaction_updated({
+        channel_id: "ch1",
+        message_id: "m2",
+        emoji: "🎉",
+        user_id: "otro",
+        action: "added",
+        count: 3,
+      }),
+    );
+
+    expect(result.current.messages?.[1].reactions).toEqual([
+      { emoji: "🎉", count: 3, reacted_by_me: false },
     ]);
   });
 });

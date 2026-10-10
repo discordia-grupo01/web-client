@@ -19,10 +19,13 @@ import {
   type MessageUpdatedPayload,
   mergeMessages,
   pushMessageEvent,
+  pushReaction,
+  type ReactionResult,
+  reactionEventFor,
   removeMessages,
   type SendMessageResult,
   SESSION_EXPIRED_MESSAGE,
-  toggleMessageReaction,
+  setMessageReaction,
   validateMessageContent,
 } from "@discordia/client-shared";
 
@@ -41,6 +44,7 @@ export type {
 
 export function useChannelMessages(
   channel: Pick<Channel, "id">,
+  currentUserId: string | null = null,
 ): ChannelMessages {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [status, setStatus] = useState<ChatStatus>("loading");
@@ -53,6 +57,16 @@ export function useChannelMessages(
   const joinParams = useRef<MessageChannelJoinParams>({});
   const statusRef = useRef<ChatStatus>("loading");
   const loadingOlderRef = useRef(false);
+  const messagesRef = useRef<Message[] | null>(null);
+  const currentUserIdRef = useRef(currentUserId);
+
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
+
+  useEffect(() => {
+    currentUserIdRef.current = currentUserId;
+  }, [currentUserId]);
 
   useEffect(() => {
     statusRef.current = status;
@@ -133,6 +147,9 @@ export function useChannelMessages(
         },
         rejected: fail,
         accessRevoked: fail,
+        get currentUserId() {
+          return currentUserIdRef.current;
+        },
       });
     }
 
@@ -189,11 +206,23 @@ export function useChannelMessages(
     [],
   );
 
-  const toggleReaction = useCallback((messageId: string, emoji: string) => {
-    setMessages(
-      (prev) => prev && toggleMessageReaction(prev, messageId, emoji),
-    );
-  }, []);
+  const toggleReaction = useCallback(
+    (messageId: string, emoji: string): Promise<ReactionResult> => {
+      const message = messagesRef.current?.find((m) => m.id === messageId);
+      return pushReaction(
+        phoenixChannel.current,
+        statusRef.current,
+        reactionEventFor(message ?? {}, emoji),
+        messageId,
+        emoji,
+        (reaction) =>
+          setMessages(
+            (prev) => prev && setMessageReaction(prev, messageId, reaction),
+          ),
+      );
+    },
+    [],
+  );
 
   const editMessage = useCallback(
     (messageId: string, content: string): Promise<EditMessageResult> => {
