@@ -24,8 +24,8 @@ interface UseFloatingPanelOptions {
   isOpen: boolean;
   onClose: () => void;
   anchorRef: RefObject<HTMLElement>;
-  /** "left" (default) alinea el borde izquierdo del panel con el anchor; "right" alinea el derecho; "stretch" iguala el ancho del panel al del anchor. */
-  align?: "left" | "right" | "stretch";
+  /** "left" (default) alinea el borde izquierdo del panel con el anchor; "right" alinea el derecho; "stretch" iguala el ancho del panel al del anchor; "side" lo abre al costado derecho del anchor (a la izquierda si no entra), alineado arriba. */
+  align?: "left" | "right" | "stretch" | "side";
 }
 
 /**
@@ -63,6 +63,24 @@ export function useFloatingPanel({
       if (!anchor) return;
       const rect = anchor.getBoundingClientRect();
 
+      const panelWidth = panelRef.current?.offsetWidth ?? 0;
+      const panelHeight = panelRef.current?.offsetHeight ?? 0;
+
+      if (align === "side") {
+        const fitsRight =
+          rect.right + GAP + panelWidth <= window.innerWidth - VIEWPORT_MARGIN;
+        const fitsLeft = rect.left - GAP - panelWidth >= VIEWPORT_MARGIN;
+        const maxTop = window.innerHeight - VIEWPORT_MARGIN - panelHeight;
+        setPosition({
+          top: Math.max(VIEWPORT_MARGIN, Math.min(rect.top, maxTop)),
+          left:
+            !fitsRight && fitsLeft
+              ? rect.left - GAP - panelWidth
+              : rect.right + GAP,
+        });
+        return;
+      }
+
       const next: FloatingPanelPosition = { top: rect.bottom + GAP };
       if (align === "right") {
         next.right = window.innerWidth - rect.right;
@@ -71,7 +89,6 @@ export function useFloatingPanel({
         if (align === "stretch") next.width = rect.width;
       }
 
-      const panelHeight = panelRef.current?.offsetHeight ?? 0;
       if (
         panelHeight > 0 &&
         next.top + panelHeight > window.innerHeight - VIEWPORT_MARGIN &&

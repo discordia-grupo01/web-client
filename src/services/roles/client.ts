@@ -4,6 +4,7 @@ import {
   DEFAULT_ROLE_SET_FAILED,
   type DeleteRoleResult,
   type ListMemberRolesResult,
+  type ListRoleMembersResult,
   type ListRolesResult,
   MEMBER_ROLE_ASSIGN_FAILED,
   MEMBER_ROLE_REMOVE_FAILED,
@@ -12,6 +13,7 @@ import {
   type ReorderRolesResult,
   ROLE_CREATE_FAILED,
   ROLE_DELETE_FAILED,
+  ROLE_MEMBERS_LOAD_FAILED,
   ROLE_REORDER_FAILED,
   ROLE_UPDATE_FAILED,
   type RolePermission,
@@ -183,5 +185,19 @@ export async function removeRoleRequest(
       ok: false,
       message: MEMBER_ROLE_REMOVE_FAILED,
     };
+  }
+}
+
+/** Todos los miembros que tienen el rol (#58). */
+export async function listRoleMembersRequest(
+  roleId: string,
+): Promise<ListRoleMembersResult> {
+  try {
+    const { data } = await api.get<ListRoleMembersResult>(
+      `/roles/${roleId}/members`,
+    );
+    return data;
+  } catch {
+    return { ok: false, message: ROLE_MEMBERS_LOAD_FAILED };
   }
 }
