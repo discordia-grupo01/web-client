@@ -2,11 +2,15 @@
 
 import {
   COLOR_PALETTE,
+  EVERYONE_VIEW_CHANNELS_OFF_BODY,
+  EVERYONE_VIEW_CHANNELS_OFF_CONFIRM,
+  EVERYONE_VIEW_CHANNELS_OFF_TITLE,
   isValidHex,
   MAX_NAME,
   NO_ROLES_YET,
   outranksRole,
   PERMISSION_COPY,
+  removesViewChannelsFromEveryone,
   type Role,
   ROLE_PERMISSIONS,
   type RolePermission,
@@ -34,6 +38,7 @@ import {
   AlertCircle,
   Check,
   ChevronRight,
+  EyeOff,
   GripVertical,
   Minus,
   Pencil,
@@ -46,6 +51,7 @@ import {
 import { useEffect, useRef, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
 import { getPublicProfileRequest } from "@/services/profile/client";
@@ -540,6 +546,8 @@ export function RolesModal({
 
   // Toast
   const [toast, setToast] = useState<string | null>(null);
+  const [isConfirmingEveryoneView, setIsConfirmingEveryoneView] =
+    useState(false);
   const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const dragSensors = useSensors(
@@ -693,7 +701,19 @@ export function RolesModal({
     setColorError("");
   }
 
+  function requestSave() {
+    if (
+      selectedRole &&
+      removesViewChannelsFromEveryone(selectedRole, editPerms)
+    ) {
+      setIsConfirmingEveryoneView(true);
+      return;
+    }
+    void handleSave();
+  }
+
   async function handleSave() {
+    setIsConfirmingEveryoneView(false);
     setNameError("");
     setColorError("");
 
@@ -1475,7 +1495,7 @@ export function RolesModal({
                   </button>
                   <button
                     type="button"
-                    onClick={handleSave}
+                    onClick={requestSave}
                     disabled={!isDirty || saving}
                     className="from-accent-gradient-start to-accent-gradient-end text-on-accent flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-br px-6 py-2.5 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
                     style={{
@@ -1521,6 +1541,17 @@ export function RolesModal({
           </p>
         </div>
       </div>
+
+      {isConfirmingEveryoneView ? (
+        <ConfirmDialog
+          icon={EyeOff}
+          title={EVERYONE_VIEW_CHANNELS_OFF_TITLE}
+          body={EVERYONE_VIEW_CHANNELS_OFF_BODY}
+          confirmLabel={EVERYONE_VIEW_CHANNELS_OFF_CONFIRM}
+          onConfirm={() => void handleSave()}
+          onCancel={() => setIsConfirmingEveryoneView(false)}
+        />
+      ) : null}
     </div>
   );
 }

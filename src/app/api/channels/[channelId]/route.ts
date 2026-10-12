@@ -15,7 +15,8 @@ import { getValidSession } from "@/services/auth/session";
 import { deleteChannel, updateChannel } from "@/services/channels/service";
 
 /**
- * BFF de `PATCH /v1/channels/:id`. Body JSON: `{ name }`.
+ * BFF de `PATCH /v1/channels/:id`. Body JSON: `{ name?, topic? }`. Un campo
+ * que no viene no se manda, para no pisar lo que ya tiene el canal.
  */
 export async function PATCH(
   request: Request,
@@ -27,10 +28,12 @@ export async function PATCH(
   }
 
   const body = await request.json().catch(() => null);
-  const name = typeof body?.name === "string" ? body.name : "";
+  const name = typeof body?.name === "string" ? body.name : undefined;
+  const topic = typeof body?.topic === "string" ? body.topic : undefined;
 
   const result = await updateChannel(session.token, params.channelId, {
-    name,
+    ...(name !== undefined ? { name } : {}),
+    ...(topic !== undefined ? { topic } : {}),
   });
 
   if (!result.ok) {

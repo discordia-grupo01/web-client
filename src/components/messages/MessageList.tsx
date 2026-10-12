@@ -29,6 +29,8 @@ interface MessageListProps {
   currentUserId: string | null;
   canManageMessages: boolean;
   canSendMessages: boolean;
+  /** `ADD_REACTIONS` del usuario actual en el servidor. */
+  canAddReactions?: boolean;
   /** Hay mensajes anteriores sin cargar (paginacion del historial). */
   hasMore?: boolean;
   isLoadingOlder?: boolean;
@@ -50,6 +52,7 @@ export function MessageList({
   currentUserId,
   canManageMessages,
   canSendMessages,
+  canAddReactions = true,
   hasMore = false,
   isLoadingOlder = false,
   onLoadOlder,
@@ -114,6 +117,7 @@ export function MessageList({
                 onToggleReaction={(emoji) =>
                   onToggleReaction(message.id, emoji)
                 }
+                canAddReactions={canAddReactions}
                 onEdit={(content) => onEditMessage(message.id, content)}
                 onDelete={() => onDeleteMessage(message.id)}
               />

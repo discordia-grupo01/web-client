@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type AccessRevokedReason,
   authorFromMember,
   buildMentionResolver,
   CHAT_RECONNECTING_NOTICE,
@@ -10,6 +11,7 @@ import {
   messageInputPlaceholder,
   type MessageAuthor,
   type Role,
+  SEND_MESSAGES_DENIED_PLACEHOLDER,
 } from "@discordia/client-shared";
 
 import { useMemo, useState } from "react";
@@ -38,6 +40,8 @@ interface ChannelChatProps {
   canManageMessages: boolean;
   canSendMessages: boolean;
   canMentionEveryone: boolean;
+  canAddReactions: boolean;
+  onAccessRevoked?: (reason: AccessRevokedReason) => void;
 }
 
 export function ChannelChat({
@@ -49,6 +53,8 @@ export function ChannelChat({
   canManageMessages,
   canSendMessages,
   canMentionEveryone,
+  canAddReactions,
+  onAccessRevoked,
 }: ChannelChatProps) {
   const {
     status,
@@ -62,15 +68,23 @@ export function ChannelChat({
     toggleReaction,
     editMessage,
     deleteMessage,
-  } = useChannelMessages(channel);
+  } = useChannelMessages(channel, currentAuthor?.id ?? null, {
+    onAccessRevoked,
+  });
   const members = useServerMembers(serverId);
   const authors = useMessageAuthors(members, messages, currentAuthor);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   async function handleDelete(messageId: string) {
-    setDeleteError(null);
+    setActionError(null);
     const result = await deleteMessage(messageId);
-    if (!result.ok) setDeleteError(result.message);
+    if (!result.ok) setActionError(result.message);
+  }
+
+  async function handleToggleReaction(messageId: string, emoji: string) {
+    setActionError(null);
+    const result = await toggleReaction(messageId, emoji);
+    if (!result.ok) setActionError(result.message);
   }
 
   const currentUserId = currentAuthor?.id ?? null;
@@ -119,20 +133,21 @@ export function ChannelChat({
           currentUserId={currentAuthor?.id ?? null}
           canManageMessages={canManageMessages}
           canSendMessages={canSendMessages}
+          canAddReactions={canAddReactions}
           hasMore={hasMore}
           isLoadingOlder={isLoadingOlder}
           onLoadOlder={loadOlder}
-          onToggleReaction={toggleReaction}
+          onToggleReaction={handleToggleReaction}
           onEditMessage={editMessage}
           onDeleteMessage={handleDelete}
         />
       )}
-      {deleteError ? (
+      {actionError ? (
         <p
           role="alert"
           className="bg-danger/10 text-danger shrink-0 px-4 py-1 text-center text-xs"
         >
-          {deleteError}
+          {actionError}
         </p>
       ) : null}
       {status === "reconnecting" ? (
@@ -144,9 +159,13 @@ export function ChannelChat({
         </p>
       ) : null}
       <MessageComposer
-        placeholder={messageInputPlaceholder(channel.name)}
+        placeholder={
+          canSendMessages
+            ? messageInputPlaceholder(channel.name)
+            : SEND_MESSAGES_DENIED_PLACEHOLDER
+        }
         onSend={sendMessage}
-        disabled={!currentAuthor || status !== "ready"}
+        disabled={!currentAuthor || status !== "ready" || !canSendMessages}
       />
     </MessageMentionsProvider>
   );
