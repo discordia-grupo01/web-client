@@ -67,7 +67,7 @@ function role(
 const EVERYONE = role(
   "everyone",
   99,
-  ["VIEW_CHANNELS", "SEND_MESSAGES", "ADD_REACTIONS"],
+  ["VIEW_CHANNELS", "SEND_MESSAGES", "ADD_REACTIONS", "CONNECT"],
   true,
 );
 const ADMIN_ROLE = role("admin", 1, ["MANAGE_SERVER"]);
@@ -75,6 +75,7 @@ const MOD = role("mod", 2, ["MANAGE_ROLES"]);
 const MEMBER = role("miembro", 3);
 
 function renderView({
+  channel = CHANNEL,
   myRoles = [EVERYONE, MOD],
   isOwner = false,
   canManageChannel = true,
@@ -89,7 +90,7 @@ function renderView({
   };
   render(
     <ChannelSettingsView
-      channel={CHANNEL}
+      channel={channel}
       categoryName="General"
       initialSection="permissions"
       canManageChannel={canManageChannel}
@@ -122,6 +123,37 @@ describe("ChannelSettingsView", () => {
     expect(
       screen.getByRole("button", { name: "Denegar: Ver canal" }),
     ).toBeEnabled();
+  });
+
+  it("en un canal de texto no ofrece Conectarse", async () => {
+    renderView();
+    await waitForEditor();
+
+    expect(
+      screen.queryByRole("group", { name: "Conectarse" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("en un canal de voz deja negar Conectarse a un rol", async () => {
+    const props = renderView({
+      channel: { ...CHANNEL, name: "juegos", kind: "voice" },
+    });
+    await waitForEditor();
+
+    expect(
+      screen.queryByRole("group", { name: "Enviar mensajes" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Denegar: Conectarse" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    await waitFor(() => expect(props.onPermissionsSaved).toHaveBeenCalled());
+    expect(put).toHaveBeenCalledWith("ch1", {
+      roleId: "everyone",
+      allow: [],
+      deny: ["CONNECT"],
+    });
   });
 
   it("no deja permitir un permiso que el actor no tiene", async () => {

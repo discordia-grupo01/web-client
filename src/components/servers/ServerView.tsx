@@ -343,10 +343,6 @@ export function ServerView({
 
   useEffect(() => fetchMyRoles(), [fetchMyRoles]);
 
-  /**
-   * Catalogo completo de roles del server: colorea las menciones a `@Rol` y
-   * arma la lista de roles de la configuracion del canal.
-   */
   const fetchServerRoles = useCallback(() => {
     let cancelled = false;
     listRolesRequest(server.id).then((result) => {
@@ -359,10 +355,6 @@ export function ServerView({
 
   useEffect(() => fetchServerRoles(), [fetchServerRoles]);
 
-  /**
-   * Trae de nuevo el server para refrescar los canales visibles: cambiar una
-   * excepcion de VIEW_CHANNELS puede mostrar u ocultar canales.
-   */
   const reloadServer = useCallback(async () => {
     const result = await listServersRequest();
     if (!result.ok) return null;
@@ -404,6 +396,7 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "ADD_REACTIONS",
   );
+  const canConnect = hasPermission({ isOwner, roles: myRoles }, "CONNECT");
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
@@ -457,16 +450,10 @@ export function ServerView({
     : undefined;
 
   const activeChannelPermissions = useMyChannelPermissions(
-    activeChannel?.kind === "text" && activeChannel !== lostChannel
-      ? activeChannel.id
-      : null,
+    activeChannel && activeChannel !== lostChannel ? activeChannel.id : null,
     permissionsVersion,
   );
 
-  /**
-   * Lo que el usuario puede hacer en el canal abierto, con sus excepciones.
-   * Mientras cargan se usa lo del servidor; el back valida igual.
-   */
   function canInActiveChannel(
     permission: ChannelOverridePermission,
     serverLevel: boolean,
@@ -920,7 +907,10 @@ export function ServerView({
                 onAccessRevoked={handleAccessRevoked}
               />
             ) : (
-              <VoiceChannelPlaceholder name={activeChannel.name} />
+              <VoiceChannelPlaceholder
+                name={activeChannel.name}
+                canConnect={canInActiveChannel("CONNECT", canConnect)}
+              />
             )}
           </>
         ) : (
