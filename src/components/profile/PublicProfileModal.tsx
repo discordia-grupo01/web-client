@@ -3,12 +3,13 @@
 import {
   BAN_ACTION_LABEL,
   BLOCK_USER_LABEL,
+  KICK_ACTION_LABEL,
   SEND_MESSAGE_LABEL,
   UNBLOCK_USER_LABEL,
   type PublicUser,
 } from "@discordia/client-shared";
 
-import { Ban, Gavel, MessageCircle, ShieldCheck } from "lucide-react";
+import { Ban, Gavel, MessageCircle, ShieldCheck, UserX } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -35,6 +36,9 @@ interface PublicProfileModalProps {
   /** Puede banear (permiso) y el perfil no es el propio ni el del owner. */
   canBan?: boolean;
   onBan?: (profile: PublicUser) => void;
+  /** Puede expulsar (permiso) y el perfil no es el propio ni el del owner. */
+  canKick?: boolean;
+  onKick?: (profile: PublicUser) => void;
   /** Muestra la accion de bloquear/desbloquear: el perfil no es el propio. */
   canBlock?: boolean;
   /** Abre el mensaje directo con este usuario. Sin esto (perfil propio) no se muestra el botón. */
@@ -58,6 +62,8 @@ export function PublicProfileModal({
   canManageRoles = false,
   canBan = false,
   onBan,
+  canKick = false,
+  onKick,
   canBlock = false,
   onSendMessage,
   onClose,
@@ -141,6 +147,18 @@ export function PublicProfileModal({
                       className="text-danger flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
                     >
                       <BlockIcon size={14} aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                ) : null}
+                {canKick && onKick ? (
+                  <Tooltip label={KICK_ACTION_LABEL}>
+                    <button
+                      type="button"
+                      onClick={() => onKick(profile)}
+                      aria-label={KICK_ACTION_LABEL}
+                      className="text-danger flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+                    >
+                      <UserX size={14} aria-hidden="true" />
                     </button>
                   </Tooltip>
                 ) : null}

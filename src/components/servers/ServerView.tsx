@@ -58,6 +58,7 @@ import {
   type BanTarget,
 } from "@/components/bans/BanMemberModal";
 import { avatarSrcOf } from "@/lib/userProfile";
+import { KickMemberModal } from "@/components/moderation/KickMemberModal";
 import { PublicProfileModal } from "@/components/profile/PublicProfileModal";
 import { UserPanel } from "@/components/profile/UserPanel";
 import { CreateCategoryModal } from "@/components/categories/CreateCategoryModal";
@@ -379,6 +380,10 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "BAN_MEMBERS",
   );
+  const canKickMembers = hasPermission(
+    { isOwner, roles: myRoles },
+    "KICK_MEMBERS",
+  );
   const canInvite = hasPermission({ isOwner, roles: myRoles }, "CREATE_INVITE");
   const canManageMessages = hasPermission(
     { isOwner, roles: myRoles },
@@ -400,6 +405,7 @@ export function ServerView({
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
+  const [kickTarget, setKickTarget] = useState<BanTarget | null>(null);
   /** Sube al banear a alguien: remonta la lista de miembros para que ya no aparezca. */
   const [membersVersion, setMembersVersion] = useState(0);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
@@ -1007,6 +1013,19 @@ export function ServerView({
             viewingUserId !== String(user?.id) &&
             viewingUserId !== server.owner_id
           }
+          canKick={
+            canKickMembers &&
+            viewingUserId !== String(user?.id) &&
+            viewingUserId !== server.owner_id
+          }
+          onKick={(profile) => {
+            setViewingUserId(null);
+            setKickTarget({
+              userId: profile.id,
+              name: profile.name,
+              avatarSrc: avatarSrcOf(profile.id, profile),
+            });
+          }}
           canBlock={viewingUserId !== String(user?.id)}
           onBan={(profile) => {
             setViewingUserId(null);
@@ -1036,6 +1055,15 @@ export function ServerView({
           avatarSrc={banTarget.avatarSrc}
           onClose={() => setBanTarget(null)}
           onBanned={() => setMembersVersion((version) => version + 1)}
+        />
+      ) : null}
+
+      {kickTarget ? (
+        <KickMemberModal
+          serverId={server.id}
+          target={kickTarget}
+          onClose={() => setKickTarget(null)}
+          onKicked={() => setMembersVersion((version) => version + 1)}
         />
       ) : null}
     </div>
