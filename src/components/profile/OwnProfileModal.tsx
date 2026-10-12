@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  displayedStatus,
   type ActivityStatusChoice,
   ALLOWED_AVATAR_TYPES,
   CANCEL_NAME_EDIT_LABEL,
@@ -26,6 +27,7 @@ import {
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
 
+import { ActivityStatusDot } from "./ActivityStatusDot";
 import { ActivityStatusRow } from "./ActivityStatusRow";
 import { CustomStatusEditor } from "./CustomStatusEditor";
 import { MemberSince } from "./MemberSince";
@@ -215,6 +217,12 @@ export function OwnProfileModal({
               </>
             )}
           </span>
+          <ActivityStatusDot
+            status={displayedStatus(activityStatus)}
+            ringWidth={3}
+            size={16}
+            className="absolute right-1 bottom-1"
+          />
         </ProfileAvatarFrame>
         <input
           ref={fileInputRef}
