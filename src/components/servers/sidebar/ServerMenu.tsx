@@ -16,6 +16,7 @@ import { ServerMenuItem } from "./ServerMenuItem";
 
 interface ServerMenuProps {
   canManageServer: boolean;
+  canManageMessages: boolean;
   canManageChannels: boolean;
   canManageRoles: boolean;
   canBanMembers: boolean;
@@ -34,6 +35,7 @@ interface ServerMenuProps {
 
 export function ServerMenu({
   canManageServer,
+  canManageMessages,
   canManageChannels,
   canManageRoles,
   canBanMembers,
@@ -74,7 +76,7 @@ export function ServerMenu({
           />
         ) : null}
 
-        {canManageServer ? (
+        {canManageServer || canManageMessages ? (
           <ServerMenuItem
             icon={Settings}
             label="Configuración del servidor"
