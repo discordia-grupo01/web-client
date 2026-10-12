@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type AccessRevokedReason,
   applyMessageUpdates,
   catchUpMessages,
   type Channel,
@@ -42,9 +43,14 @@ export type {
   SendMessageResult,
 } from "@discordia/client-shared";
 
+interface UseChannelMessagesOptions {
+  onAccessRevoked?: (reason: AccessRevokedReason) => void;
+}
+
 export function useChannelMessages(
   channel: Pick<Channel, "id">,
   currentUserId: string | null = null,
+  { onAccessRevoked }: UseChannelMessagesOptions = {},
 ): ChannelMessages {
   const [messages, setMessages] = useState<Message[] | null>(null);
   const [status, setStatus] = useState<ChatStatus>("loading");
@@ -59,6 +65,7 @@ export function useChannelMessages(
   const loadingOlderRef = useRef(false);
   const messagesRef = useRef<Message[] | null>(null);
   const currentUserIdRef = useRef(currentUserId);
+  const onAccessRevokedRef = useRef(onAccessRevoked);
 
   useEffect(() => {
     messagesRef.current = messages;
@@ -67,6 +74,10 @@ export function useChannelMessages(
   useEffect(() => {
     currentUserIdRef.current = currentUserId;
   }, [currentUserId]);
+
+  useEffect(() => {
+    onAccessRevokedRef.current = onAccessRevoked;
+  }, [onAccessRevoked]);
 
   useEffect(() => {
     statusRef.current = status;
@@ -146,7 +157,10 @@ export function useChannelMessages(
           if (isFirstJoin) void loadLatest(true);
         },
         rejected: fail,
-        accessRevoked: fail,
+        accessRevoked: (next, message, reason) => {
+          fail(next, message);
+          onAccessRevokedRef.current?.(reason);
+        },
         get currentUserId() {
           return currentUserIdRef.current;
         },
