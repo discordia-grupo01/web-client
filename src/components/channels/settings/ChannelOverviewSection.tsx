@@ -6,8 +6,10 @@ import {
   CHANNEL_TOPIC_HINT,
   CHANNEL_TOPIC_LABEL,
   CHANNEL_TOPIC_PLACEHOLDER,
+  MAX_CHANNEL_TOPIC,
   MAX_NAME,
   validateChannelName,
+  validateChannelTopic,
 } from "@discordia/client-shared";
 
 import { Hash, Volume2 } from "lucide-react";
@@ -65,20 +67,32 @@ export function ChannelOverviewSection({
 
       {kind === "text" ? (
         <div>
-          <label
-            htmlFor={topicId}
-            className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
-          >
-            {CHANNEL_TOPIC_LABEL}
-          </label>
+          <div className="mb-1.5 flex items-center justify-between">
+            <label
+              htmlFor={topicId}
+              className="text-content-subtle text-xs font-bold tracking-wider uppercase"
+            >
+              {CHANNEL_TOPIC_LABEL}
+            </label>
+            <CharacterCounter
+              length={form.topic.trim().length}
+              max={MAX_CHANNEL_TOPIC}
+            />
+          </div>
           <textarea
             id={topicId}
             value={form.topic}
             onChange={(event) => form.setTopic(event.target.value)}
-            rows={4}
+            rows={3}
+            maxLength={MAX_CHANNEL_TOPIC + 10}
             placeholder={CHANNEL_TOPIC_PLACEHOLDER}
-            className="bg-surface-input border-line text-content placeholder:text-content-subtle w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
+            aria-invalid={form.topicError ? true : undefined}
+            className={cn(
+              "bg-surface-input text-content placeholder:text-content-subtle w-full resize-none rounded-xl border px-4 py-3 text-sm transition-colors outline-none",
+              form.topicError ? "border-danger" : "border-line",
+            )}
           />
+          <FieldError message={form.topicError} />
           <p className="text-content-subtle mt-1.5 text-[11px]">
             {CHANNEL_TOPIC_HINT}
           </p>
@@ -107,8 +121,9 @@ function valuesOf(channel: Channel): OverviewValues {
 export function useChannelOverviewForm(channel: Channel) {
   const [saved, setSaved] = useState<OverviewValues>(() => valuesOf(channel));
   const [name, setNameValue] = useState(saved.name);
-  const [topic, setTopic] = useState(saved.topic);
+  const [topic, setTopicValue] = useState(saved.topic);
   const [nameError, setNameError] = useState("");
+  const [topicError, setTopicError] = useState("");
   const [isSaving, setIsSaving] = useState(false);
 
   const hasChanges = name.trim() !== saved.name || topic !== saved.topic;
@@ -118,18 +133,28 @@ export function useChannelOverviewForm(channel: Channel) {
     setNameError("");
   }, []);
 
+  const setTopic = useCallback((value: string) => {
+    setTopicValue(value);
+    setTopicError("");
+  }, []);
+
   const reset = useCallback(() => {
     setNameValue(saved.name);
-    setTopic(saved.topic);
+    setTopicValue(saved.topic);
     setNameError("");
+    setTopicError("");
   }, [saved]);
 
   /** Valida sin pegarle al back; devuelve `false` y marca el campo si falla. */
   const validate = useCallback((): boolean => {
-    const error = validateChannelName(name);
-    setNameError(error ?? "");
-    return !error;
-  }, [name]);
+    const nextNameError = validateChannelName(name) ?? "";
+    // Un tema largo que ya venia del back no bloquea guardar el nombre.
+    const nextTopicError =
+      topic !== saved.topic ? (validateChannelTopic(topic) ?? "") : "";
+    setNameError(nextNameError);
+    setTopicError(nextTopicError);
+    return !nextNameError && !nextTopicError;
+  }, [name, topic, saved.topic]);
 
   const save = useCallback(async (): Promise<OverviewSaveResult> => {
     const trimmed = name.trim();
@@ -151,7 +176,7 @@ export function useChannelOverviewForm(channel: Channel) {
     const next = valuesOf(result.channel);
     setSaved(next);
     setNameValue(next.name);
-    setTopic(next.topic);
+    setTopicValue(next.topic);
     return { ok: true, channel: result.channel };
   }, [channel.id, name, saved, topic]);
 
@@ -159,6 +184,7 @@ export function useChannelOverviewForm(channel: Channel) {
     name,
     topic,
     nameError,
+    topicError,
     hasChanges,
     isSaving,
     setName,
