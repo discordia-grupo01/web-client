@@ -6,6 +6,9 @@ import {
   channelPermissionGroupsFor,
   type ChannelOverridePermission,
   CLEAR_ROLE_OVERRIDE_LABEL,
+  INHERITED_ALLOWED_LABEL,
+  INHERITED_DENIED_LABEL,
+  INHERITED_HINT,
   OVERRIDE_ALLOW_LABEL,
   OVERRIDE_DENY_LABEL,
   OVERRIDE_INHERIT_LABEL,
@@ -83,6 +86,7 @@ export function RoleOverrideEditor({
                 label={CHANNEL_PERMISSION_COPY[permission].label}
                 description={CHANNEL_PERMISSION_COPY[permission].desc}
                 value={values?.[permission] ?? "inherit"}
+                inheritedAllowed={role.permissions.includes(permission)}
                 disabled={disabled}
                 canAllow={canAllow(permission)}
                 onChange={(value) => onChange(permission, value)}
@@ -131,6 +135,8 @@ interface PermissionOverrideRowProps {
   label: string;
   description: string;
   value: OverrideValue;
+  /** Lo que el rol tiene en el servidor: es lo que vale si queda en "Heredar". */
+  inheritedAllowed: boolean;
   /** El rol esta por encima del actor: se ve, pero no se puede tocar. */
   disabled: boolean;
   /** El actor no tiene el permiso: puede denegarlo pero no permitirlo. */
@@ -143,15 +149,32 @@ function PermissionOverrideRow({
   label,
   description,
   value,
+  inheritedAllowed,
   disabled,
   canAllow,
   onChange,
 }: PermissionOverrideRowProps) {
+  const InheritedIcon = inheritedAllowed ? Check : X;
+
   return (
     <div className="flex items-center gap-4 py-3">
       <div className="min-w-0 flex-1">
         <p className="text-content text-sm font-semibold">{label}</p>
         <p className="text-content-subtle mt-0.5 text-xs">{description}</p>
+        {value === "inherit" ? (
+          <p
+            title={INHERITED_HINT}
+            className={cn(
+              "mt-1.5 inline-flex items-center gap-1 text-[11px] font-semibold",
+              inheritedAllowed ? "text-success" : "text-danger",
+            )}
+          >
+            <InheritedIcon size={12} strokeWidth={3} aria-hidden />
+            {inheritedAllowed
+              ? INHERITED_ALLOWED_LABEL
+              : INHERITED_DENIED_LABEL}
+          </p>
+        ) : null}
       </div>
       <div role="group" aria-label={label} className="flex shrink-0">
         {OPTIONS.map((option, index) => {

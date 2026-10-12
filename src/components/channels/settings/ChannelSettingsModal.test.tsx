@@ -125,6 +125,20 @@ describe("ChannelSettingsModal", () => {
     ).toBeEnabled();
   });
 
+  it("en Heredar muestra si el rol tiene el permiso en el servidor", async () => {
+    renderView();
+    await waitForEditor();
+
+    expect(screen.getAllByText("Heredado: permitido")).toHaveLength(3);
+    expect(screen.getAllByText("Heredado: no permitido")).toHaveLength(1);
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Denegar: Gestionar mensajes" }),
+    );
+
+    expect(screen.queryByText("Heredado: no permitido")).toBeNull();
+  });
+
   it("en un canal de texto no ofrece Conectarse", async () => {
     renderView();
     await waitForEditor();
@@ -308,6 +322,24 @@ describe("ChannelSettingsModal", () => {
     expect(screen.queryAllByRole("button", { name: "Eliminar canal" })).toEqual(
       [],
     );
+  });
+
+  it("no deja guardar un tema de mas de 120 caracteres", async () => {
+    renderView();
+    await waitForEditor();
+
+    fireEvent.click(
+      screen.getAllByRole("button", { name: "Vista general" })[0],
+    );
+    fireEvent.change(screen.getByLabelText("Tema del canal"), {
+      target: { value: "a".repeat(121) },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(
+      await screen.findByText("El tema no puede superar los 120 caracteres."),
+    ).toBeInTheDocument();
+    expect(update).not.toHaveBeenCalled();
   });
 
   it("guarda el tema del canal desde Vista general", async () => {
