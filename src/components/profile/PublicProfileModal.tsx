@@ -226,6 +226,8 @@ export function PublicProfileModal({
             {/* Estado de actividad mock: no hay presencia real en identify-service. */}
             <ActivityStatusDot
               status="online"
+              ringWidth={3}
+              size={16}
               className="absolute right-1 bottom-1"
             />
           </ProfileAvatarFrame>
