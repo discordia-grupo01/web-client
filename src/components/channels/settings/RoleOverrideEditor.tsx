@@ -119,7 +119,8 @@ const OPTIONS: readonly OverrideOption[] = [
     value: "inherit",
     label: OVERRIDE_INHERIT_LABEL,
     icon: Slash,
-    activeClassName: "bg-content-subtle border-content-subtle text-surface",
+    activeClassName:
+      "bg-override-inherit border-override-inherit-line text-on-override-inherit",
     idleClassName: "text-content-subtle hover:bg-surface-hover",
   },
   {
