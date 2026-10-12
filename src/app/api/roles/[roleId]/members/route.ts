@@ -1,0 +1,35 @@
+import {
+  type ListRoleMembersResult,
+  listRoleMembersFailureMessage,
+} from "@discordia/client-shared";
+import { NextResponse } from "next/server";
+
+import { unauthorizedResponse } from "@/lib/apiRoute";
+import { getValidSession } from "@/services/auth/session";
+import { listRoleMembers } from "@/services/roles/service";
+
+/** BFF de `GET /v1/roles/:id/members`: devuelve todos los miembros del rol. */
+export async function GET(
+  _request: Request,
+  { params }: { params: { roleId: string } },
+): Promise<NextResponse<ListRoleMembersResult>> {
+  const session = await getValidSession();
+  if (!session) return unauthorizedResponse();
+
+  const result = await listRoleMembers(session.token, params.roleId);
+  if (!result.ok) {
+    if (result.status === 401) return unauthorizedResponse();
+    return NextResponse.json(
+      { ok: false, message: listRoleMembersFailureMessage(result) },
+      {
+        status:
+          result.status >= 400 && result.status < 500 ? result.status : 502,
+      },
+    );
+  }
+  return NextResponse.json({
+    ok: true,
+    members: result.data.items,
+    total: result.data.total,
+  });
+}

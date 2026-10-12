@@ -1,4 +1,11 @@
-import { type Role, type RolePermission } from "@discordia/client-shared";
+import {
+  collectAllPages,
+  type Member,
+  MEMBER_PAGE_LIMIT,
+  type MemberListResponse,
+  type Role,
+  type RolePermission,
+} from "@discordia/client-shared";
 
 import "server-only";
 
@@ -19,6 +26,7 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  *   POST   /v1/servers/:id/members/:userId/roles   -> 200 Role | 400 | 401 | 403 | 404
  *   DELETE /v1/servers/:id/members/:userId/roles/:roleId -> 204 | 401 | 403 | 404
  *   GET    /v1/servers/:id/members/:userId/roles   -> 200 [Role] | 401 | 404
+ *   GET    /v1/roles/:id/members                   -> 200 { members, total } | 401 | 403 | 404
  *
  * Nota sobre roles (ver servers/internal/service/role_service,
  * member_role_service): estos endpoints exigen `service.RequireManageRoles`,
@@ -149,5 +157,25 @@ export function listMemberRoles(
   return apiRequest<Role[]>(`/v1/servers/${serverId}/members/${userId}/roles`, {
     method: "GET",
     token,
+  });
+}
+
+/**
+ * Miembros que tienen el rol (#58), TODAS las paginas: `GET
+ * /v1/roles/:id/members` pagina de a 100 como mucho. Exige `MANAGE_ROLES`.
+ * Para @everyone son todos los miembros.
+ */
+export function listRoleMembers(
+  token: string,
+  roleId: string,
+): Promise<ApiResult<{ items: Member[]; total: number }>> {
+  return collectAllPages<Member>(async (offset) => {
+    const page = await apiRequest<MemberListResponse>(
+      `/v1/roles/${roleId}/members?limit=${MEMBER_PAGE_LIMIT}&offset=${offset}`,
+      { method: "GET", token },
+    );
+    return page.ok
+      ? { ...page, data: { items: page.data.members, total: page.data.total } }
+      : page;
   });
 }

@@ -1,8 +1,13 @@
 "use client";
 
-import { type Member, type User } from "@discordia/client-shared";
+import {
+  isMemberMuted,
+  type Member,
+  mutedUntilLabel,
+  type User,
+} from "@discordia/client-shared";
 
-import { Crown } from "lucide-react";
+import { Crown, MicOff } from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
@@ -16,7 +21,8 @@ interface MembersSidebarProps {
   currentUserId: string | null;
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
-  onOpenPublicProfile: (userId: string) => void;
+  /** Recibe el miembro para que el perfil sepa, por ejemplo, si esta silenciado. */
+  onOpenPublicProfile: (userId: string, member?: Member) => void;
 }
 
 function MemberAvatar({ member }: { member: Member }) {
@@ -80,6 +86,15 @@ function MemberRow({
           </span>
         ) : null}
       </div>
+      {isMemberMuted(member) && member.muted_until ? (
+        <MicOff
+          size={13}
+          className="text-danger shrink-0"
+          aria-label={mutedUntilLabel(member.muted_until)}
+        >
+          <title>{mutedUntilLabel(member.muted_until)}</title>
+        </MicOff>
+      ) : null}
       {member.is_owner ? (
         <Crown
           size={13}
@@ -104,7 +119,7 @@ function MemberGroup({
   currentUserId: string | null;
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
-  onOpenPublicProfile: (userId: string) => void;
+  onOpenPublicProfile: (userId: string, member?: Member) => void;
 }) {
   if (members.length === 0) return null;
   return (
@@ -125,7 +140,9 @@ function MemberGroup({
               statusEmoji={statusSource?.status_emoji ?? ""}
               isOwn={isOwn}
               onOpenOwnProfile={onOpenOwnProfile}
-              onOpenPublicProfile={() => onOpenPublicProfile(member.user_id)}
+              onOpenPublicProfile={() =>
+                onOpenPublicProfile(member.user_id, member)
+              }
             />
           );
         })}

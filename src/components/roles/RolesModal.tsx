@@ -12,8 +12,10 @@ import {
   PERMISSION_COPY,
   removesViewChannelsFromEveryone,
   type Role,
+  ROLE_MEMBERS_EMPTY,
   ROLE_PERMISSIONS,
   type RolePermission,
+  roleMembersCount,
   sortRolesByPosition,
   validateRole,
 } from "@discordia/client-shared";
@@ -53,8 +55,7 @@ import { useEffect, useRef, useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { displayNameOf } from "@/lib/userProfile";
-import { listMembersRequest } from "@/services/members/client";
-import { getPublicProfileRequest } from "@/services/profile/client";
+import { useServerMembers } from "@/services/members/useServerMembers";
 import {
   assignRoleRequest,
   createRoleRequest,
@@ -65,6 +66,7 @@ import {
   reorderRolesRequest,
   setDefaultRoleRequest,
   updateRoleRequest,
+  listRoleMembersRequest,
 } from "@/services/roles/client";
 import { cn } from "@/lib/cn";
 
@@ -245,7 +247,6 @@ function PermissionToggle({
 interface MemberInfo {
   user_id: string;
   name: string;
-  roleIds: string[];
 }
 
 function MemberRoleRow({
@@ -257,7 +258,8 @@ function MemberRoleRow({
   member: MemberInfo;
   hasRole: boolean;
   isBusy: boolean;
-  onToggle: () => void;
+  /** Sin esto (ej. @everyone, que no se puede quitar) no hay boton. */
+  onToggle?: () => void;
 }) {
   return (
     <div className="bg-surface-input border-line flex items-center gap-3 rounded-xl border px-3 py-2.5">
@@ -265,27 +267,29 @@ function MemberRoleRow({
       <span className="text-content min-w-0 flex-1 truncate text-sm font-medium">
         {member.name}
       </span>
-      <button
-        type="button"
-        onClick={onToggle}
-        disabled={isBusy}
-        className={cn(
-          "flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50",
-          hasRole
-            ? "border-danger/25 bg-danger/10 text-danger"
-            : "border-accent-strong/30 bg-accent/10 text-accent",
-        )}
-      >
-        {hasRole ? (
-          <>
-            <Minus size={11} /> Quitar
-          </>
-        ) : (
-          <>
-            <Plus size={11} /> Asignar
-          </>
-        )}
-      </button>
+      {onToggle ? (
+        <button
+          type="button"
+          onClick={onToggle}
+          disabled={isBusy}
+          className={cn(
+            "flex shrink-0 cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold transition-all hover:brightness-110 active:scale-95 disabled:cursor-not-allowed disabled:opacity-50",
+            hasRole
+              ? "border-danger/25 bg-danger/10 text-danger"
+              : "border-accent-strong/30 bg-accent/10 text-accent",
+          )}
+        >
+          {hasRole ? (
+            <>
+              <Minus size={11} /> Quitar
+            </>
+          ) : (
+            <>
+              <Plus size={11} /> Asignar
+            </>
+          )}
+        </button>
+      ) : null}
     </div>
   );
 }
@@ -539,8 +543,12 @@ export function RolesModal({
   const [newColorError, setNewColorError] = useState("");
   const [creating, setCreating] = useState(false);
 
-  // Members tab
-  const [membersInfo, setMembersInfo] = useState<MemberInfo[] | null>(null);
+  // Members tab: todos los miembros (para "Sin este rol") y, por rol, los ids
+  // de quienes lo tienen (`GET /roles/:id/members`).
+  const serverMembers = useServerMembers(serverId);
+  const [roleMemberIds, setRoleMemberIds] = useState<Record<string, string[]>>(
+    {},
+  );
   const [membersError, setMembersError] = useState("");
   const [busyMemberId, setBusyMemberId] = useState<string | null>(null);
 
@@ -599,44 +607,45 @@ export function RolesModal({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
-  function loadMembers() {
-    if (membersInfo !== null || membersError) return;
+  // Se pide al elegir un rol, asi el contador del encabezado ya es el real.
+  useEffect(() => {
+    if (!selectedId || roleMemberIds[selectedId]) return;
+    let cancelled = false;
     setMembersError("");
-    listMembersRequest(serverId).then((result) => {
+    listRoleMembersRequest(selectedId).then((result) => {
+      if (cancelled) return;
       if (!result.ok) {
         setMembersError(result.message);
-        setMembersInfo([]);
         return;
       }
-      Promise.all(
-        result.members.map(async (member) => {
-          const [fallbackProfile, memberRoles] = await Promise.all([
-            member.profile ? null : getPublicProfileRequest(member.user_id),
-            listMemberRolesRequest(serverId, member.user_id),
-          ]);
-          return {
-            user_id: member.user_id,
-            name: displayNameOf(
-              member.profile ??
-                (fallbackProfile?.ok ? fallbackProfile.user : null),
-            ),
-            roleIds: memberRoles.ok ? memberRoles.roles.map((r) => r.id) : [],
-          };
-        }),
-      ).then((infos) => setMembersInfo(infos));
+      setRoleMemberIds((prev) => ({
+        ...prev,
+        [selectedId]: result.members.map((m) => m.user_id),
+      }));
     });
-  }
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedId, roleMemberIds]);
 
   function selectRole(id: string) {
     setSelectedId(id);
     setRightView("edit");
   }
 
+  const selectedMemberIds = roleMemberIds[selectedId] ?? null;
+  const membersInfo: MemberInfo[] | null =
+    serverMembers === null || selectedMemberIds === null
+      ? null
+      : serverMembers.map((member) => ({
+          user_id: member.user_id,
+          name: displayNameOf(member.profile),
+        }));
   const membersWithRole = (membersInfo ?? []).filter((m) =>
-    m.roleIds.includes(selectedId),
+    selectedMemberIds?.includes(m.user_id),
   );
   const membersWithoutRole = (membersInfo ?? []).filter(
-    (m) => !m.roleIds.includes(selectedId),
+    (m) => !selectedMemberIds?.includes(m.user_id),
   );
 
   async function handleToggleMember(member: MemberInfo, hasRole: boolean) {
@@ -649,19 +658,15 @@ export function RolesModal({
       showToast(result.message);
       return;
     }
-    setMembersInfo(
-      (prev) =>
-        prev?.map((m) =>
-          m.user_id === member.user_id
-            ? {
-                ...m,
-                roleIds: hasRole
-                  ? m.roleIds.filter((id) => id !== selectedId)
-                  : [...m.roleIds, selectedId],
-              }
-            : m,
-        ) ?? null,
-    );
+    setRoleMemberIds((prev) => {
+      const current = prev[selectedId] ?? [];
+      return {
+        ...prev,
+        [selectedId]: hasRole
+          ? current.filter((id) => id !== member.user_id)
+          : [...current, member.user_id],
+      };
+    });
   }
 
   function handleEditName(value: string) {
@@ -1162,16 +1167,11 @@ export function RolesModal({
                         </span>
                       ) : null}
                       <span className="text-content-subtle text-xs">
-                        {isEveryoneSelected ? (
-                          "Todos los miembros"
-                        ) : (
-                          <>
-                            {membersWithRole.length}{" "}
-                            {membersWithRole.length === 1
-                              ? "miembro"
-                              : "miembros"}
-                          </>
-                        )}
+                        {isEveryoneSelected
+                          ? "Todos los miembros"
+                          : selectedMemberIds
+                            ? roleMembersCount(selectedMemberIds.length)
+                            : null}
                       </span>
                     </div>
                   </div>
@@ -1182,14 +1182,7 @@ export function RolesModal({
                     <button
                       key={tab}
                       type="button"
-                      onClick={() => {
-                        setRightView(tab);
-                        // @everyone no tiene una lista de miembros para
-                        // cargar -- la tiene todo el mundo automaticamente.
-                        if (tab === "members" && !isEveryoneSelected) {
-                          loadMembers();
-                        }
-                      }}
+                      onClick={() => setRightView(tab)}
                       className={cn(
                         "-mb-px cursor-pointer px-4 py-2 text-xs font-semibold transition-all",
                         rightView === tab
@@ -1419,13 +1412,6 @@ export function RolesModal({
                     </div>
                   ) : null}
                 </div>
-              ) : isEveryoneSelected ? (
-                <div className="flex-1 px-7 py-5">
-                  <p className="text-content-subtle text-sm">
-                    Todos los miembros del servidor tienen este rol
-                    automáticamente.
-                  </p>
-                </div>
               ) : (
                 <div className="flex-1 space-y-4 overflow-y-auto px-7 py-5">
                   {membersError ? (
@@ -1437,12 +1423,18 @@ export function RolesModal({
                   ) : (
                     <>
                       <div>
+                        {isEveryoneSelected ? (
+                          <p className="text-content-subtle mb-3 text-sm">
+                            Todos los miembros del servidor tienen este rol
+                            automáticamente.
+                          </p>
+                        ) : null}
                         <p className="text-content-subtle mb-3 text-xs font-bold tracking-wider uppercase">
                           Con este rol ({membersWithRole.length})
                         </p>
                         {membersWithRole.length === 0 ? (
                           <p className="text-content-subtle text-sm">
-                            Ningún miembro tiene este rol.
+                            {ROLE_MEMBERS_EMPTY}
                           </p>
                         ) : null}
                         <div className="space-y-1">
@@ -1452,13 +1444,17 @@ export function RolesModal({
                               member={member}
                               hasRole
                               isBusy={busyMemberId === member.user_id}
-                              onToggle={() => handleToggleMember(member, true)}
+                              onToggle={
+                                isEveryoneSelected
+                                  ? undefined
+                                  : () => handleToggleMember(member, true)
+                              }
                             />
                           ))}
                         </div>
                       </div>
 
-                      {membersWithoutRole.length > 0 ? (
+                      {!isEveryoneSelected && membersWithoutRole.length > 0 ? (
                         <div>
                           <p className="text-content-subtle mb-3 text-xs font-bold tracking-wider uppercase">
                             Sin este rol ({membersWithoutRole.length})

@@ -7,9 +7,11 @@ import {
   type ChannelOverridePermission,
   channelsOfCategory,
   hasPermission,
+  isMemberMuted,
   isUnassignedCategory,
   type PublicUser,
   type Role,
+  UNMUTE_ACTION_LABEL,
   type ServerSummary,
   sortByPosition,
   topLevelChannels,
@@ -44,6 +46,7 @@ import {
   Plus,
   Trash2,
   Volume2,
+  Mic,
 } from "lucide-react";
 import {
   useCallback,
@@ -58,6 +61,10 @@ import {
   type BanTarget,
 } from "@/components/bans/BanMemberModal";
 import { avatarSrcOf } from "@/lib/userProfile";
+import { KickMemberModal } from "@/components/moderation/KickMemberModal";
+import { MuteMemberModal } from "@/components/moderation/MuteMemberModal";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { unmuteMemberRequest } from "@/services/moderation/client";
 import { PublicProfileModal } from "@/components/profile/PublicProfileModal";
 import { UserPanel } from "@/components/profile/UserPanel";
 import { CreateCategoryModal } from "@/components/categories/CreateCategoryModal";
@@ -300,6 +307,11 @@ function SortableCategorySection({
   );
 }
 
+// TODO: pasar a client-shared junto con la proxima version (lo va a usar mobile).
+function unmuteConfirmBody(name: string): string {
+  return `${name} va a poder volver a escribir y hablar en el servidor desde ahora.`;
+}
+
 export function ServerView({
   server,
   onLeft,
@@ -379,6 +391,10 @@ export function ServerView({
     { isOwner, roles: myRoles },
     "BAN_MEMBERS",
   );
+  const canKickMembers = hasPermission(
+    { isOwner, roles: myRoles },
+    "KICK_MEMBERS",
+  );
   const canInvite = hasPermission({ isOwner, roles: myRoles }, "CREATE_INVITE");
   const canManageMessages = hasPermission(
     { isOwner, roles: myRoles },
@@ -400,6 +416,14 @@ export function ServerView({
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
+  const [kickTarget, setKickTarget] = useState<BanTarget | null>(null);
+  const [muteTarget, setMuteTarget] = useState<BanTarget | null>(null);
+  const [unmuteTarget, setUnmuteTarget] = useState<BanTarget | null>(null);
+  const [unmuteError, setUnmuteError] = useState("");
+  /** `muted_until` del miembro cuyo perfil esta abierto (viene de la lista de miembros). */
+  const [viewingMutedUntil, setViewingMutedUntil] = useState<string | null>(
+    null,
+  );
   /** Sube al banear a alguien: remonta la lista de miembros para que ya no aparezca. */
   const [membersVersion, setMembersVersion] = useState(0);
   const [isCreateChannelOpen, setIsCreateChannelOpen] = useState(false);
@@ -932,7 +956,14 @@ export function ServerView({
           currentUserId={ownProfile?.id ?? user?.id ?? null}
           ownProfile={ownProfile}
           onOpenOwnProfile={onOpenOwnProfile}
-          onOpenPublicProfile={setViewingUserId}
+          onOpenPublicProfile={(userId, member) => {
+            setViewingMutedUntil(
+              member && isMemberMuted(member)
+                ? (member.muted_until ?? null)
+                : null,
+            );
+            setViewingUserId(userId);
+          }}
         />
       </SidePanel>
 
@@ -1007,6 +1038,42 @@ export function ServerView({
             viewingUserId !== String(user?.id) &&
             viewingUserId !== server.owner_id
           }
+          canKick={
+            canKickMembers &&
+            viewingUserId !== String(user?.id) &&
+            viewingUserId !== server.owner_id
+          }
+          onKick={(profile) => {
+            setViewingUserId(null);
+            setKickTarget({
+              userId: profile.id,
+              name: profile.name,
+              avatarSrc: avatarSrcOf(profile.id, profile),
+            });
+          }}
+          mutedUntil={viewingMutedUntil}
+          canMute={
+            canManageMessages &&
+            viewingUserId !== String(user?.id) &&
+            viewingUserId !== server.owner_id
+          }
+          onMute={(profile) => {
+            setViewingUserId(null);
+            setMuteTarget({
+              userId: profile.id,
+              name: profile.name,
+              avatarSrc: avatarSrcOf(profile.id, profile),
+            });
+          }}
+          onUnmute={(profile) => {
+            setViewingUserId(null);
+            setUnmuteError("");
+            setUnmuteTarget({
+              userId: profile.id,
+              name: profile.name,
+              avatarSrc: avatarSrcOf(profile.id, profile),
+            });
+          }}
           canBlock={viewingUserId !== String(user?.id)}
           onBan={(profile) => {
             setViewingUserId(null);
@@ -1036,6 +1103,46 @@ export function ServerView({
           avatarSrc={banTarget.avatarSrc}
           onClose={() => setBanTarget(null)}
           onBanned={() => setMembersVersion((version) => version + 1)}
+        />
+      ) : null}
+
+      {muteTarget ? (
+        <MuteMemberModal
+          serverId={server.id}
+          target={muteTarget}
+          onClose={() => setMuteTarget(null)}
+          onMuted={() => setMembersVersion((version) => version + 1)}
+        />
+      ) : null}
+
+      {unmuteTarget ? (
+        <ConfirmDialog
+          icon={Mic}
+          title={UNMUTE_ACTION_LABEL}
+          body={unmuteError || unmuteConfirmBody(unmuteTarget.name)}
+          confirmLabel={UNMUTE_ACTION_LABEL}
+          onCancel={() => setUnmuteTarget(null)}
+          onConfirm={async () => {
+            const result = await unmuteMemberRequest(
+              server.id,
+              unmuteTarget.userId,
+            );
+            if (!result.ok) {
+              setUnmuteError(result.message);
+              return;
+            }
+            setUnmuteTarget(null);
+            setMembersVersion((version) => version + 1);
+          }}
+        />
+      ) : null}
+
+      {kickTarget ? (
+        <KickMemberModal
+          serverId={server.id}
+          target={kickTarget}
+          onClose={() => setKickTarget(null)}
+          onKicked={() => setMembersVersion((version) => version + 1)}
         />
       ) : null}
     </div>
