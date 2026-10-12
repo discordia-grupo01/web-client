@@ -66,6 +66,31 @@ body {
   }
 }
 
+@keyframes unsaved-bar-shake {
+  0%,
+  100% {
+    transform: translateX(-50%);
+  }
+  20%,
+  60% {
+    transform: translateX(calc(-50% - 8px));
+  }
+  40%,
+  80% {
+    transform: translateX(calc(-50% + 8px));
+  }
+}
+
+.unsaved-bar-shake {
+  animation: unsaved-bar-shake 0.4s ease-in-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .unsaved-bar-shake {
+    animation: none;
+  }
+}
+
 .loader-logo {
   --logo-ink: #e8eef5;
   --logo-square: #e8eef5;
