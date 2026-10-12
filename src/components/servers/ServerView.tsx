@@ -1,8 +1,10 @@
 "use client";
 
 import {
+  type AccessRevokedReason,
   type Category,
   type Channel,
+  type ChannelOverridePermission,
   channelsOfCategory,
   hasPermission,
   isUnassignedCategory,
@@ -63,8 +65,11 @@ import { EditCategoryModal } from "@/components/categories/EditCategoryModal";
 import { ChannelHeader } from "@/components/channels/ChannelHeader";
 import { CreateChannelModal } from "@/components/channels/CreateChannelModal";
 import { DeleteChannelModal } from "@/components/channels/DeleteChannelModal";
-import { EditChannelModal } from "@/components/channels/EditChannelModal";
 import { SortableChannelRow } from "@/components/channels/ChannelRow";
+import {
+  type ChannelSettingsSection,
+  ChannelSettingsView,
+} from "@/components/channels/settings/ChannelSettingsView";
 import { VoiceChannelPlaceholder } from "@/components/channels/VoiceChannelPlaceholder";
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
@@ -77,11 +82,13 @@ import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
 } from "@/services/channels/client";
+import { useMyChannelPermissions } from "@/services/channel-permissions/useChannelOverrides";
 import { authorFromProfile } from "@/services/messages/author";
 import {
   listMemberRolesRequest,
   listRolesRequest,
 } from "@/services/roles/client";
+import { listServersRequest } from "@/services/servers/client";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./sidebar/ServerSidebarHeader";
@@ -336,8 +343,11 @@ export function ServerView({
 
   useEffect(() => fetchMyRoles(), [fetchMyRoles]);
 
-  /** Catalogo completo de roles del server, para colorear menciones a `@Rol`. */
-  useEffect(() => {
+  /**
+   * Catalogo completo de roles del server: colorea las menciones a `@Rol` y
+   * arma la lista de roles de la configuracion del canal.
+   */
+  const fetchServerRoles = useCallback(() => {
     let cancelled = false;
     listRolesRequest(server.id).then((result) => {
       if (!cancelled && result.ok) setServerRoles(result.roles);
@@ -346,6 +356,20 @@ export function ServerView({
       cancelled = true;
     };
   }, [server.id]);
+
+  useEffect(() => fetchServerRoles(), [fetchServerRoles]);
+
+  /**
+   * Trae de nuevo el server para refrescar los canales visibles: cambiar una
+   * excepcion de VIEW_CHANNELS puede mostrar u ocultar canales.
+   */
+  const reloadServer = useCallback(async () => {
+    const result = await listServersRequest();
+    if (!result.ok) return null;
+    const fresh = result.servers.find((item) => item.id === server.id);
+    if (fresh) onServerUpdate(fresh);
+    return fresh ?? null;
+  }, [server.id, onServerUpdate]);
 
   const canManageChannels = hasPermission(
     { isOwner, roles: myRoles },
@@ -389,7 +413,17 @@ export function ServerView({
   const [createChannelDefaultCategoryId, setCreateChannelDefaultCategoryId] =
     useState<string | null>(null);
   const [isCreateCategoryOpen, setIsCreateCategoryOpen] = useState(false);
-  const [editingChannel, setEditingChannel] = useState<Channel | null>(null);
+  const [settingsTarget, setSettingsTarget] = useState<{
+    channelId: string;
+    section: ChannelSettingsSection;
+  } | null>(null);
+  /** Sube al guardar excepciones: vuelve a pedir los permisos del canal abierto. */
+  const [permissionsVersion, setPermissionsVersion] = useState(0);
+  /**
+   * Canal que se dejo de ver mientras estaba abierto. Ya no viene en
+   * `server.channels`, pero se sigue mostrando el aviso hasta cambiar de canal.
+   */
+  const [lostChannel, setLostChannel] = useState<Channel | null>(null);
   const [deletingChannel, setDeletingChannel] = useState<Channel | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
@@ -415,9 +449,65 @@ export function ServerView({
   useEffect(() => {
     if (activeChannelId) onChannelChange?.(activeChannelId);
   }, [activeChannelId, onChannelChange]);
-  const activeChannel = server.channels.find(
-    (channel) => channel.id === activeChannelId,
+  const activeChannel =
+    server.channels.find((channel) => channel.id === activeChannelId) ??
+    (lostChannel?.id === activeChannelId ? lostChannel : undefined);
+  const settingsChannel = settingsTarget
+    ? server.channels.find((channel) => channel.id === settingsTarget.channelId)
+    : undefined;
+
+  const activeChannelPermissions = useMyChannelPermissions(
+    activeChannel?.kind === "text" && activeChannel !== lostChannel
+      ? activeChannel.id
+      : null,
+    permissionsVersion,
   );
+
+  /**
+   * Lo que el usuario puede hacer en el canal abierto, con sus excepciones.
+   * Mientras cargan se usa lo del servidor; el back valida igual.
+   */
+  function canInActiveChannel(
+    permission: ChannelOverridePermission,
+    serverLevel: boolean,
+  ): boolean {
+    if (isOwner || activeChannelPermissions === null) return serverLevel;
+    return activeChannelPermissions.includes(permission);
+  }
+
+  function handleAccessRevoked(reason: AccessRevokedReason) {
+    if (reason !== "permissions_changed" || !activeChannel) return;
+    setLostChannel(activeChannel);
+    void reloadServer();
+  }
+
+  /** Al cerrar "Roles": cambiar VIEW_CHANNELS puede mostrar u ocultar canales. */
+  function handleRolesChanged() {
+    fetchMyRoles();
+    fetchServerRoles();
+    setPermissionsVersion((version) => version + 1);
+    void reloadServer();
+  }
+
+  function openChannelSettings(
+    channel: Channel,
+    section: ChannelSettingsSection,
+  ) {
+    fetchServerRoles();
+    setSettingsTarget({ channelId: channel.id, section });
+  }
+
+  async function handleChannelPermissionsSaved() {
+    const channelId = settingsTarget?.channelId;
+    setPermissionsVersion((version) => version + 1);
+    const fresh = await reloadServer();
+    if (!fresh || !channelId) return;
+    if (fresh.channels.some((channel) => channel.id === channelId)) return;
+    setSettingsTarget(null);
+    if (activeChannelId === channelId) {
+      setActiveChannelId(fresh.channels[0]?.id ?? "");
+    }
+  }
 
   // Abrir un canal (o recibir una mencion con el abierto) las marca como leidas.
   const activeUnreadMentions = unreadMentionsByChannel[activeChannelId] ?? 0;
@@ -447,7 +537,6 @@ export function ServerView({
   }
 
   function handleChannelUpdated(channel: Channel) {
-    setEditingChannel(null);
     onServerUpdate({
       ...server,
       channels: server.channels.map((existing) =>
@@ -462,6 +551,9 @@ export function ServerView({
       (existing) => existing.id !== deletingChannel.id,
     );
     setDeletingChannel(null);
+    if (settingsTarget?.channelId === deletingChannel.id) {
+      setSettingsTarget(null);
+    }
     if (activeChannelId === deletingChannel.id) {
       setActiveChannelId(remaining[0]?.id ?? "");
     }
@@ -656,12 +748,14 @@ export function ServerView({
         channel={channel}
         active={channel.id === activeChannelId}
         canManage={canManageChannels}
+        canManagePermissions={canManageRoles}
         unreadMentions={unreadMentionsByChannel[channel.id]}
         onClick={() => {
           setActiveChannelId(channel.id);
           closeMobilePanel();
         }}
-        onEdit={() => setEditingChannel(channel)}
+        onEdit={() => openChannelSettings(channel, "overview")}
+        onEditPermissions={() => openChannelSettings(channel, "permissions")}
         onDelete={() => setDeletingChannel(channel)}
       />
     ));
@@ -698,7 +792,7 @@ export function ServerView({
               if (!user) return;
               onServerUpdate({ ...server, owner_id: String(user.id) });
             }}
-            onPermissionsChanged={fetchMyRoles}
+            onPermissionsChanged={handleRolesChanged}
           />
 
           {dragError ? (
@@ -810,10 +904,20 @@ export function ServerView({
                 currentAuthor={currentAuthor}
                 serverRoles={serverRoles}
                 myRoleIds={myRoleIds}
-                canManageMessages={canManageMessages}
-                canSendMessages={canSendMessages}
+                canManageMessages={canInActiveChannel(
+                  "MANAGE_MESSAGES",
+                  canManageMessages,
+                )}
+                canSendMessages={canInActiveChannel(
+                  "SEND_MESSAGES",
+                  canSendMessages,
+                )}
                 canMentionEveryone={canMentionEveryone}
-                canAddReactions={canAddReactions}
+                canAddReactions={canInActiveChannel(
+                  "ADD_REACTIONS",
+                  canAddReactions,
+                )}
+                onAccessRevoked={handleAccessRevoked}
               />
             ) : (
               <VoiceChannelPlaceholder name={activeChannel.name} />
@@ -856,11 +960,27 @@ export function ServerView({
         />
       ) : null}
 
-      {editingChannel ? (
-        <EditChannelModal
-          channel={editingChannel}
-          onClose={() => setEditingChannel(null)}
-          onUpdated={handleChannelUpdated}
+      {settingsTarget && settingsChannel ? (
+        <ChannelSettingsView
+          key={settingsChannel.id}
+          channel={settingsChannel}
+          categoryName={
+            server.categories.find(
+              (category) =>
+                category.id === settingsChannel.category_id &&
+                !isUnassignedCategory(category),
+            )?.name ?? null
+          }
+          initialSection={settingsTarget.section}
+          canManageChannel={canManageChannels}
+          canManagePermissions={canManageRoles}
+          isOwner={isOwner}
+          myRoles={myRoles}
+          serverRoles={serverRoles}
+          onClose={() => setSettingsTarget(null)}
+          onChannelUpdated={handleChannelUpdated}
+          onPermissionsSaved={() => void handleChannelPermissionsSaved()}
+          onDelete={() => setDeletingChannel(settingsChannel)}
         />
       ) : null}
 
