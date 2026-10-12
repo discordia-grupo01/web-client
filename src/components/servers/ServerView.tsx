@@ -68,8 +68,8 @@ import { DeleteChannelModal } from "@/components/channels/DeleteChannelModal";
 import { SortableChannelRow } from "@/components/channels/ChannelRow";
 import {
   type ChannelSettingsSection,
-  ChannelSettingsView,
-} from "@/components/channels/settings/ChannelSettingsView";
+  ChannelSettingsModal,
+} from "@/components/channels/settings/ChannelSettingsModal";
 import { VoiceChannelPlaceholder } from "@/components/channels/VoiceChannelPlaceholder";
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
@@ -951,7 +951,7 @@ export function ServerView({
       ) : null}
 
       {settingsTarget && settingsChannel ? (
-        <ChannelSettingsView
+        <ChannelSettingsModal
           key={settingsChannel.id}
           channel={settingsChannel}
           categoryName={

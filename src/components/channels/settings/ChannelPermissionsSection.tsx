@@ -8,8 +8,6 @@ import {
   type Channel,
   CHANNEL_PERMISSIONS_ADMINS_NOTE,
   CHANNEL_PERMISSIONS_ROLES_LABEL,
-  CHANNEL_PERMISSIONS_TITLE,
-  channelPermissionsSubtitle,
   type HierarchyContext,
   type Role,
   ROLE_ABOVE_OWN_HINT,
@@ -27,7 +25,6 @@ import type { ChannelOverridesState } from "@/services/channel-permissions/useCh
 import { RoleOverrideEditor } from "./RoleOverrideEditor";
 
 interface ChannelPermissionsSectionProps {
-  channelName: string;
   channelKind: Channel["kind"];
   overrides: ChannelOverridesState;
   /** Todos los roles del servidor, @everyone incluido. */
@@ -36,7 +33,6 @@ interface ChannelPermissionsSectionProps {
 }
 
 export function ChannelPermissionsSection({
-  channelName,
   channelKind,
   overrides,
   serverRoles,
@@ -62,17 +58,11 @@ export function ChannelPermissionsSection({
 
   return (
     <section>
-      <h2 className="font-display text-content text-xl font-bold">
-        {CHANNEL_PERMISSIONS_TITLE}
-      </h2>
-      <p className="text-content-muted mt-2 text-sm leading-relaxed">
-        {channelPermissionsSubtitle(channelName)}
-      </p>
-      <p className="text-content-subtle mt-2 text-xs">
+      <p className="text-content-subtle text-xs">
         {CHANNEL_PERMISSIONS_ADMINS_NOTE}
       </p>
 
-      <div className="mt-7">
+      <div className="mt-4">
         {overrides.status === "error" ? (
           <div className="space-y-3">
             <FormAlert message={overrides.loadError ?? undefined} />
@@ -89,12 +79,12 @@ export function ChannelPermissionsSection({
           <div
             role="status"
             aria-label="Cargando permisos"
-            className="bg-surface-raised border-line flex min-h-[300px] items-center justify-center rounded-lg border"
+            className="border-line flex min-h-[300px] items-center justify-center rounded-xl border"
           >
             <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
           </div>
         ) : (
-          <div className="bg-surface-raised border-line flex min-h-[300px] flex-col rounded-lg border sm:flex-row">
+          <div className="border-line flex min-h-[300px] flex-col overflow-hidden rounded-xl border sm:flex-row">
             <RoleOverrideList
               roles={listedRoles}
               addableRoles={addableRoles}
@@ -159,7 +149,7 @@ function RoleOverrideList({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <aside className="border-line shrink-0 border-b p-3 sm:w-[200px] sm:border-r sm:border-b-0">
+    <aside className="border-line bg-surface-raised shrink-0 border-b p-3 sm:w-44 sm:border-r sm:border-b-0">
       <div className="mb-2 flex items-center justify-between">
         <span className="text-content-subtle text-[11px] font-bold tracking-wide uppercase">
           {CHANNEL_PERMISSIONS_ROLES_LABEL}

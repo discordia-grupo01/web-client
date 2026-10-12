@@ -3,7 +3,6 @@
 import {
   type Channel,
   CHANNEL_NAME_LABEL,
-  CHANNEL_SETTINGS_OVERVIEW_SECTION,
   CHANNEL_TOPIC_HINT,
   CHANNEL_TOPIC_LABEL,
   CHANNEL_TOPIC_PLACEHOLDER,
@@ -33,67 +32,58 @@ export function ChannelOverviewSection({
   const Icon = kind === "text" ? Hash : Volume2;
 
   return (
-    <section>
-      <h2 className="font-display text-content mb-7 text-xl font-bold">
-        {CHANNEL_SETTINGS_OVERVIEW_SECTION}
-      </h2>
-
-      <div className="space-y-7">
-        <div>
-          <div className="mb-2 flex items-center justify-between">
-            <label
-              htmlFor={nameId}
-              className={cn(
-                "text-xs font-bold tracking-wide uppercase",
-                form.nameError ? "text-danger" : "text-content-muted",
-              )}
-            >
-              {CHANNEL_NAME_LABEL}
-            </label>
-            <CharacterCounter length={form.name.trim().length} max={MAX_NAME} />
-          </div>
-          <div
-            className={cn(
-              "bg-surface-input flex items-center gap-2 rounded-md border px-3 py-2.5",
-              form.nameError ? "border-danger" : "border-line",
-            )}
+    <section className="space-y-6">
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <label
+            htmlFor={nameId}
+            className="text-content-subtle text-xs font-bold tracking-wider uppercase"
           >
-            <Icon size={15} className="text-content-subtle shrink-0" />
-            <input
-              id={nameId}
-              type="text"
-              value={form.name}
-              onChange={(event) => form.setName(event.target.value)}
-              maxLength={MAX_NAME + 10}
-              aria-invalid={form.nameError ? true : undefined}
-              className="text-content min-w-0 flex-1 bg-transparent text-sm outline-none"
-            />
-          </div>
-          <FieldError message={form.nameError} />
+            {CHANNEL_NAME_LABEL} <span className="text-danger">*</span>
+          </label>
+          <CharacterCounter length={form.name.trim().length} max={MAX_NAME} />
         </div>
-
-        {kind === "text" ? (
-          <div>
-            <label
-              htmlFor={topicId}
-              className="text-content-muted mb-2 block text-xs font-bold tracking-wide uppercase"
-            >
-              {CHANNEL_TOPIC_LABEL}
-            </label>
-            <textarea
-              id={topicId}
-              value={form.topic}
-              onChange={(event) => form.setTopic(event.target.value)}
-              rows={4}
-              placeholder={CHANNEL_TOPIC_PLACEHOLDER}
-              className="bg-surface-input border-line text-content placeholder:text-content-subtle w-full resize-none rounded-md border px-3 py-2.5 text-sm outline-none"
-            />
-            <p className="text-content-subtle mt-1.5 text-xs">
-              {CHANNEL_TOPIC_HINT}
-            </p>
-          </div>
-        ) : null}
+        <div
+          className={cn(
+            "bg-surface-input flex items-center gap-2 rounded-xl border px-4 py-3 transition-colors",
+            form.nameError ? "border-danger" : "border-line",
+          )}
+        >
+          <Icon size={15} className="text-content-subtle shrink-0" />
+          <input
+            id={nameId}
+            type="text"
+            value={form.name}
+            onChange={(event) => form.setName(event.target.value)}
+            maxLength={MAX_NAME + 10}
+            aria-invalid={form.nameError ? true : undefined}
+            className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
+          />
+        </div>
+        <FieldError message={form.nameError} />
       </div>
+
+      {kind === "text" ? (
+        <div>
+          <label
+            htmlFor={topicId}
+            className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
+          >
+            {CHANNEL_TOPIC_LABEL}
+          </label>
+          <textarea
+            id={topicId}
+            value={form.topic}
+            onChange={(event) => form.setTopic(event.target.value)}
+            rows={4}
+            placeholder={CHANNEL_TOPIC_PLACEHOLDER}
+            className="bg-surface-input border-line text-content placeholder:text-content-subtle w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
+          />
+          <p className="text-content-subtle mt-1.5 text-[11px]">
+            {CHANNEL_TOPIC_HINT}
+          </p>
+        </div>
+      ) : null}
     </section>
   );
 }

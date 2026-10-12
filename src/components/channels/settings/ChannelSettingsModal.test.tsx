@@ -22,7 +22,7 @@ import {
 } from "@/services/channel-permissions/client";
 import { updateChannelRequest } from "@/services/channels/client";
 
-import { ChannelSettingsView } from "./ChannelSettingsView";
+import { ChannelSettingsModal } from "./ChannelSettingsModal";
 
 vi.mock("@/services/channel-permissions/client", () => ({
   listChannelOverridesRequest: vi.fn(),
@@ -89,7 +89,7 @@ function renderView({
     onDelete: vi.fn(),
   };
   render(
-    <ChannelSettingsView
+    <ChannelSettingsModal
       channel={channel}
       categoryName="General"
       initialSection="permissions"
@@ -114,7 +114,7 @@ beforeEach(() => {
   remove.mockResolvedValue({ ok: true });
 });
 
-describe("ChannelSettingsView", () => {
+describe("ChannelSettingsModal", () => {
   it("abre en Permisos con @everyone seleccionado", async () => {
     renderView();
     await waitForEditor();
@@ -260,19 +260,42 @@ describe("ChannelSettingsView", () => {
     ).toBeNull();
   });
 
-  it("no cierra con cambios sin guardar", async () => {
+  it("sin cambios no deja guardar", async () => {
+    renderView();
+    await waitForEditor();
+
+    expect(
+      screen.getByRole("button", { name: "Guardar cambios" }),
+    ).toBeDisabled();
+  });
+
+  it("Cancelar cierra sin guardar", async () => {
     const props = renderView();
     await waitForEditor();
 
     fireEvent.click(
       screen.getByRole("button", { name: "Denegar: Agregar reacciones" }),
     );
-    fireEvent.keyDown(window, { key: "Escape" });
+    fireEvent.click(screen.getByRole("button", { name: "Cancelar" }));
 
+    expect(props.onClose).toHaveBeenCalled();
+    expect(put).not.toHaveBeenCalled();
+  });
+
+  it("si un rol no se pudo guardar, avisa y no cierra", async () => {
+    put.mockResolvedValueOnce({ ok: false, message: "No se pudo guardar" });
+    const props = renderView();
+    await waitForEditor();
+
+    fireEvent.click(
+      screen.getByRole("button", { name: "Denegar: Agregar reacciones" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Guardar cambios" }));
+
+    expect(await screen.findByRole("alert")).toHaveTextContent(
+      "No se pudo guardar",
+    );
     expect(props.onClose).not.toHaveBeenCalled();
-    expect(
-      screen.getByRole("region", { name: /cambios sin guardar/i }),
-    ).toHaveClass("bg-danger");
   });
 
   it("sin MANAGE_CHANNELS no muestra Vista general ni Eliminar canal", async () => {
@@ -311,5 +334,6 @@ describe("ChannelSettingsView", () => {
     );
     expect(update).toHaveBeenCalledWith("ch1", { topic: "Novedades" });
     expect(put).not.toHaveBeenCalled();
+    expect(props.onClose).toHaveBeenCalled();
   });
 });

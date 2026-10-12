@@ -45,7 +45,7 @@ export function RoleOverrideEditor({
   onClear,
 }: RoleOverrideEditorProps) {
   return (
-    <div className="min-w-0 flex-1 p-5">
+    <div className="min-w-0 flex-1 p-4">
       <div className="mb-5 flex items-center justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span
@@ -100,6 +100,7 @@ interface OverrideOption {
   label: string;
   icon: LucideIcon;
   activeClassName: string;
+  idleClassName: string;
 }
 
 const OPTIONS: readonly OverrideOption[] = [
@@ -108,18 +109,21 @@ const OPTIONS: readonly OverrideOption[] = [
     label: OVERRIDE_DENY_LABEL,
     icon: X,
     activeClassName: "bg-danger border-danger text-white",
+    idleClassName: "text-danger hover:bg-danger/15",
   },
   {
     value: "inherit",
     label: OVERRIDE_INHERIT_LABEL,
     icon: Slash,
-    activeClassName: "bg-surface-hover border-line-strong text-content",
+    activeClassName: "bg-content-subtle border-content-subtle text-surface",
+    idleClassName: "text-content-subtle hover:bg-surface-hover",
   },
   {
     value: "allow",
     label: OVERRIDE_ALLOW_LABEL,
     icon: Check,
     activeClassName: "bg-success border-success text-white",
+    idleClassName: "text-success hover:bg-success/15",
   },
 ];
 
@@ -172,7 +176,10 @@ function PermissionOverrideRow({
                 index > 0 && "-ml-px",
                 isActive
                   ? option.activeClassName
-                  : "border-line-strong text-content-subtle hover:bg-surface-hover bg-transparent",
+                  : cn(
+                      "border-line-strong bg-transparent",
+                      option.idleClassName,
+                    ),
               )}
             >
               <Icon size={16} strokeWidth={2.5} />
