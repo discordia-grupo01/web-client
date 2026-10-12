@@ -758,6 +758,7 @@ export function ServerView({
             server={server}
             isBannerVisible={isBannerVisible}
             canManageServer={canManageServer}
+            canManageMessages={canManageMessages}
             canManageChannels={canManageChannels}
             canManageRoles={canManageRoles}
             canBanMembers={canBanMembers}

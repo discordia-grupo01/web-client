@@ -28,6 +28,7 @@ interface ServerSidebarHeaderProps {
   server: ServerSummary;
   isBannerVisible: boolean;
   canManageServer: boolean;
+  canManageMessages: boolean;
   canManageChannels: boolean;
   canManageRoles: boolean;
   canBanMembers: boolean;
@@ -53,6 +54,7 @@ export function ServerSidebarHeader({
   server,
   isBannerVisible,
   canManageServer,
+  canManageMessages,
   canManageChannels,
   canManageRoles,
   canBanMembers,
@@ -127,6 +129,7 @@ export function ServerSidebarHeader({
       {isMenuOpen ? (
         <ServerMenu
           canManageServer={canManageServer}
+          canManageMessages={canManageMessages}
           canManageChannels={canManageChannels}
           canManageRoles={canManageRoles}
           canBanMembers={canBanMembers}
@@ -152,10 +155,12 @@ export function ServerSidebarHeader({
         />
       ) : null}
 
-      {openModal === "settings" && canManageServer ? (
+      {openModal === "settings" && (canManageServer || canManageMessages) ? (
         <ServerSettingsModal
           server={server}
           isOwner={isOwner}
+          canManageServer={canManageServer}
+          canManageMessages={canManageMessages}
           onClose={closeModal}
           onUpdated={(updated) => {
             closeModal();
