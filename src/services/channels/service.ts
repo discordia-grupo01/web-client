@@ -11,7 +11,7 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  *
  * Endpoints reales (ver servers/internal/handler):
  *   POST   /v1/servers/:id/channels               -> 201 Channel | 400 | 401 | 403 | 404
- *   PATCH  /v1/channels/:id                       -> 200 Channel | 400 | 401 | 403 | 404
+ *   PATCH  /v1/channels/:id                       -> 200 Channel | 400 | 401 | 403 | 404 (body: name?, topic?)
  *   DELETE /v1/channels/:id                       -> 204 | 401 | 403 | 404
  *   PATCH  /v1/channels/:id/category               -> 200 Channel | 400 | 401 | 403 | 404
  *   PATCH  /v1/servers/:id/channels/reorder        -> 200 | 400 | 401 | 403 | 404
@@ -39,8 +39,10 @@ export function createChannel(
   });
 }
 
+/** Lo que no viene no se toca. `topic: ""` borra el tema. */
 interface UpdateChannelInput {
-  name: string;
+  name?: string;
+  topic?: string;
 }
 
 export function updateChannel(

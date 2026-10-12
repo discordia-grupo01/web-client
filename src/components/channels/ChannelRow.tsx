@@ -1,10 +1,23 @@
 "use client";
 
-import type { Channel } from "@discordia/client-shared";
+import {
+  type Channel,
+  DELETE_CHANNEL_LABEL,
+  EDIT_CHANNEL_LABEL,
+  OVERRIDE_CHANNEL_PERMISSIONS_LABEL,
+} from "@discordia/client-shared";
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { Hash, MoreVertical, Pencil, Trash2, Volume2 } from "lucide-react";
+import {
+  Hash,
+  MoreVertical,
+  Pencil,
+  ShieldCheck,
+  Trash2,
+  Volume2,
+  type LucideIcon,
+} from "lucide-react";
 import { useState } from "react";
 
 import { cn } from "@/lib/cn";
@@ -12,21 +25,55 @@ import { cn } from "@/lib/cn";
 interface ChannelRowProps {
   channel: Channel;
   active: boolean;
+  /** MANAGE_CHANNELS: mover, editar y eliminar. */
   canManage: boolean;
+  /** MANAGE_ROLES: sobrescribir los permisos de los roles en el canal. */
+  canManagePermissions?: boolean;
   /** Menciones sin leer en este canal; con 0 no se muestra nada. */
   unreadMentions?: number;
   onClick: () => void;
   onEdit: () => void;
+  onEditPermissions?: () => void;
   onDelete: () => void;
+}
+
+function MenuItem({
+  icon: Icon,
+  label,
+  isDanger = false,
+  onSelect,
+}: {
+  icon: LucideIcon;
+  label: string;
+  isDanger?: boolean;
+  onSelect: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onSelect}
+      className={cn(
+        "flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors",
+        isDanger
+          ? "text-danger hover:bg-danger/10"
+          : "text-content hover:bg-surface-hover",
+      )}
+    >
+      <Icon size={14} />
+      {label}
+    </button>
+  );
 }
 
 function ChannelRow({
   channel,
   active,
   canManage,
+  canManagePermissions = false,
   unreadMentions = 0,
   onClick,
   onEdit,
+  onEditPermissions,
   onDelete,
 }: ChannelRowProps) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
@@ -69,7 +116,7 @@ function ChannelRow({
         </span>
       </button>
 
-      {canManage ? (
+      {canManage || canManagePermissions ? (
         <>
           <button
             type="button"
@@ -88,29 +135,38 @@ function ChannelRow({
                 onClick={() => setIsMenuOpen(false)}
                 className="fixed inset-0 z-40 cursor-default"
               />
-              <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-44 overflow-hidden rounded-xl border shadow-2xl">
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onEdit();
-                  }}
-                  className="text-content hover:bg-surface-hover flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-                >
-                  <Pencil size={14} />
-                  Editar Canal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsMenuOpen(false);
-                    onDelete();
-                  }}
-                  className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 px-3 py-2.5 text-left text-sm transition-colors"
-                >
-                  <Trash2 size={14} />
-                  Eliminar Canal
-                </button>
+              <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-52 overflow-hidden rounded-xl border shadow-2xl">
+                {canManage ? (
+                  <MenuItem
+                    icon={Pencil}
+                    label={EDIT_CHANNEL_LABEL}
+                    onSelect={() => {
+                      setIsMenuOpen(false);
+                      onEdit();
+                    }}
+                  />
+                ) : null}
+                {canManagePermissions && onEditPermissions ? (
+                  <MenuItem
+                    icon={ShieldCheck}
+                    label={OVERRIDE_CHANNEL_PERMISSIONS_LABEL}
+                    onSelect={() => {
+                      setIsMenuOpen(false);
+                      onEditPermissions();
+                    }}
+                  />
+                ) : null}
+                {canManage ? (
+                  <MenuItem
+                    icon={Trash2}
+                    label={DELETE_CHANNEL_LABEL}
+                    isDanger
+                    onSelect={() => {
+                      setIsMenuOpen(false);
+                      onDelete();
+                    }}
+                  />
+                ) : null}
               </div>
             </>
           ) : null}

@@ -257,6 +257,28 @@ describe("useChannelMessages: acceso revocado", () => {
     expect(result.current.statusMessage).toBe("Este canal ya no existe.");
   });
 
+  it("access_revoked por un cambio de permisos avisa el motivo", async () => {
+    const onAccessRevoked = vi.fn();
+    const view = renderHook(() =>
+      useChannelMessages({ id: "ch1" }, null, { onAccessRevoked }),
+    );
+    await waitFor(() => expect(room.join).toHaveBeenCalled());
+    act(() => room.joinPush.fire("ok"));
+
+    act(() =>
+      room.handlers.access_revoked({
+        channel_id: "ch1",
+        reason: "permissions_changed",
+      }),
+    );
+
+    expect(view.result.current.status).toBe("forbidden");
+    expect(view.result.current.statusMessage).toBe(
+      "Ya no tenés acceso a este canal.",
+    );
+    expect(onAccessRevoked).toHaveBeenCalledWith("permissions_changed");
+  });
+
   it("tras revocarse, un corte de conexion no lo pisa", async () => {
     const { result } = await mountAndJoin();
 
