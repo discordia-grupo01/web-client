@@ -37,9 +37,10 @@ export async function createChannelRequest(
   }
 }
 
+/** Lo que no viene no se toca. `topic: ""` borra el tema. */
 export async function updateChannelRequest(
   channelId: string,
-  input: { name: string },
+  input: { name?: string; topic?: string },
 ): Promise<UpdateChannelResult> {
   try {
     const { data } = await api.patch<UpdateChannelResult>(
