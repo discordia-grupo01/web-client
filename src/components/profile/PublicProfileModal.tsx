@@ -3,12 +3,24 @@
 import {
   BAN_ACTION_LABEL,
   BLOCK_USER_LABEL,
+  KICK_ACTION_LABEL,
+  MUTE_ACTION_LABEL,
+  mutedUntilLabel,
+  UNMUTE_ACTION_LABEL,
   SEND_MESSAGE_LABEL,
   UNBLOCK_USER_LABEL,
   type PublicUser,
 } from "@discordia/client-shared";
 
-import { Ban, Gavel, MessageCircle, ShieldCheck } from "lucide-react";
+import {
+  Ban,
+  Gavel,
+  MessageCircle,
+  Mic,
+  MicOff,
+  ShieldCheck,
+  UserX,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -35,6 +47,15 @@ interface PublicProfileModalProps {
   /** Puede banear (permiso) y el perfil no es el propio ni el del owner. */
   canBan?: boolean;
   onBan?: (profile: PublicUser) => void;
+  /** Puede expulsar (permiso) y el perfil no es el propio ni el del owner. */
+  canKick?: boolean;
+  onKick?: (profile: PublicUser) => void;
+  /** Hasta cuando esta silenciado en este servidor; `null` si no lo esta. */
+  mutedUntil?: string | null;
+  /** Puede silenciar (`MANAGE_MESSAGES`) y el perfil no es el propio ni el del owner. */
+  canMute?: boolean;
+  onMute?: (profile: PublicUser) => void;
+  onUnmute?: (profile: PublicUser) => void;
   /** Muestra la accion de bloquear/desbloquear: el perfil no es el propio. */
   canBlock?: boolean;
   /** Abre el mensaje directo con este usuario. Sin esto (perfil propio) no se muestra el botón. */
@@ -58,6 +79,12 @@ export function PublicProfileModal({
   canManageRoles = false,
   canBan = false,
   onBan,
+  canKick = false,
+  onKick,
+  mutedUntil = null,
+  canMute = false,
+  onMute,
+  onUnmute,
   canBlock = false,
   onSendMessage,
   onClose,
@@ -144,6 +171,42 @@ export function PublicProfileModal({
                     </button>
                   </Tooltip>
                 ) : null}
+                {canMute && mutedUntil && onUnmute ? (
+                  <Tooltip label={UNMUTE_ACTION_LABEL}>
+                    <button
+                      type="button"
+                      onClick={() => onUnmute(profile)}
+                      aria-label={UNMUTE_ACTION_LABEL}
+                      className="text-content flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+                    >
+                      <Mic size={14} aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                ) : null}
+                {canMute && !mutedUntil && onMute ? (
+                  <Tooltip label={MUTE_ACTION_LABEL}>
+                    <button
+                      type="button"
+                      onClick={() => onMute(profile)}
+                      aria-label={MUTE_ACTION_LABEL}
+                      className="text-danger flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+                    >
+                      <MicOff size={14} aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                ) : null}
+                {canKick && onKick ? (
+                  <Tooltip label={KICK_ACTION_LABEL}>
+                    <button
+                      type="button"
+                      onClick={() => onKick(profile)}
+                      aria-label={KICK_ACTION_LABEL}
+                      className="text-danger flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+                    >
+                      <UserX size={14} aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                ) : null}
                 {canBan && onBan ? (
                   <Tooltip label={BAN_ACTION_LABEL}>
                     <button
@@ -174,6 +237,12 @@ export function PublicProfileModal({
               <h2 className="font-display text-content text-lg font-bold">
                 {profile.name}
               </h2>
+              {mutedUntil ? (
+                <p className="text-danger mt-0.5 flex items-center gap-1.5 text-xs font-semibold">
+                  <MicOff size={12} aria-hidden="true" />
+                  {mutedUntilLabel(mutedUntil)}
+                </p>
+              ) : null}
               <CustomStatusBadge
                 statusText={profile.status_text}
                 statusEmoji={profile.status_emoji}

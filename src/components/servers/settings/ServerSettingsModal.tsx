@@ -8,6 +8,7 @@ import {
   SERVER_NAME_LABEL,
   SERVER_NAME_PLACEHOLDER,
   type ServerSummary,
+  WORD_FILTER_TITLE,
 } from "@discordia/client-shared";
 import { useState, type FormEvent } from "react";
 
@@ -23,14 +24,21 @@ import { DeleteServerModal } from "../DeleteServerModal";
 import { BannerPresetPicker } from "./BannerPresetPicker";
 import { ServerIdentityEditor } from "./ServerIdentityEditor";
 import { useServerSettingsForm } from "./useServerSettingsForm";
+import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";
 const NAME_INPUT_ID = "server-settings-name";
 const SETTINGS_MODAL_WIDTH = 660;
 
+type SettingsSection = "profile" | "words";
+
 interface ServerSettingsModalProps {
   server: ServerSummary;
   isOwner: boolean;
+  /** "Perfil del servidor" (nombre, icono, banner). */
+  canManageServer: boolean;
+  /** "Palabras prohibidas". */
+  canManageMessages: boolean;
   onClose: () => void;
   onUpdated: (server: ServerSummary) => void;
   onDeleted: () => void;
@@ -39,12 +47,36 @@ interface ServerSettingsModalProps {
 export function ServerSettingsModal({
   server,
   isOwner,
+  canManageServer,
+  canManageMessages,
   onClose,
   onUpdated,
   onDeleted,
 }: ServerSettingsModalProps) {
   const form = useServerSettingsForm({ server, onUpdated });
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [section, setSection] = useState<SettingsSection>(
+    canManageServer ? "profile" : "words",
+  );
+
+  function navButton(target: SettingsSection, label: string) {
+    const isActive = section === target;
+    return (
+      <button
+        type="button"
+        onClick={() => setSection(target)}
+        aria-current={isActive ? "page" : undefined}
+        className={cn(
+          "mt-1 cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors",
+          isActive
+            ? "bg-surface-input text-content"
+            : "text-content-muted hover:bg-surface-input/60 hover:text-content",
+        )}
+      >
+        {label}
+      </button>
+    );
+  }
 
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -63,12 +95,10 @@ export function ServerSettingsModal({
             <p className="text-content-subtle mb-1 truncate px-3 text-xs font-bold tracking-wider uppercase">
               {server.name}
             </p>
-            <button
-              type="button"
-              className="bg-surface-input text-content mt-1 cursor-default rounded-lg px-3 py-2 text-left text-sm font-semibold"
-            >
-              Perfil del servidor
-            </button>
+            {canManageServer
+              ? navButton("profile", "Perfil del servidor")
+              : null}
+            {canManageMessages ? navButton("words", WORD_FILTER_TITLE) : null}
 
             {isOwner ? (
               <>
@@ -84,101 +114,108 @@ export function ServerSettingsModal({
             ) : null}
           </nav>
 
-          <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-            <div className="px-7 pt-8 pb-2">
-              <h2
-                id={TITLE_ID}
-                className="font-display text-content mb-1 text-xl font-bold"
-              >
-                Perfil del servidor
-              </h2>
-              <p className="text-content-muted text-sm leading-relaxed">
-                Actualizá la identidad visual de tu comunidad.
-              </p>
-            </div>
-
-            <div className="space-y-6 px-7 py-6">
-              <FormAlert message={form.globalError} />
-
-              <div>
-                <SectionLabel>Identidad del servidor</SectionLabel>
-                <div className="mt-2">
-                  <ServerIdentityEditor
-                    serverName={form.name || server.name}
-                    iconSrc={form.iconPreviewSrc}
-                    bannerSrc={form.bannerPreviewSrc}
-                    bannerGradient={form.bannerPreviewGradient}
-                    hasBanner={form.hasBanner}
-                    onPickIcon={form.pickIcon}
-                    onPickBanner={form.pickBanner}
-                    onRemoveBanner={form.removeBanner}
-                  />
-                </div>
-                <FieldError message={form.iconError} />
-                <FieldError message={form.bannerError} />
-                <p className="text-content-subtle mt-2 text-[11px]">
-                  {formatImageTypes(ALLOWED_SERVER_ICON_TYPES)} · Máx.{" "}
-                  {MAX_ICON_FILE_MB} MB
+          {section === "words" ? (
+            <WordFilterSection serverId={server.id} titleId={TITLE_ID} />
+          ) : (
+            <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
+              <div className="px-7 pt-8 pb-2">
+                <h2
+                  id={TITLE_ID}
+                  className="font-display text-content mb-1 text-xl font-bold"
+                >
+                  Perfil del servidor
+                </h2>
+                <p className="text-content-muted text-sm leading-relaxed">
+                  Actualizá la identidad visual de tu comunidad.
                 </p>
               </div>
 
-              <BannerPresetPicker
-                selectedId={form.selectedPresetId}
-                onSelect={form.choosePreset}
-              />
+              <div className="space-y-6 px-7 py-6">
+                <FormAlert message={form.globalError} />
 
-              <div>
-                <div className="mb-1.5 flex items-center justify-between">
-                  <label
-                    htmlFor={NAME_INPUT_ID}
-                    className="text-content-subtle text-xs font-bold tracking-wider uppercase"
+                <div>
+                  <SectionLabel>Identidad del servidor</SectionLabel>
+                  <div className="mt-2">
+                    <ServerIdentityEditor
+                      serverName={form.name || server.name}
+                      iconSrc={form.iconPreviewSrc}
+                      bannerSrc={form.bannerPreviewSrc}
+                      bannerGradient={form.bannerPreviewGradient}
+                      hasBanner={form.hasBanner}
+                      onPickIcon={form.pickIcon}
+                      onPickBanner={form.pickBanner}
+                      onRemoveBanner={form.removeBanner}
+                    />
+                  </div>
+                  <FieldError message={form.iconError} />
+                  <FieldError message={form.bannerError} />
+                  <p className="text-content-subtle mt-2 text-[11px]">
+                    {formatImageTypes(ALLOWED_SERVER_ICON_TYPES)} · Máx.{" "}
+                    {MAX_ICON_FILE_MB} MB
+                  </p>
+                </div>
+
+                <BannerPresetPicker
+                  selectedId={form.selectedPresetId}
+                  onSelect={form.choosePreset}
+                />
+
+                <div>
+                  <div className="mb-1.5 flex items-center justify-between">
+                    <label
+                      htmlFor={NAME_INPUT_ID}
+                      className="text-content-subtle text-xs font-bold tracking-wider uppercase"
+                    >
+                      {SERVER_NAME_LABEL} <span className="text-danger">*</span>
+                    </label>
+                    <CharacterCounter
+                      length={form.name.length}
+                      max={MAX_NAME}
+                    />
+                  </div>
+
+                  <div
+                    className={cn(
+                      "bg-surface-input flex items-center rounded-xl border px-4 py-3 transition-colors",
+                      form.nameError ? "border-danger" : "border-line",
+                    )}
                   >
-                    {SERVER_NAME_LABEL} <span className="text-danger">*</span>
-                  </label>
-                  <CharacterCounter length={form.name.length} max={MAX_NAME} />
-                </div>
+                    <input
+                      id={NAME_INPUT_ID}
+                      type="text"
+                      value={form.name}
+                      onChange={(event) => form.changeName(event.target.value)}
+                      placeholder={SERVER_NAME_PLACEHOLDER}
+                      maxLength={MAX_NAME + 10}
+                      autoFocus
+                      className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
+                    />
+                  </div>
 
-                <div
-                  className={cn(
-                    "bg-surface-input flex items-center rounded-xl border px-4 py-3 transition-colors",
-                    form.nameError ? "border-danger" : "border-line",
-                  )}
-                >
-                  <input
-                    id={NAME_INPUT_ID}
-                    type="text"
-                    value={form.name}
-                    onChange={(event) => form.changeName(event.target.value)}
-                    placeholder={SERVER_NAME_PLACEHOLDER}
-                    maxLength={MAX_NAME + 10}
-                    autoFocus
-                    className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"
-                  />
+                  <FieldError message={form.nameError} />
                 </div>
-
-                <FieldError message={form.nameError} />
               </div>
-            </div>
 
-            <div className="border-line flex items-center justify-end gap-3 border-t px-7 py-5">
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={onClose}
-                className="w-auto"
-              >
-                Cancelar
-              </Button>
-              <Button
-                type="submit"
-                disabled={!form.canSubmit}
-                isLoading={form.isSubmitting}
-                className="w-auto"
-              >
-                Guardar cambios
-              </Button>
-            </div>
-          </form>
+              <div className="border-line flex items-center justify-end gap-3 border-t px-7 py-5">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={onClose}
+                  className="w-auto"
+                >
+                  Cancelar
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={!form.canSubmit}
+                  isLoading={form.isSubmitting}
+                  className="w-auto"
+                >
+                  Guardar cambios
+                </Button>
+              </div>
+            </form>
+          )}
         </div>
       </ModalShell>
 
