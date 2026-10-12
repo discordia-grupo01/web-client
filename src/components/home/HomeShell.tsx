@@ -23,6 +23,10 @@ import { ServerView } from "@/components/servers/ServerView";
 import { useLoadingGate } from "@/hooks/useLoadingGate";
 import { useAuth } from "@/services/auth/AuthContext";
 import { BlockedUsersProvider } from "@/services/blocks/BlockedUsersContext";
+import {
+  useVoiceSession,
+  VoiceSessionProvider,
+} from "@/services/voice/VoiceSessionContext";
 import { useDirectMessages } from "@/services/conversations/useDirectMessages";
 import { useMentions } from "@/services/mentions/useMentions";
 import { authorFromProfile } from "@/services/messages/author";
@@ -66,6 +70,15 @@ function HomeShellContent({
   const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
+    
+  const voice = useVoiceSession();
+  const voiceFocus = voice.state.focus;
+  useEffect(() => {
+    if (!voiceFocus) return;
+    setView("servers");
+    setSelectedServerId(voiceFocus.serverId);
+    setLastChannelId(voiceFocus.channelId);
+  }, [voiceFocus]);
 
   // Se pide una sola vez y sobrevive a cambiar de vista, asi el contador de
   // no leidos del riel no se resetea al entrar y salir de Mensajes Directos.
@@ -196,6 +209,7 @@ function HomeShellContent({
   }
 
   function removeServer(serverId: string) {
+    if (voice.state.target?.serverId === serverId) voice.leave();
     setServers((prev) => prev.filter((server) => server.id !== serverId));
     setSelectedServerId((prev) => (prev === serverId ? null : prev));
   }
@@ -296,7 +310,9 @@ function HomeShellContent({
 export function HomeShell(props: HomeShellProps) {
   return (
     <BlockedUsersProvider>
-      <HomeShellContent {...props} />
+      <VoiceSessionProvider>
+        <HomeShellContent {...props} />
+      </VoiceSessionProvider>
     </BlockedUsersProvider>
   );
 }
