@@ -410,12 +410,7 @@ export function ServerView({
     channelId: string;
     section: ChannelSettingsSection;
   } | null>(null);
-  /** Sube al guardar excepciones: vuelve a pedir los permisos del canal abierto. */
   const [permissionsVersion, setPermissionsVersion] = useState(0);
-  /**
-   * Canal que se dejo de ver mientras estaba abierto. Ya no viene en
-   * `server.channels`, pero se sigue mostrando el aviso hasta cambiar de canal.
-   */
   const [lostChannel, setLostChannel] = useState<Channel | null>(null);
   const [deletingChannel, setDeletingChannel] = useState<Channel | null>(null);
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
@@ -468,7 +463,6 @@ export function ServerView({
     void reloadServer();
   }
 
-  /** Al cerrar "Roles": cambiar VIEW_CHANNELS puede mostrar u ocultar canales. */
   function handleRolesChanged() {
     fetchMyRoles();
     fetchServerRoles();
@@ -488,8 +482,11 @@ export function ServerView({
     const channelId = settingsTarget?.channelId;
     setPermissionsVersion((version) => version + 1);
     const fresh = await reloadServer();
-    if (!fresh || !channelId) return;
-    if (fresh.channels.some((channel) => channel.id === channelId)) return;
+    if (!channelId) return;
+    if (!fresh || fresh.channels.some((channel) => channel.id === channelId)) {
+      setActiveChannelId(channelId);
+      return;
+    }
     setSettingsTarget(null);
     if (activeChannelId === channelId) {
       setActiveChannelId(fresh.channels[0]?.id ?? "");
@@ -524,6 +521,7 @@ export function ServerView({
   }
 
   function handleChannelUpdated(channel: Channel) {
+    setActiveChannelId(channel.id);
     onServerUpdate({
       ...server,
       channels: server.channels.map((existing) =>
