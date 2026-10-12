@@ -7,6 +7,7 @@ import type { ActivityStatus } from "@discordia/client-shared";
  */
 export const ACTIVITY_STATUS_DOT_CLASS: Record<ActivityStatus, string> = {
   online: "bg-success",
+  idle: "bg-warning",
   dnd: "bg-danger",
   offline: "bg-content-subtle",
 };
