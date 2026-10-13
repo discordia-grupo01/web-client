@@ -28,6 +28,7 @@ import {
   SESSION_EXPIRED_MESSAGE,
   setMessageReaction,
   validateMessageContent,
+  withAttachmentIds,
 } from "@discordia/client-shared";
 
 import type { Channel as PhoenixChannel } from "phoenix";
@@ -206,14 +207,17 @@ export function useChannelMessages(
   }, [channel.id, nextCursor]);
 
   const sendMessage = useCallback(
-    (content: string): Promise<SendMessageResult> => {
-      const invalid = validateMessageContent(content);
+    (
+      content: string,
+      attachmentIds: readonly string[] = [],
+    ): Promise<SendMessageResult> => {
+      const invalid = validateMessageContent(content, attachmentIds.length > 0);
       if (invalid) return Promise.resolve({ ok: false, message: invalid });
       return pushMessageEvent(
         phoenixChannel.current,
         statusRef.current,
         "new_message",
-        { content },
+        withAttachmentIds({ content }, attachmentIds),
         { failedMessage: MESSAGE_SEND_FAILED },
       );
     },
@@ -240,7 +244,11 @@ export function useChannelMessages(
 
   const editMessage = useCallback(
     (messageId: string, content: string): Promise<EditMessageResult> => {
-      const invalid = validateMessageContent(content);
+      const hasAttachments = Boolean(
+        messagesRef.current?.find((m) => m.id === messageId)?.attachments
+          ?.length,
+      );
+      const invalid = validateMessageContent(content, hasAttachments);
       if (invalid) return Promise.resolve({ ok: false, message: invalid });
       return pushMessageEvent(
         phoenixChannel.current,

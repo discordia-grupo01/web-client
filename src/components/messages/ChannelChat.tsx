@@ -165,6 +165,7 @@ export function ChannelChat({
             : SEND_MESSAGES_DENIED_PLACEHOLDER
         }
         onSend={sendMessage}
+        uploadTarget={{ channelId: channel.id }}
         disabled={!currentAuthor || status !== "ready" || !canSendMessages}
       />
     </MessageMentionsProvider>
