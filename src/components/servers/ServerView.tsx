@@ -15,8 +15,14 @@ import {
   type ServerSummary,
   sortByPosition,
   topLevelChannels,
+  toVoicePresence,
+  voiceParticipantsOf,
   type User,
+  VOICE_CONNECTING,
+  VOICE_RECONNECTING,
   visibleCategories,
+  voiceConnectedCount,
+  withLivePresence,
 } from "@discordia/client-shared";
 
 import {
@@ -52,6 +58,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -77,12 +84,17 @@ import {
   type ChannelSettingsSection,
   ChannelSettingsModal,
 } from "@/components/channels/settings/ChannelSettingsModal";
-import { VoiceChannelPlaceholder } from "@/components/channels/VoiceChannelPlaceholder";
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { MembersSidebar } from "@/components/members/MembersSidebar";
 import { ChannelChat } from "@/components/messages/ChannelChat";
+import { ownAvatarSrc } from "@/components/voice/ownAvatar";
+import {
+  VoiceChannelParticipants,
+  type SidebarVoiceParticipant,
+} from "@/components/voice/VoiceChannelParticipants";
+import { VoiceChannelView } from "@/components/voice/VoiceChannelView";
 import { useAuth } from "@/services/auth/AuthContext";
 import { reorderCategoriesRequest } from "@/services/categories/client";
 import {
@@ -96,6 +108,8 @@ import {
   listRolesRequest,
 } from "@/services/roles/client";
 import { listServersRequest } from "@/services/servers/client";
+import { useVoicePresence } from "@/services/voice/useVoicePresence";
+import { useVoiceSession } from "@/services/voice/VoiceSessionContext";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./sidebar/ServerSidebarHeader";
@@ -517,6 +531,78 @@ export function ServerView({
     }
   }
 
+  const voice = useVoiceSession();
+  const voiceState = voice.state;
+  const voiceChannelId =
+    voiceState.target?.serverId === server.id
+      ? voiceState.target.channelId
+      : null;
+  const liveVoiceParticipants = useMemo(
+    () => (voiceChannelId ? voiceParticipantsOf(voiceState) : []),
+    [voiceChannelId, voiceState],
+  );
+  // Lo del canal propio sale en vivo de LiveKit; el resto, del polling.
+  const { byChannel: polledVoicePresence, refresh: refreshVoicePresence } =
+    useVoicePresence(server.id);
+  const voicePresence = useMemo(
+    () =>
+      voiceChannelId
+        ? withLivePresence(
+            polledVoicePresence,
+            voiceChannelId,
+            toVoicePresence(liveVoiceParticipants),
+          )
+        : polledVoicePresence,
+    [polledVoicePresence, voiceChannelId, liveVoiceParticipants],
+  );
+  // Al entrar o salir, la lista de los demas se actualiza sin esperar al poll.
+  const voiceStatus = voiceState.status;
+  useEffect(() => {
+    refreshVoicePresence();
+  }, [voiceChannelId, voiceStatus, refreshVoicePresence]);
+
+  function sidebarVoiceParticipants(
+    channelId: string,
+  ): SidebarVoiceParticipant[] {
+    if (channelId === voiceChannelId) {
+      return liveVoiceParticipants.map((participant) => ({
+        identity: participant.identity,
+        name: participant.name,
+        avatarSrc:
+          participant.isLocal && ownProfile ? ownAvatarSrc(ownProfile) : null,
+        muted: participant.muted,
+        speaking: participant.speaking && !participant.mutedForMe,
+        cameraOn: participant.cameraOn,
+        screenSharing: participant.screenSharing,
+      }));
+    }
+    return (voicePresence[channelId] ?? []).map((participant) => ({
+      identity: participant.participant_id,
+      name: participant.name,
+    }));
+  }
+
+  // Tocar "Voz conectada" trae la vista al canal de la llamada. Si el pedido
+  // ya estaba antes de montar, lo resolvio `HomeShell` con `initialChannelId`.
+  const voiceFocus = voiceState.focus;
+  const seenFocusNonce = useRef(voiceFocus?.nonce);
+  useEffect(() => {
+    if (!voiceFocus || voiceFocus.nonce === seenFocusNonce.current) return;
+    seenFocusNonce.current = voiceFocus.nonce;
+    if (voiceFocus.serverId !== server.id) return;
+    setActiveChannelId(voiceFocus.channelId);
+    closeMobilePanel();
+  }, [voiceFocus, server.id, closeMobilePanel]);
+
+  // Se borro el canal de la llamada (o ya no lo ves): se corta.
+  const leaveVoice = voice.leave;
+  const isVoiceChannelGone =
+    voiceChannelId !== null &&
+    !server.channels.some((channel) => channel.id === voiceChannelId);
+  useEffect(() => {
+    if (isVoiceChannelGone) leaveVoice();
+  }, [isVoiceChannelGone, leaveVoice]);
+
   // Abrir un canal (o recibir una mencion con el abierto) las marca como leidas.
   const activeUnreadMentions = unreadMentionsByChannel[activeChannelId] ?? 0;
   useEffect(() => {
@@ -766,7 +852,14 @@ export function ServerView({
         onEdit={() => openChannelSettings(channel, "overview")}
         onEditPermissions={() => openChannelSettings(channel, "permissions")}
         onDelete={() => setDeletingChannel(channel)}
-      />
+        isVoiceConnected={channel.id === voiceChannelId}
+      >
+        {channel.kind === "voice" ? (
+          <VoiceChannelParticipants
+            participants={sidebarVoiceParticipants(channel.id)}
+          />
+        ) : null}
+      </SortableChannelRow>
     ));
   }
 
@@ -904,6 +997,19 @@ export function ServerView({
               onToggleBanner={() => setIsBannerVisible((prev) => !prev)}
               isMembersVisible={isMembersVisible}
               onToggleMembers={() => setIsMembersVisible((prev) => !prev)}
+              voicePill={
+                activeChannel.id === voiceChannelId
+                  ? {
+                      label:
+                        voiceState.status === "connected"
+                          ? voiceConnectedCount(liveVoiceParticipants.length)
+                          : voiceState.status === "reconnecting"
+                            ? VOICE_RECONNECTING
+                            : VOICE_CONNECTING,
+                      isLive: voiceState.status === "connected",
+                    }
+                  : null
+              }
             />
 
             {activeChannel.kind === "text" ? (
@@ -930,9 +1036,13 @@ export function ServerView({
                 onAccessRevoked={handleAccessRevoked}
               />
             ) : (
-              <VoiceChannelPlaceholder
-                name={activeChannel.name}
+              <VoiceChannelView
+                channel={activeChannel}
+                serverId={server.id}
+                serverName={server.name}
                 canConnect={canInActiveChannel("CONNECT", canConnect)}
+                ownProfile={ownProfile}
+                presence={voicePresence[activeChannel.id] ?? []}
               />
             )}
           </>

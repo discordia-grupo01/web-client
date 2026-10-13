@@ -18,7 +18,7 @@ import {
   Volume2,
   type LucideIcon,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -35,6 +35,8 @@ interface ChannelRowProps {
   onEdit: () => void;
   onEditPermissions?: () => void;
   onDelete: () => void;
+  isVoiceConnected?: boolean;
+  children?: ReactNode;
 }
 
 function MenuItem({
@@ -75,103 +77,116 @@ function ChannelRow({
   onEdit,
   onEditPermissions,
   onDelete,
+  isVoiceConnected = false,
+  children,
 }: ChannelRowProps) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   return (
-    <div className="group relative flex items-center">
-      {unreadMentions > 0 ? (
-        <span
-          aria-hidden
-          className="bg-content absolute top-1/2 left-0 h-2 w-1 -translate-y-1/2 rounded-r-full"
-        />
-      ) : null}
-      <button
-        type="button"
-        onClick={onClick}
-        title={
-          unreadMentions > 0
-            ? `${unreadMentions} menciones sin leer`
-            : undefined
-        }
-        className={cn(
-          "flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
-          active
-            ? "text-content bg-accent/20"
-            : "text-content-muted hover:bg-surface-hover",
-        )}
-      >
-        <Icon
-          size={16}
-          className={active ? "text-accent" : "text-content-subtle"}
-        />
-        <span
+    <div>
+      <div className="group relative flex items-center">
+        {unreadMentions > 0 ? (
+          <span
+            aria-hidden
+            className="bg-content absolute top-1/2 left-0 h-2 w-1 -translate-y-1/2 rounded-r-full"
+          />
+        ) : null}
+        <button
+          type="button"
+          onClick={onClick}
+          title={
+            unreadMentions > 0
+              ? `${unreadMentions} menciones sin leer`
+              : undefined
+          }
           className={cn(
-            "truncate",
-            unreadMentions > 0 && !active && "text-content font-semibold",
+            "flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
+            isVoiceConnected
+              ? cn("text-success bg-success/10", active && "bg-success/20")
+              : active
+                ? "text-content bg-accent/20"
+                : "text-content-muted hover:bg-surface-hover",
           )}
         >
-          {channel.name}
-        </span>
-      </button>
-
-      {canManage || canManagePermissions ? (
-        <>
-          <button
-            type="button"
-            onClick={() => setIsMenuOpen((prev) => !prev)}
-            aria-label="Opciones del canal"
-            className="text-content-subtle hover:text-content absolute right-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+          <Icon
+            size={16}
+            className={
+              isVoiceConnected
+                ? "text-success"
+                : active
+                  ? "text-accent"
+                  : "text-content-subtle"
+            }
+          />
+          <span
+            className={cn(
+              "truncate",
+              unreadMentions > 0 && !active && "text-content font-semibold",
+            )}
           >
-            <MoreVertical size={14} />
-          </button>
+            {channel.name}
+          </span>
+        </button>
 
-          {isMenuOpen ? (
-            <>
-              <button
-                type="button"
-                aria-label="Cerrar menu"
-                onClick={() => setIsMenuOpen(false)}
-                className="fixed inset-0 z-40 cursor-default"
-              />
-              <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-52 overflow-hidden rounded-xl border shadow-2xl">
-                {canManage ? (
-                  <MenuItem
-                    icon={Pencil}
-                    label={EDIT_CHANNEL_LABEL}
-                    onSelect={() => {
-                      setIsMenuOpen(false);
-                      onEdit();
-                    }}
-                  />
-                ) : null}
-                {canManagePermissions && onEditPermissions ? (
-                  <MenuItem
-                    icon={ShieldCheck}
-                    label={OVERRIDE_CHANNEL_PERMISSIONS_LABEL}
-                    onSelect={() => {
-                      setIsMenuOpen(false);
-                      onEditPermissions();
-                    }}
-                  />
-                ) : null}
-                {canManage ? (
-                  <MenuItem
-                    icon={Trash2}
-                    label={DELETE_CHANNEL_LABEL}
-                    isDanger
-                    onSelect={() => {
-                      setIsMenuOpen(false);
-                      onDelete();
-                    }}
-                  />
-                ) : null}
-              </div>
-            </>
-          ) : null}
-        </>
-      ) : null}
+        {canManage || canManagePermissions ? (
+          <>
+            <button
+              type="button"
+              onClick={() => setIsMenuOpen((prev) => !prev)}
+              aria-label="Opciones del canal"
+              className="text-content-subtle hover:text-content absolute right-1 flex size-6 shrink-0 cursor-pointer items-center justify-center rounded opacity-0 transition-opacity group-hover:opacity-100"
+            >
+              <MoreVertical size={14} />
+            </button>
+
+            {isMenuOpen ? (
+              <>
+                <button
+                  type="button"
+                  aria-label="Cerrar menu"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="fixed inset-0 z-40 cursor-default"
+                />
+                <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-52 overflow-hidden rounded-xl border shadow-2xl">
+                  {canManage ? (
+                    <MenuItem
+                      icon={Pencil}
+                      label={EDIT_CHANNEL_LABEL}
+                      onSelect={() => {
+                        setIsMenuOpen(false);
+                        onEdit();
+                      }}
+                    />
+                  ) : null}
+                  {canManagePermissions && onEditPermissions ? (
+                    <MenuItem
+                      icon={ShieldCheck}
+                      label={OVERRIDE_CHANNEL_PERMISSIONS_LABEL}
+                      onSelect={() => {
+                        setIsMenuOpen(false);
+                        onEditPermissions();
+                      }}
+                    />
+                  ) : null}
+                  {canManage ? (
+                    <MenuItem
+                      icon={Trash2}
+                      label={DELETE_CHANNEL_LABEL}
+                      isDanger
+                      onSelect={() => {
+                        setIsMenuOpen(false);
+                        onDelete();
+                      }}
+                    />
+                  ) : null}
+                </div>
+              </>
+            ) : null}
+          </>
+        ) : null}
+      </div>
+      {children}
     </div>
   );
 }

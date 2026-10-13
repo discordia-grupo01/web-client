@@ -1,7 +1,8 @@
 "use client";
 
 import {
-  type ActivityStatus,
+  displayedStatus,
+  type ActivityStatusChoice,
   ALLOWED_AVATAR_TYPES,
   CANCEL_NAME_EDIT_LABEL,
   CHANGE_AVATAR_LABEL,
@@ -26,7 +27,8 @@ import {
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
 
-import { ActivityStatusPicker } from "./ActivityStatusPicker";
+import { ActivityStatusDot } from "./ActivityStatusDot";
+import { ActivityStatusRow } from "./ActivityStatusRow";
 import { CustomStatusEditor } from "./CustomStatusEditor";
 import { MemberSince } from "./MemberSince";
 import { ProfileAvatarFrame } from "./ProfileAvatarFrame";
@@ -64,7 +66,7 @@ export function OwnProfileModal({
   // identify-service. Se resetea a "En línea" al reabrir el modal a
   // propósito -- no hay nada real que persistir.
   const [activityStatus, setActivityStatus] =
-    useState<ActivityStatus>("online");
+    useState<ActivityStatusChoice>("online");
 
   const avatarSrc =
     imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
@@ -215,6 +217,12 @@ export function OwnProfileModal({
               </>
             )}
           </span>
+          <ActivityStatusDot
+            status={displayedStatus(activityStatus)}
+            ringWidth={3}
+            size={16}
+            className="absolute right-1 bottom-1"
+          />
         </ProfileAvatarFrame>
         <input
           ref={fileInputRef}
@@ -297,7 +305,7 @@ export function OwnProfileModal({
             <p className="text-content-subtle mt-1 text-xs">{profile.email}</p>
           </div>
 
-          <ActivityStatusPicker
+          <ActivityStatusRow
             status={activityStatus}
             onChange={setActivityStatus}
           />

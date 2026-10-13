@@ -30,12 +30,17 @@ export function ProfileAvatarFrame({
 }: ProfileAvatarFrameProps) {
   const avatar = (
     <>
-      <Avatar name={name} src={src} size={size} className="rounded-full" />
       <span
-        className="absolute inset-0 rounded-full border-4"
-        style={{ borderColor: "var(--bg-modal)" }}
-        aria-hidden="true"
-      />
+        className="block rounded-full p-1"
+        style={{ backgroundColor: "var(--bg-modal)" }}
+      >
+        <Avatar
+          name={name}
+          src={src}
+          size={size - 8}
+          className="rounded-full"
+        />
+      </span>
       {children}
     </>
   );
