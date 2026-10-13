@@ -81,6 +81,50 @@ body {
   }
 }
 
+@keyframes speaking-pulse {
+  0%,
+  100% {
+    box-shadow:
+      0 0 0 0 color-mix(in srgb, var(--success) 50%, transparent),
+      0 0 20px color-mix(in srgb, var(--success) 20%, transparent);
+  }
+  50% {
+    box-shadow:
+      0 0 0 5px color-mix(in srgb, var(--success) 12%, transparent),
+      0 0 32px color-mix(in srgb, var(--success) 35%, transparent);
+  }
+}
+
+.speaking-glow {
+  border-color: var(--success);
+  animation: speaking-pulse 1.8s ease-in-out infinite;
+}
+
+@keyframes speaking-bar {
+  0%,
+  100% {
+    transform: scaleY(0.45);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+.speaking-bar {
+  transform-origin: bottom;
+  animation: speaking-bar 0.9s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .speaking-glow {
+    animation: none;
+    box-shadow: 0 0 24px color-mix(in srgb, var(--success) 30%, transparent);
+  }
+  .speaking-bar {
+    animation: none;
+  }
+}
+
 .loader-logo {
   --logo-ink: #e8eef5;
   --logo-square: #e8eef5;

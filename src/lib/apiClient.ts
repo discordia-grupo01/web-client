@@ -89,3 +89,26 @@ export async function apiRequestWithSetCookie<T>(
     return { result: toNetworkError(error), setCookieHeader: undefined };
   }
 }
+
+/**
+ * Como `apiRequest`, pero ademas devuelve el body crudo. Lo necesita voz:
+ * signaling manda los errores como `{ error: "voice_forbidden" }` y no con la
+ * forma de los otros servicios, asi que `toApiResult` pierde el codigo.
+ */
+export async function apiRequestWithBody<T>(
+  path: string,
+  options: RequestOptions = {},
+): Promise<{ result: ApiResult<T>; body: unknown }> {
+  try {
+    const response = await http.request<unknown>({
+      url: path,
+      ...buildRequestConfig(options),
+    });
+    return {
+      result: toApiResult<T>(response.status, response.data),
+      body: response.data,
+    };
+  } catch (error) {
+    return { result: toNetworkError(error), body: undefined };
+  }
+}

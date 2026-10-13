@@ -1,14 +1,22 @@
 "use client";
 
-import { type User } from "@discordia/client-shared";
+import {
+  type User,
+  VOICE_MODERATOR_MUTED,
+  VOICE_MUTE_LABEL,
+  VOICE_UNMUTE_LABEL,
+} from "@discordia/client-shared";
 
-import { Headphones, LogOut, Mic, Settings } from "lucide-react";
+import { Headphones, LogOut, Mic, MicOff, Settings } from "lucide-react";
 import { useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal";
 import { Avatar } from "@/components/ui/Avatar";
+import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
+import { cn } from "@/lib/cn";
+import { useOptionalVoiceSession } from "@/services/voice/VoiceSessionContext";
 
 interface UserPanelProps {
   user: User;
@@ -18,9 +26,18 @@ interface UserPanelProps {
 export function UserPanel({ user, onClick }: UserPanelProps) {
   const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const voice = useOptionalVoiceSession();
+  const isMuted = voice?.state.muted ?? false;
+  const canSpeak = voice?.state.canSpeak ?? true;
+  const micLabel = !canSpeak
+    ? VOICE_MODERATOR_MUTED
+    : isMuted
+      ? VOICE_UNMUTE_LABEL
+      : VOICE_MUTE_LABEL;
 
   return (
     <>
+      <VoiceConnectedStrip />
       <div
         className="flex w-full shrink-0 items-center gap-1 px-2 py-2"
         style={{
@@ -61,10 +78,19 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
         <div className="flex shrink-0 items-center gap-0.5">
           <button
             type="button"
-            title="Silenciar micrófono"
-            className="text-content-muted hover:bg-surface-hover flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+            title={micLabel}
+            aria-label={micLabel}
+            aria-pressed={isMuted}
+            onClick={voice?.toggleMute}
+            disabled={!canSpeak}
+            className={cn(
+              "flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50",
+              isMuted
+                ? "text-danger hover:bg-danger/10"
+                : "text-content-muted hover:bg-surface-hover",
+            )}
           >
-            <Mic size={15} />
+            {isMuted ? <MicOff size={15} /> : <Mic size={15} />}
           </button>
           <button
             type="button"

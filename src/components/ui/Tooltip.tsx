@@ -9,9 +9,15 @@ interface TooltipProps {
   children: ReactNode;
   /** Ancho del hijo: por default se ajusta al contenido. */
   className?: string;
+  align?: "center" | "end";
 }
 
-export function Tooltip({ label, children, className }: TooltipProps) {
+export function Tooltip({
+  label,
+  children,
+  className,
+  align = "center",
+}: TooltipProps) {
   const [isSuppressed, setIsSuppressed] = useState(false);
 
   return (
@@ -28,8 +34,9 @@ export function Tooltip({ label, children, className }: TooltipProps) {
       <span
         role="tooltip"
         className={cn(
-          "bg-surface-raised border-line text-content pointer-events-none absolute top-full left-1/2 z-50",
-          "mt-1.5 -translate-x-1/2 rounded-md border px-2 py-1 text-xs whitespace-nowrap shadow-lg",
+          "bg-surface-raised border-line text-content pointer-events-none absolute top-full z-50",
+          "mt-1.5 rounded-md border px-2 py-1 text-xs whitespace-nowrap shadow-lg",
+          align === "end" ? "right-0" : "left-1/2 -translate-x-1/2",
           "opacity-0 transition-opacity",
           !isSuppressed &&
             "group-hover:opacity-100 group-has-[:focus-visible]:opacity-100",
