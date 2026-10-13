@@ -224,7 +224,10 @@ export function useDirectMessages(
   );
 
   const sendMessage = useCallback(
-    (content: string): Promise<SendDmResult> => {
+    (
+      content: string,
+      attachmentIds: readonly string[] = [],
+    ): Promise<SendDmResult> => {
       if (!activePartnerId) {
         return Promise.resolve({ ok: false, message: DM_SEND_FAILED });
       }
@@ -239,6 +242,7 @@ export function useDirectMessages(
             partner_id: activePartnerId,
             message: sent.message,
           }),
+        attachmentIds,
       );
     },
     [activePartnerId, applyDm],

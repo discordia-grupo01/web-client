@@ -4,6 +4,7 @@ import {
   formatMessageTime,
   MESSAGE_EDITED_LABEL,
   mentionsPerson,
+  type MessageAttachment,
   type MessageAuthor,
   type MessageMentions,
   type MessageReaction,
@@ -14,6 +15,7 @@ import { useState } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 
+import { MessageAttachments } from "./MessageAttachments";
 import { MessageActions } from "./MessageActions";
 import { useMessageMentions } from "./MentionsContext";
 import { MessageContent } from "./MessageContent";
@@ -32,6 +34,7 @@ export interface MessageItemMessage extends MessageMentions {
   inserted_at: string;
   edited_at?: string | null;
   reactions?: MessageReaction[];
+  attachments?: MessageAttachment[];
 }
 
 /** `void` en los mensajes directos (maqueta local, no puede fallar). */
@@ -118,12 +121,13 @@ export function MessageItem({
         {isEditing ? (
           <MessageEditForm
             initialContent={message.content}
+            hasAttachments={(message.attachments?.length ?? 0) > 0}
             onSave={saveEdit}
             onCancel={stopEditing}
             isSaving={isSavingEdit}
             error={editError}
           />
-        ) : (
+        ) : message.content || !message.attachments?.length ? (
           <MessageContent
             content={message.content}
             mentions={message}
@@ -135,7 +139,11 @@ export function MessageItem({
               ) : null
             }
           />
-        )}
+        ) : null}
+
+        {!isEditing && message.attachments?.length ? (
+          <MessageAttachments attachments={message.attachments} />
+        ) : null}
 
         {!isEditing && onToggleReaction ? (
           <MessageReactions

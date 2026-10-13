@@ -25,7 +25,10 @@ import { DmWelcome } from "./DmWelcome";
 interface DmConversationProps {
   currentAuthor: MessageAuthor;
   activeSummary: ConversationSummary | null;
-  onSend: (content: string) => Promise<SendDmResult>;
+  onSend: (
+    content: string,
+    attachmentIds?: readonly string[],
+  ) => Promise<SendDmResult>;
   onOpenPartnerProfile: (partnerId: string) => void;
 }
 
@@ -122,6 +125,7 @@ export function DmConversation({
       <MessageComposer
         placeholder={dmInputPlaceholder(partner.name)}
         onSend={onSend}
+        uploadTarget={{ to: partner.id }}
         disabled={blockedByMe}
       />
     </div>
