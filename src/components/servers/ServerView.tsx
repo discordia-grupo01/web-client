@@ -125,6 +125,18 @@ function bucketCategoryId(bucket: string): string | null {
   return bucket.startsWith("cat:") ? bucket.slice(4) : null;
 }
 
+function placeChannelInBucket(
+  channels: Channel[],
+  moved: Channel,
+  orderedIds: string[],
+): Channel[] {
+  return channels.map((existing) => {
+    const current = existing.id === moved.id ? moved : existing;
+    const position = orderedIds.indexOf(current.id);
+    return position === -1 ? current : { ...current, position };
+  });
+}
+
 interface ServerViewProps {
   server: ServerSummary;
   onLeft: () => void;
@@ -147,10 +159,12 @@ interface ServerViewProps {
 function CategoryDropZone({
   bucket,
   items,
+  showEmptyTarget = false,
   children,
 }: {
   bucket: string;
   items: string[];
+  showEmptyTarget?: boolean;
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: bucket });
@@ -166,6 +180,14 @@ function CategoryDropZone({
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {children}
       </SortableContext>
+      {showEmptyTarget && items.length === 0 ? (
+        <div
+          className={cn(
+            "h-8 rounded-md border border-dashed transition-colors",
+            isOver ? "border-accent-strong/60" : "border-line",
+          )}
+        />
+      ) : null}
     </div>
   );
 }
@@ -750,6 +772,69 @@ export function ServerView({
     }
   }
 
+  async function moveChannelToBucket(
+    channel: Channel,
+    targetBucket: string,
+    overId: string,
+  ) {
+    const targetCategoryId = resolveBucketCategoryId(targetBucket);
+    if (targetCategoryId === channel.category_id) return;
+
+    const targetIds = channelsInBucket(targetBucket).map((c) => c.id);
+    const overIndex = targetIds.indexOf(overId);
+    const insertAt = overIndex === -1 ? targetIds.length : overIndex;
+    const orderedIds = [
+      ...targetIds.slice(0, insertAt),
+      channel.id,
+      ...targetIds.slice(insertAt),
+    ];
+
+    const previousChannels = server.channels;
+    onServerUpdate({
+      ...server,
+      channels: placeChannelInBucket(
+        previousChannels,
+        { ...channel, category_id: targetCategoryId },
+        orderedIds,
+      ),
+    });
+
+    const moved = await moveChannelToCategoryRequest(
+      channel.id,
+      targetCategoryId,
+    );
+    if (!moved.ok) {
+      setDragError(moved.message);
+      onServerUpdate({ ...server, channels: previousChannels });
+      return;
+    }
+
+    const reordered = await reorderChannelsRequest(
+      server.id,
+      moved.channel.category_id,
+      orderedIds,
+    );
+    if (!reordered.ok) {
+      setDragError(reordered.message);
+      onServerUpdate({
+        ...server,
+        channels: previousChannels.map((existing) =>
+          existing.id === channel.id ? moved.channel : existing,
+        ),
+      });
+      return;
+    }
+
+    onServerUpdate({
+      ...server,
+      channels: placeChannelInBucket(
+        previousChannels,
+        moved.channel,
+        orderedIds,
+      ),
+    });
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setDraggingChannel(null);
@@ -771,35 +856,7 @@ export function ServerView({
     if (!overBucket) return;
 
     if (overBucket !== activeBucket) {
-      const targetCategoryId = resolveBucketCategoryId(overBucket);
-      if (targetCategoryId === channel.category_id) return;
-
-      const previousChannels = server.channels;
-      onServerUpdate({
-        ...server,
-        channels: previousChannels.map((existing) =>
-          existing.id === channel.id
-            ? { ...existing, category_id: targetCategoryId }
-            : existing,
-        ),
-      });
-
-      const result = await moveChannelToCategoryRequest(
-        channel.id,
-        targetCategoryId,
-      );
-      if (!result.ok) {
-        setDragError(result.message);
-        onServerUpdate({ ...server, channels: previousChannels });
-        return;
-      }
-
-      onServerUpdate({
-        ...server,
-        channels: previousChannels.map((existing) =>
-          existing.id === channel.id ? result.channel : existing,
-        ),
-      });
+      await moveChannelToBucket(channel, overBucket, String(over.id));
       return;
     }
 
@@ -911,10 +968,11 @@ export function ServerView({
             onDragEnd={handleDragEnd}
           >
             <div className="flex-1 space-y-3 overflow-y-auto px-2 py-1">
-              {uncategorized.length > 0 ? (
+              {uncategorized.length > 0 || canManageChannels ? (
                 <CategoryDropZone
                   bucket={UNCATEGORIZED_BUCKET}
                   items={uncategorized.map((channel) => channel.id)}
+                  showEmptyTarget={draggingChannel !== null}
                 >
                   {renderChannelList(uncategorized)}
                 </CategoryDropZone>
