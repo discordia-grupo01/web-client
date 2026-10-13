@@ -2,6 +2,7 @@
 
 import {
   type User,
+  VOICE_MODERATOR_MUTED,
   VOICE_MUTE_LABEL,
   VOICE_UNMUTE_LABEL,
 } from "@discordia/client-shared";
@@ -27,7 +28,12 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const voice = useOptionalVoiceSession();
   const isMuted = voice?.state.muted ?? false;
-  const micLabel = isMuted ? VOICE_UNMUTE_LABEL : VOICE_MUTE_LABEL;
+  const canSpeak = voice?.state.canSpeak ?? true;
+  const micLabel = !canSpeak
+    ? VOICE_MODERATOR_MUTED
+    : isMuted
+      ? VOICE_UNMUTE_LABEL
+      : VOICE_MUTE_LABEL;
 
   return (
     <>
@@ -76,8 +82,9 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
             aria-label={micLabel}
             aria-pressed={isMuted}
             onClick={voice?.toggleMute}
+            disabled={!canSpeak}
             className={cn(
-              "flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors",
+              "flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors disabled:cursor-not-allowed disabled:opacity-50",
               isMuted
                 ? "text-danger hover:bg-danger/10"
                 : "text-content-muted hover:bg-surface-hover",

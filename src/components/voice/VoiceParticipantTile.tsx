@@ -11,6 +11,7 @@ import {
   type VoiceParticipant,
 } from "@discordia/client-shared";
 
+import type { Track } from "livekit-client";
 import { MicOff, MonitorUp, Video, Volume2, VolumeX } from "lucide-react";
 import type { ReactNode } from "react";
 
@@ -18,11 +19,15 @@ import { Tooltip } from "@/components/ui/Tooltip";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 
+import { VoiceVideo } from "./VoiceVideo";
+
 const SPEAKING_BAR_HEIGHTS = [4, 7, 11, 7, 4];
 
 interface VoiceParticipantTileProps {
   participant: VoiceParticipant;
   avatarSrc?: string | null;
+  /** Pantalla compartida o camara, en ese orden de prioridad. */
+  video?: { track: Track; source: "camera" | "screen" } | null;
   /** Solo para los demas: el tuyo no se puede silenciar para vos. */
   onToggleMutedForMe?: () => void;
 }
@@ -30,6 +35,7 @@ interface VoiceParticipantTileProps {
 export function VoiceParticipantTile({
   participant,
   avatarSrc,
+  video = null,
   onToggleMutedForMe,
 }: VoiceParticipantTileProps) {
   const { name, speaking, muted, cameraOn, screenSharing, mutedForMe } =
@@ -54,9 +60,18 @@ export function VoiceParticipantTile({
         }}
       />
 
+      {video ? (
+        <VoiceVideo
+          track={video.track}
+          fit={video.source === "screen" ? "contain" : "cover"}
+          isMirrored={participant.isLocal && video.source === "camera"}
+        />
+      ) : null}
+
       <div
         className={cn(
           "relative rounded-full transition-[box-shadow,opacity]",
+          video && "hidden",
           mutedForMe && "opacity-50",
         )}
         style={{

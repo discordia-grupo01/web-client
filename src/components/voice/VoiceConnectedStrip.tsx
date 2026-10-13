@@ -8,7 +8,7 @@ import {
   voiceConnectedLocation,
 } from "@discordia/client-shared";
 
-import { PhoneOff } from "lucide-react";
+import { PhoneOff, TriangleAlert, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { useOptionalVoiceSession } from "@/services/voice/VoiceSessionContext";
@@ -22,7 +22,15 @@ const STATUS_LABEL = {
 export function VoiceConnectedStrip() {
   const voice = useOptionalVoiceSession();
   const target = voice?.state.target;
-  if (!voice || !target || voice.state.status === "idle") return null;
+  if (!voice) return null;
+  if (!target || voice.state.status === "idle") {
+    return voice.state.notice ? (
+      <VoiceEndedNotice
+        message={voice.state.notice}
+        onDismiss={voice.dismissNotice}
+      />
+    ) : null;
+  }
 
   const isConnected = voice.state.status === "connected";
 
@@ -69,6 +77,33 @@ export function VoiceConnectedStrip() {
         className="text-content-muted hover:bg-danger/10 hover:text-danger flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors"
       >
         <PhoneOff size={15} />
+      </button>
+    </div>
+  );
+}
+
+/** Por que se corto la llamada (te sacaron, se cerro el canal, se cayo). */
+function VoiceEndedNotice({
+  message,
+  onDismiss,
+}: {
+  message: string;
+  onDismiss: () => void;
+}) {
+  return (
+    <div
+      role="status"
+      className="bg-danger/10 border-danger/20 text-danger flex shrink-0 items-start gap-2 border-t px-3 py-2 text-xs"
+    >
+      <TriangleAlert size={14} className="mt-0.5 shrink-0" />
+      <span className="flex-1">{message}</span>
+      <button
+        type="button"
+        onClick={onDismiss}
+        aria-label="Cerrar aviso"
+        className="cursor-pointer opacity-70 hover:opacity-100"
+      >
+        <X size={14} />
       </button>
     </div>
   );

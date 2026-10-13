@@ -9,6 +9,7 @@ import {
   VOICE_LEAVE,
   VOICE_LEAVE_LABEL,
   VOICE_MUTE,
+  VOICE_MODERATOR_MUTED,
   VOICE_MUTE_LABEL,
   VOICE_SCREEN_SHARE,
   VOICE_SCREEN_SHARE_START,
@@ -34,6 +35,8 @@ type ControlTone = "neutral" | "danger" | "accent";
 
 interface VoiceControlsProps {
   muted: boolean;
+  /** `false` si un moderador te silencio: el mic queda apagado y no se puede activar. */
+  canSpeak: boolean;
   cameraOn: boolean;
   screenSharing: boolean;
   onToggleMute: () => void;
@@ -44,6 +47,7 @@ interface VoiceControlsProps {
 
 export function VoiceControls({
   muted,
+  canSpeak,
   cameraOn,
   screenSharing,
   onToggleMute,
@@ -62,9 +66,16 @@ export function VoiceControls({
         <ControlButton
           icon={muted ? MicOff : Mic}
           label={muted ? VOICE_UNMUTE : VOICE_MUTE}
-          ariaLabel={muted ? VOICE_UNMUTE_LABEL : VOICE_MUTE_LABEL}
+          ariaLabel={
+            !canSpeak
+              ? VOICE_MODERATOR_MUTED
+              : muted
+                ? VOICE_UNMUTE_LABEL
+                : VOICE_MUTE_LABEL
+          }
           tone={muted ? "danger" : "neutral"}
           isPressed={muted}
+          disabled={!canSpeak}
           onClick={onToggleMute}
         />
         <ControlButton
@@ -119,6 +130,7 @@ function ControlButton({
   tone,
   isPressed,
   isLeave = false,
+  disabled = false,
   onClick,
 }: {
   icon: LucideIcon;
@@ -127,6 +139,7 @@ function ControlButton({
   tone: ControlTone;
   isPressed?: boolean;
   isLeave?: boolean;
+  disabled?: boolean;
   onClick: () => void;
 }) {
   const classes = TONE_CLASSES[tone];
@@ -135,6 +148,7 @@ function ControlButton({
     <button
       type="button"
       onClick={onClick}
+      disabled={disabled}
       aria-label={ariaLabel}
       aria-pressed={isPressed}
       title={ariaLabel}
@@ -142,6 +156,7 @@ function ControlButton({
         "flex min-w-14 cursor-pointer flex-col items-center gap-1 rounded-xl px-2 py-2 transition-all active:scale-95 md:px-4",
         "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none",
         classes.button,
+        disabled && "cursor-not-allowed opacity-50 active:scale-100",
         isLeave &&
           "bg-danger/15 hover:bg-danger/25 border-danger/30 border md:px-5",
       )}

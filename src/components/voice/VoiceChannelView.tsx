@@ -1,23 +1,26 @@
 "use client";
 
 import {
+  VOICE_AUDIO_BLOCKED,
   VOICE_CHANNEL_EMPTY,
   VOICE_CONNECT_FORBIDDEN,
   VOICE_IN_CHANNEL_LABEL,
   VOICE_JOIN,
+  VOICE_MODERATOR_MUTED,
   VOICE_SWITCH,
+  voiceParticipantsOf,
   voicePresenceCount,
   type Channel,
   type User,
   type VoicePresenceParticipant,
 } from "@discordia/client-shared";
 
-import { Volume2, VolumeX } from "lucide-react";
+import { TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 import { useVoiceSession } from "@/services/voice/VoiceSessionContext";
-import { voiceParticipantsOf } from "@/services/voice/voiceSession";
 
 import { VoiceControls } from "./VoiceControls";
 import { VoiceParticipantTile } from "./VoiceParticipantTile";
@@ -27,8 +30,6 @@ interface VoiceChannelViewProps {
   channel: Channel;
   serverId: string;
   serverName: string;
-  /** Todos los canales del servidor (los datos de prueba salen de aca). */
-  channels: readonly Channel[];
   canConnect: boolean;
   ownProfile: User | null;
   /** Quien esta en este canal, para la pantalla previa a entrar. */
@@ -39,7 +40,6 @@ export function VoiceChannelView({
   channel,
   serverId,
   serverName,
-  channels,
   canConnect,
   ownProfile,
   presence,
@@ -55,26 +55,28 @@ export function VoiceChannelView({
         canConnect={canConnect && ownProfile !== null}
         isInAnotherChannel={state.target !== null}
         presence={presence}
+        notice={state.notice}
+        onDismissNotice={voice.dismissNotice}
         onJoin={() =>
-          voice.join(
-            {
-              serverId,
-              serverName,
-              channelId: channel.id,
-              channelName: channel.name,
-            },
-            channels,
-          )
+          voice.join({
+            serverId,
+            serverName,
+            channelId: channel.id,
+            channelName: channel.name,
+          })
         }
       />
     );
   }
 
-  const participants = voiceParticipantsOf(state, {
-    identity: ownProfile.id,
-    name: ownProfile.name,
-  });
+  const participants = voiceParticipantsOf(state);
   const ownSrc = ownAvatarSrc(ownProfile);
+  const videoOf = (identity: string) => {
+    const screen = voice.videoTrackOf(identity, "screen");
+    if (screen) return { track: screen, source: "screen" as const };
+    const camera = voice.videoTrackOf(identity, "camera");
+    return camera ? { track: camera, source: "camera" as const } : null;
+  };
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
@@ -94,6 +96,7 @@ export function VoiceChannelView({
               key={participant.identity}
               participant={participant}
               avatarSrc={participant.isLocal ? ownSrc : null}
+              video={videoOf(participant.identity)}
               onToggleMutedForMe={
                 participant.isLocal
                   ? undefined
@@ -104,8 +107,26 @@ export function VoiceChannelView({
         </div>
       </div>
 
+      {voice.isAudioBlocked ? (
+        <CallBanner>
+          <button
+            type="button"
+            onClick={voice.startAudio}
+            className="cursor-pointer underline-offset-2 hover:underline"
+          >
+            {VOICE_AUDIO_BLOCKED}
+          </button>
+        </CallBanner>
+      ) : null}
+      {!state.canSpeak ? (
+        <CallBanner>{VOICE_MODERATOR_MUTED}</CallBanner>
+      ) : voice.mediaError ? (
+        <CallBanner>{voice.mediaError}</CallBanner>
+      ) : null}
+
       <VoiceControls
         muted={state.muted}
+        canSpeak={state.canSpeak}
         cameraOn={state.cameraOn}
         screenSharing={state.screenSharing}
         onToggleMute={voice.toggleMute}
@@ -117,17 +138,32 @@ export function VoiceChannelView({
   );
 }
 
+function CallBanner({ children }: { children: ReactNode }) {
+  return (
+    <div className="flex shrink-0 justify-center px-4 pb-2">
+      <p className="bg-highlight/15 text-content flex items-center gap-2 rounded-lg px-3 py-2 text-sm">
+        <TriangleAlert size={15} className="text-highlight shrink-0" />
+        {children}
+      </p>
+    </div>
+  );
+}
+
 function VoiceLobby({
   channelName,
   canConnect,
   isInAnotherChannel,
   presence,
+  notice,
+  onDismissNotice,
   onJoin,
 }: {
   channelName: string;
   canConnect: boolean;
   isInAnotherChannel: boolean;
   presence: readonly VoicePresenceParticipant[];
+  notice: string | null;
+  onDismissNotice: () => void;
   onJoin: () => void;
 }) {
   const Icon = canConnect ? Volume2 : VolumeX;
@@ -174,6 +210,23 @@ function VoiceLobby({
             </li>
           ) : null}
         </ul>
+      ) : null}
+
+      {notice ? (
+        <p
+          role="alert"
+          className="bg-danger/10 text-danger flex max-w-sm items-start gap-2 rounded-lg px-3 py-2 text-left text-sm"
+        >
+          <span className="flex-1">{notice}</span>
+          <button
+            type="button"
+            onClick={onDismissNotice}
+            aria-label="Cerrar aviso"
+            className="cursor-pointer opacity-70 hover:opacity-100"
+          >
+            <X size={15} />
+          </button>
+        </p>
       ) : null}
 
       {canConnect ? (

@@ -16,6 +16,7 @@ import {
   sortByPosition,
   topLevelChannels,
   toVoicePresence,
+  voiceParticipantsOf,
   type User,
   VOICE_CONNECTING,
   VOICE_RECONNECTING,
@@ -107,9 +108,8 @@ import {
   listRolesRequest,
 } from "@/services/roles/client";
 import { listServersRequest } from "@/services/servers/client";
-import { mockPresenceFor } from "@/services/voice/mockVoice";
+import { useVoicePresence } from "@/services/voice/useVoicePresence";
 import { useVoiceSession } from "@/services/voice/VoiceSessionContext";
-import { voiceParticipantsOf } from "@/services/voice/voiceSession";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./sidebar/ServerSidebarHeader";
@@ -538,27 +538,28 @@ export function ServerView({
       ? voiceState.target.channelId
       : null;
   const liveVoiceParticipants = useMemo(
-    () =>
-      voiceChannelId && ownProfile
-        ? voiceParticipantsOf(voiceState, {
-            identity: ownProfile.id,
-            name: ownProfile.name,
-          })
-        : [],
-    [voiceChannelId, ownProfile, voiceState],
+    () => (voiceChannelId ? voiceParticipantsOf(voiceState) : []),
+    [voiceChannelId, voiceState],
   );
-  // TODO(voz): `mockPresenceFor` se reemplaza por el polling de
-  // `GET /api/voice/participants` cuando se conecte con signaling.
-  const voicePresence = useMemo(() => {
-    const presence = mockPresenceFor(server.channels);
-    return voiceChannelId
-      ? withLivePresence(
-          presence,
-          voiceChannelId,
-          toVoicePresence(liveVoiceParticipants),
-        )
-      : presence;
-  }, [server.channels, voiceChannelId, liveVoiceParticipants]);
+  // Lo del canal propio sale en vivo de LiveKit; el resto, del polling.
+  const { byChannel: polledVoicePresence, refresh: refreshVoicePresence } =
+    useVoicePresence(server.id);
+  const voicePresence = useMemo(
+    () =>
+      voiceChannelId
+        ? withLivePresence(
+            polledVoicePresence,
+            voiceChannelId,
+            toVoicePresence(liveVoiceParticipants),
+          )
+        : polledVoicePresence,
+    [polledVoicePresence, voiceChannelId, liveVoiceParticipants],
+  );
+  // Al entrar o salir, la lista de los demas se actualiza sin esperar al poll.
+  const voiceStatus = voiceState.status;
+  useEffect(() => {
+    refreshVoicePresence();
+  }, [voiceChannelId, voiceStatus, refreshVoicePresence]);
 
   function sidebarVoiceParticipants(
     channelId: string,
@@ -1039,7 +1040,6 @@ export function ServerView({
                 channel={activeChannel}
                 serverId={server.id}
                 serverName={server.name}
-                channels={server.channels}
                 canConnect={canInActiveChannel("CONNECT", canConnect)}
                 ownProfile={ownProfile}
                 presence={voicePresence[activeChannel.id] ?? []}
