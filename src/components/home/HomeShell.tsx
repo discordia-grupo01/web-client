@@ -70,7 +70,7 @@ function HomeShellContent({
   const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
-    
+
   const voice = useVoiceSession();
   const voiceFocus = voice.state.focus;
   useEffect(() => {
