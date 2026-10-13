@@ -178,13 +178,18 @@ export function useChannelOverrides(
 
 export type ChannelOverridesState = ReturnType<typeof useChannelOverrides>;
 
+export type MyChannelPermissions =
+  | { status: "loading" }
+  | { status: "loaded"; permissions: readonly string[] }
+  | { status: "unknown" };
+
 export function useMyChannelPermissions(
   channelId: string | null,
   refreshKey = 0,
-): string[] | null {
+): MyChannelPermissions {
   const [loaded, setLoaded] = useState<{
     channelId: string;
-    permissions: string[];
+    permissions: string[] | null;
   } | null>(null);
   const [focusCount, setFocusCount] = useState(0);
 
@@ -194,19 +199,26 @@ export function useMyChannelPermissions(
     return () => window.removeEventListener("focus", onFocus);
   }, []);
 
-  // No llega evento cuando una excepcion cambia sin quitar el acceso, asi que
-  // se vuelve a pedir al cambiar de canal, al subir refreshKey y con el foco.
   useEffect(() => {
     if (!channelId) return;
     let cancelled = false;
     getMyChannelPermissionsRequest(channelId).then((result) => {
-      if (cancelled || !result.ok) return;
-      setLoaded({ channelId, permissions: result.permissions });
+      if (cancelled) return;
+      setLoaded((current) => {
+        if (result.ok) return { channelId, permissions: result.permissions };
+        // Un fallo al refrescar no borra lo que ya sabiamos de este canal.
+        if (current?.channelId === channelId) return current;
+        return { channelId, permissions: null };
+      });
     });
     return () => {
       cancelled = true;
     };
   }, [channelId, refreshKey, focusCount]);
 
-  return loaded && loaded.channelId === channelId ? loaded.permissions : null;
+  if (!channelId) return { status: "unknown" };
+  if (loaded?.channelId !== channelId) return { status: "loading" };
+  return loaded.permissions
+    ? { status: "loaded", permissions: loaded.permissions }
+    : { status: "unknown" };
 }

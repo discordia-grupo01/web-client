@@ -509,12 +509,18 @@ export function ServerView({
     permissionsVersion,
   );
 
+  const isCheckingChannelPermissions =
+    !isOwner && activeChannelPermissions.status === "loading";
+
   function canInActiveChannel(
     permission: ChannelOverridePermission,
     serverLevel: boolean,
   ): boolean {
-    if (isOwner || activeChannelPermissions === null) return serverLevel;
-    return activeChannelPermissions.includes(permission);
+    if (isOwner || activeChannelPermissions.status === "unknown") {
+      return serverLevel;
+    }
+    if (activeChannelPermissions.status === "loading") return false;
+    return activeChannelPermissions.permissions.includes(permission);
   }
 
   function handleAccessRevoked(reason: AccessRevokedReason) {
@@ -1091,6 +1097,7 @@ export function ServerView({
                   "ADD_REACTIONS",
                   canAddReactions,
                 )}
+                isCheckingPermissions={isCheckingChannelPermissions}
                 onAccessRevoked={handleAccessRevoked}
               />
             ) : (
@@ -1099,6 +1106,7 @@ export function ServerView({
                 serverId={server.id}
                 serverName={server.name}
                 canConnect={canInActiveChannel("CONNECT", canConnect)}
+                isCheckingAccess={isCheckingChannelPermissions}
                 ownProfile={ownProfile}
                 presence={voicePresence[activeChannel.id] ?? []}
               />
