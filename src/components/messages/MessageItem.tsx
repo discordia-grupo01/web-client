@@ -3,6 +3,7 @@
 import {
   formatMessageTime,
   MESSAGE_EDITED_LABEL,
+  MESSAGE_NOT_SENT_LABEL,
   mentionsPerson,
   type MessageAttachment,
   type MessageAuthor,
@@ -10,6 +11,7 @@ import {
   type MessageReaction,
 } from "@discordia/client-shared";
 
+import { CircleAlert } from "lucide-react";
 import { useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
@@ -35,6 +37,9 @@ export interface MessageItemMessage extends MessageMentions {
   edited_at?: string | null;
   reactions?: MessageReaction[];
   attachments?: MessageAttachment[];
+  /** Mensaje propio que no se pudo enviar (solo existe en pantalla). */
+  delivery?: "failed";
+  delivery_error?: string;
 }
 
 /** `void` en los mensajes directos (maqueta local, no puede fallar). */
@@ -65,6 +70,7 @@ export function MessageItem({
   onDelete,
 }: MessageItemProps) {
   const { me } = useMessageMentions();
+  const delivery = message.delivery;
   const isMentioningMe =
     me.userId !== null && mentionsPerson(message, me.userId, me.roleIds);
   const [isEditing, setIsEditing] = useState(false);
@@ -95,6 +101,8 @@ export function MessageItem({
           ? "bg-highlight/10 hover:bg-highlight/15 border-highlight rounded-none border-l-2"
           : "hover:bg-surface-hover",
         isGroupStart && "mt-4",
+        delivery === "failed" &&
+          "border-danger bg-danger/5 rounded-none border-l-2",
       )}
     >
       {isGroupStart ? (
@@ -145,7 +153,17 @@ export function MessageItem({
           <MessageAttachments attachments={message.attachments} />
         ) : null}
 
-        {!isEditing && onToggleReaction ? (
+        {delivery === "failed" ? (
+          <p
+            role="alert"
+            className="text-danger mt-0.5 flex items-center gap-1 text-xs"
+          >
+            <CircleAlert size={13} aria-hidden />
+            {message.delivery_error || MESSAGE_NOT_SENT_LABEL}
+          </p>
+        ) : null}
+
+        {!isEditing && !delivery && onToggleReaction ? (
           <MessageReactions
             reactions={message.reactions ?? []}
             onToggle={onToggleReaction}
@@ -154,7 +172,7 @@ export function MessageItem({
         ) : null}
       </div>
 
-      {!isEditing ? (
+      {!isEditing && !delivery ? (
         <MessageActions
           canEdit={canEdit}
           canDelete={canDelete}

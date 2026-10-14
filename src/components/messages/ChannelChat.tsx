@@ -19,6 +19,7 @@ import { useMemo, useState } from "react";
 import { avatarSrcOf } from "@/lib/userProfile";
 import { useServerMembers } from "@/services/members/useServerMembers";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
+import { useFailedMessages } from "@/services/messages/useFailedMessages";
 import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
@@ -72,6 +73,13 @@ export function ChannelChat({
     deleteMessage,
   } = useChannelMessages(channel, currentAuthor?.id ?? null, {
     onAccessRevoked,
+  });
+  const failed = useFailedMessages({
+    chatKey: channel.id,
+    channelId: channel.id,
+    currentUserId: currentAuthor?.id ?? null,
+    send: sendMessage,
+    getLastMessageId: () => messages?.at(-1)?.id ?? null,
   });
   const members = useServerMembers(serverId);
   const authors = useMessageAuthors(members, messages, currentAuthor);
@@ -130,7 +138,7 @@ export function ChannelChat({
         <MessageList
           welcome={<ChannelWelcome channelName={channel.name} />}
           label={`Mensajes de #${channel.name}`}
-          messages={messages}
+          messages={failed.withFailed(messages)}
           authors={authors}
           currentUserId={currentAuthor?.id ?? null}
           canManageMessages={canManageMessages}
@@ -166,7 +174,7 @@ export function ChannelChat({
             ? messageInputPlaceholder(channel.name)
             : SEND_MESSAGES_DENIED_PLACEHOLDER
         }
-        onSend={sendMessage}
+        onSend={failed.onSend}
         uploadTarget={{ channelId: channel.id }}
         disabled={!currentAuthor || status !== "ready" || !canSendMessages}
       />

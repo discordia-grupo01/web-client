@@ -9,6 +9,7 @@ import {
 } from "@discordia/client-shared";
 
 import { MessageCircle } from "lucide-react";
+import { useCallback, useRef } from "react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { MessageList } from "@/components/messages/MessageList";
@@ -18,6 +19,7 @@ import type {
   ConversationSummary,
   SendDmResult,
 } from "@/services/conversations/useDirectMessages";
+import { useFailedMessages } from "@/services/messages/useFailedMessages";
 
 import { DmHistory } from "./DmHistory";
 import { DmWelcome } from "./DmWelcome";
@@ -38,6 +40,18 @@ export function DmConversation({
   onSend,
   onOpenPartnerProfile,
 }: DmConversationProps) {
+  const lastMessageId = useRef<string | null>(null);
+  const setLastMessageId = useCallback((id: string | null) => {
+    lastMessageId.current = id;
+  }, []);
+  const failed = useFailedMessages({
+    chatKey: activeSummary?.conversationId ?? activeSummary?.partner.id ?? "",
+    channelId: activeSummary?.conversationId ?? "",
+    currentUserId: currentAuthor.id,
+    send: onSend,
+    getLastMessageId: () => lastMessageId.current,
+  });
+
   if (!activeSummary) {
     return (
       <div
@@ -100,14 +114,16 @@ export function DmConversation({
           conversationId={conversationId}
           partner={partner}
           currentAuthor={currentAuthor}
+          withFailed={failed.withFailed}
+          onLastMessageIdChange={setLastMessageId}
         />
       ) : (
         // Borrador: nadie escribio todavia, no hay nada que pedirle al back.
         <MessageList
           welcome={<DmWelcome partner={partner} />}
           label={`Conversación con ${partner.name}`}
-          messages={[]}
-          authors={{}}
+          messages={failed.withFailed([])}
+          authors={{ [currentAuthor.id]: currentAuthor }}
           currentUserId={currentAuthor.id}
           canManageMessages={false}
           canSendMessages
@@ -124,7 +140,7 @@ export function DmConversation({
       ) : null}
       <MessageComposer
         placeholder={dmInputPlaceholder(partner.name)}
-        onSend={onSend}
+        onSend={failed.onSend}
         uploadTarget={{ to: partner.id }}
         disabled={blockedByMe}
       />

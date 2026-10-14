@@ -9,6 +9,8 @@ import {
   type DirectConversation,
   type ListConversationsResult,
   joinUserChannel,
+  markConversationReadIn,
+  mergeConversations,
   type MessageAuthor,
   messageAuthorOf,
   type NewDmPayload,
@@ -17,6 +19,8 @@ import {
   type SendDmResult,
   type UserRoomCallbacks,
   unknownAuthor,
+  withActiveRead,
+  withDraftConversations,
   withLocalReads,
 } from "@discordia/client-shared";
 
@@ -80,7 +84,11 @@ export function useDirectMessages(
   });
 
   const applyList = useCallback((result: ListConversationsResult) => {
-    if (result.ok) setConversations(result.conversations);
+    if (result.ok) {
+      setConversations((prev) =>
+        mergeConversations(prev, result.conversations),
+      );
+    }
     setLoadError(result.ok ? null : result.message);
     setIsLoading(false);
   }, []);
@@ -169,16 +177,29 @@ export function useDirectMessages(
     }
   }, [conversations, partners]);
 
+  const [draftPartnerIds, setDraftPartnerIds] = useState<string[]>([]);
   const [readKeys, setReadKeys] = useState<ReadonlySet<string>>(new Set());
 
-  const summaries = useMemo(
-    () =>
-      withLocalReads(
-        conversationSummaries(conversations, partners, blockedIds),
-        readKeys,
-      ),
-    [conversations, partners, blockedIds, readKeys],
-  );
+  const summaries = useMemo(() => {
+    const listed = withLocalReads(
+      conversationSummaries(conversations, partners, blockedIds),
+      readKeys,
+    );
+    return withDraftConversations(
+      isViewActive ? withActiveRead(listed, activePartnerId) : listed,
+      draftPartnerIds,
+      partners,
+      blockedIds,
+    );
+  }, [
+    conversations,
+    partners,
+    blockedIds,
+    readKeys,
+    draftPartnerIds,
+    isViewActive,
+    activePartnerId,
+  ]);
 
   const activeSummary = useMemo(
     () =>
@@ -194,19 +215,54 @@ export function useDirectMessages(
   );
 
   // Abrir una conversacion (o recibir un mensaje con ella abierta) la marca leida.
-  const activeUnreadId =
-    isViewActive && activeSummary?.isUnread === true
-      ? activeSummary.conversationId
-      : null;
-  const activeLastMessageId = activeSummary?.lastMessage?.id;
+  const activeConversation = isViewActive
+    ? conversations.find((c) => c.partner_id === activePartnerId)
+    : undefined;
+  const activeUnreadId = activeConversation?.unread
+    ? activeConversation.id
+    : null;
+  const activeLastMessageId = activeConversation?.last_message?.id;
+
+  // Se ve leida al instante (se ajusta durante el render): si se cambia de chat
+  // antes de que el back conteste, el punto no queda colgado. El back lo
+  // confirma aparte, en el efecto de abajo.
+  const [toConfirm, setToConfirm] = useState<{
+    conversationId: string;
+    lastMessageId: string | undefined;
+  } | null>(null);
+  if (
+    activeUnreadId &&
+    (toConfirm?.conversationId !== activeUnreadId ||
+      toConfirm.lastMessageId !== activeLastMessageId)
+  ) {
+    setToConfirm({
+      conversationId: activeUnreadId,
+      lastMessageId: activeLastMessageId,
+    });
+    setConversations((prev) =>
+      markConversationReadIn(prev, activeUnreadId, activeLastMessageId),
+    );
+  }
   useEffect(() => {
-    if (!activeUnreadId) return;
-    void markConversationReadRequest(activeUnreadId).then((result) => {
+    if (!toConfirm) return;
+    const { conversationId, lastMessageId } = toConfirm;
+    void markConversationReadRequest(conversationId).then((result) => {
       if (!result.ok) return;
-      const key = conversationReadKey(activeUnreadId, activeLastMessageId);
+      const key = conversationReadKey(conversationId, lastMessageId);
       setReadKeys((prev) => new Set(prev).add(key));
     });
-  }, [activeUnreadId, activeLastMessageId]);
+  }, [toConfirm]);
+
+  // Un chat restaurado tras recargar sin conversacion en el back (ni borrador
+  // abierto en esta sesion) no se muestra: el back manda.
+  if (
+    !isLoading &&
+    activePartnerId &&
+    !conversations.some((c) => c.partner_id === activePartnerId) &&
+    !draftPartnerIds.includes(activePartnerId)
+  ) {
+    setActivePartnerId(null);
+  }
 
   /**
    * Abre la conversacion con `partnerId`. Si nunca hablaron no se crea nada
@@ -217,6 +273,10 @@ export function useDirectMessages(
     (partnerId: string, partner?: MessageAuthor) => {
       if (partner) {
         setPartners((prev) => ({ ...prev, [partnerId]: partner }));
+        setDraftPartnerIds((prev) => [
+          partnerId,
+          ...prev.filter((id) => id !== partnerId),
+        ]);
       }
       setActivePartnerId(partnerId);
     },

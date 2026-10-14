@@ -3,10 +3,11 @@
 import {
   CHAT_RECONNECTING_NOTICE,
   LOADING_MESSAGES_LABEL,
+  type Message,
   type MessageAuthor,
 } from "@discordia/client-shared";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { ChatStatusNotice } from "@/components/messages/ChatStatusNotice";
 import { MessageList } from "@/components/messages/MessageList";
@@ -18,6 +19,10 @@ interface DmHistoryProps {
   conversationId: string;
   partner: MessageAuthor;
   currentAuthor: MessageAuthor;
+  /** Pone en su lugar los mensajes propios que no se pudieron enviar. */
+  withFailed: (messages: Message[]) => Message[];
+  /** El ultimo mensaje del chat, para anclar ahi un envio fallido. */
+  onLastMessageIdChange: (id: string | null) => void;
 }
 
 /**
@@ -30,6 +35,8 @@ export function DmHistory({
   conversationId,
   partner,
   currentAuthor,
+  withFailed,
+  onLastMessageIdChange,
 }: DmHistoryProps) {
   const {
     status,
@@ -43,6 +50,10 @@ export function DmHistory({
     editMessage,
     deleteMessage,
   } = useChannelMessages({ id: conversationId });
+  const lastMessageId = messages?.at(-1)?.id ?? null;
+  useEffect(() => {
+    onLastMessageIdChange(lastMessageId);
+  }, [lastMessageId, onLastMessageIdChange]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const authors = useMemo(
     () => ({ [partner.id]: partner, [currentAuthor.id]: currentAuthor }),
@@ -72,7 +83,7 @@ export function DmHistory({
         <MessageList
           welcome={<DmWelcome partner={partner} />}
           label={`Conversación con ${partner.name}`}
-          messages={messages}
+          messages={withFailed(messages)}
           authors={authors}
           currentUserId={currentAuthor.id}
           canManageMessages={false}

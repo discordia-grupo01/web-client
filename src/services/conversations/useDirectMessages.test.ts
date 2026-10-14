@@ -167,6 +167,102 @@ describe("useDirectMessages", () => {
     );
   });
 
+  it("lo leido con el chat abierto sigue leido aunque se cambie de chat antes de que el back conteste", async () => {
+    vi.mocked(listConversationsRequest).mockResolvedValue({
+      ok: true,
+      conversations: [
+        conversation(),
+        conversation({ id: "conv2", partner_id: "beto" }),
+      ],
+    });
+    let confirmRead: (value: { ok: true }) => void = () => {};
+    vi.mocked(markConversationReadRequest).mockReturnValue(
+      new Promise((resolve) => {
+        confirmRead = resolve;
+      }),
+    );
+    const { result } = await mountAndJoin();
+    act(() => result.current.openConversation("ana"));
+
+    act(() =>
+      room.handlers.new_dm({
+        conversation_id: "conv1",
+        partner_id: "ana",
+        message: message("m2", "ana"),
+      }),
+    );
+    await waitFor(() =>
+      expect(markConversationReadRequest).toHaveBeenCalledWith("conv1"),
+    );
+    act(() => result.current.openConversation("beto"));
+    await act(async () => confirmRead({ ok: true }));
+
+    const ana = result.current.conversations.find(
+      (c) => c.partner.id === "ana",
+    );
+    expect(ana?.isUnread).toBe(false);
+  });
+
+  it("un new_dm repetido de lo ya leido no vuelve a marcar sin leer", async () => {
+    vi.mocked(listConversationsRequest).mockResolvedValue({
+      ok: true,
+      conversations: [
+        conversation(),
+        conversation({ id: "conv2", partner_id: "beto" }),
+      ],
+    });
+    const { result } = await mountAndJoin();
+    act(() => result.current.openConversation("ana"));
+    const dm = {
+      conversation_id: "conv1",
+      partner_id: "ana",
+      message: message("m2", "ana"),
+    };
+    act(() => room.handlers.new_dm(dm));
+    await waitFor(() =>
+      expect(markConversationReadRequest).toHaveBeenCalledWith("conv1"),
+    );
+    await act(async () => {});
+    act(() => result.current.openConversation("beto"));
+
+    act(() => room.handlers.new_dm(dm));
+    await act(async () => {});
+
+    const ana = result.current.conversations.find(
+      (c) => c.partner.id === "ana",
+    );
+    expect(ana?.isUnread).toBe(false);
+  });
+
+  it("al cambiar de chat sin que el back conteste, la lectura ya mostrada no se pierde", async () => {
+    vi.mocked(listConversationsRequest).mockResolvedValue({
+      ok: true,
+      conversations: [
+        conversation(),
+        conversation({ id: "conv2", partner_id: "beto" }),
+      ],
+    });
+    vi.mocked(markConversationReadRequest).mockReturnValue(
+      new Promise(() => {}),
+    );
+    const { result } = await mountAndJoin();
+    act(() => result.current.openConversation("ana"));
+    act(() =>
+      room.handlers.new_dm({
+        conversation_id: "conv1",
+        partner_id: "ana",
+        message: message("m2", "ana"),
+      }),
+    );
+
+    act(() => result.current.openConversation("beto"));
+
+    const ana = result.current.conversations.find(
+      (c) => c.partner.id === "ana",
+    );
+    expect(ana?.isUnread).toBe(false);
+  });
+
   it("no marca como leida si la vista de DMs no esta activa", async () => {
     vi.mocked(listConversationsRequest).mockResolvedValue({
       ok: true,
