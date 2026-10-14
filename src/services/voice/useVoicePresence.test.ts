@@ -116,6 +116,66 @@ describe("useVoicePresence", () => {
     expect(result.current.byChannel).toEqual({});
   });
 
+  it("lo olvidado sigue afuera aunque el poll lo traiga antes de confirmar", async () => {
+    listVoiceParticipantsRequest.mockResolvedValue({
+      ok: true,
+      byChannel: { c1: [ana] },
+    });
+
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    act(() => result.current.forget("c1", "u1"));
+    await act(async () => {
+      vi.advanceTimersByTime(VOICE_PARTICIPANTS_POLL_MS);
+    });
+    await flush();
+
+    expect(listVoiceParticipantsRequest).toHaveBeenCalledTimes(2);
+    expect(result.current.byChannel).toEqual({});
+  });
+
+  it("confirm vuelve a mostrar lo que trae el back", async () => {
+    listVoiceParticipantsRequest.mockResolvedValue({
+      ok: true,
+      byChannel: { c1: [ana] },
+    });
+
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    act(() => result.current.forget("c1", "u1"));
+    expect(result.current.byChannel).toEqual({});
+
+    act(() => result.current.confirm());
+    await flush();
+
+    expect(result.current.byChannel).toEqual({ c1: [ana] });
+  });
+
+  it("si se olvida de nuevo antes de que vuelva el confirm, sigue afuera", async () => {
+    listVoiceParticipantsRequest.mockResolvedValueOnce({
+      ok: true,
+      byChannel: { c1: [ana] },
+    });
+    let resolveConfirm: (value: unknown) => void = () => {};
+    listVoiceParticipantsRequest.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveConfirm = resolve;
+      }),
+    );
+
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    act(() => result.current.forget("c1", "u1"));
+    act(() => result.current.confirm());
+    act(() => result.current.forget("c2", "u1"));
+    await act(async () => {
+      resolveConfirm({ ok: true, byChannel: { c2: [ana] } });
+      await Promise.resolve();
+    });
+
+    expect(result.current.byChannel).toEqual({});
+  });
+
   it("sin servidor no pide nada", () => {
     renderHook(() => useVoicePresence(null));
     expect(listVoiceParticipantsRequest).not.toHaveBeenCalled();
