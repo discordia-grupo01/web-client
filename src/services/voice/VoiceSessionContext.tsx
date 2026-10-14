@@ -46,6 +46,11 @@ interface VoiceSessionValue {
   mediaError: string | null;
   /** El navegador bloqueo el audio hasta que el usuario toque algo. */
   isAudioBlocked: boolean;
+  /**
+   * Sube cuando signaling confirma la salida (`DELETE /api/voice/session`):
+   * recien ahi la presencia que devuelve el back ya no lo trae a uno adentro.
+   */
+  leaveSettledCount: number;
   join: (target: VoiceSessionTarget) => void;
   leave: () => void;
   toggleMute: () => void;
@@ -75,6 +80,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   );
   const [mediaError, setMediaError] = useState<string | null>(null);
   const [isAudioBlocked, setIsAudioBlocked] = useState(false);
+  const [leaveSettledCount, setLeaveSettledCount] = useState(0);
 
   const roomRef = useRef<Room | null>(null);
   const audioHostRef = useRef<HTMLDivElement>(null);
@@ -243,6 +249,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     if (!channelId) return;
 
     const result = await leaveVoiceSessionRequest(channelId);
+    setLeaveSettledCount((count) => count + 1);
     if (!result.ok && stateRef.current.target === null) {
       dispatch({ type: "ended", notice: result.message });
     }
@@ -350,6 +357,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       state,
       mediaError,
       isAudioBlocked,
+      leaveSettledCount,
       join: startJoin,
       leave: startLeave,
       toggleMute,
@@ -365,6 +373,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       state,
       mediaError,
       isAudioBlocked,
+      leaveSettledCount,
       startJoin,
       startLeave,
       toggleMute,
