@@ -3,7 +3,12 @@ import type {
   VoiceParticipant,
 } from "@discordia/client-shared";
 
-import { DisconnectReason, type Participant, RoomEvent } from "livekit-client";
+import {
+  DisconnectReason,
+  type Participant,
+  RoomEvent,
+  Track,
+} from "livekit-client";
 
 /** Eventos de LiveKit que cambian lo que se ve de los participantes. */
 export const PARTICIPANT_EVENTS = [
@@ -60,6 +65,49 @@ export function roomParticipants(room: {
       toVoiceParticipant(participant, false),
     ),
   ];
+}
+
+/** El video de una tarjeta. La pantalla compartida le gana a la camara. */
+export interface TileVideo<T = Track> {
+  track: T;
+  source: "camera" | "screen";
+}
+
+/** Lo que hace falta de un participante de LiveKit para encontrar su video. */
+interface VideoParticipant<T> {
+  identity: string;
+  getTrackPublication: (
+    source: Track.Source,
+  ) => { isMuted: boolean; track?: T } | undefined;
+}
+
+interface VideoRoom<T> {
+  localParticipant: VideoParticipant<T>;
+  remoteParticipants: ReadonlyMap<string, VideoParticipant<T>>;
+}
+
+function publishedVideo<T>(
+  participant: VideoParticipant<T> | undefined,
+  source: Track.Source,
+): T | null {
+  const publication = participant?.getTrackPublication(source);
+  return publication && !publication.isMuted
+    ? (publication.track ?? null)
+    : null;
+}
+
+export function tileVideoOf<T>(
+  room: VideoRoom<T>,
+  identity: string,
+): TileVideo<T> | null {
+  const participant =
+    room.localParticipant.identity === identity
+      ? room.localParticipant
+      : room.remoteParticipants.get(identity);
+  const screen = publishedVideo(participant, Track.Source.ScreenShare);
+  if (screen) return { track: screen, source: "screen" };
+  const camera = publishedVideo(participant, Track.Source.Camera);
+  return camera ? { track: camera, source: "camera" } : null;
 }
 
 /**
