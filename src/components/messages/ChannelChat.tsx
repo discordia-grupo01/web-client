@@ -19,10 +19,12 @@ import { useMemo, useState } from "react";
 import { avatarSrcOf } from "@/lib/userProfile";
 import { useServerMembers } from "@/services/members/useServerMembers";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
+import { useFailedMessages } from "@/services/messages/useFailedMessages";
 import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
 import { ChatStatusNotice } from "./ChatStatusNotice";
+import { ConnectionLostNotice } from "./ConnectionLostNotice";
 import {
   MessageMentionsProvider,
   type MessageMentionsValue,
@@ -72,6 +74,13 @@ export function ChannelChat({
     deleteMessage,
   } = useChannelMessages(channel, currentAuthor?.id ?? null, {
     onAccessRevoked,
+  });
+  const failed = useFailedMessages({
+    chatKey: channel.id,
+    channelId: channel.id,
+    currentUserId: currentAuthor?.id ?? null,
+    send: sendMessage,
+    getLastMessageId: () => messages?.at(-1)?.id ?? null,
   });
   const members = useServerMembers(serverId);
   const authors = useMessageAuthors(members, messages, currentAuthor);
@@ -125,12 +134,16 @@ export function ChannelChat({
   return (
     <MessageMentionsProvider value={mentions}>
       {messages === null ? (
-        <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+        status === "offline" ? (
+          <ConnectionLostNotice variant="panel" />
+        ) : (
+          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+        )
       ) : (
         <MessageList
           welcome={<ChannelWelcome channelName={channel.name} />}
           label={`Mensajes de #${channel.name}`}
-          messages={messages}
+          messages={failed.withFailed(messages)}
           authors={authors}
           currentUserId={currentAuthor?.id ?? null}
           canManageMessages={canManageMessages}
@@ -152,6 +165,9 @@ export function ChannelChat({
           {actionError}
         </p>
       ) : null}
+      {status === "offline" && messages !== null ? (
+        <ConnectionLostNotice variant="bar" />
+      ) : null}
       {status === "reconnecting" ? (
         <p
           role="status"
@@ -166,7 +182,7 @@ export function ChannelChat({
             ? messageInputPlaceholder(channel.name)
             : SEND_MESSAGES_DENIED_PLACEHOLDER
         }
-        onSend={sendMessage}
+        onSend={failed.onSend}
         uploadTarget={{ channelId: channel.id }}
         disabled={!currentAuthor || status !== "ready" || !canSendMessages}
       />

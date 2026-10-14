@@ -102,6 +102,7 @@ export function MessageComposer({
     if (outcome === undefined) {
       setIsSending(false);
       clearDraft();
+      textareaRef.current?.focus();
       return;
     }
 
@@ -203,7 +204,8 @@ export function MessageComposer({
           onKeyDown={handleKeyDown}
           aria-controls={draft.isOpen ? suggestionsId : undefined}
           aria-autocomplete="list"
-          disabled={disabled || isSending}
+          disabled={disabled}
+          readOnly={isSending}
           placeholder={placeholder}
           aria-label={placeholder}
           className="text-content placeholder:text-content-subtle w-full border-none bg-transparent py-1.5 text-base outline-none placeholder:truncate md:text-sm"
