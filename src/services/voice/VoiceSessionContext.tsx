@@ -36,10 +36,10 @@ import { leaveVoiceSessionRequest, requestVoiceTokenRequest } from "./client";
 import {
   PARTICIPANT_EVENTS,
   roomParticipants,
+  type TileVideo,
+  tileVideoOf,
   toVoiceDisconnectReason,
 } from "./livekitParticipants";
-
-export type VoiceVideoSource = "camera" | "screen";
 
 interface VoiceSessionValue {
   state: VoiceSessionState;
@@ -55,7 +55,7 @@ interface VoiceSessionValue {
   focusConnectedChannel: () => void;
   dismissNotice: () => void;
   startAudio: () => void;
-  videoTrackOf: (identity: string, source: VoiceVideoSource) => Track | null;
+  videoOf: (identity: string) => TileVideo | null;
 }
 
 const VoiceSessionContext = createContext<VoiceSessionValue | null>(null);
@@ -341,23 +341,10 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     void roomRef.current?.startAudio();
   }, []);
 
-  const videoTrackOf = useCallback(
-    (identity: string, source: VoiceVideoSource): Track | null => {
-      const room = roomRef.current;
-      if (!room) return null;
-      const participant =
-        room.localParticipant.identity === identity
-          ? room.localParticipant
-          : room.remoteParticipants.get(identity);
-      const publication = participant?.getTrackPublication(
-        source === "camera" ? Track.Source.Camera : Track.Source.ScreenShare,
-      );
-      return publication && !publication.isMuted
-        ? (publication.track ?? null)
-        : null;
-    },
-    [],
-  );
+  const videoOf = useCallback((identity: string): TileVideo | null => {
+    const room = roomRef.current;
+    return room ? tileVideoOf<Track>(room, identity) : null;
+  }, []);
 
   const value = useMemo(
     () => ({
@@ -374,7 +361,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       focusConnectedChannel,
       dismissNotice,
       startAudio,
-      videoTrackOf,
+      videoOf,
     }),
     [
       state,
@@ -390,7 +377,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       focusConnectedChannel,
       dismissNotice,
       startAudio,
-      videoTrackOf,
+      videoOf,
     ],
   );
 

@@ -7,6 +7,7 @@ import {
 import {
   ConnectionState,
   type DisconnectReason,
+  type LocalTrackPublication,
   type Participant,
   type RemoteTrack,
   Room,
@@ -17,11 +18,20 @@ import {
 import {
   PARTICIPANT_EVENTS,
   roomParticipants,
+  type TileVideo,
+  tileVideoOf,
   toVoiceDisconnectReason,
 } from "./livekitParticipants";
 
+/** Lo que la sesion atiende; el tema y la foto los aplica la pagina. */
+export type VoiceEmbedCommand = Exclude<
+  VoiceBridgeCommand,
+  { type: "setAppearance" }
+>;
+
 export interface VoiceEmbedSession {
-  handle: (command: VoiceBridgeCommand) => void;
+  handle: (command: VoiceEmbedCommand) => void;
+  videoOf: (identity: string) => TileVideo | null;
   dispose: () => void;
 }
 
@@ -35,8 +45,9 @@ export function createVoiceEmbedSession(
   audioHost: HTMLElement,
 ): VoiceEmbedSession {
   let room: Room | null = null;
-  // La app puede mandar el mic antes de que termine de conectar.
+  // La app puede mandar el mic y la camara antes de que termine de conectar.
   let microphoneEnabled = false;
+  let cameraEnabled = false;
   const mutedForMe = new Set<string>();
   let participantsTimer: ReturnType<typeof setTimeout> | null = null;
   let participantsPending = false;
@@ -76,6 +87,22 @@ export function createVoiceEmbedSession(
       await current.localParticipant.setMicrophoneEnabled(enabled);
     } catch {
       if (enabled) post({ type: "error", error: "mic_denied" });
+    }
+  };
+
+  const stopCamera = () => {
+    cameraEnabled = false;
+    post({ type: "cameraStopped" });
+  };
+
+  const applyCamera = async (current: Room) => {
+    const enabled = cameraEnabled;
+    try {
+      await current.localParticipant.setCameraEnabled(enabled);
+    } catch {
+      if (!enabled || !cameraEnabled) return;
+      post({ type: "error", error: "camera_denied" });
+      stopCamera();
     }
   };
 
@@ -131,6 +158,20 @@ export function createVoiceEmbedSession(
         void applyMicrophone(current);
       },
     );
+    // Si se pierde la camara, LiveKit despublica el track sin que la app lo
+    // pida: el boton de la app tiene que volver a "apagada".
+    current.on(
+      RoomEvent.LocalTrackUnpublished,
+      (publication: LocalTrackPublication) => {
+        if (
+          publication.source === Track.Source.Camera &&
+          cameraEnabled &&
+          !current.localParticipant.isCameraEnabled
+        ) {
+          stopCamera();
+        }
+      },
+    );
     current.on(RoomEvent.AudioPlaybackStatusChanged, () => {
       if (!current.canPlaybackAudio) {
         post({ type: "error", error: "audio_blocked" });
@@ -177,6 +218,7 @@ export function createVoiceEmbedSession(
       post({ type: "error", error: "audio_blocked" });
     }
     await applyMicrophone(current);
+    if (cameraEnabled) await applyCamera(current);
   };
 
   const disconnect = () => {
@@ -198,6 +240,12 @@ export function createVoiceEmbedSession(
             void applyMicrophone(room);
           }
           return;
+        case "setCameraEnabled":
+          cameraEnabled = command.enabled;
+          if (room?.state === ConnectionState.Connected) {
+            void applyCamera(room);
+          }
+          return;
         case "setMutedForMe":
           if (command.muted) mutedForMe.add(command.identity);
           else mutedForMe.delete(command.identity);
@@ -210,6 +258,9 @@ export function createVoiceEmbedSession(
           disconnect();
           return;
       }
+    },
+    videoOf(identity) {
+      return room ? tileVideoOf<Track>(room, identity) : null;
     },
     dispose() {
       const current = room;
