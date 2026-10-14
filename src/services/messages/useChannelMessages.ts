@@ -35,7 +35,11 @@ import type { Channel as PhoenixChannel } from "phoenix";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 import { fetchMessagesRequest } from "./client";
-import { acquireSocket, onSocketSessionExpired } from "./socket";
+import {
+  acquireSocket,
+  onSocketGaveUp,
+  onSocketSessionExpired,
+} from "./socket";
 
 export type {
   ChatStatus,
@@ -128,7 +132,7 @@ export function useChannelMessages(
         if (acquired.sessionExpired) {
           fail("sessionExpired", SESSION_EXPIRED_MESSAGE);
         } else {
-          setStatus("reconnecting");
+          setStatus("offline");
         }
         return;
       }
@@ -168,14 +172,20 @@ export function useChannelMessages(
       });
     }
 
-    const stopListening = onSocketSessionExpired(() =>
+    const stopSessionListener = onSocketSessionExpired(() =>
       fail("sessionExpired", SESSION_EXPIRED_MESSAGE),
+    );
+    const stopGaveUpListener = onSocketGaveUp(() =>
+      setStatus((prev) =>
+        prev === "ready" || prev === "reconnecting" ? "offline" : prev,
+      ),
     );
     void start();
 
     return () => {
       cancelled = true;
-      stopListening();
+      stopSessionListener();
+      stopGaveUpListener();
       phoenixChannel.current?.leave();
       phoenixChannel.current = null;
       release?.();

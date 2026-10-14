@@ -40,6 +40,7 @@ export function DirectMessagesView({
   const {
     conversations,
     isLoading,
+    loadError,
     activeSummary,
     openConversation,
     sendMessage,
@@ -56,6 +57,7 @@ export function DirectMessagesView({
         <DmRailList
           conversations={conversations}
           isLoading={isLoading}
+          loadError={loadError}
           activePartnerId={activeSummary?.partner.id ?? null}
           onSelect={(id) => {
             openConversation(id);

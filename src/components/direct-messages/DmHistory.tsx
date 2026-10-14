@@ -10,6 +10,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { ChatStatusNotice } from "@/components/messages/ChatStatusNotice";
+import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
 
@@ -78,7 +79,11 @@ export function DmHistory({
   return (
     <>
       {messages === null ? (
-        <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+        status === "offline" ? (
+          <ConnectionLostNotice variant="panel" />
+        ) : (
+          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+        )
       ) : (
         <MessageList
           welcome={<DmWelcome partner={partner} />}
@@ -103,6 +108,9 @@ export function DmHistory({
         >
           {deleteError}
         </p>
+      ) : null}
+      {status === "offline" && messages !== null ? (
+        <ConnectionLostNotice variant="bar" />
       ) : null}
       {status === "reconnecting" ? (
         <p
