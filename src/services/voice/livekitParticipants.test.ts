@@ -1,8 +1,9 @@
-import { DisconnectReason } from "livekit-client";
+import { DisconnectReason, Track } from "livekit-client";
 import { describe, expect, it } from "vitest";
 
 import {
   roomParticipants,
+  tileVideoOf,
   toVoiceDisconnectReason,
   toVoiceParticipant,
 } from "./livekitParticipants";
@@ -75,5 +76,60 @@ describe("toVoiceDisconnectReason", () => {
     [undefined, "error"],
   ])("%s -> %s", (reason, expected) => {
     expect(toVoiceDisconnectReason(reason)).toBe(expected);
+  });
+});
+
+describe("tileVideoOf", () => {
+  function videoParticipant(
+    identity: string,
+    tracks: Partial<Record<Track.Source, { isMuted: boolean; track: string }>>,
+  ) {
+    return {
+      identity,
+      getTrackPublication: (source: Track.Source) => tracks[source],
+    };
+  }
+
+  const room = {
+    localParticipant: videoParticipant("ana", {
+      [Track.Source.Camera]: { isMuted: false, track: "camara-ana" },
+    }),
+    remoteParticipants: new Map([
+      [
+        "beto",
+        videoParticipant("beto", {
+          [Track.Source.Camera]: { isMuted: false, track: "camara-beto" },
+          [Track.Source.ScreenShare]: {
+            isMuted: false,
+            track: "pantalla-beto",
+          },
+        }),
+      ],
+      [
+        "caro",
+        videoParticipant("caro", {
+          [Track.Source.Camera]: { isMuted: true, track: "camara-caro" },
+        }),
+      ],
+    ]),
+  };
+
+  it("la pantalla compartida le gana a la camara", () => {
+    expect(tileVideoOf(room, "beto")).toEqual({
+      track: "pantalla-beto",
+      source: "screen",
+    });
+  });
+
+  it("encuentra la camara propia", () => {
+    expect(tileVideoOf(room, "ana")).toEqual({
+      track: "camara-ana",
+      source: "camera",
+    });
+  });
+
+  it("una camara apagada o alguien que no esta no tienen video", () => {
+    expect(tileVideoOf(room, "caro")).toBeNull();
+    expect(tileVideoOf(room, "nadie")).toBeNull();
   });
 });

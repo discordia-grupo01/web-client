@@ -7,8 +7,9 @@ export const metadata: Metadata = {
 };
 
 /**
- * La llama el WebView invisible de app-mobile para correr LiveKit (Expo Go
- * no tiene el SDK nativo). No pide sesion: la app ya consiguio el token.
+ * La carga el WebView de app-mobile para correr LiveKit (Expo Go no tiene el
+ * SDK nativo) y dibujar la grilla de la llamada. No pide sesion: la app ya
+ * consiguio el token.
  */
 export default function VoiceEmbedPage() {
   return <VoiceEmbed />;
