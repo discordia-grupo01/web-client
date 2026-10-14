@@ -509,12 +509,18 @@ export function ServerView({
     permissionsVersion,
   );
 
+  const isCheckingChannelPermissions =
+    !isOwner && activeChannelPermissions.status === "loading";
+
   function canInActiveChannel(
     permission: ChannelOverridePermission,
     serverLevel: boolean,
   ): boolean {
-    if (isOwner || activeChannelPermissions === null) return serverLevel;
-    return activeChannelPermissions.includes(permission);
+    if (isOwner || activeChannelPermissions.status === "unknown") {
+      return serverLevel;
+    }
+    if (activeChannelPermissions.status === "loading") return false;
+    return activeChannelPermissions.permissions.includes(permission);
   }
 
   function handleAccessRevoked(reason: AccessRevokedReason) {
@@ -564,8 +570,11 @@ export function ServerView({
     [voiceChannelId, voiceState],
   );
   // Lo del canal propio sale en vivo de LiveKit; el resto, del polling.
-  const { byChannel: polledVoicePresence, refresh: refreshVoicePresence } =
-    useVoicePresence(server.id);
+  const {
+    byChannel: polledVoicePresence,
+    refresh: refreshVoicePresence,
+    forget: forgetVoiceParticipant,
+  } = useVoicePresence(server.id);
   const voicePresence = useMemo(
     () =>
       voiceChannelId
@@ -577,11 +586,31 @@ export function ServerView({
         : polledVoicePresence,
     [polledVoicePresence, voiceChannelId, liveVoiceParticipants],
   );
-  // Al entrar o salir, la lista de los demas se actualiza sin esperar al poll.
+  // Al entrar, la lista de los demas se actualiza sin esperar al poll: al
+  // estar conectado, signaling ya movio la sesion.
   const voiceStatus = voiceState.status;
   useEffect(() => {
-    refreshVoicePresence();
+    if (voiceStatus === "connected") refreshVoicePresence();
   }, [voiceChannelId, voiceStatus, refreshVoicePresence]);
+
+  // Al salir (o cambiar de canal) uno deja de figurar en el canal anterior en
+  // el momento. Pedir la presencia ahi traeria lo viejo: el DELETE a
+  // signaling todavia esta en vuelo, y por eso el avatar quedaba adentro.
+  const ownVoiceIdentity = user ? String(user.id) : null;
+  const previousVoiceChannelId = useRef(voiceChannelId);
+  useEffect(() => {
+    const previous = previousVoiceChannelId.current;
+    previousVoiceChannelId.current = voiceChannelId;
+    if (previous && previous !== voiceChannelId && ownVoiceIdentity) {
+      forgetVoiceParticipant(previous, ownVoiceIdentity);
+    }
+  }, [voiceChannelId, ownVoiceIdentity, forgetVoiceParticipant]);
+
+  // Con la salida confirmada, ya se puede pedir la presencia real.
+  const { leaveSettledCount } = voice;
+  useEffect(() => {
+    if (leaveSettledCount > 0) refreshVoicePresence();
+  }, [leaveSettledCount, refreshVoicePresence]);
 
   function sidebarVoiceParticipants(
     channelId: string,
@@ -1091,6 +1120,7 @@ export function ServerView({
                   "ADD_REACTIONS",
                   canAddReactions,
                 )}
+                isCheckingPermissions={isCheckingChannelPermissions}
                 onAccessRevoked={handleAccessRevoked}
               />
             ) : (
@@ -1099,6 +1129,7 @@ export function ServerView({
                 serverId={server.id}
                 serverName={server.name}
                 canConnect={canInActiveChannel("CONNECT", canConnect)}
+                isCheckingAccess={isCheckingChannelPermissions}
                 ownProfile={ownProfile}
                 presence={voicePresence[activeChannel.id] ?? []}
               />
