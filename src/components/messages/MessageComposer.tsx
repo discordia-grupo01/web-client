@@ -2,9 +2,13 @@
 
 import {
   ATTACH_FILE_LABEL,
+  ATTACHMENT_ACCEPT,
+  type AttachmentTarget,
   EMOJI_PICKER_LABEL,
   MAX_MESSAGE_LENGTH,
   SEND_MESSAGE_LABEL,
+  validateAttachment,
+  validateAttachmentCount,
   validateMessageContent,
 } from "@discordia/client-shared";
 
@@ -21,6 +25,7 @@ import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FieldError } from "@/components/ui/FieldError";
 import { cn } from "@/lib/cn";
 
+import { useAttachmentUploads } from "@/services/attachments/useAttachmentUploads";
 import type { SendMessageResult } from "@/services/messages/useChannelMessages";
 import { useMentionDraft } from "@/services/messages/useMentionDraft";
 
@@ -43,13 +48,19 @@ interface MessageComposerProps {
    * bien (un fallo lo deja para reintentar). Si devuelve `void`, se limpia al
    * instante.
    */
-  onSend: (content: string) => void | Promise<SendMessageResult>;
+  onSend: (
+    content: string,
+    attachmentIds?: string[],
+  ) => void | Promise<SendMessageResult>;
+  /** A donde van los archivos: el canal o el usuario del DM. */
+  uploadTarget: AttachmentTarget;
   disabled?: boolean;
 }
 
 export function MessageComposer({
   placeholder,
   onSend,
+  uploadTarget,
   disabled = false,
 }: MessageComposerProps) {
   const { sources } = useMessageMentions();
@@ -60,32 +71,44 @@ export function MessageComposer({
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
+  const { uploadAll, forget } = useAttachmentUploads();
   // El limite del back cuenta el texto con los tokens `<@id>`, no lo visible.
   const canSend =
     !disabled &&
     !isSending &&
-    validateMessageContent(draft.encoded) === undefined;
+    validateMessageContent(draft.encoded, attachments.length > 0) === undefined;
   const length = [...draft.encoded].length;
+
+  function clearDraft() {
+    draft.reset();
+    setAttachments([]);
+    forget();
+  }
 
   async function submit(event?: FormEvent) {
     event?.preventDefault();
     if (!canSend) return;
     setSendError(undefined);
+    setIsSending(true);
 
-    const outcome = onSend(draft.encoded);
-    if (outcome === undefined) {
-      draft.reset();
-      setAttachments([]);
+    const uploads = await uploadAll(attachments, uploadTarget);
+    if (!uploads.ok) {
+      setIsSending(false);
+      setSendError(uploads.message);
       return;
     }
 
-    setIsSending(true);
+    const outcome = onSend(draft.encoded, uploads.ids);
+    if (outcome === undefined) {
+      setIsSending(false);
+      clearDraft();
+      return;
+    }
+
     const result = await outcome;
     setIsSending(false);
-    if (result.ok) {
-      draft.reset();
-      setAttachments([]);
-    } else setSendError(result.message);
+    if (result.ok) clearDraft();
+    else setSendError(result.message);
     textareaRef.current?.focus();
   }
 
@@ -100,12 +123,20 @@ export function MessageComposer({
   }
 
   function addFiles(files: FileList | null) {
-    if (!files) return;
-    const added = Array.from(files, (file) => ({
-      id: crypto.randomUUID(),
-      file,
-    }));
-    setAttachments((prev) => [...prev, ...added]);
+    if (!files || files.length === 0) return;
+    const chosen = Array.from(files);
+    const rejected = chosen
+      .map((file) => validateAttachment(file))
+      .find((error) => error !== undefined);
+    const valid = chosen.filter((file) => !validateAttachment(file));
+    const overLimit = validateAttachmentCount(attachments.length, valid.length);
+    if (overLimit) return setSendError(overLimit);
+
+    setSendError(rejected);
+    setAttachments((prev) => [
+      ...prev,
+      ...valid.map((file) => ({ id: crypto.randomUUID(), file })),
+    ]);
   }
 
   function insertEmoji(emoji: string) {
@@ -130,6 +161,7 @@ export function MessageComposer({
       ) : null}
       <AttachmentChips
         attachments={attachments}
+        disabled={isSending}
         onRemove={(id) =>
           setAttachments((prev) => prev.filter((item) => item.id !== id))
         }
@@ -139,6 +171,7 @@ export function MessageComposer({
         type="file"
         multiple
         hidden
+        accept={ATTACHMENT_ACCEPT}
         onChange={(event) => {
           addFiles(event.target.files);
           // Permite volver a elegir el mismo archivo despues de quitarlo.

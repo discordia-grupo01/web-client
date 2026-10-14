@@ -125,6 +125,18 @@ function bucketCategoryId(bucket: string): string | null {
   return bucket.startsWith("cat:") ? bucket.slice(4) : null;
 }
 
+function placeChannelInBucket(
+  channels: Channel[],
+  moved: Channel,
+  orderedIds: string[],
+): Channel[] {
+  return channels.map((existing) => {
+    const current = existing.id === moved.id ? moved : existing;
+    const position = orderedIds.indexOf(current.id);
+    return position === -1 ? current : { ...current, position };
+  });
+}
+
 interface ServerViewProps {
   server: ServerSummary;
   onLeft: () => void;
@@ -147,10 +159,12 @@ interface ServerViewProps {
 function CategoryDropZone({
   bucket,
   items,
+  showEmptyTarget = false,
   children,
 }: {
   bucket: string;
   items: string[];
+  showEmptyTarget?: boolean;
   children: ReactNode;
 }) {
   const { setNodeRef, isOver } = useDroppable({ id: bucket });
@@ -166,6 +180,14 @@ function CategoryDropZone({
       <SortableContext items={items} strategy={verticalListSortingStrategy}>
         {children}
       </SortableContext>
+      {showEmptyTarget && items.length === 0 ? (
+        <div
+          className={cn(
+            "h-8 rounded-md border border-dashed transition-colors",
+            isOver ? "border-accent-strong/60" : "border-line",
+          )}
+        />
+      ) : null}
     </div>
   );
 }
@@ -487,12 +509,18 @@ export function ServerView({
     permissionsVersion,
   );
 
+  const isCheckingChannelPermissions =
+    !isOwner && activeChannelPermissions.status === "loading";
+
   function canInActiveChannel(
     permission: ChannelOverridePermission,
     serverLevel: boolean,
   ): boolean {
-    if (isOwner || activeChannelPermissions === null) return serverLevel;
-    return activeChannelPermissions.includes(permission);
+    if (isOwner || activeChannelPermissions.status === "unknown") {
+      return serverLevel;
+    }
+    if (activeChannelPermissions.status === "loading") return false;
+    return activeChannelPermissions.permissions.includes(permission);
   }
 
   function handleAccessRevoked(reason: AccessRevokedReason) {
@@ -542,8 +570,11 @@ export function ServerView({
     [voiceChannelId, voiceState],
   );
   // Lo del canal propio sale en vivo de LiveKit; el resto, del polling.
-  const { byChannel: polledVoicePresence, refresh: refreshVoicePresence } =
-    useVoicePresence(server.id);
+  const {
+    byChannel: polledVoicePresence,
+    refresh: refreshVoicePresence,
+    forget: forgetVoiceParticipant,
+  } = useVoicePresence(server.id);
   const voicePresence = useMemo(
     () =>
       voiceChannelId
@@ -555,11 +586,31 @@ export function ServerView({
         : polledVoicePresence,
     [polledVoicePresence, voiceChannelId, liveVoiceParticipants],
   );
-  // Al entrar o salir, la lista de los demas se actualiza sin esperar al poll.
+  // Al entrar, la lista de los demas se actualiza sin esperar al poll: al
+  // estar conectado, signaling ya movio la sesion.
   const voiceStatus = voiceState.status;
   useEffect(() => {
-    refreshVoicePresence();
+    if (voiceStatus === "connected") refreshVoicePresence();
   }, [voiceChannelId, voiceStatus, refreshVoicePresence]);
+
+  // Al salir (o cambiar de canal) uno deja de figurar en el canal anterior en
+  // el momento. Pedir la presencia ahi traeria lo viejo: el DELETE a
+  // signaling todavia esta en vuelo, y por eso el avatar quedaba adentro.
+  const ownVoiceIdentity = user ? String(user.id) : null;
+  const previousVoiceChannelId = useRef(voiceChannelId);
+  useEffect(() => {
+    const previous = previousVoiceChannelId.current;
+    previousVoiceChannelId.current = voiceChannelId;
+    if (previous && previous !== voiceChannelId && ownVoiceIdentity) {
+      forgetVoiceParticipant(previous, ownVoiceIdentity);
+    }
+  }, [voiceChannelId, ownVoiceIdentity, forgetVoiceParticipant]);
+
+  // Con la salida confirmada, ya se puede pedir la presencia real.
+  const { leaveSettledCount } = voice;
+  useEffect(() => {
+    if (leaveSettledCount > 0) refreshVoicePresence();
+  }, [leaveSettledCount, refreshVoicePresence]);
 
   function sidebarVoiceParticipants(
     channelId: string,
@@ -750,6 +801,69 @@ export function ServerView({
     }
   }
 
+  async function moveChannelToBucket(
+    channel: Channel,
+    targetBucket: string,
+    overId: string,
+  ) {
+    const targetCategoryId = resolveBucketCategoryId(targetBucket);
+    if (targetCategoryId === channel.category_id) return;
+
+    const targetIds = channelsInBucket(targetBucket).map((c) => c.id);
+    const overIndex = targetIds.indexOf(overId);
+    const insertAt = overIndex === -1 ? targetIds.length : overIndex;
+    const orderedIds = [
+      ...targetIds.slice(0, insertAt),
+      channel.id,
+      ...targetIds.slice(insertAt),
+    ];
+
+    const previousChannels = server.channels;
+    onServerUpdate({
+      ...server,
+      channels: placeChannelInBucket(
+        previousChannels,
+        { ...channel, category_id: targetCategoryId },
+        orderedIds,
+      ),
+    });
+
+    const moved = await moveChannelToCategoryRequest(
+      channel.id,
+      targetCategoryId,
+    );
+    if (!moved.ok) {
+      setDragError(moved.message);
+      onServerUpdate({ ...server, channels: previousChannels });
+      return;
+    }
+
+    const reordered = await reorderChannelsRequest(
+      server.id,
+      moved.channel.category_id,
+      orderedIds,
+    );
+    if (!reordered.ok) {
+      setDragError(reordered.message);
+      onServerUpdate({
+        ...server,
+        channels: previousChannels.map((existing) =>
+          existing.id === channel.id ? moved.channel : existing,
+        ),
+      });
+      return;
+    }
+
+    onServerUpdate({
+      ...server,
+      channels: placeChannelInBucket(
+        previousChannels,
+        moved.channel,
+        orderedIds,
+      ),
+    });
+  }
+
   async function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     setDraggingChannel(null);
@@ -771,35 +885,7 @@ export function ServerView({
     if (!overBucket) return;
 
     if (overBucket !== activeBucket) {
-      const targetCategoryId = resolveBucketCategoryId(overBucket);
-      if (targetCategoryId === channel.category_id) return;
-
-      const previousChannels = server.channels;
-      onServerUpdate({
-        ...server,
-        channels: previousChannels.map((existing) =>
-          existing.id === channel.id
-            ? { ...existing, category_id: targetCategoryId }
-            : existing,
-        ),
-      });
-
-      const result = await moveChannelToCategoryRequest(
-        channel.id,
-        targetCategoryId,
-      );
-      if (!result.ok) {
-        setDragError(result.message);
-        onServerUpdate({ ...server, channels: previousChannels });
-        return;
-      }
-
-      onServerUpdate({
-        ...server,
-        channels: previousChannels.map((existing) =>
-          existing.id === channel.id ? result.channel : existing,
-        ),
-      });
+      await moveChannelToBucket(channel, overBucket, String(over.id));
       return;
     }
 
@@ -911,10 +997,11 @@ export function ServerView({
             onDragEnd={handleDragEnd}
           >
             <div className="flex-1 space-y-3 overflow-y-auto px-2 py-1">
-              {uncategorized.length > 0 ? (
+              {uncategorized.length > 0 || canManageChannels ? (
                 <CategoryDropZone
                   bucket={UNCATEGORIZED_BUCKET}
                   items={uncategorized.map((channel) => channel.id)}
+                  showEmptyTarget={draggingChannel !== null}
                 >
                   {renderChannelList(uncategorized)}
                 </CategoryDropZone>
@@ -1033,6 +1120,7 @@ export function ServerView({
                   "ADD_REACTIONS",
                   canAddReactions,
                 )}
+                isCheckingPermissions={isCheckingChannelPermissions}
                 onAccessRevoked={handleAccessRevoked}
               />
             ) : (
@@ -1041,6 +1129,7 @@ export function ServerView({
                 serverId={server.id}
                 serverName={server.name}
                 canConnect={canInActiveChannel("CONNECT", canConnect)}
+                isCheckingAccess={isCheckingChannelPermissions}
                 ownProfile={ownProfile}
                 presence={voicePresence[activeChannel.id] ?? []}
               />

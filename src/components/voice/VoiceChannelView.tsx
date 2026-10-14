@@ -31,6 +31,8 @@ interface VoiceChannelViewProps {
   serverId: string;
   serverName: string;
   canConnect: boolean;
+  /** Los permisos del canal todavia no llegaron: ni boton ni "no tenes permiso". */
+  isCheckingAccess?: boolean;
   ownProfile: User | null;
   /** Quien esta en este canal, para la pantalla previa a entrar. */
   presence: readonly VoicePresenceParticipant[];
@@ -41,6 +43,7 @@ export function VoiceChannelView({
   serverId,
   serverName,
   canConnect,
+  isCheckingAccess = false,
   ownProfile,
   presence,
 }: VoiceChannelViewProps) {
@@ -53,6 +56,7 @@ export function VoiceChannelView({
       <VoiceLobby
         channelName={channel.name}
         canConnect={canConnect && ownProfile !== null}
+        isCheckingAccess={isCheckingAccess}
         isInAnotherChannel={state.target !== null}
         presence={presence}
         notice={state.notice}
@@ -152,6 +156,7 @@ function CallBanner({ children }: { children: ReactNode }) {
 function VoiceLobby({
   channelName,
   canConnect,
+  isCheckingAccess,
   isInAnotherChannel,
   presence,
   notice,
@@ -160,13 +165,15 @@ function VoiceLobby({
 }: {
   channelName: string;
   canConnect: boolean;
+  isCheckingAccess: boolean;
   isInAnotherChannel: boolean;
   presence: readonly VoicePresenceParticipant[];
   notice: string | null;
   onDismissNotice: () => void;
   onJoin: () => void;
 }) {
-  const Icon = canConnect ? Volume2 : VolumeX;
+  const isForbidden = !canConnect && !isCheckingAccess;
+  const Icon = isForbidden ? VolumeX : Volume2;
   const shown = presence.slice(0, 5);
   const hidden = presence.length - shown.length;
 
@@ -181,7 +188,7 @@ function VoiceLobby({
           {channelName}
         </h2>
         <p className="text-content-muted mt-1 max-w-sm text-sm leading-relaxed">
-          {!canConnect
+          {isForbidden
             ? VOICE_CONNECT_FORBIDDEN
             : presence.length === 0
               ? VOICE_CHANNEL_EMPTY

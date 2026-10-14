@@ -41,6 +41,7 @@ interface ChannelChatProps {
   canSendMessages: boolean;
   canMentionEveryone: boolean;
   canAddReactions: boolean;
+  isCheckingPermissions?: boolean;
   onAccessRevoked?: (reason: AccessRevokedReason) => void;
 }
 
@@ -54,6 +55,7 @@ export function ChannelChat({
   canSendMessages,
   canMentionEveryone,
   canAddReactions,
+  isCheckingPermissions = false,
   onAccessRevoked,
 }: ChannelChatProps) {
   const {
@@ -160,11 +162,12 @@ export function ChannelChat({
       ) : null}
       <MessageComposer
         placeholder={
-          canSendMessages
+          canSendMessages || isCheckingPermissions
             ? messageInputPlaceholder(channel.name)
             : SEND_MESSAGES_DENIED_PLACEHOLDER
         }
         onSend={sendMessage}
+        uploadTarget={{ channelId: channel.id }}
         disabled={!currentAuthor || status !== "ready" || !canSendMessages}
       />
     </MessageMentionsProvider>

@@ -5,13 +5,25 @@ import {
 
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { beforeAll, describe, expect, it, vi } from "vitest";
+
+vi.mock("@/services/attachments/client", () => ({
+  uploadAttachmentRequest: vi.fn(),
+}));
+
+import { uploadAttachmentRequest } from "@/services/attachments/client";
 
 import { MessageMentionsProvider } from "./MentionsContext";
 import { MessageComposer } from "./MessageComposer";
 
 function renderComposer(onSend = vi.fn()) {
-  render(<MessageComposer placeholder="Mensaje en #general" onSend={onSend} />);
+  render(
+    <MessageComposer
+      placeholder="Mensaje en #general"
+      onSend={onSend}
+      uploadTarget={{ channelId: "c1" }}
+    />,
+  );
   return { onSend, input: screen.getByRole("textbox") };
 }
 
@@ -21,7 +33,7 @@ describe("MessageComposer", () => {
 
     await userEvent.type(input, "hola{Enter}");
 
-    expect(onSend).toHaveBeenCalledWith("hola");
+    expect(onSend).toHaveBeenCalledWith("hola", []);
     expect(input).toHaveValue("");
   });
 
@@ -53,7 +65,7 @@ describe("MessageComposer", () => {
       screen.getByRole("button", { name: SEND_MESSAGE_LABEL }),
     );
 
-    expect(onSend).toHaveBeenCalledWith("desde el boton");
+    expect(onSend).toHaveBeenCalledWith("desde el boton", []);
   });
 
   it("@everyone sin selector (sin permiso o en un DM) se envia tal cual, como texto", async () => {
@@ -61,7 +73,7 @@ describe("MessageComposer", () => {
 
     await userEvent.type(input, "@everyone hola{Enter}");
 
-    expect(onSend).toHaveBeenCalledWith("@everyone hola");
+    expect(onSend).toHaveBeenCalledWith("@everyone hola", []);
   });
 
   describe("menciones", () => {
@@ -93,7 +105,11 @@ describe("MessageComposer", () => {
         <MessageMentionsProvider
           value={{ sources, me: { userId: "u_ana", roleIds: [] } }}
         >
-          <MessageComposer placeholder="Mensaje en #general" onSend={onSend} />
+          <MessageComposer
+            placeholder="Mensaje en #general"
+            onSend={onSend}
+            uploadTarget={{ channelId: "c1" }}
+          />
         </MessageMentionsProvider>,
       );
       return { onSend, input: screen.getByRole("textbox") };
@@ -141,7 +157,7 @@ describe("MessageComposer", () => {
 
       await userEvent.type(input, "mirá esto{Enter}");
 
-      expect(onSend).toHaveBeenCalledWith("Hola <@u_beto> mirá esto");
+      expect(onSend).toHaveBeenCalledWith("Hola <@u_beto> mirá esto", []);
     });
 
     it("elegir con un clic tambien funciona", async () => {
@@ -151,7 +167,7 @@ describe("MessageComposer", () => {
       await userEvent.click(screen.getByRole("option", { name: /Diseño/ }));
       await userEvent.type(input, "hola{Enter}");
 
-      expect(onSend).toHaveBeenCalledWith("<@&r1> hola");
+      expect(onSend).toHaveBeenCalledWith("<@&r1> hola", []);
     });
 
     it("la mencion elegida se resalta en el cuadro de texto", async () => {
@@ -206,7 +222,7 @@ describe("MessageComposer", () => {
 
       await userEvent.type(input, "hola @Beto{Escape}{Enter}");
 
-      expect(onSend).toHaveBeenCalledWith("hola @Beto");
+      expect(onSend).toHaveBeenCalledWith("hola @Beto", []);
     });
   });
 
@@ -266,5 +282,81 @@ describe("MessageComposer", () => {
 
       expect(onSend).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe("MessageComposer con adjuntos", () => {
+  beforeAll(() => {
+    // jsdom no implementa las URLs de objeto que usa la miniatura.
+    URL.createObjectURL = vi.fn(() => "blob:miniatura");
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  function chooseFiles(files: File[]) {
+    const input =
+      document.querySelector<HTMLInputElement>('input[type="file"]');
+    return userEvent.upload(input!, files, { applyAccept: false });
+  }
+
+  it("rechaza un formato no permitido con un error descriptivo", async () => {
+    renderComposer();
+
+    await chooseFiles([new File(["x"], "a.zip", { type: "application/zip" })]);
+
+    expect(await screen.findByText(/Formato no soportado/)).toBeInTheDocument();
+    expect(screen.queryByText("a.zip")).not.toBeInTheDocument();
+  });
+
+  it("rechaza un archivo que supera el tamaño maximo", async () => {
+    renderComposer();
+    const big = new File(["x"], "grande.pdf", { type: "application/pdf" });
+    Object.defineProperty(big, "size", { value: 11 * 1024 * 1024 });
+
+    await chooseFiles([big]);
+
+    expect(await screen.findByText(/tamaño máximo/)).toBeInTheDocument();
+    expect(screen.queryByText("grande.pdf")).not.toBeInTheDocument();
+  });
+
+  it("sube el archivo y manda su id con el mensaje, aun sin texto", async () => {
+    vi.mocked(uploadAttachmentRequest).mockResolvedValue({
+      ok: true,
+      attachment: {
+        id: "a1",
+        url: "https://x/a1.png",
+        name: "foto.png",
+        content_type: "image/png",
+        size: 10,
+      },
+    });
+    const { onSend } = renderComposer();
+
+    await chooseFiles([new File(["x"], "foto.png", { type: "image/png" })]);
+    await userEvent.click(
+      screen.getByRole("button", { name: SEND_MESSAGE_LABEL }),
+    );
+
+    await waitFor(() => expect(onSend).toHaveBeenCalledWith("", ["a1"]));
+    expect(uploadAttachmentRequest).toHaveBeenCalledWith(expect.any(File), {
+      channelId: "c1",
+    });
+  });
+
+  it("si la subida falla muestra el error y no envia", async () => {
+    vi.mocked(uploadAttachmentRequest).mockResolvedValue({
+      ok: false,
+      message: "No se pudo guardar el archivo",
+    });
+    const { onSend } = renderComposer();
+
+    await chooseFiles([new File(["x"], "foto.png", { type: "image/png" })]);
+    await userEvent.click(
+      screen.getByRole("button", { name: SEND_MESSAGE_LABEL }),
+    );
+
+    expect(
+      await screen.findByText("No se pudo guardar el archivo"),
+    ).toBeInTheDocument();
+    expect(onSend).not.toHaveBeenCalled();
   });
 });

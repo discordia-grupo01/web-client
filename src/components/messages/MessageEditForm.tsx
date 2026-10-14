@@ -15,6 +15,8 @@ import { useMessageMentions } from "./MentionsContext";
 
 interface MessageEditFormProps {
   initialContent: string;
+  /** El mensaje tiene adjuntos: puede quedar sin texto. */
+  hasAttachments?: boolean;
   onSave: (content: string) => void;
   onCancel: () => void;
   /** Mientras se guarda no se puede volver a guardar. */
@@ -26,6 +28,7 @@ interface MessageEditFormProps {
 /** Textarea inline para editar un mensaje: Enter guarda, Esc cancela. */
 export function MessageEditForm({
   initialContent,
+  hasAttachments = false,
   onSave,
   onCancel,
   isSaving = false,
@@ -49,7 +52,8 @@ export function MessageEditForm({
   });
 
   function save() {
-    if (isSaving || validateMessageContent(draft.encoded)) return;
+    if (isSaving || validateMessageContent(draft.encoded, hasAttachments))
+      return;
     onSave(draft.encoded.trim());
   }
 

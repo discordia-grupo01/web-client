@@ -75,6 +75,47 @@ describe("useVoicePresence", () => {
     expect(result.current.byChannel).toEqual({});
   });
 
+  it("forget saca a alguien de un canal sin esperar al back", async () => {
+    const beto = { participant_id: "u2", name: "Beto" };
+    listVoiceParticipantsRequest.mockResolvedValue({
+      ok: true,
+      byChannel: { c1: [ana, beto], c2: [ana] },
+    });
+
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    act(() => result.current.forget("c1", "u1"));
+
+    expect(result.current.byChannel).toEqual({ c1: [beto], c2: [ana] });
+
+    act(() => result.current.forget("c2", "u1"));
+    expect(result.current.byChannel).toEqual({ c1: [beto] });
+  });
+
+  it("forget descarta un pedido en vuelo, que lo volveria a traer", async () => {
+    listVoiceParticipantsRequest.mockResolvedValueOnce({
+      ok: true,
+      byChannel: { c1: [ana] },
+    });
+    let resolveStale: (value: unknown) => void = () => {};
+    listVoiceParticipantsRequest.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveStale = resolve;
+      }),
+    );
+
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    act(() => result.current.refresh());
+    act(() => result.current.forget("c1", "u1"));
+    await act(async () => {
+      resolveStale({ ok: true, byChannel: { c1: [ana] } });
+      await Promise.resolve();
+    });
+
+    expect(result.current.byChannel).toEqual({});
+  });
+
   it("sin servidor no pide nada", () => {
     renderHook(() => useVoicePresence(null));
     expect(listVoiceParticipantsRequest).not.toHaveBeenCalled();
