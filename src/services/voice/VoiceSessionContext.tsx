@@ -13,6 +13,7 @@ import {
 import {
   ConnectionState,
   type DisconnectReason,
+  type LocalTrackPublication,
   type Participant,
   type RemoteTrack,
   Room,
@@ -42,14 +43,8 @@ export type VoiceVideoSource = "camera" | "screen";
 
 interface VoiceSessionValue {
   state: VoiceSessionState;
-  /** Falla de medios dentro de la llamada (mic denegado); la llamada sigue. */
   mediaError: string | null;
-  /** El navegador bloqueo el audio hasta que el usuario toque algo. */
   isAudioBlocked: boolean;
-  /**
-   * Sube cuando signaling confirma la salida (`DELETE /api/voice/session`):
-   * recien ahi la presencia que devuelve el back ya no lo trae a uno adentro.
-   */
   leaveSettledCount: number;
   join: (target: VoiceSessionTarget) => void;
   leave: () => void;
@@ -65,14 +60,6 @@ interface VoiceSessionValue {
 
 const VoiceSessionContext = createContext<VoiceSessionValue | null>(null);
 
-/**
- * La llamada de voz vive arriba de todo (en `HomeShell`) para seguir
- * conectado al cambiar de canal, de servidor o ir a Mensajes Directos.
- *
- * Pide el token al BFF y se conecta directo a LiveKit. Los eventos de la sala
- * se traducen a las acciones de `voiceSessionReducer` (client-shared), el
- * mismo estado que usa mobile con el puente del WebView.
- */
 export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(
     voiceSessionReducer,
@@ -162,6 +149,26 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
             type: "speak_permission",
             allowed: participant.permissions?.canPublish !== false,
           });
+        },
+      );
+      room.on(
+        RoomEvent.LocalTrackUnpublished,
+        (publication: LocalTrackPublication) => {
+          const { localParticipant } = room;
+          const { screenSharing, cameraOn } = stateRef.current;
+          if (
+            publication.source === Track.Source.ScreenShare &&
+            screenSharing &&
+            !localParticipant.isScreenShareEnabled
+          ) {
+            dispatch({ type: "toggle_screen_share" });
+          } else if (
+            publication.source === Track.Source.Camera &&
+            cameraOn &&
+            !localParticipant.isCameraEnabled
+          ) {
+            dispatch({ type: "toggle_camera" });
+          }
         },
       );
       room.on(RoomEvent.AudioPlaybackStatusChanged, () => {
