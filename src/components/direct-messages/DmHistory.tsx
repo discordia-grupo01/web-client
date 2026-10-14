@@ -2,7 +2,6 @@
 
 import {
   CHAT_RECONNECTING_NOTICE,
-  CHAT_OFFLINE_NOTICE_WEB,
   LOADING_MESSAGES_LABEL,
   type Message,
   type MessageAuthor,
@@ -80,13 +79,11 @@ export function DmHistory({
   return (
     <>
       {messages === null ? (
-        <ChatStatusNotice
-          message={
-            status === "offline"
-              ? CHAT_OFFLINE_NOTICE_WEB
-              : LOADING_MESSAGES_LABEL
-          }
-        />
+        status === "offline" ? (
+          <ConnectionLostNotice variant="panel" />
+        ) : (
+          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+        )
       ) : (
         <MessageList
           welcome={<DmWelcome partner={partner} />}
@@ -113,7 +110,7 @@ export function DmHistory({
         </p>
       ) : null}
       {status === "offline" && messages !== null ? (
-        <ConnectionLostNotice />
+        <ConnectionLostNotice variant="bar" />
       ) : null}
       {status === "reconnecting" ? (
         <p
