@@ -19,11 +19,10 @@ import { TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
-import { cn } from "@/lib/cn";
 import { useVoiceSession } from "@/services/voice/VoiceSessionContext";
 
 import { VoiceControls } from "./VoiceControls";
-import { VoiceParticipantTile } from "./VoiceParticipantTile";
+import { VoiceParticipantGrid } from "./VoiceParticipantGrid";
 import { ownAvatarSrc } from "./ownAvatar";
 
 interface VoiceChannelViewProps {
@@ -74,42 +73,16 @@ export function VoiceChannelView({
   }
 
   const participants = voiceParticipantsOf(state);
-  const ownSrc = ownAvatarSrc(ownProfile);
-  const videoOf = (identity: string) => {
-    const screen = voice.videoTrackOf(identity, "screen");
-    if (screen) return { track: screen, source: "screen" as const };
-    const camera = voice.videoTrackOf(identity, "camera");
-    return camera ? { track: camera, source: "camera" as const } : null;
-  };
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
-      <div className="flex min-h-0 flex-1 overflow-y-auto p-3 md:p-8">
-        <div
-          className={cn(
-            "m-auto grid w-full gap-4",
-            participants.length === 1
-              ? "max-w-2xl grid-cols-1"
-              : "max-w-4xl grid-cols-1 sm:grid-cols-2",
-            participants.length > 4 && "max-w-6xl xl:grid-cols-3",
-            state.status === "connecting" && "opacity-60",
-          )}
-        >
-          {participants.map((participant) => (
-            <VoiceParticipantTile
-              key={participant.identity}
-              participant={participant}
-              avatarSrc={participant.isLocal ? ownSrc : null}
-              video={videoOf(participant.identity)}
-              onToggleMutedForMe={
-                participant.isLocal
-                  ? undefined
-                  : () => voice.toggleMutedForMe(participant.identity)
-              }
-            />
-          ))}
-        </div>
-      </div>
+      <VoiceParticipantGrid
+        participants={participants}
+        isConnecting={state.status === "connecting"}
+        ownAvatarSrc={ownAvatarSrc(ownProfile)}
+        videoOf={voice.videoOf}
+        onToggleMutedForMe={voice.toggleMutedForMe}
+      />
 
       {voice.isAudioBlocked ? (
         <CallBanner>
