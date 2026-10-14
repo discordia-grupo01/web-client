@@ -57,6 +57,7 @@ import {
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -371,9 +372,6 @@ export function ServerView({
   const myRoleIds = useMemo(() => myRoles.map((role) => role.id), [myRoles]);
   const [serverRoles, setServerRoles] = useState<Role[]>([]);
 
-  /**
-   * Roles asignados al usuario actual en este servidor
-   */
   const fetchMyRoles = useCallback(() => {
     if (!user) {
       setMyRoles([]);
@@ -569,11 +567,10 @@ export function ServerView({
     () => (voiceChannelId ? voiceParticipantsOf(voiceState) : []),
     [voiceChannelId, voiceState],
   );
-  // Lo del canal propio sale en vivo de LiveKit; el resto, del polling.
   const {
     byChannel: polledVoicePresence,
-    refresh: refreshVoicePresence,
     forget: forgetVoiceParticipant,
+    confirm: confirmVoicePresence,
   } = useVoicePresence(server.id);
   const voicePresence = useMemo(
     () =>
@@ -586,19 +583,14 @@ export function ServerView({
         : polledVoicePresence,
     [polledVoicePresence, voiceChannelId, liveVoiceParticipants],
   );
-  // Al entrar, la lista de los demas se actualiza sin esperar al poll: al
-  // estar conectado, signaling ya movio la sesion.
   const voiceStatus = voiceState.status;
   useEffect(() => {
-    if (voiceStatus === "connected") refreshVoicePresence();
-  }, [voiceChannelId, voiceStatus, refreshVoicePresence]);
+    if (voiceStatus === "connected") confirmVoicePresence();
+  }, [voiceChannelId, voiceStatus, confirmVoicePresence]);
 
-  // Al salir (o cambiar de canal) uno deja de figurar en el canal anterior en
-  // el momento. Pedir la presencia ahi traeria lo viejo: el DELETE a
-  // signaling todavia esta en vuelo, y por eso el avatar quedaba adentro.
   const ownVoiceIdentity = user ? String(user.id) : null;
   const previousVoiceChannelId = useRef(voiceChannelId);
-  useEffect(() => {
+  useLayoutEffect(() => {
     const previous = previousVoiceChannelId.current;
     previousVoiceChannelId.current = voiceChannelId;
     if (previous && previous !== voiceChannelId && ownVoiceIdentity) {
@@ -606,11 +598,11 @@ export function ServerView({
     }
   }, [voiceChannelId, ownVoiceIdentity, forgetVoiceParticipant]);
 
-  // Con la salida confirmada, ya se puede pedir la presencia real.
+  // Con la salida confirmada, lo que traiga el back vuelve a ser la verdad.
   const { leaveSettledCount } = voice;
   useEffect(() => {
-    if (leaveSettledCount > 0) refreshVoicePresence();
-  }, [leaveSettledCount, refreshVoicePresence]);
+    if (leaveSettledCount > 0) confirmVoicePresence();
+  }, [leaveSettledCount, confirmVoicePresence]);
 
   function sidebarVoiceParticipants(
     channelId: string,
