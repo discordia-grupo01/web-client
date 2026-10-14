@@ -10,6 +10,7 @@ vi.mock("./client", () => ({ fetchMessagesRequest: vi.fn() }));
 vi.mock("./socket", () => ({
   acquireSocket: vi.fn(),
   onSocketSessionExpired: vi.fn(() => () => {}),
+  onSocketGaveUp: vi.fn(() => () => {}),
 }));
 
 /** Respuesta de un `push` o del `join` de Phoenix: se dispara a mano desde el test. */
@@ -404,7 +405,7 @@ describe("useChannelMessages: enviar", () => {
 
     expect(outcome).toEqual({
       ok: false,
-      message: "No pudimos enviar el mensaje. Intentá de nuevo.",
+      message: "No pudimos enviar el mensaje.",
     });
   });
 

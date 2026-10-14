@@ -19,6 +19,7 @@ import { cn } from "@/lib/cn";
 interface DmRailListProps {
   conversations: ConversationSummary[];
   isLoading: boolean;
+  loadError: string | null;
   activePartnerId: string | null;
   onSelect: (partnerId: string) => void;
   onStartNew: () => void;
@@ -50,6 +51,7 @@ function DmPartnerAvatar({
 export function DmRailList({
   conversations,
   isLoading,
+  loadError,
   activePartnerId,
   onSelect,
   onStartNew,
@@ -95,8 +97,14 @@ export function DmRailList({
             />
           </div>
         ) : conversations.length === 0 ? (
-          <p className="text-content-subtle px-2 text-xs">
-            {NO_CONVERSATIONS_YET}
+          <p
+            role={loadError ? "alert" : undefined}
+            className={cn(
+              "px-2 text-xs",
+              loadError ? "text-danger" : "text-content-subtle",
+            )}
+          >
+            {loadError ?? NO_CONVERSATIONS_YET}
           </p>
         ) : (
           conversations.map(

@@ -6,6 +6,7 @@ import {
   buildMentionResolver,
   CHAT_RECONNECTING_NOTICE,
   type Channel,
+  CHAT_OFFLINE_NOTICE_WEB,
   LOADING_MESSAGES_LABEL,
   type MentionSources,
   messageInputPlaceholder,
@@ -24,6 +25,7 @@ import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
 import { ChatStatusNotice } from "./ChatStatusNotice";
+import { ConnectionLostNotice } from "./ConnectionLostNotice";
 import {
   MessageMentionsProvider,
   type MessageMentionsValue,
@@ -133,7 +135,13 @@ export function ChannelChat({
   return (
     <MessageMentionsProvider value={mentions}>
       {messages === null ? (
-        <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+        <ChatStatusNotice
+          message={
+            status === "offline"
+              ? CHAT_OFFLINE_NOTICE_WEB
+              : LOADING_MESSAGES_LABEL
+          }
+        />
       ) : (
         <MessageList
           welcome={<ChannelWelcome channelName={channel.name} />}
@@ -159,6 +167,9 @@ export function ChannelChat({
         >
           {actionError}
         </p>
+      ) : null}
+      {status === "offline" && messages !== null ? (
+        <ConnectionLostNotice />
       ) : null}
       {status === "reconnecting" ? (
         <p
