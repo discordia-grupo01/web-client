@@ -16,13 +16,14 @@ import {
 } from "@discordia/client-shared";
 
 import { TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
-import type { ReactNode } from "react";
+import { useCallback, useState, type ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { useVoiceSession } from "@/services/voice/VoiceSessionContext";
 
 import { VoiceControls } from "./VoiceControls";
 import { VoiceParticipantGrid } from "./VoiceParticipantGrid";
+import { VoiceParticipantsPanel } from "./VoiceParticipantsPanel";
 import { ownAvatarSrc } from "./ownAvatar";
 
 interface VoiceChannelViewProps {
@@ -49,6 +50,10 @@ export function VoiceChannelView({
   const voice = useVoiceSession();
   const { state } = voice;
   const isInThisChannel = state.target?.channelId === channel.id;
+  const [pinnedIdentity, setPinnedIdentity] = useState<string | null>(null);
+  const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const openPanel = useCallback(() => setIsPanelOpen(true), []);
+  const closePanel = useCallback(() => setIsPanelOpen(false), []);
 
   if (!isInThisChannel || !ownProfile) {
     return (
@@ -73,15 +78,19 @@ export function VoiceChannelView({
   }
 
   const participants = voiceParticipantsOf(state);
+  const avatarSrc = ownAvatarSrc(ownProfile);
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col">
       <VoiceParticipantGrid
         participants={participants}
         isConnecting={state.status === "connecting"}
-        ownAvatarSrc={ownAvatarSrc(ownProfile)}
+        ownAvatarSrc={avatarSrc}
         videoOf={voice.videoOf}
         onToggleMutedForMe={voice.toggleMutedForMe}
+        onShowParticipants={openPanel}
+        pinnedIdentity={pinnedIdentity}
+        onPinChange={setPinnedIdentity}
       />
 
       {voice.isAudioBlocked ? (
@@ -109,8 +118,23 @@ export function VoiceChannelView({
         onToggleMute={voice.toggleMute}
         onToggleCamera={voice.toggleCamera}
         onToggleScreenShare={voice.toggleScreenShare}
+        onShowParticipants={openPanel}
         onLeave={voice.leave}
       />
+
+      {isPanelOpen ? (
+        <VoiceParticipantsPanel
+          participants={participants}
+          ownAvatarSrc={avatarSrc}
+          pinnedIdentity={pinnedIdentity}
+          onToggleMutedForMe={voice.toggleMutedForMe}
+          onPinChange={(identity) => {
+            setPinnedIdentity(identity);
+            closePanel();
+          }}
+          onClose={closePanel}
+        />
+      ) : null}
     </div>
   );
 }

@@ -33,6 +33,7 @@ export function VoiceEmbed() {
   const [participants, setParticipants] = useState<VoiceParticipant[]>([]);
   const [status, setStatus] = useState<VoiceConnectionStatus>("idle");
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
+  const [pinnedIdentity, setPinnedIdentity] = useState<string | null>(null);
 
   useEffect(() => {
     const audioHost = audioHostRef.current;
@@ -58,6 +59,10 @@ export function VoiceEmbed() {
         setLocalAvatarUrl(command.localAvatarUrl);
         return;
       }
+      if (command.type === "setPinned") {
+        setPinnedIdentity(command.identity);
+        return;
+      }
       session.handle(command);
     };
 
@@ -78,6 +83,9 @@ export function VoiceEmbed() {
   const requestMuteForMe = useCallback((identity: string) => {
     postToApp({ type: "muteForMeRequested", identity });
   }, []);
+  const requestParticipants = useCallback(() => {
+    postToApp({ type: "participantsRequested" });
+  }, []);
 
   return (
     <main className="bg-surface flex h-dvh flex-col">
@@ -87,6 +95,9 @@ export function VoiceEmbed() {
         ownAvatarSrc={localAvatarUrl}
         videoOf={videoOf}
         onToggleMutedForMe={requestMuteForMe}
+        onShowParticipants={requestParticipants}
+        pinnedIdentity={pinnedIdentity}
+        onTilePress={requestParticipants}
       />
       <div ref={audioHostRef} hidden />
     </main>
