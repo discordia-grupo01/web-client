@@ -86,6 +86,9 @@ export function VoiceEmbed() {
   const requestParticipants = useCallback(() => {
     postToApp({ type: "participantsRequested" });
   }, []);
+  const requestPin = useCallback((identity: string | null) => {
+    postToApp({ type: "pinRequested", identity });
+  }, []);
 
   return (
     <main className="bg-surface flex h-dvh flex-col">
@@ -97,6 +100,7 @@ export function VoiceEmbed() {
         onToggleMutedForMe={requestMuteForMe}
         onShowParticipants={requestParticipants}
         pinnedIdentity={pinnedIdentity}
+        onPinChange={requestPin}
         onTilePress={requestParticipants}
       />
       <div ref={audioHostRef} hidden />

@@ -2,8 +2,6 @@
 
 import type { VoiceParticipant } from "@discordia/client-shared";
 
-import { useState } from "react";
-
 import { useElementSize } from "@/hooks/useElementSize";
 import { cn } from "@/lib/cn";
 import type { TileVideo } from "@/services/voice/livekitParticipants";
@@ -27,9 +25,8 @@ interface VoiceParticipantGridProps {
   onToggleMutedForMe: (identity: string) => void;
   onShowParticipants: () => void;
   pinnedIdentity: string | null;
-  /** Sin esto no se fija con doble click (en mobile se fija desde la lista). */
   onPinChange?: (identity: string | null) => void;
-  /** En mobile tocar un tile abre la lista de participantes. */
+  /** En mobile tocar un tile abre la lista, asi que ahi no se fija con doble toque. */
   onTilePress?: () => void;
 }
 
@@ -48,16 +45,10 @@ export function VoiceParticipantGrid({
   const isNarrow = size.width < NARROW_GRID_BREAKPOINT;
   const options = isNarrow ? NARROW_GRID : WIDE_GRID;
 
-  const sharer = participants.find((participant) => participant.screenSharing);
-  const [dismissedSharer, setDismissedSharer] = useState<string | null>(null);
-  if (dismissedSharer !== null && sharer?.identity !== dismissedSharer) {
-    setDismissedSharer(null);
-  }
-  const pinned = participants.find(
-    (participant) => participant.identity === pinnedIdentity,
-  );
   const focus =
-    pinned ?? (sharer && sharer.identity !== dismissedSharer ? sharer : null);
+    participants.find(
+      (participant) => participant.identity === pinnedIdentity,
+    ) ?? null;
 
   const layout = voiceGridLayout(
     size.width,
@@ -91,7 +82,7 @@ export function VoiceParticipantGrid({
           isLocal ? undefined : () => onToggleMutedForMe(identity)
         }
         onTogglePin={
-          onPinChange
+          onPinChange && !onTilePress
             ? () => onPinChange(identity === pinnedIdentity ? null : identity)
             : undefined
         }
@@ -100,11 +91,7 @@ export function VoiceParticipantGrid({
     );
   };
 
-  const backToGrid = !focus
-    ? undefined
-    : focus === pinned
-      ? onPinChange && (() => onPinChange(null))
-      : () => setDismissedSharer(focus.identity);
+  const backToGrid = focus && onPinChange ? () => onPinChange(null) : undefined;
 
   return (
     <div

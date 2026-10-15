@@ -8,6 +8,8 @@ import {
   VOICE_JOIN,
   VOICE_MODERATOR_MUTED,
   VOICE_SWITCH,
+  pinOnScreenShareChange,
+  screenSharingIds,
   voiceParticipantsOf,
   voicePresenceCount,
   type Channel,
@@ -52,6 +54,7 @@ export function VoiceChannelView({
   const isInThisChannel = state.target?.channelId === channel.id;
   const [pinnedIdentity, setPinnedIdentity] = useState<string | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
+  const [lastSharingIds, setLastSharingIds] = useState<readonly string[]>([]);
   const openPanel = useCallback(() => setIsPanelOpen(true), []);
   const closePanel = useCallback(() => setIsPanelOpen(false), []);
 
@@ -78,6 +81,13 @@ export function VoiceChannelView({
   }
 
   const participants = voiceParticipantsOf(state);
+  const sharingIds = screenSharingIds(participants);
+  if (sharingIds.join("|") !== lastSharingIds.join("|")) {
+    setLastSharingIds(sharingIds);
+    setPinnedIdentity((pinned) =>
+      pinOnScreenShareChange(pinned, lastSharingIds, participants),
+    );
+  }
   const avatarSrc = ownAvatarSrc(ownProfile);
 
   return (
