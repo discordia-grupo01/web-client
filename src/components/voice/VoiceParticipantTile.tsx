@@ -107,7 +107,7 @@ export function VoiceParticipantTile({
             "absolute top-2 right-2 transition-opacity",
             mutedForMe
               ? "opacity-100"
-              : "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
+              : "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
           )}
         >
           <Tooltip label={muteForMeLabel} align="end">
@@ -117,7 +117,7 @@ export function VoiceParticipantTile({
               aria-label={`${muteForMeLabel}: ${name}`}
               aria-pressed={mutedForMe}
               className={cn(
-                "flex size-8 cursor-pointer items-center justify-center rounded-lg backdrop-blur transition-colors",
+                "flex size-8 cursor-pointer items-center justify-center rounded-lg backdrop-blur transition-colors pointer-coarse:size-10",
                 "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none",
                 mutedForMe
                   ? "bg-danger/20 text-danger hover:bg-danger/30"
