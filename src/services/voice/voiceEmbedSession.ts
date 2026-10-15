@@ -23,10 +23,10 @@ import {
   toVoiceDisconnectReason,
 } from "./livekitParticipants";
 
-/** Lo que la sesion atiende; el tema y la foto los aplica la pagina. */
+/** Lo que la sesion atiende; el tema, la foto y a quien se fija los aplica la pagina. */
 export type VoiceEmbedCommand = Exclude<
   VoiceBridgeCommand,
-  { type: "setAppearance" }
+  { type: "setAppearance" } | { type: "setPinned" }
 >;
 
 export interface VoiceEmbedSession {
