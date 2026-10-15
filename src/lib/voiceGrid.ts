@@ -19,7 +19,6 @@ export interface VoiceGridLayout {
   columns: number;
   tileWidth: number;
   tileHeight: number;
-  /** Cuantos tiles entran, contando el "+N" si hace falta. */
   capacity: number;
 }
 
@@ -35,7 +34,6 @@ export const NARROW_GRID: VoiceGridOptions = {
   maxColumns: 3,
 };
 
-/** Por debajo de este ancho la llamada usa la grilla de celular. */
 export const NARROW_GRID_BREAKPOINT = 560;
 
 function tileWidthFor(
@@ -47,7 +45,6 @@ function tileWidthFor(
 ): number {
   const byWidth = (width - gap * (columns - 1)) / columns;
   const byHeight = ((height - gap * (rows - 1)) / rows) * VOICE_TILE_ASPECT;
-  // Entero: la grilla es un flex-wrap y un subpixel de mas la haria cortar antes.
   return Math.max(0, Math.floor(Math.min(byWidth, byHeight)));
 }
 
@@ -89,7 +86,6 @@ export function voiceGridLayout(
   };
 }
 
-/** Cuantos tiles de `tileLength` entran en una tira de `length`, con `gap` entre ellos. */
 export function stripCapacity(
   length: number,
   tileLength: number,
@@ -106,15 +102,6 @@ interface StageCandidate {
   screenSharing: boolean;
 }
 
-/**
- * A quienes se ve cuando no entran todos (`slots` lugares, sin contar el
- * "+N"). Vos siempre; los que ya se veian se quedan, para que la grilla no
- * salte; si habla alguien de afuera entra en lugar de quien hace mas que no
- * habla. Los huecos se llenan primero con quien tiene camara o pantalla.
- *
- * `spokeAt` es un contador por participante: mas alto, hablo mas reciente.
- * El resultado respeta el orden de `participants`.
- */
 export function pickVisibleParticipants<T extends StageCandidate>(
   participants: readonly T[],
   slots: number,
@@ -166,4 +153,86 @@ export function pickVisibleParticipants<T extends StageCandidate>(
   }
 
   return participants.filter((p) => chosen.has(p.identity));
+}
+
+export type VoiceFocusMode = "side" | "bottom" | "stacked";
+
+export interface VoiceFocusLayout {
+  mode: VoiceFocusMode;
+  stageWidth: number;
+  stageHeight: number;
+  tileWidth: number;
+  tileHeight: number;
+  columns: number;
+  capacity: number;
+}
+
+const FOCUS_GAP = 8;
+const SIDE_STRIP_MIN_WIDTH = 900;
+const SIDE_STRIP_TILE_WIDTH = 176;
+const BOTTOM_STRIP_TILE_HEIGHT = 90;
+const STACKED_STAGE_SHARE = 0.55;
+
+function fitStage(width: number, height: number) {
+  const stageWidth = Math.max(0, Math.min(width, height * VOICE_TILE_ASPECT));
+  return { stageWidth, stageHeight: stageWidth / VOICE_TILE_ASPECT };
+}
+
+export function voiceFocusLayout(
+  width: number,
+  height: number,
+  othersCount: number,
+  isNarrow: boolean,
+): VoiceFocusLayout {
+  if (!isNarrow && width >= SIDE_STRIP_MIN_WIDTH) {
+    const tileHeight = SIDE_STRIP_TILE_WIDTH / VOICE_TILE_ASPECT;
+    const stripWidth = othersCount > 0 ? SIDE_STRIP_TILE_WIDTH + FOCUS_GAP : 0;
+    return {
+      mode: "side",
+      ...fitStage(width - stripWidth, height),
+      tileWidth: SIDE_STRIP_TILE_WIDTH,
+      tileHeight,
+      columns: 1,
+      capacity: stripCapacity(height, tileHeight, FOCUS_GAP),
+    };
+  }
+
+  if (!isNarrow) {
+    const tileWidth = BOTTOM_STRIP_TILE_HEIGHT * VOICE_TILE_ASPECT;
+    const stripHeight =
+      othersCount > 0 ? BOTTOM_STRIP_TILE_HEIGHT + FOCUS_GAP : 0;
+    const capacity = stripCapacity(width, tileWidth, FOCUS_GAP);
+    return {
+      mode: "bottom",
+      ...fitStage(width, height - stripHeight),
+      tileWidth,
+      tileHeight: BOTTOM_STRIP_TILE_HEIGHT,
+      columns: capacity,
+      capacity,
+    };
+  }
+
+  const stage = fitStage(
+    width,
+    othersCount > 0 ? height * STACKED_STAGE_SHARE : height,
+  );
+  const remaining = height - stage.stageHeight - FOCUS_GAP;
+  const grid = voiceGridLayout(width, remaining, othersCount, NARROW_GRID);
+  const tileWidth = Math.min(
+    grid.tileWidth,
+    Math.floor((width - FOCUS_GAP) / 2),
+  );
+  const shown = Math.min(othersCount, grid.capacity);
+  const columns = Math.max(
+    1,
+    Math.min(shown, Math.floor((width + FOCUS_GAP) / (tileWidth + FOCUS_GAP))),
+  );
+  return {
+    mode: "stacked",
+    ...stage,
+    tileWidth,
+    tileHeight: tileWidth / VOICE_TILE_ASPECT,
+    columns,
+    capacity: grid.capacity,
+  };
 }

@@ -4,6 +4,7 @@ import {
   NARROW_GRID,
   pickVisibleParticipants,
   stripCapacity,
+  voiceFocusLayout,
   voiceGridLayout,
   WIDE_GRID,
 } from "./voiceGrid";
@@ -126,5 +127,32 @@ describe("pickVisibleParticipants", () => {
     expect(
       ids(pickVisibleParticipants(all, 2, ["yo", "a"], new Map())),
     ).toEqual(["yo", "a"]);
+  });
+});
+
+describe("voiceFocusLayout", () => {
+  it("en pantallas anchas pone al resto en una tira al costado", () => {
+    const layout = voiceFocusLayout(1300, 600, 13, false);
+
+    expect(layout.mode).toBe("side");
+    expect(layout.stageWidth + layout.tileWidth).toBeLessThanOrEqual(1300);
+  });
+
+  it("en celular el resto usa el alto que queda, con tiles grandes", () => {
+    const layout = voiceFocusLayout(374, 560, 1, true);
+
+    expect(layout.mode).toBe("stacked");
+    expect(layout.stageHeight).toBeLessThanOrEqual(560 * 0.55);
+    expect(layout.tileWidth).toBe(Math.floor((374 - 8) / 2));
+  });
+
+  it("en celular con mucha gente limita la capacidad sin pasarse del alto", () => {
+    const layout = voiceFocusLayout(374, 560, 30, true);
+    const rows = Math.ceil(layout.capacity / layout.columns);
+
+    expect(layout.capacity).toBeLessThan(30);
+    expect(
+      layout.stageHeight + 8 + rows * layout.tileHeight + (rows - 1) * 8,
+    ).toBeLessThanOrEqual(560);
   });
 });
