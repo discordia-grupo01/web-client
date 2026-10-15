@@ -9,15 +9,14 @@ import { LayoutGrid } from "lucide-react";
 import type { ReactNode } from "react";
 
 import type { ElementSize } from "@/hooks/useElementSize";
-import { stripCapacity, VOICE_TILE_ASPECT } from "@/lib/voiceGrid";
+import { cn } from "@/lib/cn";
+import { voiceFocusLayout } from "@/lib/voiceGrid";
 
 import { VoiceOverflowTile } from "./VoiceOverflowTile";
 import { useVisibleParticipants } from "./useVisibleParticipants";
 
 const GAP = 8;
-const SIDE_STRIP_MIN_WIDTH = 900;
-const SIDE_STRIP_TILE_WIDTH = 176;
-const BOTTOM_STRIP_TILE_HEIGHT = { narrow: 56, wide: 90 } as const;
+const BACK_ROW_HEIGHT = 40;
 
 export type RenderTile = (
   participant: VoiceParticipant,
@@ -35,10 +34,6 @@ interface VoiceFocusLayoutProps {
   onBackToGrid?: () => void;
 }
 
-/**
- * Alguien comparte pantalla o esta fijado: se ve en grande y el resto queda
- * en una tira chica, abajo o al costado, que tampoco scrollea.
- */
 export function VoiceFocusLayout({
   focus,
   others,
@@ -48,26 +43,17 @@ export function VoiceFocusLayout({
   onShowParticipants,
   onBackToGrid,
 }: VoiceFocusLayoutProps) {
-  const isSideStrip = !isNarrow && size.width >= SIDE_STRIP_MIN_WIDTH;
-  const stripTile = isSideStrip
-    ? {
-        width: SIDE_STRIP_TILE_WIDTH,
-        height: SIDE_STRIP_TILE_WIDTH / VOICE_TILE_ASPECT,
-      }
-    : {
-        width:
-          BOTTOM_STRIP_TILE_HEIGHT[isNarrow ? "narrow" : "wide"] *
-          VOICE_TILE_ASPECT,
-        height: BOTTOM_STRIP_TILE_HEIGHT[isNarrow ? "narrow" : "wide"],
-      };
-
-  const capacity = isSideStrip
-    ? stripCapacity(size.height, stripTile.height, GAP)
-    : stripCapacity(size.width, stripTile.width, GAP);
-  const hasOverflow = others.length > capacity;
+  const backRow = isNarrow && onBackToGrid ? BACK_ROW_HEIGHT : 0;
+  const layout = voiceFocusLayout(
+    size.width,
+    size.height - backRow,
+    others.length,
+    isNarrow,
+  );
+  const hasOverflow = others.length > layout.capacity;
   const visible = useVisibleParticipants(
     others,
-    hasOverflow ? capacity - 1 : others.length,
+    hasOverflow ? layout.capacity - 1 : others.length,
   );
   const visibleIds = new Set(
     visible.map((participant) => participant.identity),
@@ -76,56 +62,60 @@ export function VoiceFocusLayout({
     (participant) => !visibleIds.has(participant.identity),
   );
 
-  const stageWidth = isSideStrip
-    ? size.width - stripTile.width - GAP
-    : size.width;
-  const stageHeight =
-    isSideStrip || others.length === 0
-      ? size.height
-      : size.height - stripTile.height - GAP;
-  const focusWidth = Math.max(
-    0,
-    Math.min(stageWidth, stageHeight * VOICE_TILE_ASPECT),
-  );
+  const backButton = onBackToGrid ? (
+    <button
+      type="button"
+      onClick={onBackToGrid}
+      className={cn(
+        "bg-surface-raised/90 border-line-strong text-content hover:bg-surface-hover flex cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold backdrop-blur transition-colors",
+        !isNarrow && "absolute top-2 left-1/2 -translate-x-1/2",
+      )}
+    >
+      <LayoutGrid size={14} />
+      {VOICE_BACK_TO_GRID}
+    </button>
+  ) : null;
 
   return (
     <div
-      className={
-        isSideStrip
-          ? "flex h-full w-full items-center gap-2"
-          : "flex h-full w-full flex-col items-center gap-2"
-      }
+      className={cn(
+        "flex h-full w-full items-center justify-center",
+        layout.mode !== "side" && "flex-col",
+      )}
+      style={{ gap: GAP }}
     >
-      <div className="relative flex min-h-0 min-w-0 flex-1 items-center justify-center">
-        {renderTile(focus, focusWidth, focusWidth / VOICE_TILE_ASPECT)}
-        {onBackToGrid ? (
-          <button
-            type="button"
-            onClick={onBackToGrid}
-            className="bg-surface-raised/90 border-line-strong text-content hover:bg-surface-hover absolute top-2 left-1/2 flex -translate-x-1/2 cursor-pointer items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold backdrop-blur transition-colors"
-          >
-            <LayoutGrid size={14} />
-            {VOICE_BACK_TO_GRID}
-          </button>
-        ) : null}
+      {isNarrow ? backButton : null}
+
+      <div
+        className="relative shrink-0"
+        style={{ width: layout.stageWidth, height: layout.stageHeight }}
+      >
+        {renderTile(focus, layout.stageWidth, layout.stageHeight)}
+        {isNarrow ? null : backButton}
       </div>
 
       {others.length > 0 ? (
         <div
-          className={
-            isSideStrip
-              ? "flex shrink-0 flex-col justify-center gap-2"
-              : "flex shrink-0 justify-center gap-2"
-          }
+          className={cn(
+            "flex shrink-0 flex-wrap content-center justify-center",
+            layout.mode === "side" && "flex-col",
+          )}
+          style={{
+            gap: GAP,
+            width:
+              layout.mode === "stacked"
+                ? layout.columns * layout.tileWidth + (layout.columns - 1) * GAP
+                : undefined,
+          }}
         >
           {visible.map((participant) =>
-            renderTile(participant, stripTile.width, stripTile.height),
+            renderTile(participant, layout.tileWidth, layout.tileHeight),
           )}
           {hasOverflow ? (
             <VoiceOverflowTile
               hidden={hidden}
-              width={stripTile.width}
-              height={stripTile.height}
+              width={layout.tileWidth}
+              height={layout.tileHeight}
               onPress={onShowParticipants}
             />
           ) : null}
