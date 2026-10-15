@@ -11,6 +11,8 @@ import {
   VOICE_MUTE,
   VOICE_MODERATOR_MUTED,
   VOICE_MUTE_LABEL,
+  VOICE_PARTICIPANTS_BUTTON,
+  VOICE_PARTICIPANTS_OPEN,
   VOICE_SCREEN_SHARE,
   VOICE_SCREEN_SHARE_START,
   VOICE_SCREEN_SHARE_STOP,
@@ -24,6 +26,7 @@ import {
   MicOff,
   MonitorUp,
   PhoneOff,
+  Users,
   Video,
   VideoOff,
   type LucideIcon,
@@ -42,6 +45,7 @@ interface VoiceControlsProps {
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onToggleScreenShare: () => void;
+  onShowParticipants: () => void;
   onLeave: () => void;
 }
 
@@ -53,6 +57,7 @@ export function VoiceControls({
   onToggleMute,
   onToggleCamera,
   onToggleScreenShare,
+  onShowParticipants,
   onLeave,
 }: VoiceControlsProps) {
   return (
@@ -97,6 +102,14 @@ export function VoiceControls({
           tone={screenSharing ? "accent" : "neutral"}
           isPressed={screenSharing}
           onClick={onToggleScreenShare}
+        />
+
+        <ControlButton
+          icon={Users}
+          label={VOICE_PARTICIPANTS_BUTTON}
+          ariaLabel={VOICE_PARTICIPANTS_OPEN}
+          tone="neutral"
+          onClick={onShowParticipants}
         />
 
         <span aria-hidden className="bg-line mx-1 h-10 w-px" />
@@ -153,7 +166,7 @@ function ControlButton({
       aria-pressed={isPressed}
       title={ariaLabel}
       className={cn(
-        "flex min-w-14 cursor-pointer flex-col items-center gap-1 rounded-xl px-2 py-2 transition-all active:scale-95 md:px-4",
+        "flex min-w-12 cursor-pointer flex-col items-center gap-1 rounded-xl px-1.5 py-2 transition-all active:scale-95 sm:min-w-14 md:px-4",
         "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none",
         classes.button,
         disabled && "cursor-not-allowed opacity-50 active:scale-100",

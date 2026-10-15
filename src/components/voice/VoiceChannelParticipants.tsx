@@ -4,11 +4,15 @@ import {
   VOICE_CAMERA_ON_LABEL,
   VOICE_MUTED_LABEL,
   VOICE_SCREEN_SHARING,
+  VOICE_SHOW_LESS,
+  VOICE_SIDEBAR_PREVIEW_SIZE,
+  voiceHiddenCount,
+  voiceSidebarPreview,
 } from "@discordia/client-shared";
 
 import { MicOff, MonitorUp, Video } from "lucide-react";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
@@ -28,11 +32,18 @@ export function VoiceChannelParticipants({
 }: {
   participants: readonly SidebarVoiceParticipant[];
 }) {
+  const [isExpanded, setIsExpanded] = useState(false);
   if (participants.length === 0) return null;
+
+  const { shown, hidden } = voiceSidebarPreview(
+    participants,
+    VOICE_SIDEBAR_PREVIEW_SIZE,
+  );
+  const listed = isExpanded ? participants : shown;
 
   return (
     <ul className="mb-1 ml-4">
-      {participants.map((participant) => (
+      {listed.map((participant) => (
         <li
           key={participant.identity}
           className="hover:bg-surface-hover flex items-center gap-2 rounded-md px-2 py-1 transition-colors"
@@ -83,6 +94,18 @@ export function VoiceChannelParticipants({
           ) : null}
         </li>
       ))}
+      {hidden.length > 0 ? (
+        <li>
+          <button
+            type="button"
+            onClick={() => setIsExpanded((expanded) => !expanded)}
+            aria-expanded={isExpanded}
+            className="font-display text-content-subtle hover:bg-surface-hover hover:text-content-muted w-full cursor-pointer rounded-md px-2 py-1 text-left text-xs transition-colors"
+          >
+            {isExpanded ? VOICE_SHOW_LESS : voiceHiddenCount(hidden.length)}
+          </button>
+        </li>
+      ) : null}
     </ul>
   );
 }
