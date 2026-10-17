@@ -1,6 +1,6 @@
 const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
 
-/** `http(s)://host` -> `ws(s)://host`: el WebSocket de mensajes sale por el mismo gateway. */
+/** `http(s)://host` -> `ws(s)://host`. */
 function toWebSocketUrl(httpUrl: string): string {
   return httpUrl.replace(/^http/, "ws");
 }
@@ -17,6 +17,9 @@ export const env = {
    * que definir `NEXT_PUBLIC_WS_URL=ws://localhost:8000/socket`.
    */
   wsUrl: process.env.NEXT_PUBLIC_WS_URL ?? `${toWebSocketUrl(apiUrl)}/socket`,
+  voiceWsUrl:
+    process.env.NEXT_PUBLIC_VOICE_WS_URL ??
+    `${toWebSocketUrl(apiUrl)}/voice/socket`,
 };
 
 export const isProduction = process.env.NODE_ENV === "production";

@@ -567,42 +567,18 @@ export function ServerView({
     () => (voiceChannelId ? voiceParticipantsOf(voiceState) : []),
     [voiceChannelId, voiceState],
   );
-  const {
-    byChannel: polledVoicePresence,
-    forget: forgetVoiceParticipant,
-    confirm: confirmVoicePresence,
-  } = useVoicePresence(server.id);
+  const { byChannel: socketVoicePresence } = useVoicePresence(server.id);
   const voicePresence = useMemo(
     () =>
       voiceChannelId
         ? withLivePresence(
-            polledVoicePresence,
+            socketVoicePresence,
             voiceChannelId,
             toVoicePresence(liveVoiceParticipants),
           )
-        : polledVoicePresence,
-    [polledVoicePresence, voiceChannelId, liveVoiceParticipants],
+        : socketVoicePresence,
+    [socketVoicePresence, voiceChannelId, liveVoiceParticipants],
   );
-  const voiceStatus = voiceState.status;
-  useEffect(() => {
-    if (voiceStatus === "connected") confirmVoicePresence();
-  }, [voiceChannelId, voiceStatus, confirmVoicePresence]);
-
-  const ownVoiceIdentity = user ? String(user.id) : null;
-  const previousVoiceChannelId = useRef(voiceChannelId);
-  useLayoutEffect(() => {
-    const previous = previousVoiceChannelId.current;
-    previousVoiceChannelId.current = voiceChannelId;
-    if (previous && previous !== voiceChannelId && ownVoiceIdentity) {
-      forgetVoiceParticipant(previous, ownVoiceIdentity);
-    }
-  }, [voiceChannelId, ownVoiceIdentity, forgetVoiceParticipant]);
-
-  // Con la salida confirmada, lo que traiga el back vuelve a ser la verdad.
-  const { leaveSettledCount } = voice;
-  useEffect(() => {
-    if (leaveSettledCount > 0) confirmVoicePresence();
-  }, [leaveSettledCount, confirmVoicePresence]);
 
   function sidebarVoiceParticipants(
     channelId: string,
