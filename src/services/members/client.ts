@@ -1,5 +1,7 @@
 import {
   type ListMembersResult,
+  type MemberPageQuery,
+  memberPageQueryString,
   MEMBERS_LOAD_FAILED,
 } from "@discordia/client-shared";
 
@@ -11,14 +13,14 @@ import { api } from "@/lib/browserApiClient";
  * Next.
  */
 
+/** Sin `limit` el BFF pide 100, el maximo del back. */
 export async function listMembersRequest(
   serverId: string,
-  offset = 0,
+  query: MemberPageQuery = {},
 ): Promise<ListMembersResult> {
   try {
     const { data } = await api.get<ListMembersResult>(
-      `/servers/${serverId}/members`,
-      { params: offset > 0 ? { offset } : undefined },
+      `/servers/${serverId}/members${memberPageQueryString(query)}`,
     );
     return data;
   } catch {

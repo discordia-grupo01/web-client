@@ -2,7 +2,13 @@
 
 import {
   type Member,
+  type MemberPageQuery,
+  MEMBERS_EMPTY_SEARCH,
+  MEMBERS_SEARCH_LABEL,
+  MEMBERS_SEARCH_PLACEHOLDER,
   type OwnershipTransfer,
+  paginationSummary,
+  TRANSFER_CANDIDATES_PAGE_SIZE,
   type PublicUser,
   TRANSFER_CHOOSE_NEW_OWNER,
   TRANSFER_NONE_PENDING,
@@ -11,11 +17,14 @@ import {
 } from "@discordia/client-shared";
 
 import { AlertCircle, ArrowLeftRight, Check, Crown, X } from "lucide-react";
-import { useEffect, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
-import { useProfileFallback } from "@/hooks/useProfileFallback";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { Pagination } from "@/components/ui/Pagination";
+import { SearchInput } from "@/components/ui/SearchInput";
+import { useMemberPages } from "@/hooks/useMemberPages";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
@@ -145,8 +154,7 @@ export function TransferOwnershipModal({
   onClose,
   onOwnershipAccepted,
 }: TransferOwnershipModalProps) {
-  const [loadedMembers, setLoadedMembers] = useState<Member[] | null>(null);
-  const members = useProfileFallback(loadedMembers);
+  const [search, setSearch] = useState("");
   const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
@@ -169,24 +177,19 @@ export function TransferOwnershipModal({
       ? pendingTransfer?.from_user_id
       : undefined;
 
-  useEffect(() => {
-    if (!canInitiate) return;
-    let cancelled = false;
-    listMembersRequest(serverId).then((result) => {
-      if (cancelled) return;
-      if (!result.ok) {
-        setErrorMessage(result.message);
-        setLoadedMembers([]);
-        return;
-      }
-      const candidates = result.members.filter((member) => !member.is_owner);
-      setLoadedMembers(candidates);
-    });
-    return () => {
-      cancelled = true;
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [serverId, canInitiate]);
+  const fetchPage = useCallback(
+    (query: MemberPageQuery) => listMembersRequest(serverId, query),
+    [serverId],
+  );
+  const memberPages = useMemberPages({
+    fetchPage,
+    search,
+    enabled: canInitiate,
+    pageSize: TRANSFER_CANDIDATES_PAGE_SIZE,
+  });
+  const members: Member[] | null =
+    memberPages.members?.filter((member) => !member.is_owner) ?? null;
+  const hasOtherMembers = memberPages.isSearching || memberPages.total > 1;
 
   /** Nombre de la otra persona involucrada, para no mostrar "otro miembro" a secas. */
   useEffect(() => {
@@ -366,6 +369,11 @@ export function TransferOwnershipModal({
   return (
     <ModalShell onClose={onClose}>
       {errorBanner}
+      {memberPages.errorMessage ? (
+        <div className="mb-4">
+          <FormAlert message={memberPages.errorMessage} />
+        </div>
+      ) : null}
       <p className="text-content-subtle mb-3 text-xs font-bold tracking-wider uppercase">
         {TRANSFER_CHOOSE_NEW_OWNER}
       </p>
@@ -374,24 +382,60 @@ export function TransferOwnershipModal({
         <div className="flex items-center justify-center py-8">
           <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
         </div>
-      ) : members.length === 0 ? (
+      ) : !hasOtherMembers ? (
         <p className="text-content-muted py-4 text-center text-sm">
           {TRANSFER_NO_OTHER_MEMBERS}
         </p>
       ) : (
-        <div className="space-y-2">
-          {members.map((member) => (
-            <MemberOption
-              key={member.user_id}
-              member={member}
-              selected={selectedUserId === member.user_id}
-              onSelect={() => setSelectedUserId(member.user_id)}
+        <>
+          <div className="mb-3">
+            <SearchInput
+              value={search}
+              onChange={setSearch}
+              label={MEMBERS_SEARCH_LABEL}
+              placeholder={MEMBERS_SEARCH_PLACEHOLDER}
             />
-          ))}
-        </div>
+          </div>
+          {members.length === 0 ? (
+            <p className="text-content-muted py-4 text-center text-sm">
+              {MEMBERS_EMPTY_SEARCH}
+            </p>
+          ) : (
+            <div
+              className="space-y-2 transition-opacity"
+              style={{ opacity: memberPages.isLoading ? 0.6 : 1 }}
+            >
+              {members.map((member) => (
+                <MemberOption
+                  key={member.user_id}
+                  member={member}
+                  selected={selectedUserId === member.user_id}
+                  onSelect={() => setSelectedUserId(member.user_id)}
+                />
+              ))}
+            </div>
+          )}
+          {memberPages.pageCount > 1 ? (
+            <div className="mt-4 flex flex-col items-center gap-2">
+              <p aria-live="polite" className="text-content-muted text-xs">
+                {paginationSummary(
+                  memberPages.range.from,
+                  memberPages.range.to,
+                  memberPages.total,
+                  memberPages.isSearching ? "resultados" : "miembros",
+                )}
+              </p>
+              <Pagination
+                page={memberPages.page}
+                pageCount={memberPages.pageCount}
+                onPageChange={memberPages.setPage}
+              />
+            </div>
+          ) : null}
+        </>
       )}
 
-      {members && members.length > 0 ? (
+      {members && hasOtherMembers ? (
         <Button
           type="button"
           onClick={handleInitiate}

@@ -20,7 +20,7 @@ export function useServerMembers(serverId: string): Member[] | null {
   useEffect(() => {
     let cancelled = false;
     collectAllPages<Member>(async (offset) => {
-      const result = await listMembersRequest(serverId, offset);
+      const result = await listMembersRequest(serverId, { offset });
       return result.ok
         ? {
             ok: true,

@@ -5,6 +5,8 @@ import {
   type DeleteRoleResult,
   type ListMemberRolesResult,
   type ListRoleMembersResult,
+  type MemberPageQuery,
+  memberPageQueryString,
   type ListRolesResult,
   MEMBER_ROLE_ASSIGN_FAILED,
   MEMBER_ROLE_REMOVE_FAILED,
@@ -188,13 +190,14 @@ export async function removeRoleRequest(
   }
 }
 
-/** Todos los miembros que tienen el rol (#58). */
+/** Una pagina de los miembros con el rol (#58), o sin el con `hasRole: false`. */
 export async function listRoleMembersRequest(
   roleId: string,
+  query: MemberPageQuery = {},
 ): Promise<ListRoleMembersResult> {
   try {
     const { data } = await api.get<ListRoleMembersResult>(
-      `/roles/${roleId}/members`,
+      `/roles/${roleId}/members${memberPageQueryString(query)}`,
     );
     return data;
   } catch {
