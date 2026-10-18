@@ -58,9 +58,10 @@ interface BansModalProps {
 
 /**
  * Moderacion del servidor en dos pestañas: los baneados (con su revocacion) y
- * los miembros que se pueden banear (que abren su perfil). El back no filtra
- * por nombre ni entrega nombres: la busqueda se hace aca sobre los perfiles ya
- * resueltos y la paginacion es en memoria (`usePagination`).
+ * los miembros que se pueden banear (que abren su perfil). Los baneados se
+ * buscan y paginan en memoria (`usePagination`): el back no los filtra por
+ * nombre. Los miembros, en cambio, los busca y pagina el back
+ * (`useBanCandidates`), porque un servidor puede tener muchisimos.
  */
 export function BansModal({
   serverId,
@@ -82,6 +83,7 @@ export function BansModal({
     serverId,
     ownerId,
     currentUserId,
+    search,
     enabled: hasOpenedMembers,
   });
 
@@ -89,32 +91,45 @@ export function BansModal({
   const errorMessage = isBans ? banList.errorMessage : candidates.errorMessage;
   const isSearching = search.trim() !== "";
 
-  const items = useMemo<UserListItem[] | null>(() => {
-    if (isBans) {
-      return (
-        banList.bans?.map((ban) => ({
-          userId: ban.user_id,
-          profile: ban.profile,
-          subtitle: ban.reason || BAN_NO_REASON,
-        })) ?? null
-      );
-    }
-    return (
+  const banItems = useMemo<UserListItem[] | null>(
+    () =>
+      banList.bans?.map((ban) => ({
+        userId: ban.user_id,
+        profile: ban.profile,
+        subtitle: ban.reason || BAN_NO_REASON,
+      })) ?? null,
+    [banList.bans],
+  );
+  const banMatches = useMemo(
+    () =>
+      (banItems ?? []).filter((item) =>
+        matchesSearch(displayNameOf(item.profile), search),
+      ),
+    [banItems, search],
+  );
+  const banPagination = usePagination(banMatches);
+
+  const memberItems = useMemo<UserListItem[] | null>(
+    () =>
       candidates.candidates?.map((member) => ({
         userId: member.user_id,
         profile: member.profile,
-      })) ?? null
-    );
-  }, [isBans, banList.bans, candidates.candidates]);
-
-  const matches = useMemo(
-    () =>
-      (items ?? []).filter((item) =>
-        matchesSearch(displayNameOf(item.profile), search),
-      ),
-    [items, search],
+      })) ?? null,
+    [candidates.candidates],
   );
-  const pagination = usePagination(matches);
+
+  // Lo que dibuja la pestaña activa, venga de memoria o del back.
+  const items = isBans ? banItems : memberItems;
+  const pageItems = isBans ? banPagination.pageItems : (memberItems ?? []);
+  const pagination = isBans
+    ? banPagination
+    : {
+        page: candidates.page,
+        pageCount: candidates.pageCount,
+        total: candidates.total,
+        range: candidates.range,
+        setPage: candidates.setPage,
+      };
 
   const noun = isBans ? "baneados" : "miembros";
   const emptyMessage = isBans
@@ -131,7 +146,7 @@ export function BansModal({
     setSearch("");
     setNotice("");
     setRevokeError("");
-    pagination.resetPage();
+    banPagination.resetPage();
   }
 
   function actionsFor(item: UserListItem): UserRowAction[] {
@@ -162,7 +177,7 @@ export function BansModal({
 
   function handleSearchChange(value: string) {
     setSearch(value);
-    pagination.resetPage();
+    banPagination.resetPage();
   }
 
   async function handleRevoke({ userId, profile }: UserListItem) {
@@ -202,9 +217,9 @@ export function BansModal({
           label={isBans ? BANS_SEARCH_LABEL : BANS_MEMBERS_SEARCH_LABEL}
           placeholder={BANS_SEARCH_PLACEHOLDER}
         />
-        {isSearching ? (
+        {isBans && isSearching ? (
           <p role="status" className="text-content-muted text-xs">
-            {searchResultsSummary(matches.length, items?.length ?? 0, noun)}
+            {searchResultsSummary(banMatches.length, items?.length ?? 0, noun)}
           </p>
         ) : null}
       </div>
@@ -237,7 +252,7 @@ export function BansModal({
           </div>
         ) : (
           <UserList
-            items={pagination.pageItems}
+            items={pageItems}
             emptyMessage={emptyMessage}
             actionsFor={actionsFor}
             disableActions={revokingUserId !== null}

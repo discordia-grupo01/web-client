@@ -6,6 +6,7 @@ import {
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/apiRoute";
+import { memberPageQueryFrom } from "@/lib/memberPageQuery";
 import { getValidSession } from "@/services/auth/session";
 import { listMembers } from "@/services/members/service";
 
@@ -22,8 +23,11 @@ export async function GET(
     return unauthorizedResponse();
   }
 
-  const offset = Number(new URL(request.url).searchParams.get("offset")) || 0;
-  const result = await listMembers(session.token, params.serverId, offset);
+  const result = await listMembers(
+    session.token,
+    params.serverId,
+    memberPageQueryFrom(request.url),
+  );
   if (!result.ok) {
     if (result.status === 401) {
       return unauthorizedResponse();

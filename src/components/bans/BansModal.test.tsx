@@ -78,20 +78,20 @@ async function renderModal(count: number) {
 }
 
 describe("BansModal", () => {
-  it("pagina la lista de a 20 y navega con Siguiente", async () => {
+  it("pagina la lista de a 15 y navega con Siguiente", async () => {
     await renderModal(45);
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(20);
+    expect(screen.getAllByRole("listitem")).toHaveLength(15);
     expect(
-      screen.getByText("Mostrando 1–20 de 45 baneados"),
+      screen.getByText("Mostrando 1–15 de 45 baneados"),
     ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
 
     expect(
-      screen.getByText("Mostrando 21–40 de 45 baneados"),
+      screen.getByText("Mostrando 16–30 de 45 baneados"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Usuario 21")).toBeInTheDocument();
+    expect(screen.getByText("Usuario 16")).toBeInTheDocument();
     expect(screen.queryByText("Usuario 1")).toBeNull();
   });
 
@@ -200,11 +200,17 @@ describe("BansModal", () => {
 
     async function openMembersTab() {
       listBansRequest.mockResolvedValue({ ok: true, bans: [], total: 0 });
-      listMembersRequest.mockResolvedValue({
-        ok: true,
-        members,
-        total: members.length,
-      });
+      getPublicProfileRequest.mockResolvedValue({ ok: false, message: "" });
+      // Como el back: filtra por nombre lo que llega en `search`.
+      listMembersRequest.mockImplementation(
+        async (_serverId: string, query: { search?: string } = {}) => {
+          const needle = query.search?.trim().toLowerCase() ?? "";
+          const found = members.filter((member) =>
+            (member.profile?.name ?? "").toLowerCase().includes(needle),
+          );
+          return { ok: true, members: found, total: found.length };
+        },
+      );
       const handlers = renderBansModal();
       await userEvent.click(
         screen.getByRole("tab", { name: "Banear miembro" }),
@@ -257,13 +263,20 @@ describe("BansModal", () => {
       expect(onClose).not.toHaveBeenCalled();
     });
 
-    it("busca miembros por nombre", async () => {
+    it("busca miembros por nombre en el back, desde la primera pagina", async () => {
       await openMembersTab();
 
       await userEvent.type(screen.getByRole("searchbox"), "usuario 6");
 
-      expect(screen.getAllByRole("listitem")).toHaveLength(1);
-      expect(screen.getByText("1 resultado de 2 miembros")).toBeInTheDocument();
+      await waitFor(() =>
+        expect(screen.getAllByRole("listitem")).toHaveLength(1),
+      );
+      expect(screen.getByText("Usuario 6")).toBeInTheDocument();
+      expect(listMembersRequest).toHaveBeenLastCalledWith("s1", {
+        search: "usuario 6",
+        limit: 15,
+        offset: 0,
+      });
     });
   });
 

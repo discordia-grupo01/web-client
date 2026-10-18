@@ -1,8 +1,7 @@
 import {
-  collectAllPages,
-  type Member,
-  MEMBER_PAGE_LIMIT,
   type MemberListResponse,
+  type MemberPageQuery,
+  memberPageQueryString,
   type Role,
   type RolePermission,
 } from "@discordia/client-shared";
@@ -161,21 +160,16 @@ export function listMemberRoles(
 }
 
 /**
- * Miembros que tienen el rol (#58), TODAS las paginas: `GET
- * /v1/roles/:id/members` pagina de a 100 como mucho. Exige `MANAGE_ROLES`.
- * Para @everyone son todos los miembros.
+ * Una pagina de los miembros que tienen el rol (#58), o con `hasRole: false`
+ * de los que no lo tienen. Exige `MANAGE_ROLES`. Para @everyone son todos.
  */
 export function listRoleMembers(
   token: string,
   roleId: string,
-): Promise<ApiResult<{ items: Member[]; total: number }>> {
-  return collectAllPages<Member>(async (offset) => {
-    const page = await apiRequest<MemberListResponse>(
-      `/v1/roles/${roleId}/members?limit=${MEMBER_PAGE_LIMIT}&offset=${offset}`,
-      { method: "GET", token },
-    );
-    return page.ok
-      ? { ...page, data: { items: page.data.members, total: page.data.total } }
-      : page;
-  });
+  query: MemberPageQuery,
+): Promise<ApiResult<MemberListResponse>> {
+  return apiRequest<MemberListResponse>(
+    `/v1/roles/${roleId}/members${memberPageQueryString(query)}`,
+    { method: "GET", token },
+  );
 }
