@@ -1,5 +1,5 @@
 import type { Member, Role } from "@discordia/client-shared";
-import { render, screen, within } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -39,13 +39,11 @@ function member(id: string, name: string): Member {
   } as Member;
 }
 
-vi.mock("@/services/members/useServerMembers", () => ({
-  useServerMembers: () => [
-    member("u1", "Ana"),
-    member("u2", "Beto"),
-    member("u3", "Caro"),
-  ],
-}));
+const SERVER_MEMBERS = [
+  member("u1", "Ana"),
+  member("u2", "Beto"),
+  member("u3", "Caro"),
+];
 
 const MOD: Role = {
   id: "r-mod",
@@ -59,13 +57,39 @@ const MOD: Role = {
   updated_at: "2026-10-01T00:00:00Z",
 };
 
+/** Quienes tienen el rol; asignar y quitar lo cambian, como en el back. */
+let holders: Set<string>;
+
 beforeEach(() => {
   vi.resetAllMocks();
+  holders = new Set(["u2"]);
   listRolesRequest.mockResolvedValue({ ok: true, roles: [MOD] });
-  listRoleMembersRequest.mockResolvedValue({
-    ok: true,
-    members: [member("u2", "Beto")],
-    total: 1,
+  listRoleMembersRequest.mockImplementation(
+    async (
+      _roleId: string,
+      query: { search?: string; hasRole?: boolean; limit?: number } = {},
+    ) => {
+      const wantsHolders = query.hasRole !== false;
+      const needle = query.search?.trim().toLowerCase() ?? "";
+      const found = SERVER_MEMBERS.filter(
+        (m) =>
+          holders.has(m.user_id) === wantsHolders &&
+          m.profile!.name.toLowerCase().includes(needle),
+      );
+      return {
+        ok: true,
+        members: found.slice(0, query.limit ?? found.length),
+        total: found.length,
+      };
+    },
+  );
+  assignRoleRequest.mockImplementation(async (_s, userId: string) => {
+    holders.add(userId);
+    return { ok: true, role: MOD };
+  });
+  removeRoleRequest.mockImplementation(async (_s, userId: string) => {
+    holders.delete(userId);
+    return { ok: true };
   });
 });
 
@@ -87,32 +111,77 @@ async function openMembersTab() {
 }
 
 describe("RolesModal: miembros por rol", () => {
-  it("CA1: lista a todos los que tienen el rol y al resto aparte", async () => {
+  it("CA1: separa en pestañas a quienes tienen el rol y a quienes no", async () => {
     renderModal();
     await openMembersTab();
 
-    expect(listRoleMembersRequest).toHaveBeenCalledWith("r-mod");
-    const withRole = (await screen.findByText("Con este rol (1)"))
-      .parentElement!;
-    expect(within(withRole).getByText("Beto")).toBeInTheDocument();
-    const withoutRole = screen.getByText("Sin este rol (2)").parentElement!;
-    expect(within(withoutRole).getByText("Ana")).toBeInTheDocument();
-    expect(within(withoutRole).getByText("Caro")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: "Con este rol (1)" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: "Sin este rol (2)" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Beto")).toBeInTheDocument();
+    expect(screen.queryByText("Ana")).not.toBeInTheDocument();
     expect(screen.getByText("1 miembro")).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("tab", { name: "Sin este rol (2)" }),
+    );
+
+    expect(await screen.findByText("Ana")).toBeInTheDocument();
+    expect(screen.getByText("Caro")).toBeInTheDocument();
+    expect(listRoleMembersRequest).toHaveBeenCalledWith("r-mod", {
+      search: "",
+      limit: 15,
+      offset: 0,
+      hasRole: false,
+    });
   });
 
-  it("asignar el rol mueve al miembro a 'Con este rol'", async () => {
-    assignRoleRequest.mockResolvedValue({ ok: true, role: MOD });
+  it("asignar el rol desde 'Sin este rol' lo pasa a 'Con este rol'", async () => {
     renderModal();
     await openMembersTab();
-    await screen.findByText("Con este rol (1)");
+    await userEvent.click(
+      await screen.findByRole("tab", { name: "Sin este rol (2)" }),
+    );
 
-    const ana = screen.getByText("Ana").closest("div")!;
+    const ana = (await screen.findByText("Ana")).closest("div")!;
     await userEvent.click(within(ana).getByRole("button", { name: /Asignar/ }));
 
     expect(assignRoleRequest).toHaveBeenCalledWith("s1", "u1", "r-mod");
-    expect(await screen.findByText("Con este rol (2)")).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: "Con este rol (2)" }),
+    ).toBeInTheDocument();
+    expect(
+      await screen.findByRole("tab", { name: "Sin este rol (1)" }),
+    ).toBeInTheDocument();
     expect(screen.getByText("2 miembros")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.queryByText("Ana")).not.toBeInTheDocument(),
+    );
+  });
+
+  it("busca por nombre en el back para asignar rapido", async () => {
+    renderModal();
+    await openMembersTab();
+    await userEvent.click(
+      await screen.findByRole("tab", { name: "Sin este rol (2)" }),
+    );
+    await screen.findByText("Ana");
+
+    await userEvent.type(screen.getByRole("searchbox"), "car");
+
+    await waitFor(() =>
+      expect(screen.queryByText("Ana")).not.toBeInTheDocument(),
+    );
+    expect(screen.getByText("Caro")).toBeInTheDocument();
+    expect(listRoleMembersRequest).toHaveBeenCalledWith("r-mod", {
+      search: "car",
+      limit: 15,
+      offset: 0,
+      hasRole: false,
+    });
   });
 
   it("si no puede cargar los miembros del rol, muestra el error", async () => {

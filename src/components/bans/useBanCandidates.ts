@@ -1,66 +1,49 @@
 "use client";
 
-import { type Member } from "@discordia/client-shared";
+import { type MemberPageQuery } from "@discordia/client-shared";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo } from "react";
 
-import { useProfileFallback } from "@/hooks/useProfileFallback";
+import { useMemberPages } from "@/hooks/useMemberPages";
 import { listMembersRequest } from "@/services/members/client";
 
 interface UseBanCandidatesOptions {
   serverId: string;
   ownerId: string;
   currentUserId: string | null;
+  search: string;
   /** No pide nada hasta que la pestaña se abre por primera vez. */
   enabled: boolean;
 }
 
 /**
- * Miembros que se pueden ofrecer para banear: todos menos el propietario y
- * uno mismo. La jerarquia de roles no se evalua aca (el front no conoce la
- * posicion de los roles): si el objetivo tiene un rol igual o superior, el
- * back rechaza el baneo y el modal lo muestra.
+ * Miembros que se pueden ofrecer para banear, de a una pagina del back: todos
+ * menos el propietario y uno mismo (que se sacan de la pagina, asi que esa
+ * pagina muestra uno menos). La jerarquia de roles no se evalua aca (el front
+ * no conoce la posicion de los roles): si el objetivo tiene un rol igual o
+ * superior, el back rechaza el baneo y el modal lo muestra.
  */
 export function useBanCandidates({
   serverId,
   ownerId,
   currentUserId,
+  search,
   enabled,
 }: UseBanCandidatesOptions) {
-  const [members, setMembers] = useState<Member[] | null>(null);
-  const [errorMessage, setErrorMessage] = useState("");
+  const fetchPage = useCallback(
+    (query: MemberPageQuery) => listMembersRequest(serverId, query),
+    [serverId],
+  );
+  const pages = useMemberPages({ fetchPage, search, enabled });
 
-  useEffect(() => {
-    if (!enabled) return;
-    let cancelled = false;
-    setMembers(null);
-    setErrorMessage("");
-
-    listMembersRequest(serverId).then((result) => {
-      if (cancelled) return;
-      if (!result.ok) {
-        setErrorMessage(result.message);
-        setMembers([]);
-        return;
-      }
-      setMembers(result.members);
-    });
-
-    return () => {
-      cancelled = true;
-    };
-  }, [serverId, enabled]);
-
-  const eligible = useMemo(
+  const candidates = useMemo(
     () =>
-      members?.filter(
+      pages.members?.filter(
         (member) =>
           member.user_id !== ownerId && member.user_id !== currentUserId,
       ) ?? null,
-    [members, ownerId, currentUserId],
+    [pages.members, ownerId, currentUserId],
   );
 
-  const candidates = useProfileFallback(eligible);
-
-  return { candidates, errorMessage };
+  return { ...pages, candidates };
 }

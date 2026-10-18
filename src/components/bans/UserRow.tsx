@@ -36,22 +36,19 @@ export function UserRow({
   const name = displayNameOf(profile);
 
   return (
-    <li className="bg-surface-raised border-line flex min-w-0 flex-wrap items-center gap-3 rounded-xl border p-3 sm:flex-nowrap">
+    <li className="bg-surface-raised border-line flex min-w-0 flex-wrap items-center gap-2.5 rounded-xl border px-3 py-2 sm:flex-nowrap">
       <Avatar
         name={name}
         src={avatarSrcOf(userId, profile)}
-        size={40}
+        size={26}
         className="rounded-full"
       />
       <div className="min-w-0 flex-1 basis-40">
-        <p
-          className="font-display text-content truncate font-semibold"
-          title={name}
-        >
+        <p className="text-content truncate text-sm" title={name}>
           {name}
         </p>
         {subtitle ? (
-          <p className="text-content-muted line-clamp-2 text-xs leading-relaxed break-words">
+          <p className="text-content-muted truncate text-xs" title={subtitle}>
             {subtitle}
           </p>
         ) : null}
@@ -66,7 +63,7 @@ export function UserRow({
             isLoading={action.isLoading}
             disabled={isDisabled}
             className={cn(
-              "w-auto px-3 py-2 text-xs",
+              "w-auto px-2.5 py-1 text-xs",
               action.tone === "danger" ? "text-danger" : "text-accent-strong",
             )}
           >

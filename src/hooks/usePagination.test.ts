@@ -6,13 +6,13 @@ import { usePagination } from "./usePagination";
 const items = Array.from({ length: 45 }, (_, index) => index + 1);
 
 describe("usePagination", () => {
-  it("arranca en la primera pagina con 20 por pagina", () => {
+  it("arranca en la primera pagina con 15 por pagina", () => {
     const { result } = renderHook(() => usePagination(items));
 
     expect(result.current.page).toBe(1);
     expect(result.current.pageCount).toBe(3);
-    expect(result.current.pageItems).toHaveLength(20);
-    expect(result.current.range).toEqual({ from: 1, to: 20 });
+    expect(result.current.pageItems).toHaveLength(15);
+    expect(result.current.range).toEqual({ from: 1, to: 15 });
   });
 
   it("cambiar el tamaño vuelve a la primera pagina", () => {
@@ -32,7 +32,7 @@ describe("usePagination", () => {
     act(() => result.current.setPage(99));
 
     expect(result.current.page).toBe(3);
-    expect(result.current.pageItems).toEqual([41, 42, 43, 44, 45]);
+    expect(result.current.pageItems).toEqual(items.slice(30));
   });
 
   it("si la lista se achica, la pagina se corrige sola", () => {
