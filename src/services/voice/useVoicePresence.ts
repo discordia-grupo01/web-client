@@ -12,6 +12,12 @@ import { connectVoicePresence, type VoicePresenceEvent } from "./socket";
 
 const EMPTY: VoicePresenceByChannel = {};
 
+interface PresenceJournalEntry {
+  event: VoicePresenceEvent;
+  joined: boolean;
+  sequence: number;
+}
+
 function applyPresenceEvent(
   current: VoicePresenceByChannel,
   event: VoicePresenceEvent,
@@ -51,27 +57,50 @@ export function useVoicePresence(serverId: string | null): {
     byChannel: VoicePresenceByChannel;
   }>({ serverId, byChannel: EMPTY });
   const requestId = useRef(0);
+  const eventSequence = useRef(0);
+  const eventJournal = useRef<PresenceJournalEntry[]>([]);
 
   const refresh = useCallback(() => {
     if (!serverId) return;
     const id = ++requestId.current;
+    const snapshotSequence = eventSequence.current;
     void listVoiceParticipantsRequest(serverId).then((result) => {
       if (id !== requestId.current || !result.ok) return;
-      setPresence({ serverId, byChannel: result.byChannel });
+      setPresence((current) => {
+        if (current.serverId !== serverId) {
+          return { serverId, byChannel: result.byChannel };
+        }
+
+        const byChannel = eventJournal.current
+          .filter(({ sequence }) => sequence > snapshotSequence)
+          .reduce(
+            (next, { event, joined }) =>
+              applyPresenceEvent(next, event, joined),
+            result.byChannel,
+          );
+
+        eventJournal.current = eventJournal.current.filter(
+          ({ sequence }) => sequence > snapshotSequence,
+        );
+        return { serverId, byChannel };
+      });
     });
   }, [serverId]);
 
   const applyEvent = useCallback(
     (event: VoicePresenceEvent, joined: boolean) => {
+      if (event.server_id !== serverId) return;
+      const sequence = ++eventSequence.current;
+      eventJournal.current.push({ event, joined, sequence });
       setPresence((current) => {
-        if (current.serverId !== event.server_id) return current;
+        if (current.serverId !== serverId) return current;
         return {
           serverId: current.serverId,
           byChannel: applyPresenceEvent(current.byChannel, event, joined),
         };
       });
     },
-    [],
+    [serverId],
   );
 
   useEffect(() => {
