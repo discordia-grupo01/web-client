@@ -2,8 +2,12 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listVoiceParticipantsRequest = vi.hoisted(() => vi.fn());
+const fetchVoiceSocketTicketRequest = vi.hoisted(() => vi.fn());
 const connectVoicePresence = vi.hoisted(() => vi.fn());
-vi.mock("./client", () => ({ listVoiceParticipantsRequest }));
+vi.mock("./client", () => ({
+  listVoiceParticipantsRequest,
+  fetchVoiceSocketTicketRequest,
+}));
 vi.mock("./socket", () => ({ connectVoicePresence }));
 
 import { useVoicePresence } from "./useVoicePresence";
@@ -14,6 +18,10 @@ beforeEach(() => {
   listVoiceParticipantsRequest.mockReset().mockResolvedValue({
     ok: true,
     byChannel: {},
+  });
+  fetchVoiceSocketTicketRequest.mockReset().mockResolvedValue({
+    ok: true,
+    ticket: "voice-ticket",
   });
   connectVoicePresence.mockReset().mockReturnValue(() => {});
   vi.useFakeTimers();
@@ -43,6 +51,7 @@ describe("useVoicePresence", () => {
     expect(listVoiceParticipantsRequest).toHaveBeenCalledWith("s1");
     expect(connectVoicePresence).toHaveBeenCalledWith(
       "s1",
+      "voice-ticket",
       expect.objectContaining({
         joined: expect.any(Function),
         left: expect.any(Function),
@@ -59,7 +68,7 @@ describe("useVoicePresence", () => {
 
     const { result } = renderHook(() => useVoicePresence("s1"));
     await flush();
-    const handlers = connectVoicePresence.mock.calls[0][1];
+    const handlers = connectVoicePresence.mock.calls[0][2];
 
     act(() =>
       handlers.joined({
@@ -89,7 +98,7 @@ describe("useVoicePresence", () => {
     });
   });
 
-  it("cierra el socket al cambiar de servidor", () => {
+  it("cierra el socket al cambiar de servidor", async () => {
     const disconnect = vi.fn();
     connectVoicePresence.mockReturnValue(disconnect);
     const { rerender } = renderHook(
@@ -97,7 +106,10 @@ describe("useVoicePresence", () => {
       { initialProps: { serverId: "s1" } },
     );
 
-    rerender({ serverId: "s2" });
+    await flush();
+    await act(async () => {
+      rerender({ serverId: "s2" });
+    });
     expect(disconnect).toHaveBeenCalledOnce();
   });
 

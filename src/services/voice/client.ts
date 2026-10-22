@@ -53,3 +53,20 @@ export async function listVoiceParticipantsRequest(
     return { ok: false, message: VOICE_PARTICIPANTS_FAILED };
   }
 }
+
+export async function fetchVoiceSocketTicketRequest(): Promise<
+  { ok: true; ticket: string } | { ok: false; sessionExpired: boolean }
+> {
+  try {
+    const { data, status } = await api.post<{
+      ticket?: string;
+      expires_in?: number;
+    }>("/voice/socket-ticket");
+    if (status === 200 && typeof data?.ticket === "string") {
+      return { ok: true, ticket: data.ticket };
+    }
+    return { ok: false, sessionExpired: status === 401 };
+  } catch {
+    return { ok: false, sessionExpired: false };
+  }
+}

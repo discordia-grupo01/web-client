@@ -14,7 +14,7 @@ import {
   validateAvatar,
 } from "@discordia/client-shared";
 
-import { AlertCircle, Camera, Check, Pencil, X } from "lucide-react";
+import { AlertCircle, Camera, Check, Pencil, Trash2, X } from "lucide-react";
 import { useCallback, useRef, useState, type ChangeEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -34,6 +34,8 @@ import { MemberSince } from "./MemberSince";
 import { ProfileAvatarFrame } from "./ProfileAvatarFrame";
 import { ProfileBanner } from "./ProfileBanner";
 import { ProfileModalOverlay } from "./ProfileModalOverlay";
+
+const REMOVE_AVATAR_LABEL = "Eliminar foto de perfil";
 
 interface OwnProfileModalProps {
   /** Sin servidor seleccionado (p.ej. abierto desde el home) no hay roles que mostrar. */
@@ -81,12 +83,14 @@ export function OwnProfileModal({
     name?: string;
     description?: string;
     image?: File;
+    removeImage?: boolean;
   }): Promise<boolean> {
     setGlobalError("");
     const formData = new FormData();
     formData.set("name", overrides.name ?? profile.name);
     formData.set("description", overrides.description ?? profile.description);
     if (overrides.image) formData.set("image", overrides.image);
+    if (overrides.removeImage) formData.set("remove_image", "true");
 
     const result = await updateOwnProfileRequest(formData);
 
@@ -189,6 +193,22 @@ export function OwnProfileModal({
     event.target.value = "";
   }
 
+  async function removeAvatar() {
+    if (!profile.avatar_url && !imagePreview) return;
+    if (
+      !window.confirm(
+        "¿Querés eliminar tu foto de perfil? Se mostrará tu avatar con inicial.",
+      )
+    ) {
+      return;
+    }
+    setImageError("");
+    setIsUploadingAvatar(true);
+    const ok = await submitProfile({ removeImage: true });
+    setIsUploadingAvatar(false);
+    if (ok) setImagePreview(null);
+  }
+
   return (
     <ProfileModalOverlay onClose={onClose}>
       <div className="relative shrink-0">
@@ -233,6 +253,22 @@ export function OwnProfileModal({
         />
         {imageError ? (
           <p className="text-danger mt-1 px-6 text-xs">{imageError}</p>
+        ) : null}
+        {profile.avatar_url || imagePreview ? (
+          <button
+            type="button"
+            onClick={removeAvatar}
+            disabled={isUploadingAvatar}
+            className="group text-danger border-danger/30 bg-danger/10 hover:border-danger/50 hover:bg-danger/20 mt-2 ml-6 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all hover:shadow-sm active:scale-95 disabled:pointer-events-none disabled:opacity-50"
+            aria-label={REMOVE_AVATAR_LABEL}
+            title={REMOVE_AVATAR_LABEL}
+          >
+            <Trash2
+              size={13}
+              className="transition-transform group-hover:rotate-[-8deg]"
+            />
+            {REMOVE_AVATAR_LABEL}
+          </button>
         ) : null}
       </div>
 
