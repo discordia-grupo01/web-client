@@ -77,6 +77,7 @@ export function useDirectMessages(
 
   const userRoom = useRef<PhoenixChannel | null>(null);
   const isJoined = useRef(false);
+  const [isConnected, setIsConnected] = useState(false);
   const requestedProfiles = useRef(new Set<string>());
   const callbacksRef = useRef(callbacks);
   useEffect(() => {
@@ -129,9 +130,11 @@ export function useDirectMessages(
         mention: (payload) => callbacksRef.current.onMention?.(payload),
         connectionLost: () => {
           isJoined.current = false;
+          setIsConnected(false);
         },
         joined: (isFirstJoin) => {
           isJoined.current = true;
+          setIsConnected(true);
           if (!isFirstJoin) {
             void reload();
             callbacksRef.current.onRejoined?.();
@@ -145,6 +148,7 @@ export function useDirectMessages(
       cancelled = true;
       isJoined.current = false;
       userRoom.current = null;
+      setIsConnected(false);
       room?.leave();
       release?.();
     };
@@ -287,6 +291,7 @@ export function useDirectMessages(
     (
       content: string,
       attachmentIds: readonly string[] = [],
+      clientId?: string,
     ): Promise<SendDmResult> => {
       if (!activePartnerId) {
         return Promise.resolve({ ok: false, message: DM_SEND_FAILED });
@@ -303,6 +308,7 @@ export function useDirectMessages(
             message: sent.message,
           }),
         attachmentIds,
+        clientId,
       );
     },
     [activePartnerId, applyDm],
@@ -322,5 +328,6 @@ export function useDirectMessages(
     activeSummary,
     openConversation,
     sendMessage,
+    isConnected,
   };
 }

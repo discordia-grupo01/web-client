@@ -29,6 +29,7 @@ import {
   setMessageReaction,
   validateMessageContent,
   withAttachmentIds,
+  withClientId,
 } from "@discordia/client-shared";
 
 import type { Channel as PhoenixChannel } from "phoenix";
@@ -220,6 +221,7 @@ export function useChannelMessages(
     (
       content: string,
       attachmentIds: readonly string[] = [],
+      clientId?: string,
     ): Promise<SendMessageResult> => {
       const invalid = validateMessageContent(content, attachmentIds.length > 0);
       if (invalid) return Promise.resolve({ ok: false, message: invalid });
@@ -227,7 +229,7 @@ export function useChannelMessages(
         phoenixChannel.current,
         statusRef.current,
         "new_message",
-        withAttachmentIds({ content }, attachmentIds),
+        withClientId(withAttachmentIds({ content }, attachmentIds), clientId),
         { failedMessage: MESSAGE_SEND_FAILED },
       );
     },

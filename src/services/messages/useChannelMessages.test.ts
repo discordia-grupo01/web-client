@@ -406,6 +406,7 @@ describe("useChannelMessages: enviar", () => {
     expect(outcome).toEqual({
       ok: false,
       message: "No pudimos enviar el mensaje.",
+      retryable: true,
     });
   });
 
@@ -465,6 +466,7 @@ describe("useChannelMessages: eliminar", () => {
     expect(outcome).toEqual({
       ok: false,
       message: "No tenés permiso para eliminar este mensaje.",
+      retryable: false,
     });
     expect(result.current.messages).toHaveLength(2);
   });
@@ -496,6 +498,7 @@ describe("useChannelMessages: eliminar", () => {
     expect(outcome).toEqual({
       ok: false,
       message: "No pudimos eliminar el mensaje. Intentá de nuevo.",
+      retryable: true,
     });
   });
 
@@ -611,6 +614,7 @@ describe("useChannelMessages: editar", () => {
     expect(outcome).toEqual({
       ok: false,
       message: "Solo el autor de un mensaje puede editarlo.",
+      retryable: false,
     });
     expect(result.current.messages?.[0].content).toBe("mensaje m1");
   });
@@ -627,6 +631,7 @@ describe("useChannelMessages: editar", () => {
     expect(outcome).toEqual({
       ok: false,
       message: "No pudimos editar el mensaje. Intentá de nuevo.",
+      retryable: true,
     });
   });
 
@@ -728,6 +733,7 @@ describe("useChannelMessages: reacciones", () => {
     expect(outcome).toEqual({
       ok: false,
       message: "No tenés permiso para reaccionar en este canal.",
+      retryable: false,
     });
     expect(result.current.messages?.[0].reactions).toBeUndefined();
   });

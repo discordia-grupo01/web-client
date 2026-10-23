@@ -44,6 +44,7 @@ export function DirectMessagesView({
     activeSummary,
     openConversation,
     sendMessage,
+    isConnected,
   } = directMessages;
   const { candidates, isLoading: isLoadingCandidates } = useDmCandidates(
     servers,
@@ -74,6 +75,7 @@ export function DirectMessagesView({
           currentAuthor={currentAuthor}
           activeSummary={activeSummary}
           onSend={sendMessage}
+          isConnected={isConnected}
           onOpenPartnerProfile={setProfileUserId}
         />
       ) : null}

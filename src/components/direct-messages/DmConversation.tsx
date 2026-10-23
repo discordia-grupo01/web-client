@@ -9,7 +9,6 @@ import {
 } from "@discordia/client-shared";
 
 import { MessageCircle } from "lucide-react";
-import { useCallback, useRef } from "react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { MessageList } from "@/components/messages/MessageList";
@@ -19,7 +18,7 @@ import type {
   ConversationSummary,
   SendDmResult,
 } from "@/services/conversations/useDirectMessages";
-import { useFailedMessages } from "@/services/messages/useFailedMessages";
+import { usePendingMessages } from "@/services/messages/usePendingMessages";
 
 import { DmHistory } from "./DmHistory";
 import { DmWelcome } from "./DmWelcome";
@@ -30,7 +29,10 @@ interface DmConversationProps {
   onSend: (
     content: string,
     attachmentIds?: readonly string[],
+    clientId?: string,
   ) => Promise<SendDmResult>;
+  /** La sala personal esta unida: solo entonces se puede enviar. */
+  isConnected: boolean;
   onOpenPartnerProfile: (partnerId: string) => void;
 }
 
@@ -38,18 +40,15 @@ export function DmConversation({
   currentAuthor,
   activeSummary,
   onSend,
+  isConnected,
   onOpenPartnerProfile,
 }: DmConversationProps) {
-  const lastMessageId = useRef<string | null>(null);
-  const setLastMessageId = useCallback((id: string | null) => {
-    lastMessageId.current = id;
-  }, []);
-  const failed = useFailedMessages({
+  const pending = usePendingMessages({
     chatKey: activeSummary?.conversationId ?? activeSummary?.partner.id ?? "",
     channelId: activeSummary?.conversationId ?? "",
     currentUserId: currentAuthor.id,
+    isReady: isConnected,
     send: onSend,
-    getLastMessageId: () => lastMessageId.current,
   });
 
   if (!activeSummary) {
@@ -114,15 +113,17 @@ export function DmConversation({
           conversationId={conversationId}
           partner={partner}
           currentAuthor={currentAuthor}
-          withFailed={failed.withFailed}
-          onLastMessageIdChange={setLastMessageId}
+          withPending={pending.withPending}
+          onMessagesChange={pending.reconcile}
+          onRetryMessage={pending.retry}
+          onDiscardMessage={pending.discard}
         />
       ) : (
         // Borrador: nadie escribio todavia, no hay nada que pedirle al back.
         <MessageList
           welcome={<DmWelcome partner={partner} />}
           label={`Conversación con ${partner.name}`}
-          messages={failed.withFailed([])}
+          messages={pending.withPending([])}
           authors={{ [currentAuthor.id]: currentAuthor }}
           currentUserId={currentAuthor.id}
           canManageMessages={false}
@@ -130,6 +131,8 @@ export function DmConversation({
           onToggleReaction={() => {}}
           onEditMessage={() => {}}
           onDeleteMessage={() => {}}
+          onRetryMessage={pending.retry}
+          onDiscardMessage={pending.discard}
         />
       )}
 
@@ -140,7 +143,7 @@ export function DmConversation({
       ) : null}
       <MessageComposer
         placeholder={dmInputPlaceholder(partner.name)}
-        onSend={failed.onSend}
+        onSend={pending.onSend}
         uploadTarget={{ to: partner.id }}
         disabled={blockedByMe}
       />

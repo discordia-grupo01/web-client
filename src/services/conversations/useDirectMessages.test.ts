@@ -327,6 +327,7 @@ describe("useDirectMessages", () => {
     expect(await outcome).toEqual({
       ok: false,
       message: "No se pudo entregar el mensaje.",
+      retryable: false,
     });
   });
 
