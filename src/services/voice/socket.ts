@@ -17,9 +17,10 @@ interface VoicePresenceHandlers {
 
 export function connectVoicePresence(
   serverId: string,
+  ticket: string,
   handlers: VoicePresenceHandlers,
 ): () => void {
-  const socket = new Socket(env.voiceWsUrl);
+  const socket = new Socket(env.voiceWsUrl, { params: { ticket } });
   const channel = socket.channel(`voice_server:${serverId}`, {});
 
   channel.on("voice.participant_joined", handlers.joined);

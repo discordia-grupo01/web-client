@@ -4,10 +4,19 @@ import { type VoicePresenceByChannel } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { listVoiceParticipantsRequest } from "./client";
+import {
+  fetchVoiceSocketTicketRequest,
+  listVoiceParticipantsRequest,
+} from "./client";
 import { connectVoicePresence, type VoicePresenceEvent } from "./socket";
 
 const EMPTY: VoicePresenceByChannel = {};
+
+interface PresenceJournalEntry {
+  event: VoicePresenceEvent;
+  joined: boolean;
+  sequence: number;
+}
 
 function applyPresenceEvent(
   current: VoicePresenceByChannel,
@@ -48,38 +57,69 @@ export function useVoicePresence(serverId: string | null): {
     byChannel: VoicePresenceByChannel;
   }>({ serverId, byChannel: EMPTY });
   const requestId = useRef(0);
+  const eventSequence = useRef(0);
+  const eventJournal = useRef<PresenceJournalEntry[]>([]);
 
   const refresh = useCallback(() => {
     if (!serverId) return;
     const id = ++requestId.current;
+    const snapshotSequence = eventSequence.current;
     void listVoiceParticipantsRequest(serverId).then((result) => {
       if (id !== requestId.current || !result.ok) return;
-      setPresence({ serverId, byChannel: result.byChannel });
+      setPresence((current) => {
+        if (current.serverId !== serverId) {
+          return { serverId, byChannel: result.byChannel };
+        }
+
+        const byChannel = eventJournal.current
+          .filter(({ sequence }) => sequence > snapshotSequence)
+          .reduce(
+            (next, { event, joined }) =>
+              applyPresenceEvent(next, event, joined),
+            result.byChannel,
+          );
+
+        eventJournal.current = eventJournal.current.filter(
+          ({ sequence }) => sequence > snapshotSequence,
+        );
+        return { serverId, byChannel };
+      });
     });
   }, [serverId]);
 
   const applyEvent = useCallback(
     (event: VoicePresenceEvent, joined: boolean) => {
+      if (event.server_id !== serverId) return;
+      const sequence = ++eventSequence.current;
+      eventJournal.current.push({ event, joined, sequence });
       setPresence((current) => {
-        if (current.serverId !== event.server_id) return current;
+        if (current.serverId !== serverId) return current;
         return {
           serverId: current.serverId,
           byChannel: applyPresenceEvent(current.byChannel, event, joined),
         };
       });
     },
-    [],
+    [serverId],
   );
 
   useEffect(() => {
     if (!serverId) return;
+    let disposed = false;
+    let disconnect: (() => void) | null = null;
+
     refresh();
-    const disconnect = connectVoicePresence(serverId, {
-      joined: (event) => applyEvent(event, true),
-      left: (event) => applyEvent(event, false),
+    void fetchVoiceSocketTicketRequest().then((result) => {
+      if (disposed || !result.ok) return;
+      disconnect = connectVoicePresence(serverId, result.ticket, {
+        joined: (event) => applyEvent(event, true),
+        left: (event) => applyEvent(event, false),
+      });
     });
+
     return () => {
-      disconnect();
+      disposed = true;
+      disconnect?.();
       requestId.current += 1;
     };
   }, [serverId, refresh, applyEvent]);

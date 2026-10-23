@@ -2,8 +2,12 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listVoiceParticipantsRequest = vi.hoisted(() => vi.fn());
+const fetchVoiceSocketTicketRequest = vi.hoisted(() => vi.fn());
 const connectVoicePresence = vi.hoisted(() => vi.fn());
-vi.mock("./client", () => ({ listVoiceParticipantsRequest }));
+vi.mock("./client", () => ({
+  listVoiceParticipantsRequest,
+  fetchVoiceSocketTicketRequest,
+}));
 vi.mock("./socket", () => ({ connectVoicePresence }));
 
 import { useVoicePresence } from "./useVoicePresence";
@@ -14,6 +18,10 @@ beforeEach(() => {
   listVoiceParticipantsRequest.mockReset().mockResolvedValue({
     ok: true,
     byChannel: {},
+  });
+  fetchVoiceSocketTicketRequest.mockReset().mockResolvedValue({
+    ok: true,
+    ticket: "voice-ticket",
   });
   connectVoicePresence.mockReset().mockReturnValue(() => {});
   vi.useFakeTimers();
@@ -43,6 +51,7 @@ describe("useVoicePresence", () => {
     expect(listVoiceParticipantsRequest).toHaveBeenCalledWith("s1");
     expect(connectVoicePresence).toHaveBeenCalledWith(
       "s1",
+      "voice-ticket",
       expect.objectContaining({
         joined: expect.any(Function),
         left: expect.any(Function),
@@ -59,7 +68,7 @@ describe("useVoicePresence", () => {
 
     const { result } = renderHook(() => useVoicePresence("s1"));
     await flush();
-    const handlers = connectVoicePresence.mock.calls[0][1];
+    const handlers = connectVoicePresence.mock.calls[0][2];
 
     act(() =>
       handlers.joined({
@@ -89,7 +98,39 @@ describe("useVoicePresence", () => {
     });
   });
 
-  it("cierra el socket al cambiar de servidor", () => {
+  it("conserva cambios del socket mientras llega el snapshot inicial", async () => {
+    let resolveSnapshot: ((value: unknown) => void) | undefined;
+    listVoiceParticipantsRequest.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSnapshot = resolve;
+      }),
+    );
+
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    const handlers = connectVoicePresence.mock.calls[0][2];
+
+    act(() =>
+      handlers.joined({
+        event_type: "voice.participant_joined",
+        server_id: "s1",
+        room_id: "c1",
+        participant_id: "u2",
+        name: "Beto",
+      }),
+    );
+
+    await act(async () => {
+      resolveSnapshot?.({ ok: true, byChannel: { c1: [ana] } });
+      await Promise.resolve();
+    });
+
+    expect(result.current.byChannel).toEqual({
+      c1: [ana, { participant_id: "u2", name: "Beto" }],
+    });
+  });
+
+  it("cierra el socket al cambiar de servidor", async () => {
     const disconnect = vi.fn();
     connectVoicePresence.mockReturnValue(disconnect);
     const { rerender } = renderHook(
@@ -97,7 +138,10 @@ describe("useVoicePresence", () => {
       { initialProps: { serverId: "s1" } },
     );
 
-    rerender({ serverId: "s2" });
+    await flush();
+    await act(async () => {
+      rerender({ serverId: "s2" });
+    });
     expect(disconnect).toHaveBeenCalledOnce();
   });
 

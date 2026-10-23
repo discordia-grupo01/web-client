@@ -10,7 +10,6 @@ import {
   MAX_DESCRIPTION,
   MAX_NAME,
   NO_DESCRIPTION_YET,
-  REMOVE_AVATAR_LABEL,
   type User,
   validateAvatar,
 } from "@discordia/client-shared";
@@ -35,6 +34,8 @@ import { MemberSince } from "./MemberSince";
 import { ProfileAvatarFrame } from "./ProfileAvatarFrame";
 import { ProfileBanner } from "./ProfileBanner";
 import { ProfileModalOverlay } from "./ProfileModalOverlay";
+
+const REMOVE_AVATAR_LABEL = "Eliminar foto de perfil";
 
 interface OwnProfileModalProps {
   /** Sin servidor seleccionado (p.ej. abierto desde el home) no hay roles que mostrar. */

@@ -15,6 +15,7 @@ import { apiRequestWithBody } from "@/lib/apiClient";
  *   POST   /api/voice/token                     -> 200 VoiceToken | 400 | 401 | 403 | 503
  *   DELETE /api/voice/session                   -> 204 | 400 | 401 | 403 | 503
  *   GET    /api/voice/participants?server_id=   -> 200 VoiceParticipantsResponse | 400 | 401 | 403
+ *   POST   /api/voice/socket-ticket             -> 200 { ticket, expires_in } | 401 | 503
  *
  * Los errores llegan como `{ error: "<codigo>" }` (ver `voiceErrorCodeOf`).
  */
@@ -22,6 +23,11 @@ import { apiRequestWithBody } from "@/lib/apiClient";
 export type VoiceServiceResult<T> =
   | { ok: true; data: T }
   | { ok: false; status: number; code: VoiceErrorCode | undefined };
+
+export interface VoiceSocketTicket {
+  ticket: string;
+  expires_in: number;
+}
 
 async function voiceRequest<T>(
   path: string,
@@ -62,5 +68,14 @@ export function listVoiceParticipants(
     method: "GET",
     token,
     params: { server_id: serverId },
+  });
+}
+
+export function createVoiceSocketTicket(
+  token: string,
+): Promise<VoiceServiceResult<VoiceSocketTicket>> {
+  return voiceRequest<VoiceSocketTicket>("/api/voice/socket-ticket", {
+    method: "POST",
+    token,
   });
 }
