@@ -64,7 +64,7 @@ describe("MessageList", () => {
     expect(screen.getByText("primero")).toBeInTheDocument();
     expect(screen.getByText("segundo")).toBeInTheDocument();
     expect(screen.getAllByText("Ana")).toHaveLength(1);
-    expect(screen.getByText("Moderador")).toBeInTheDocument();
+    expect(screen.getByText("Ana")).toHaveStyle({ color: "#38a169" });
   });
 
   describe("menciones", () => {
