@@ -1,6 +1,5 @@
 import {
   formatMessageTimestamp,
-  hexToRgba,
   type MessageAuthor,
 } from "@discordia/client-shared";
 
@@ -18,22 +17,6 @@ export function MessageHeader({ author, createdAt }: MessageHeaderProps) {
       >
         {author.name}
       </span>
-
-      {author.roleName ? (
-        <span
-          className="text-sky rounded px-1 py-px text-[10px] font-semibold"
-          style={
-            author.roleColor
-              ? {
-                  color: author.roleColor,
-                  background: hexToRgba(author.roleColor, 0.15),
-                }
-              : undefined
-          }
-        >
-          {author.roleName}
-        </span>
-      ) : null}
 
       <time dateTime={createdAt} className="text-content-subtle text-[11px]">
         {formatMessageTimestamp(createdAt)}

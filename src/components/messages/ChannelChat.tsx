@@ -87,7 +87,12 @@ export function ChannelChat({
     if (messages) reconcilePending(messages);
   }, [messages, reconcilePending]);
   const members = useServerMembers(serverId);
-  const authors = useMessageAuthors(members, messages, currentAuthor);
+  const authors = useMessageAuthors(
+    members,
+    messages,
+    currentAuthor,
+    serverRoles,
+  );
   const [actionError, setActionError] = useState<string | null>(null);
 
   async function handleDelete(messageId: string) {
@@ -106,7 +111,11 @@ export function ChannelChat({
   const mentions = useMemo<MessageMentionsValue>(() => {
     const sources: MentionSources = {
       members: (members ?? []).map((member) =>
-        authorFromMember(member, avatarSrcOf(member.user_id, member.profile)),
+        authorFromMember(
+          member,
+          avatarSrcOf(member.user_id, member.profile),
+          serverRoles,
+        ),
       ),
       roles: serverRoles,
       canMentionEveryone,
