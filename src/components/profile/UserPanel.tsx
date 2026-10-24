@@ -7,11 +7,10 @@ import {
   VOICE_UNMUTE_LABEL,
 } from "@discordia/client-shared";
 
-import { Headphones, LogOut, Mic, MicOff, Settings } from "lucide-react";
+import { Headphones, Mic, MicOff, Settings } from "lucide-react";
 import { useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
-import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
@@ -24,7 +23,6 @@ interface UserPanelProps {
 }
 
 export function UserPanel({ user, onClick }: UserPanelProps) {
-  const [isLogoutModalOpen, setIsLogoutModalOpen] = useState(false);
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const voice = useOptionalVoiceSession();
   const isMuted = voice?.state.muted ?? false;
@@ -107,20 +105,8 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
           >
             <Settings size={15} />
           </button>
-          <button
-            type="button"
-            title="Cerrar sesión"
-            onClick={() => setIsLogoutModalOpen(true)}
-            className="text-content-muted hover:bg-danger/10 hover:text-danger flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors"
-          >
-            <LogOut size={15} />
-          </button>
         </div>
       </div>
-
-      {isLogoutModalOpen ? (
-        <LogoutConfirmModal onClose={() => setIsLogoutModalOpen(false)} />
-      ) : null}
 
       {isSettingsOpen ? (
         <AccountSettingsModal onClose={() => setIsSettingsOpen(false)} />
