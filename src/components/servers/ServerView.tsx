@@ -144,7 +144,8 @@ interface ServerViewProps {
   onServerUpdate: (server: ServerSummary) => void;
   /** Levantado a `HomeShell`: se comparte con el estado "sin servidor". */
   ownProfile: User | null;
-  onOpenOwnProfile: () => void;
+  /** Con `serverId` el perfil muestra los roles de ese servidor. */
+  onOpenOwnProfile: (serverId?: string) => void;
   /** Abre un mensaje directo con alguien (desde su perfil). */
   onMessageUser: (profile: PublicUser) => void;
   /** Menciones sin leer por canal (levantado a `HomeShell`, que tiene la sala personal). */
@@ -1033,7 +1034,7 @@ export function ServerView({
           </DndContext>
 
           {ownProfile ? (
-            <UserPanel user={ownProfile} onClick={onOpenOwnProfile} />
+            <UserPanel user={ownProfile} onClick={() => onOpenOwnProfile()} />
           ) : null}
         </div>
       </SidePanel>
@@ -1090,6 +1091,18 @@ export function ServerView({
                 )}
                 isCheckingPermissions={isCheckingChannelPermissions}
                 onAccessRevoked={handleAccessRevoked}
+                onOpenProfile={(userId, member) => {
+                  if (userId === String(ownProfile?.id ?? user?.id)) {
+                    onOpenOwnProfile(server.id);
+                    return;
+                  }
+                  setViewingMutedUntil(
+                    member && isMemberMuted(member)
+                      ? (member.muted_until ?? null)
+                      : null,
+                  );
+                  setViewingUserId(userId);
+                }}
               />
             ) : (
               <VoiceChannelView
@@ -1120,9 +1133,10 @@ export function ServerView({
         <MembersSidebar
           key={`${server.id}:${server.owner_id}:${membersVersion}`}
           serverId={server.id}
+          serverRoles={serverRoles}
           currentUserId={ownProfile?.id ?? user?.id ?? null}
           ownProfile={ownProfile}
-          onOpenOwnProfile={onOpenOwnProfile}
+          onOpenOwnProfile={() => onOpenOwnProfile(server.id)}
           onOpenPublicProfile={(userId, member) => {
             setViewingMutedUntil(
               member && isMemberMuted(member)

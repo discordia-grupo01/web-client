@@ -6,6 +6,7 @@ import {
   type Message,
   type MessageAuthor,
   messageAuthorOf,
+  type Role,
   PROFILE_FALLBACK_CONCURRENCY,
 } from "@discordia/client-shared";
 
@@ -27,6 +28,7 @@ export function useMessageAuthors(
   members: Member[] | null,
   messages: Message[] | null,
   currentAuthor: MessageAuthor | null,
+  serverRoles: Role[],
 ): Record<string, MessageAuthor> {
   const [extra, setExtra] = useState<Record<string, MessageAuthor>>({});
   const requested = useRef(new Set<string>());
@@ -45,11 +47,20 @@ export function useMessageAuthors(
       byId[member.user_id] = authorFromMember(
         member,
         avatarSrcOf(member.user_id, member.profile),
+        serverRoles,
       );
     }
-    if (currentAuthor) byId[currentAuthor.id] = currentAuthor;
+    if (currentAuthor) {
+      // El perfil propio es mas fresco, pero el rol sale de la copia del miembro.
+      const asMember = byId[currentAuthor.id];
+      byId[currentAuthor.id] = {
+        ...currentAuthor,
+        roleName: asMember?.roleName ?? null,
+        roleColor: asMember?.roleColor ?? null,
+      };
+    }
     return byId;
-  }, [members, extra, currentAuthor]);
+  }, [members, extra, currentAuthor, serverRoles]);
 
   // Se espera a tener los miembros: antes de eso todo autor "falta" y se
   // pediria un perfil por cada uno sin necesidad.

@@ -98,6 +98,38 @@ describe("useVoicePresence", () => {
     });
   });
 
+  it("conserva cambios del socket mientras llega el snapshot inicial", async () => {
+    let resolveSnapshot: ((value: unknown) => void) | undefined;
+    listVoiceParticipantsRequest.mockReturnValue(
+      new Promise((resolve) => {
+        resolveSnapshot = resolve;
+      }),
+    );
+
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    const handlers = connectVoicePresence.mock.calls[0][2];
+
+    act(() =>
+      handlers.joined({
+        event_type: "voice.participant_joined",
+        server_id: "s1",
+        room_id: "c1",
+        participant_id: "u2",
+        name: "Beto",
+      }),
+    );
+
+    await act(async () => {
+      resolveSnapshot?.({ ok: true, byChannel: { c1: [ana] } });
+      await Promise.resolve();
+    });
+
+    expect(result.current.byChannel).toEqual({
+      c1: [ana, { participant_id: "u2", name: "Beto" }],
+    });
+  });
+
   it("cierra el socket al cambiar de servidor", async () => {
     const disconnect = vi.fn();
     connectVoicePresence.mockReturnValue(disconnect);

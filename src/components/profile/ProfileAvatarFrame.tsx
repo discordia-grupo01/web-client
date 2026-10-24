@@ -10,6 +10,9 @@ interface ProfileAvatarFrameProps {
   /** Si se pasa, el avatar es clickeable (perfil propio: abre el selector de archivo). */
   onClick?: () => void;
   ariaLabel?: string;
+  /** Para cuando el click abre un menu en vez de una accion directa. */
+  ariaHasPopup?: "menu";
+  ariaExpanded?: boolean;
   className?: string;
   /** Contenido superpuesto al avatar (capa de "cambiar foto" o el punto de estado). */
   children?: ReactNode;
@@ -25,6 +28,8 @@ export function ProfileAvatarFrame({
   size = 80,
   onClick,
   ariaLabel,
+  ariaHasPopup,
+  ariaExpanded,
   className,
   children,
 }: ProfileAvatarFrameProps) {
@@ -52,6 +57,8 @@ export function ProfileAvatarFrame({
           type="button"
           onClick={onClick}
           aria-label={ariaLabel}
+          aria-haspopup={ariaHasPopup}
+          aria-expanded={ariaExpanded}
           className={cn(
             "group relative inline-block cursor-pointer rounded-full",
             className,

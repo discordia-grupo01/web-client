@@ -9,9 +9,9 @@ import {
 } from "@discordia/client-shared";
 
 import { MessageCircle } from "lucide-react";
-import { useCallback, useRef } from "react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageComposer } from "@/components/messages/MessageComposer";
 import { Avatar } from "@/components/ui/Avatar";
@@ -19,7 +19,7 @@ import type {
   ConversationSummary,
   SendDmResult,
 } from "@/services/conversations/useDirectMessages";
-import { useFailedMessages } from "@/services/messages/useFailedMessages";
+import { usePendingMessages } from "@/services/messages/usePendingMessages";
 
 import { DmHistory } from "./DmHistory";
 import { DmWelcome } from "./DmWelcome";
@@ -30,26 +30,35 @@ interface DmConversationProps {
   onSend: (
     content: string,
     attachmentIds?: readonly string[],
+    clientId?: string,
   ) => Promise<SendDmResult>;
+  /** La sala personal esta unida: solo entonces se puede enviar. */
+  isConnected: boolean;
+  /** No cargo la lista y tampoco hay conexion: no tiene sentido pedir elegir una conversacion. */
+  isOffline: boolean;
+  /** Vuelve a pedir la lista de conversaciones. */
+  onRetryLoad: () => void | Promise<unknown>;
   onOpenPartnerProfile: (partnerId: string) => void;
+  /** Click en el nombre o la foto de un mensaje (puede ser el propio). */
+  onOpenProfile: (userId: string) => void;
 }
 
 export function DmConversation({
   currentAuthor,
   activeSummary,
   onSend,
+  isConnected,
+  isOffline,
+  onRetryLoad,
   onOpenPartnerProfile,
+  onOpenProfile,
 }: DmConversationProps) {
-  const lastMessageId = useRef<string | null>(null);
-  const setLastMessageId = useCallback((id: string | null) => {
-    lastMessageId.current = id;
-  }, []);
-  const failed = useFailedMessages({
+  const pending = usePendingMessages({
     chatKey: activeSummary?.conversationId ?? activeSummary?.partner.id ?? "",
     channelId: activeSummary?.conversationId ?? "",
     currentUserId: currentAuthor.id,
+    isReady: isConnected,
     send: onSend,
-    getLastMessageId: () => lastMessageId.current,
   });
 
   if (!activeSummary) {
@@ -61,14 +70,18 @@ export function DmConversation({
         <div className="p-2 md:hidden">
           <MobileNavButton />
         </div>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3">
-          <div className="bg-surface-input flex size-16 items-center justify-center rounded-2xl">
-            <MessageCircle size={28} className="text-content-subtle" />
+        {isOffline ? (
+          <ConnectionLostNotice onRetry={onRetryLoad} />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3">
+            <div className="bg-surface-input flex size-16 items-center justify-center rounded-2xl">
+              <MessageCircle size={28} className="text-content-subtle" />
+            </div>
+            <p className="text-content-subtle text-sm">
+              {SELECT_CONVERSATION_NOTICE}
+            </p>
           </div>
-          <p className="text-content-subtle text-sm">
-            {SELECT_CONVERSATION_NOTICE}
-          </p>
-        </div>
+        )}
       </div>
     );
   }
@@ -114,15 +127,18 @@ export function DmConversation({
           conversationId={conversationId}
           partner={partner}
           currentAuthor={currentAuthor}
-          withFailed={failed.withFailed}
-          onLastMessageIdChange={setLastMessageId}
+          withPending={pending.withPending}
+          onMessagesChange={pending.reconcile}
+          onRetryMessage={pending.retry}
+          onDiscardMessage={pending.discard}
+          onOpenProfile={onOpenProfile}
         />
       ) : (
         // Borrador: nadie escribio todavia, no hay nada que pedirle al back.
         <MessageList
           welcome={<DmWelcome partner={partner} />}
           label={`Conversación con ${partner.name}`}
-          messages={failed.withFailed([])}
+          messages={pending.withPending([])}
           authors={{ [currentAuthor.id]: currentAuthor }}
           currentUserId={currentAuthor.id}
           canManageMessages={false}
@@ -130,6 +146,9 @@ export function DmConversation({
           onToggleReaction={() => {}}
           onEditMessage={() => {}}
           onDeleteMessage={() => {}}
+          onRetryMessage={pending.retry}
+          onDiscardMessage={pending.discard}
+          onOpenProfile={onOpenProfile}
         />
       )}
 
@@ -140,7 +159,7 @@ export function DmConversation({
       ) : null}
       <MessageComposer
         placeholder={dmInputPlaceholder(partner.name)}
-        onSend={failed.onSend}
+        onSend={pending.onSend}
         uploadTarget={{ to: partner.id }}
         disabled={blockedByMe}
       />

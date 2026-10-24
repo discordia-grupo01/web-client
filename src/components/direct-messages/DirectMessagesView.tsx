@@ -44,6 +44,8 @@ export function DirectMessagesView({
     activeSummary,
     openConversation,
     sendMessage,
+    isConnected,
+    retry,
   } = directMessages;
   const { candidates, isLoading: isLoadingCandidates } = useDmCandidates(
     servers,
@@ -58,6 +60,8 @@ export function DirectMessagesView({
           conversations={conversations}
           isLoading={isLoading}
           loadError={loadError}
+          isOffline={loadError !== null && !isConnected}
+          onRetryLoad={retry}
           activePartnerId={activeSummary?.partner.id ?? null}
           onSelect={(id) => {
             openConversation(id);
@@ -74,7 +78,15 @@ export function DirectMessagesView({
           currentAuthor={currentAuthor}
           activeSummary={activeSummary}
           onSend={sendMessage}
+          isConnected={isConnected}
+          isOffline={loadError !== null && !isConnected}
+          onRetryLoad={retry}
           onOpenPartnerProfile={setProfileUserId}
+          onOpenProfile={(userId) =>
+            userId === currentAuthor.id
+              ? onOpenOwnProfile()
+              : setProfileUserId(userId)
+          }
         />
       ) : null}
 

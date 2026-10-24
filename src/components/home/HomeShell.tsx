@@ -67,7 +67,9 @@ function HomeShellContent({
   const [ownProfile, setOwnProfile] = useState<User | null>(null);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [areServersLoaded, setAreServersLoaded] = useState(false);
-  const [isOwnProfileOpen, setIsOwnProfileOpen] = useState(false);
+  const [ownProfileServerId, setOwnProfileServerId] = useState<
+    string | null | undefined
+  >(undefined);
   const selectedServer =
     servers.find((server) => server.id === selectedServerId) ?? null;
 
@@ -245,7 +247,7 @@ function HomeShellContent({
           <DirectMessagesView
             currentAuthor={currentAuthor}
             ownProfile={ownProfile}
-            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            onOpenOwnProfile={() => setOwnProfileServerId(null)}
             servers={servers}
             directMessages={directMessages}
           />
@@ -256,7 +258,9 @@ function HomeShellContent({
             onLeft={() => removeServer(selectedServer.id)}
             onServerUpdate={updateServer}
             ownProfile={ownProfile}
-            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            onOpenOwnProfile={(serverId) =>
+              setOwnProfileServerId(serverId ?? null)
+            }
             onMessageUser={messageUser}
             unreadMentionsByChannel={mentions.byChannel}
             onChannelRead={mentions.markChannelRead}
@@ -268,7 +272,7 @@ function HomeShellContent({
             hasServers={servers.length > 0}
             userName={user?.name}
             ownProfile={ownProfile}
-            onOpenOwnProfile={() => setIsOwnProfileOpen(true)}
+            onOpenOwnProfile={() => setOwnProfileServerId(null)}
             onCreateClick={() => setIsCreateModalOpen(true)}
             onJoinClick={() => setIsJoinModalOpen(true)}
           />
@@ -294,11 +298,11 @@ function HomeShellContent({
           />
         ) : null}
 
-        {isOwnProfileOpen && ownProfile ? (
+        {ownProfileServerId !== undefined && ownProfile ? (
           <OwnProfileModal
-            serverId={selectedServer?.id}
+            serverId={ownProfileServerId ?? undefined}
             profile={ownProfile}
-            onClose={() => setIsOwnProfileOpen(false)}
+            onClose={() => setOwnProfileServerId(undefined)}
             onUpdated={setOwnProfile}
           />
         ) : null}

@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CHAT_RECONNECTING_NOTICE,
   LOADING_MESSAGES_LABEL,
   type Message,
   type MessageAuthor,
@@ -10,6 +9,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { ChatStatusNotice } from "@/components/messages/ChatStatusNotice";
+import { ConnectionPill } from "@/components/messages/ConnectionPill";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
@@ -20,10 +20,13 @@ interface DmHistoryProps {
   conversationId: string;
   partner: MessageAuthor;
   currentAuthor: MessageAuthor;
-  /** Pone en su lugar los mensajes propios que no se pudieron enviar. */
-  withFailed: (messages: Message[]) => Message[];
-  /** El ultimo mensaje del chat, para anclar ahi un envio fallido. */
-  onLastMessageIdChange: (id: string | null) => void;
+  /** Agrega al final los mensajes propios que todavia no llegaron o no se pudieron enviar. */
+  withPending: (messages: Message[]) => Message[];
+  /** Los mensajes del chat cambiaron: los pendientes que ya llegaron se sacan. */
+  onMessagesChange: (messages: Message[]) => void;
+  onRetryMessage: (clientId: string) => void;
+  onDiscardMessage: (clientId: string) => void;
+  onOpenProfile: (userId: string) => void;
 }
 
 /**
@@ -36,8 +39,11 @@ export function DmHistory({
   conversationId,
   partner,
   currentAuthor,
-  withFailed,
-  onLastMessageIdChange,
+  withPending,
+  onMessagesChange,
+  onRetryMessage,
+  onDiscardMessage,
+  onOpenProfile,
 }: DmHistoryProps) {
   const {
     status,
@@ -51,10 +57,9 @@ export function DmHistory({
     editMessage,
     deleteMessage,
   } = useChannelMessages({ id: conversationId });
-  const lastMessageId = messages?.at(-1)?.id ?? null;
   useEffect(() => {
-    onLastMessageIdChange(lastMessageId);
-  }, [lastMessageId, onLastMessageIdChange]);
+    if (messages) onMessagesChange(messages);
+  }, [messages, onMessagesChange]);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const authors = useMemo(
     () => ({ [partner.id]: partner, [currentAuthor.id]: currentAuthor }),
@@ -78,17 +83,20 @@ export function DmHistory({
 
   return (
     <>
+      {messages !== null ? (
+        <ConnectionPill status={status} onRetry={retry} />
+      ) : null}
       {messages === null ? (
         status === "offline" ? (
-          <ConnectionLostNotice variant="panel" />
+          <ConnectionLostNotice onRetry={retry} />
         ) : (
-          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} isLoading />
         )
       ) : (
         <MessageList
           welcome={<DmWelcome partner={partner} />}
           label={`Conversación con ${partner.name}`}
-          messages={withFailed(messages)}
+          messages={withPending(messages)}
           authors={authors}
           currentUserId={currentAuthor.id}
           canManageMessages={false}
@@ -99,6 +107,9 @@ export function DmHistory({
           onToggleReaction={toggleReaction}
           onEditMessage={editMessage}
           onDeleteMessage={handleDelete}
+          onRetryMessage={onRetryMessage}
+          onDiscardMessage={onDiscardMessage}
+          onOpenProfile={onOpenProfile}
         />
       )}
       {deleteError ? (
@@ -107,17 +118,6 @@ export function DmHistory({
           className="bg-danger/10 text-danger shrink-0 px-4 py-1 text-center text-xs"
         >
           {deleteError}
-        </p>
-      ) : null}
-      {status === "offline" && messages !== null ? (
-        <ConnectionLostNotice variant="bar" />
-      ) : null}
-      {status === "reconnecting" ? (
-        <p
-          role="status"
-          className="bg-surface-hover text-content-muted shrink-0 px-4 py-1 text-center text-xs"
-        >
-          {CHAT_RECONNECTING_NOTICE}
         </p>
       ) : null}
     </>

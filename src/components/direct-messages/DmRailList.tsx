@@ -16,10 +16,15 @@ import { Avatar } from "@/components/ui/Avatar";
 import type { ConversationSummary } from "@/services/conversations/useDirectMessages";
 import { cn } from "@/lib/cn";
 
+import { DmListError } from "./DmListError";
+
 interface DmRailListProps {
   conversations: ConversationSummary[];
   isLoading: boolean;
   loadError: string | null;
+  /** La lista no cargo y tampoco hay conexion. */
+  isOffline: boolean;
+  onRetryLoad: () => void | Promise<unknown>;
   activePartnerId: string | null;
   onSelect: (partnerId: string) => void;
   onStartNew: () => void;
@@ -52,6 +57,8 @@ export function DmRailList({
   conversations,
   isLoading,
   loadError,
+  isOffline,
+  onRetryLoad,
   activePartnerId,
   onSelect,
   onStartNew,
@@ -96,15 +103,15 @@ export function DmRailList({
               aria-label="Cargando conversaciones"
             />
           </div>
+        ) : conversations.length === 0 && loadError ? (
+          <DmListError
+            message={loadError}
+            isOffline={isOffline}
+            onRetry={onRetryLoad}
+          />
         ) : conversations.length === 0 ? (
-          <p
-            role={loadError ? "alert" : undefined}
-            className={cn(
-              "px-2 text-xs",
-              loadError ? "text-danger" : "text-content-subtle",
-            )}
-          >
-            {loadError ?? NO_CONVERSATIONS_YET}
+          <p className="text-content-subtle px-2 text-xs">
+            {NO_CONVERSATIONS_YET}
           </p>
         ) : (
           conversations.map(

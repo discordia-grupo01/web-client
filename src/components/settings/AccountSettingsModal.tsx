@@ -1,8 +1,9 @@
 "use client";
 
-import { ChevronLeft, ChevronRight, Moon, Shield } from "lucide-react";
+import { ChevronLeft, ChevronRight, LogOut, Moon, Shield } from "lucide-react";
 import { useState } from "react";
 
+import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { TwoFactorSummaryRow } from "@/components/security/TwoFactorSummaryRow";
 import { cn } from "@/lib/cn";
@@ -38,6 +39,7 @@ interface AccountSettingsModalProps {
 export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
   const [section, setSection] = useState<Section>("appearance");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(true);
+  const [isLogoutOpen, setIsLogoutOpen] = useState(false);
 
   const activeSection = SECTIONS.find((item) => item.id === section);
 
@@ -89,6 +91,14 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
               );
             })}
           </nav>
+          <button
+            type="button"
+            onClick={() => setIsLogoutOpen(true)}
+            className="text-danger hover:bg-danger/10 mt-auto flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors"
+          >
+            <LogOut size={17} />
+            <strong className="font-display text-sm">Cerrar sesión</strong>
+          </button>
         </aside>
 
         <main className="flex min-w-0 flex-1 flex-col">
@@ -147,6 +157,18 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
                   </button>
                 );
               })}
+              <button
+                type="button"
+                onClick={() => setIsLogoutOpen(true)}
+                className="bg-surface-raised border-line text-danger flex min-h-16 w-full cursor-pointer items-center gap-4 rounded-2xl border p-4 text-left"
+              >
+                <span className="bg-danger/10 flex size-11 shrink-0 items-center justify-center rounded-xl">
+                  <LogOut size={20} />
+                </span>
+                <strong className="font-display text-base">
+                  Cerrar sesión
+                </strong>
+              </button>
             </nav>
           ) : null}
 
@@ -174,6 +196,9 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
           </div>
         </main>
       </div>
+      {isLogoutOpen ? (
+        <LogoutConfirmModal onClose={() => setIsLogoutOpen(false)} />
+      ) : null}
     </ModalShell>
   );
 }

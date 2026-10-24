@@ -3,12 +3,15 @@
 import {
   formatMessageTime,
   MESSAGE_EDITED_LABEL,
+  DISCARD_MESSAGE_LABEL,
   MESSAGE_NOT_SENT_LABEL,
   mentionsPerson,
   type MessageAttachment,
   type MessageAuthor,
   type MessageMentions,
   type MessageReaction,
+  RETRY_LABEL,
+  SENDING_LABEL,
 } from "@discordia/client-shared";
 
 import { CircleAlert } from "lucide-react";
@@ -37,8 +40,8 @@ export interface MessageItemMessage extends MessageMentions {
   edited_at?: string | null;
   reactions?: MessageReaction[];
   attachments?: MessageAttachment[];
-  /** Mensaje propio que no se pudo enviar (solo existe en pantalla). */
-  delivery?: "failed";
+  /** Mensaje propio que se esta enviando o no se pudo enviar (solo existe en pantalla). */
+  delivery?: "sending" | "waiting" | "failed";
   delivery_error?: string;
 }
 
@@ -56,6 +59,11 @@ interface MessageItemProps {
   canAddReactions?: boolean;
   onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
+  /** Solo en un mensaje fallido. */
+  onRetry?: () => void;
+  onDiscard?: () => void;
+  /** Sin esto el nombre y la foto no son cliqueables. */
+  onOpenProfile?: (userId: string) => void;
 }
 
 export function MessageItem({
@@ -68,6 +76,9 @@ export function MessageItem({
   canAddReactions = true,
   onEdit,
   onDelete,
+  onRetry,
+  onDiscard,
+  onOpenProfile,
 }: MessageItemProps) {
   const { me } = useMessageMentions();
   const delivery = message.delivery;
@@ -102,16 +113,34 @@ export function MessageItem({
           : "hover:bg-surface-hover",
         isGroupStart && "mt-4",
         delivery === "failed" &&
-          "border-danger bg-danger/5 rounded-none border-l-2",
+          "rounded-none shadow-[inset_2px_0_0_var(--border-strong)]",
+        delivery === "waiting" && "opacity-60",
       )}
+      aria-busy={delivery === "sending" || delivery === "waiting" || undefined}
     >
       {isGroupStart ? (
-        <Avatar
-          name={author.name}
-          src={author.avatarUrl}
-          size={AVATAR_SIZE}
-          className="mt-0.5 rounded-full"
-        />
+        onOpenProfile ? (
+          <button
+            type="button"
+            onClick={() => onOpenProfile(message.user_id)}
+            aria-label={`Ver perfil de ${author.name}`}
+            className="mt-0.5 h-fit shrink-0 cursor-pointer rounded-full"
+          >
+            <Avatar
+              name={author.name}
+              src={author.avatarUrl}
+              size={AVATAR_SIZE}
+              className="rounded-full"
+            />
+          </button>
+        ) : (
+          <Avatar
+            name={author.name}
+            src={author.avatarUrl}
+            size={AVATAR_SIZE}
+            className="mt-0.5 rounded-full"
+          />
+        )
       ) : (
         <time
           dateTime={message.inserted_at}
@@ -123,7 +152,13 @@ export function MessageItem({
 
       <div className="min-w-0 flex-1">
         {isGroupStart ? (
-          <MessageHeader author={author} createdAt={message.inserted_at} />
+          <MessageHeader
+            author={author}
+            createdAt={message.inserted_at}
+            onOpenProfile={
+              onOpenProfile ? () => onOpenProfile(message.user_id) : undefined
+            }
+          />
         ) : null}
 
         {isEditing ? (
@@ -153,13 +188,38 @@ export function MessageItem({
           <MessageAttachments attachments={message.attachments} />
         ) : null}
 
+        {delivery === "waiting" ? (
+          <p role="status" className="text-content-subtle mt-0.5 text-xs">
+            {SENDING_LABEL}
+          </p>
+        ) : null}
+
         {delivery === "failed" ? (
           <p
             role="alert"
-            className="text-danger mt-0.5 flex items-center gap-1 text-xs"
+            className="text-content-subtle mt-1 flex flex-wrap items-center gap-x-1.5 text-xs"
           >
-            <CircleAlert size={13} aria-hidden />
+            <CircleAlert size={12} className="shrink-0" aria-hidden />
             {message.delivery_error || MESSAGE_NOT_SENT_LABEL}
+            {onRetry ? (
+              <button
+                type="button"
+                onClick={onRetry}
+                className="text-content cursor-pointer font-medium underline-offset-2 hover:underline"
+              >
+                {RETRY_LABEL}
+              </button>
+            ) : null}
+            {onRetry && onDiscard ? <span aria-hidden>·</span> : null}
+            {onDiscard ? (
+              <button
+                type="button"
+                onClick={onDiscard}
+                className="text-content cursor-pointer font-medium underline-offset-2 hover:underline"
+              >
+                {DISCARD_MESSAGE_LABEL}
+              </button>
+            ) : null}
           </p>
         ) : null}
 

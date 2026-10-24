@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  highestRoleOf,
   isMemberMuted,
   type Member,
   type MemberPageQuery,
@@ -9,6 +10,7 @@ import {
   MEMBERS_SEARCH_LABEL,
   MEMBERS_SEARCH_PLACEHOLDER,
   mutedUntilLabel,
+  type Role,
   type User,
 } from "@discordia/client-shared";
 
@@ -26,6 +28,8 @@ const LOAD_MORE_THRESHOLD_PX = 160;
 
 interface MembersSidebarProps {
   serverId: string;
+  /** Roles del servidor: el nombre toma el color del rol mas alto de cada miembro. */
+  serverRoles: Role[];
   currentUserId: string | null;
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
@@ -54,6 +58,7 @@ function MemberAvatar({ member }: { member: Member }) {
 
 function MemberRow({
   member,
+  roleColor,
   statusText,
   statusEmoji,
   isOwn,
@@ -61,6 +66,7 @@ function MemberRow({
   onOpenPublicProfile,
 }: {
   member: Member;
+  roleColor: string | null;
   statusText: string;
   statusEmoji: string;
   isOwn: boolean;
@@ -79,6 +85,7 @@ function MemberRow({
       <div className="min-w-0 flex-1">
         <span
           className="text-content-muted block truncate text-sm"
+          style={roleColor ? { color: roleColor } : undefined}
           title={member.user_id}
         >
           {displayName}
@@ -156,6 +163,7 @@ function MemberGroup({
   label,
   count,
   members,
+  serverRoles,
   currentUserId,
   ownProfile,
   onOpenOwnProfile,
@@ -165,6 +173,7 @@ function MemberGroup({
   /** Cuantos hay en total, aunque todavia no esten todos cargados. */
   count: number;
   members: Member[];
+  serverRoles: Role[];
   currentUserId: string | null;
   ownProfile: User | null;
   onOpenOwnProfile: () => void;
@@ -185,6 +194,9 @@ function MemberGroup({
             <MemberRow
               key={member.user_id}
               member={member}
+              roleColor={
+                highestRoleOf(member.role_ids, serverRoles)?.color ?? null
+              }
               statusText={statusSource?.status_text ?? ""}
               statusEmoji={statusSource?.status_emoji ?? ""}
               isOwn={isOwn}
@@ -202,6 +214,7 @@ function MemberGroup({
 
 export function MembersSidebar({
   serverId,
+  serverRoles,
   currentUserId,
   ownProfile,
   onOpenOwnProfile,
@@ -263,6 +276,7 @@ export function MembersSidebar({
               label="Resultados"
               count={total}
               members={members}
+              serverRoles={serverRoles}
               currentUserId={currentUserId}
               ownProfile={ownProfile}
               onOpenOwnProfile={onOpenOwnProfile}
@@ -273,6 +287,7 @@ export function MembersSidebar({
             label="Propietario"
             count={owners.length}
             members={isSearching ? [] : owners}
+            serverRoles={serverRoles}
             currentUserId={currentUserId}
             ownProfile={ownProfile}
             onOpenOwnProfile={onOpenOwnProfile}
@@ -282,6 +297,7 @@ export function MembersSidebar({
             label="Miembros"
             count={Math.max(total - 1, regulars.length)}
             members={isSearching ? [] : regulars}
+            serverRoles={serverRoles}
             currentUserId={currentUserId}
             ownProfile={ownProfile}
             onOpenOwnProfile={onOpenOwnProfile}
