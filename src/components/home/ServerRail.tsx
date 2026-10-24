@@ -8,6 +8,7 @@ import { SidePanel } from "@/components/layout/SidePanel";
 import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
 import { Avatar } from "@/components/ui/Avatar";
 import { CountBadge } from "@/components/ui/CountBadge";
+import { SideTooltip } from "@/components/ui/Tooltip";
 import { serverIconSrc } from "@/services/servers/image-urls";
 import { cn } from "@/lib/cn";
 
@@ -107,14 +108,16 @@ function ServerRailItem({
       {isActive ? (
         <div className="bg-server-pill absolute top-1/2 -left-2 h-8 w-1 -translate-y-1/2 rounded-r-full" />
       ) : null}
-      <button
-        type="button"
-        title={server.name}
-        onClick={onClick}
-        className="cursor-pointer overflow-hidden rounded-2xl"
-      >
-        <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
-      </button>
+      <SideTooltip label={server.name}>
+        <button
+          type="button"
+          aria-label={server.name}
+          onClick={onClick}
+          className="cursor-pointer overflow-hidden rounded-2xl"
+        >
+          <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
+        </button>
+      </SideTooltip>
       {unreadMentions > 0 ? (
         <CountBadge
           count={unreadMentions}

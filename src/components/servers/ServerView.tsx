@@ -144,7 +144,8 @@ interface ServerViewProps {
   onServerUpdate: (server: ServerSummary) => void;
   /** Levantado a `HomeShell`: se comparte con el estado "sin servidor". */
   ownProfile: User | null;
-  onOpenOwnProfile: () => void;
+  /** Con `serverId` el perfil muestra los roles de ese servidor. */
+  onOpenOwnProfile: (serverId?: string) => void;
   /** Abre un mensaje directo con alguien (desde su perfil). */
   onMessageUser: (profile: PublicUser) => void;
   /** Menciones sin leer por canal (levantado a `HomeShell`, que tiene la sala personal). */
@@ -1033,7 +1034,7 @@ export function ServerView({
           </DndContext>
 
           {ownProfile ? (
-            <UserPanel user={ownProfile} onClick={onOpenOwnProfile} />
+            <UserPanel user={ownProfile} onClick={() => onOpenOwnProfile()} />
           ) : null}
         </div>
       </SidePanel>
@@ -1122,7 +1123,7 @@ export function ServerView({
           serverId={server.id}
           currentUserId={ownProfile?.id ?? user?.id ?? null}
           ownProfile={ownProfile}
-          onOpenOwnProfile={onOpenOwnProfile}
+          onOpenOwnProfile={() => onOpenOwnProfile(server.id)}
           onOpenPublicProfile={(userId, member) => {
             setViewingMutedUntil(
               member && isMemberMuted(member)

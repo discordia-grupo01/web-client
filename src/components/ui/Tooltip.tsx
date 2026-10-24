@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, type ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
 
@@ -44,6 +45,53 @@ export function Tooltip({
       >
         {label}
       </span>
+    </span>
+  );
+}
+
+interface SideTooltipProps {
+  label: string;
+  children: ReactNode;
+}
+
+/**
+ * Tooltip a la derecha del hijo, posicionado con `fixed` en un portal para que
+ * no lo recorte un contenedor con scroll (p. ej. la barra de servidores).
+ */
+export function SideTooltip({ label, children }: SideTooltipProps) {
+  const [anchor, setAnchor] = useState<{ top: number; left: number } | null>(
+    null,
+  );
+
+  const show = (element: HTMLElement) => {
+    const rect = element.getBoundingClientRect();
+    setAnchor({ top: rect.top + rect.height / 2, left: rect.right + 8 });
+  };
+
+  return (
+    <span
+      className="relative inline-flex"
+      onMouseEnter={(event) => show(event.currentTarget)}
+      onMouseLeave={() => setAnchor(null)}
+      onClickCapture={() => setAnchor(null)}
+      onFocus={(event) => {
+        if (event.target.matches(":focus-visible")) show(event.currentTarget);
+      }}
+      onBlur={() => setAnchor(null)}
+    >
+      {children}
+      {anchor
+        ? createPortal(
+            <span
+              role="tooltip"
+              style={{ top: anchor.top, left: anchor.left }}
+              className="bg-surface-raised border-line text-content pointer-events-none fixed z-50 -translate-y-1/2 rounded-md border px-2 py-1 text-xs whitespace-nowrap shadow-lg"
+            >
+              {label}
+            </span>,
+            document.body,
+          )
+        : null}
     </span>
   );
 }
