@@ -178,7 +178,9 @@ export function useChannelMessages(
     );
     const stopGaveUpListener = onSocketGaveUp(() =>
       setStatus((prev) =>
-        prev === "ready" || prev === "reconnecting" ? "offline" : prev,
+        prev === "ready" || prev === "reconnecting" || prev === "loading"
+          ? "offline"
+          : prev,
       ),
     );
     void start();

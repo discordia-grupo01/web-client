@@ -50,7 +50,7 @@ const noSubscribe = () => () => {};
  * mensaje se ve en el chat enseguida, igual que uno enviado; si se demora se atenua con "Enviando…".
  * Si falla se reintenta solo (3 intentos); sin conexion espera en cola y sale al
  * volver; si no hay caso, queda marcado con Reintentar / Eliminar. Lo que no se
- * envio se recuerda en el dispositivo 24 h (ver `lib/pendingMessages`).
+ * envio se recuerda en el dispositivo 2 h (ver `lib/pendingMessages`).
  *
  * Con adjuntos se envia como siempre: el cuadro espera la respuesta.
  */

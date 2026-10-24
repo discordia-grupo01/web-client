@@ -3,7 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { fetchMessagesRequest } from "./client";
-import { acquireSocket } from "./socket";
+import { acquireSocket, onSocketGaveUp } from "./socket";
 import { useChannelMessages } from "./useChannelMessages";
 
 vi.mock("./client", () => ({ fetchMessagesRequest: vi.fn() }));
@@ -772,5 +772,33 @@ describe("useChannelMessages: paginacion", () => {
     });
     expect(result.current.messages?.map((m) => m.id)).toEqual(["m1", "m2"]);
     expect(result.current.hasMore).toBe(false);
+  });
+});
+
+describe("useChannelMessages: sin conexion", () => {
+  it("si el socket se rinde mientras el chat todavia carga, pasa a sin conexion y no queda cargando", async () => {
+    const view = renderHook(() => useChannelMessages({ id: "ch1" }));
+    await waitFor(() => expect(room.join).toHaveBeenCalled());
+    expect(view.result.current.status).toBe("loading");
+
+    const gaveUp = vi.mocked(onSocketGaveUp).mock.calls[0][0];
+    act(() => gaveUp());
+
+    expect(view.result.current.status).toBe("offline");
+  });
+
+  it("al reintentar con el servicio caido vuelve enseguida a sin conexion", async () => {
+    vi.mocked(acquireSocket).mockResolvedValue({
+      ok: false,
+      sessionExpired: false,
+    });
+    const view = renderHook(() => useChannelMessages({ id: "ch1" }));
+    await waitFor(() => expect(view.result.current.status).toBe("offline"));
+
+    act(() => view.result.current.retry());
+    expect(view.result.current.status).toBe("loading");
+
+    await waitFor(() => expect(view.result.current.status).toBe("offline"));
+    expect(acquireSocket).toHaveBeenCalledTimes(2);
   });
 });

@@ -109,6 +109,8 @@ export function MessageItem({
           ? "bg-highlight/10 hover:bg-highlight/15 border-highlight rounded-none border-l-2"
           : "hover:bg-surface-hover",
         isGroupStart && "mt-4",
+        delivery === "failed" &&
+          "rounded-none shadow-[inset_2px_0_0_var(--border-strong)]",
         delivery === "waiting" && "opacity-60",
       )}
       aria-busy={delivery === "sending" || delivery === "waiting" || undefined}
@@ -170,7 +172,7 @@ export function MessageItem({
         {delivery === "failed" ? (
           <p
             role="alert"
-            className="border-line-strong text-content-subtle mt-1 flex flex-wrap items-center gap-x-1.5 border-l-2 pl-2 text-xs"
+            className="text-content-subtle mt-1 flex flex-wrap items-center gap-x-1.5 text-xs"
           >
             <CircleAlert size={12} className="shrink-0" aria-hidden />
             {message.delivery_error || MESSAGE_NOT_SENT_LABEL}

@@ -17,7 +17,7 @@ function readAll(userId: string) {
   }
 }
 
-/** Los mensajes sin enviar de un chat, ya sin los de mas de 24 h. */
+/** Los mensajes sin enviar de un chat, ya sin los de mas de 2 h. */
 export function loadPendingMessages(
   userId: string,
   chatKey: string,

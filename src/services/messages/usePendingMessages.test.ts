@@ -151,7 +151,7 @@ describe("usePendingMessages", () => {
     expect(second.send).not.toHaveBeenCalled();
   });
 
-  it("lo que supero las 24 h se descarta sin avisar", async () => {
+  it("lo que supero las 2 h se descarta sin avisar", async () => {
     const first = setup();
     act(() => void first.view.result.current.onSend("viejo"));
     await act(async () =>
@@ -159,7 +159,7 @@ describe("usePendingMessages", () => {
     );
     first.view.unmount();
 
-    vi.setSystemTime(Date.now() + 24 * 60 * 60 * 1000 + 1);
+    vi.setSystemTime(Date.now() + 2 * 60 * 60 * 1000 + 1);
     const second = setup();
 
     expect(second.view.result.current.withPending([])).toEqual([]);
