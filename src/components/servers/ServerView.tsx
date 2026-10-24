@@ -1091,6 +1091,18 @@ export function ServerView({
                 )}
                 isCheckingPermissions={isCheckingChannelPermissions}
                 onAccessRevoked={handleAccessRevoked}
+                onOpenProfile={(userId, member) => {
+                  if (userId === String(ownProfile?.id ?? user?.id)) {
+                    onOpenOwnProfile(server.id);
+                    return;
+                  }
+                  setViewingMutedUntil(
+                    member && isMemberMuted(member)
+                      ? (member.muted_until ?? null)
+                      : null,
+                  );
+                  setViewingUserId(userId);
+                }}
               />
             ) : (
               <VoiceChannelView
@@ -1121,6 +1133,7 @@ export function ServerView({
         <MembersSidebar
           key={`${server.id}:${server.owner_id}:${membersVersion}`}
           serverId={server.id}
+          serverRoles={serverRoles}
           currentUserId={ownProfile?.id ?? user?.id ?? null}
           ownProfile={ownProfile}
           onOpenOwnProfile={() => onOpenOwnProfile(server.id)}

@@ -7,6 +7,7 @@ import {
   type Channel,
   LOADING_MESSAGES_LABEL,
   type MentionSources,
+  type Member,
   messageInputPlaceholder,
   type MessageAuthor,
   type Role,
@@ -45,6 +46,8 @@ interface ChannelChatProps {
   canAddReactions: boolean;
   isCheckingPermissions?: boolean;
   onAccessRevoked?: (reason: AccessRevokedReason) => void;
+  /** Click en el nombre o la foto de un autor (puede ser el usuario actual). */
+  onOpenProfile?: (userId: string, member?: Member) => void;
 }
 
 export function ChannelChat({
@@ -59,6 +62,7 @@ export function ChannelChat({
   canAddReactions,
   isCheckingPermissions = false,
   onAccessRevoked,
+  onOpenProfile,
 }: ChannelChatProps) {
   const {
     status,
@@ -87,7 +91,12 @@ export function ChannelChat({
     if (messages) reconcilePending(messages);
   }, [messages, reconcilePending]);
   const members = useServerMembers(serverId);
-  const authors = useMessageAuthors(members, messages, currentAuthor);
+  const authors = useMessageAuthors(
+    members,
+    messages,
+    currentAuthor,
+    serverRoles,
+  );
   const [actionError, setActionError] = useState<string | null>(null);
 
   async function handleDelete(messageId: string) {
@@ -106,7 +115,11 @@ export function ChannelChat({
   const mentions = useMemo<MessageMentionsValue>(() => {
     const sources: MentionSources = {
       members: (members ?? []).map((member) =>
-        authorFromMember(member, avatarSrcOf(member.user_id, member.profile)),
+        authorFromMember(
+          member,
+          avatarSrcOf(member.user_id, member.profile),
+          serverRoles,
+        ),
       ),
       roles: serverRoles,
       canMentionEveryone,
@@ -164,6 +177,15 @@ export function ChannelChat({
           onDeleteMessage={handleDelete}
           onRetryMessage={pending.retry}
           onDiscardMessage={pending.discard}
+          onOpenProfile={
+            onOpenProfile
+              ? (userId) =>
+                  onOpenProfile(
+                    userId,
+                    members?.find((member) => member.user_id === userId),
+                  )
+              : undefined
+          }
         />
       )}
       {actionError ? (
