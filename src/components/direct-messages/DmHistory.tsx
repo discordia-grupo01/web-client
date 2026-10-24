@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  CHAT_RECONNECTING_NOTICE,
   LOADING_MESSAGES_LABEL,
   type Message,
   type MessageAuthor,
@@ -10,6 +9,7 @@ import {
 import { useEffect, useMemo, useState } from "react";
 
 import { ChatStatusNotice } from "@/components/messages/ChatStatusNotice";
+import { ConnectionPill } from "@/components/messages/ConnectionPill";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
@@ -81,11 +81,14 @@ export function DmHistory({
 
   return (
     <>
+      {messages !== null ? (
+        <ConnectionPill status={status} onRetry={retry} />
+      ) : null}
       {messages === null ? (
         status === "offline" ? (
-          <ConnectionLostNotice variant="panel" />
+          <ConnectionLostNotice onRetry={retry} />
         ) : (
-          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} isLoading />
         )
       ) : (
         <MessageList
@@ -112,17 +115,6 @@ export function DmHistory({
           className="bg-danger/10 text-danger shrink-0 px-4 py-1 text-center text-xs"
         >
           {deleteError}
-        </p>
-      ) : null}
-      {status === "offline" && messages !== null ? (
-        <ConnectionLostNotice variant="bar" />
-      ) : null}
-      {status === "reconnecting" ? (
-        <p
-          role="status"
-          className="bg-surface-hover text-content-muted shrink-0 px-4 py-1 text-center text-xs"
-        >
-          {CHAT_RECONNECTING_NOTICE}
         </p>
       ) : null}
     </>

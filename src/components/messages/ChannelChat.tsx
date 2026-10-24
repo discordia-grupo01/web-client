@@ -4,7 +4,6 @@ import {
   type AccessRevokedReason,
   authorFromMember,
   buildMentionResolver,
-  CHAT_RECONNECTING_NOTICE,
   type Channel,
   LOADING_MESSAGES_LABEL,
   type MentionSources,
@@ -24,6 +23,7 @@ import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
 import { ChatStatusNotice } from "./ChatStatusNotice";
+import { ConnectionPill } from "./ConnectionPill";
 import { ConnectionLostNotice } from "./ConnectionLostNotice";
 import {
   MessageMentionsProvider,
@@ -137,11 +137,14 @@ export function ChannelChat({
 
   return (
     <MessageMentionsProvider value={mentions}>
+      {messages !== null ? (
+        <ConnectionPill status={status} onRetry={retry} />
+      ) : null}
       {messages === null ? (
         status === "offline" ? (
-          <ConnectionLostNotice variant="panel" />
+          <ConnectionLostNotice onRetry={retry} />
         ) : (
-          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} isLoading />
         )
       ) : (
         <MessageList
@@ -169,17 +172,6 @@ export function ChannelChat({
           className="bg-danger/10 text-danger shrink-0 px-4 py-1 text-center text-xs"
         >
           {actionError}
-        </p>
-      ) : null}
-      {status === "offline" && messages !== null ? (
-        <ConnectionLostNotice variant="bar" />
-      ) : null}
-      {status === "reconnecting" ? (
-        <p
-          role="status"
-          className="bg-surface-hover text-content-muted shrink-0 px-4 py-1 text-center text-xs"
-        >
-          {CHAT_RECONNECTING_NOTICE}
         </p>
       ) : null}
       <MessageComposer

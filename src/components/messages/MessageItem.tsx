@@ -109,8 +109,6 @@ export function MessageItem({
           ? "bg-highlight/10 hover:bg-highlight/15 border-highlight rounded-none border-l-2"
           : "hover:bg-surface-hover",
         isGroupStart && "mt-4",
-        delivery === "failed" &&
-          "border-danger bg-danger/5 rounded-none border-l-2",
         delivery === "waiting" && "opacity-60",
       )}
       aria-busy={delivery === "sending" || delivery === "waiting" || undefined}
@@ -172,15 +170,15 @@ export function MessageItem({
         {delivery === "failed" ? (
           <p
             role="alert"
-            className="text-danger mt-0.5 flex flex-wrap items-center gap-x-1 text-xs"
+            className="border-line-strong text-content-subtle mt-1 flex flex-wrap items-center gap-x-1.5 border-l-2 pl-2 text-xs"
           >
-            <CircleAlert size={13} aria-hidden />
+            <CircleAlert size={12} className="shrink-0" aria-hidden />
             {message.delivery_error || MESSAGE_NOT_SENT_LABEL}
             {onRetry ? (
               <button
                 type="button"
                 onClick={onRetry}
-                className="cursor-pointer font-semibold underline underline-offset-2"
+                className="text-content cursor-pointer font-medium underline-offset-2 hover:underline"
               >
                 {RETRY_LABEL}
               </button>
@@ -190,7 +188,7 @@ export function MessageItem({
               <button
                 type="button"
                 onClick={onDiscard}
-                className="cursor-pointer font-semibold underline underline-offset-2"
+                className="text-content cursor-pointer font-medium underline-offset-2 hover:underline"
               >
                 {DISCARD_MESSAGE_LABEL}
               </button>

@@ -11,6 +11,7 @@ import {
 import { MessageCircle } from "lucide-react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageComposer } from "@/components/messages/MessageComposer";
 import { Avatar } from "@/components/ui/Avatar";
@@ -33,6 +34,10 @@ interface DmConversationProps {
   ) => Promise<SendDmResult>;
   /** La sala personal esta unida: solo entonces se puede enviar. */
   isConnected: boolean;
+  /** No cargo la lista y tampoco hay conexion: no tiene sentido pedir elegir una conversacion. */
+  isOffline: boolean;
+  /** Vuelve a pedir la lista de conversaciones. */
+  onRetryLoad: () => void | Promise<unknown>;
   onOpenPartnerProfile: (partnerId: string) => void;
 }
 
@@ -41,6 +46,8 @@ export function DmConversation({
   activeSummary,
   onSend,
   isConnected,
+  isOffline,
+  onRetryLoad,
   onOpenPartnerProfile,
 }: DmConversationProps) {
   const pending = usePendingMessages({
@@ -60,14 +67,18 @@ export function DmConversation({
         <div className="p-2 md:hidden">
           <MobileNavButton />
         </div>
-        <div className="flex flex-1 flex-col items-center justify-center gap-3">
-          <div className="bg-surface-input flex size-16 items-center justify-center rounded-2xl">
-            <MessageCircle size={28} className="text-content-subtle" />
+        {isOffline ? (
+          <ConnectionLostNotice onRetry={onRetryLoad} />
+        ) : (
+          <div className="flex flex-1 flex-col items-center justify-center gap-3">
+            <div className="bg-surface-input flex size-16 items-center justify-center rounded-2xl">
+              <MessageCircle size={28} className="text-content-subtle" />
+            </div>
+            <p className="text-content-subtle text-sm">
+              {SELECT_CONVERSATION_NOTICE}
+            </p>
           </div>
-          <p className="text-content-subtle text-sm">
-            {SELECT_CONVERSATION_NOTICE}
-          </p>
-        </div>
+        )}
       </div>
     );
   }
