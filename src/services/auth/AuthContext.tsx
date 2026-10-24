@@ -13,6 +13,7 @@ import {
 } from "react";
 
 import { ROUTES } from "@/lib/constants";
+import { clearPendingMessages } from "@/lib/pendingMessages";
 
 import { logoutRequest } from "./client";
 
@@ -39,12 +40,14 @@ export function AuthProvider({
   const [user] = useState(initialUser);
   const [isLoggingOut, startLogout] = useTransition();
 
+  const userId = user?.id;
   const logout = useCallback(() => {
     startLogout(async () => {
       await logoutRequest();
+      if (userId !== undefined) clearPendingMessages(String(userId));
       window.location.href = ROUTES.login;
     });
-  }, []);
+  }, [userId]);
 
   const value = useMemo<AuthContextValue>(
     () => ({

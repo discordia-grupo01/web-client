@@ -4,7 +4,6 @@ import {
   type AccessRevokedReason,
   authorFromMember,
   buildMentionResolver,
-  CHAT_RECONNECTING_NOTICE,
   type Channel,
   LOADING_MESSAGES_LABEL,
   type MentionSources,
@@ -14,16 +13,17 @@ import {
   SEND_MESSAGES_DENIED_PLACEHOLDER,
 } from "@discordia/client-shared";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 import { avatarSrcOf } from "@/lib/userProfile";
 import { useServerMembers } from "@/services/members/useServerMembers";
 import { useChannelMessages } from "@/services/messages/useChannelMessages";
-import { useFailedMessages } from "@/services/messages/useFailedMessages";
+import { usePendingMessages } from "@/services/messages/usePendingMessages";
 import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
 import { ChatStatusNotice } from "./ChatStatusNotice";
+import { ConnectionPill } from "./ConnectionPill";
 import { ConnectionLostNotice } from "./ConnectionLostNotice";
 import {
   MessageMentionsProvider,
@@ -75,13 +75,17 @@ export function ChannelChat({
   } = useChannelMessages(channel, currentAuthor?.id ?? null, {
     onAccessRevoked,
   });
-  const failed = useFailedMessages({
+  const pending = usePendingMessages({
     chatKey: channel.id,
     channelId: channel.id,
     currentUserId: currentAuthor?.id ?? null,
+    isReady: status === "ready",
     send: sendMessage,
-    getLastMessageId: () => messages?.at(-1)?.id ?? null,
   });
+  const reconcilePending = pending.reconcile;
+  useEffect(() => {
+    if (messages) reconcilePending(messages);
+  }, [messages, reconcilePending]);
   const members = useServerMembers(serverId);
   const authors = useMessageAuthors(members, messages, currentAuthor);
   const [actionError, setActionError] = useState<string | null>(null);
@@ -133,17 +137,20 @@ export function ChannelChat({
 
   return (
     <MessageMentionsProvider value={mentions}>
+      {messages !== null ? (
+        <ConnectionPill status={status} onRetry={retry} />
+      ) : null}
       {messages === null ? (
         status === "offline" ? (
-          <ConnectionLostNotice variant="panel" />
+          <ConnectionLostNotice onRetry={retry} />
         ) : (
-          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} />
+          <ChatStatusNotice message={LOADING_MESSAGES_LABEL} isLoading />
         )
       ) : (
         <MessageList
           welcome={<ChannelWelcome channelName={channel.name} />}
           label={`Mensajes de #${channel.name}`}
-          messages={failed.withFailed(messages)}
+          messages={pending.withPending(messages)}
           authors={authors}
           currentUserId={currentAuthor?.id ?? null}
           canManageMessages={canManageMessages}
@@ -155,6 +162,8 @@ export function ChannelChat({
           onToggleReaction={handleToggleReaction}
           onEditMessage={editMessage}
           onDeleteMessage={handleDelete}
+          onRetryMessage={pending.retry}
+          onDiscardMessage={pending.discard}
         />
       )}
       {actionError ? (
@@ -165,26 +174,23 @@ export function ChannelChat({
           {actionError}
         </p>
       ) : null}
-      {status === "offline" && messages !== null ? (
-        <ConnectionLostNotice variant="bar" />
-      ) : null}
-      {status === "reconnecting" ? (
-        <p
-          role="status"
-          className="bg-surface-hover text-content-muted shrink-0 px-4 py-1 text-center text-xs"
-        >
-          {CHAT_RECONNECTING_NOTICE}
-        </p>
-      ) : null}
       <MessageComposer
         placeholder={
           canSendMessages || isCheckingPermissions
             ? messageInputPlaceholder(channel.name)
             : SEND_MESSAGES_DENIED_PLACEHOLDER
         }
-        onSend={failed.onSend}
+        onSend={pending.onSend}
         uploadTarget={{ channelId: channel.id }}
-        disabled={!currentAuthor || status !== "ready" || !canSendMessages}
+        disabled={
+          !currentAuthor ||
+          !canSendMessages ||
+          !(
+            status === "ready" ||
+            status === "reconnecting" ||
+            status === "offline"
+          )
+        }
       />
     </MessageMentionsProvider>
   );

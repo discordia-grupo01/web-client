@@ -327,6 +327,7 @@ describe("useDirectMessages", () => {
     expect(await outcome).toEqual({
       ok: false,
       message: "No se pudo entregar el mensaje.",
+      retryable: false,
     });
   });
 
@@ -338,6 +339,21 @@ describe("useDirectMessages", () => {
     const { result } = await mountAndJoin();
 
     expect(result.current.conversations[0].blockedByMe).toBe(true);
+  });
+
+  it("Reintentar vuelve a pedir la lista y a unir la sala personal", async () => {
+    const { result } = await mountAndJoin();
+    expect(acquireSocket).toHaveBeenCalledTimes(1);
+    expect(listConversationsRequest).toHaveBeenCalledTimes(1);
+    expect(room.join).toHaveBeenCalledTimes(1);
+
+    await act(async () => {
+      await result.current.retry();
+    });
+
+    expect(listConversationsRequest).toHaveBeenCalledTimes(2);
+    await waitFor(() => expect(acquireSocket).toHaveBeenCalledTimes(2));
+    await waitFor(() => expect(room.join).toHaveBeenCalledTimes(2));
   });
 
   it("sin la sala unida no manda nada", async () => {

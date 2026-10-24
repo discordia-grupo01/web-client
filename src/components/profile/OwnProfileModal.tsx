@@ -10,12 +10,19 @@ import {
   MAX_DESCRIPTION,
   MAX_NAME,
   NO_DESCRIPTION_YET,
+  REMOVE_AVATAR_LABEL,
   type User,
   validateAvatar,
 } from "@discordia/client-shared";
 
 import { AlertCircle, Camera, Check, Pencil, Trash2, X } from "lucide-react";
-import { useCallback, useRef, useState, type ChangeEvent } from "react";
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type ChangeEvent,
+} from "react";
 
 import { Button } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -34,8 +41,6 @@ import { MemberSince } from "./MemberSince";
 import { ProfileAvatarFrame } from "./ProfileAvatarFrame";
 import { ProfileBanner } from "./ProfileBanner";
 import { ProfileModalOverlay } from "./ProfileModalOverlay";
-
-const REMOVE_AVATAR_LABEL = "Eliminar foto de perfil";
 
 interface OwnProfileModalProps {
   /** Sin servidor seleccionado (p.ej. abierto desde el home) no hay roles que mostrar. */
@@ -62,6 +67,7 @@ export function OwnProfileModal({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Estado de actividad: mock puramente visual, no hay presencia real en
@@ -72,13 +78,19 @@ export function OwnProfileModal({
 
   const avatarSrc =
     imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
+  const hasAvatar = Boolean(avatarSrc);
 
-  /**
-   * `PATCH /v1/me/profile` siempre pide name/description en el multipart --
-   * el backend responde 500 si llega vacio (ver identify-service
-   * feature/profile) -- asi que estos tres flujos (nombre, descripcion,
-   * foto) mandan siempre los tres campos, cambie o no cada uno.
-   */
+  useEffect(() => {
+    if (!isAvatarMenuOpen) return;
+    function onKeyDown(event: KeyboardEvent) {
+      if (event.key !== "Escape") return;
+      event.stopPropagation();
+      setIsAvatarMenuOpen(false);
+    }
+    document.addEventListener("keydown", onKeyDown, true);
+    return () => document.removeEventListener("keydown", onKeyDown, true);
+  }, [isAvatarMenuOpen]);
+
   async function submitProfile(overrides: {
     name?: string;
     description?: string;
@@ -193,8 +205,19 @@ export function OwnProfileModal({
     event.target.value = "";
   }
 
+  function handleAvatarClick() {
+    if (hasAvatar) setIsAvatarMenuOpen((open) => !open);
+    else fileInputRef.current?.click();
+  }
+
+  function pickNewAvatar() {
+    setIsAvatarMenuOpen(false);
+    fileInputRef.current?.click();
+  }
+
   async function removeAvatar() {
-    if (!profile.avatar_url && !imagePreview) return;
+    setIsAvatarMenuOpen(false);
+    if (!hasAvatar) return;
     if (
       !window.confirm(
         "¿Querés eliminar tu foto de perfil? Se mostrará tu avatar con inicial.",
@@ -217,8 +240,10 @@ export function OwnProfileModal({
         <ProfileAvatarFrame
           name={profile.name}
           src={avatarSrc}
-          onClick={() => fileInputRef.current?.click()}
+          onClick={handleAvatarClick}
           ariaLabel={CHANGE_AVATAR_LABEL}
+          ariaHasPopup={hasAvatar ? "menu" : undefined}
+          ariaExpanded={hasAvatar ? isAvatarMenuOpen : undefined}
         >
           <span
             className={cn(
@@ -254,21 +279,41 @@ export function OwnProfileModal({
         {imageError ? (
           <p className="text-danger mt-1 px-6 text-xs">{imageError}</p>
         ) : null}
-        {profile.avatar_url || imagePreview ? (
-          <button
-            type="button"
-            onClick={removeAvatar}
-            disabled={isUploadingAvatar}
-            className="group text-danger border-danger/30 bg-danger/10 hover:border-danger/50 hover:bg-danger/20 mt-2 ml-6 inline-flex items-center gap-1.5 rounded-lg border px-2.5 py-1.5 text-xs font-semibold transition-all hover:shadow-sm active:scale-95 disabled:pointer-events-none disabled:opacity-50"
-            aria-label={REMOVE_AVATAR_LABEL}
-            title={REMOVE_AVATAR_LABEL}
-          >
-            <Trash2
-              size={13}
-              className="transition-transform group-hover:rotate-[-8deg]"
+        {isAvatarMenuOpen ? (
+          <>
+            <button
+              type="button"
+              aria-label="Cerrar menú"
+              tabIndex={-1}
+              onClick={() => setIsAvatarMenuOpen(false)}
+              className="fixed inset-0 z-10 cursor-default"
             />
-            {REMOVE_AVATAR_LABEL}
-          </button>
+            <div
+              role="menu"
+              className="bg-surface-modal border-line absolute top-full left-6 z-20 mt-1 w-56 rounded-xl border p-1.5 shadow-xl"
+            >
+              <button
+                type="button"
+                role="menuitem"
+                onClick={pickNewAvatar}
+                autoFocus
+                className="text-content hover:bg-surface-input flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors"
+              >
+                <Camera size={16} />
+                {CHANGE_AVATAR_LABEL}
+              </button>
+              <button
+                type="button"
+                role="menuitem"
+                onClick={removeAvatar}
+                disabled={isUploadingAvatar}
+                className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+              >
+                <Trash2 size={16} />
+                {REMOVE_AVATAR_LABEL}
+              </button>
+            </div>
+          </>
         ) : null}
       </div>
 

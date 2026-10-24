@@ -13,6 +13,9 @@ export const TWO_FACTOR_CHALLENGE_COOKIE = "discordia_2fa_challenge";
 /** Clave para almacenar el tema en el localStorage. */
 export const THEME_STORAGE_KEY = "discordia:theme";
 
+/** Clave (por usuario) donde se guardan los mensajes que no se pudieron enviar. */
+export const PENDING_MESSAGES_STORAGE_KEY = "discordia:pending-messages";
+
 /** Rutas de la app. Centralizadas para no hardcodear strings sueltos. */
 export const ROUTES = {
   login: "/login",

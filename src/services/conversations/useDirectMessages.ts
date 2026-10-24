@@ -74,9 +74,12 @@ export function useDirectMessages(
   const [isLoading, setIsLoading] = useState(true);
   const [partners, setPartners] = useState<Record<string, MessageAuthor>>({});
   const [activePartnerId, setActivePartnerId] = useState<string | null>(null);
+  // Cada reintento vuelve a abrir la sala personal (el socket pudo haberse rendido).
+  const [attempt, setAttempt] = useState(0);
 
   const userRoom = useRef<PhoenixChannel | null>(null);
   const isJoined = useRef(false);
+  const [isConnected, setIsConnected] = useState(false);
   const requestedProfiles = useRef(new Set<string>());
   const callbacksRef = useRef(callbacks);
   useEffect(() => {
@@ -98,6 +101,12 @@ export function useDirectMessages(
     [applyList],
   );
 
+  /** Vuelve a pedir la lista y a unir la sala de DMs, que no se reabre sola tras rendirse. */
+  const retry = useCallback(() => {
+    setAttempt((value) => value + 1);
+    return reload();
+  }, [reload]);
+
   const applyDm = useCallback(
     (payload: NewDmPayload) =>
       setConversations((prev) => applyNewDm(prev, payload, currentUserId)),
@@ -110,7 +119,7 @@ export function useDirectMessages(
     let release: (() => void) | null = null;
     let room: PhoenixChannel | null = null;
 
-    void listConversationsRequest().then(applyList);
+    if (attempt === 0) void listConversationsRequest().then(applyList);
 
     async function start() {
       const acquired = await acquireSocket();
@@ -129,9 +138,11 @@ export function useDirectMessages(
         mention: (payload) => callbacksRef.current.onMention?.(payload),
         connectionLost: () => {
           isJoined.current = false;
+          setIsConnected(false);
         },
         joined: (isFirstJoin) => {
           isJoined.current = true;
+          setIsConnected(true);
           if (!isFirstJoin) {
             void reload();
             callbacksRef.current.onRejoined?.();
@@ -145,10 +156,11 @@ export function useDirectMessages(
       cancelled = true;
       isJoined.current = false;
       userRoom.current = null;
+      setIsConnected(false);
       room?.leave();
       release?.();
     };
-  }, [currentUserId, reload, applyList, applyDm]);
+  }, [currentUserId, reload, applyList, applyDm, attempt]);
 
   // El back solo devuelve ids: nombre y foto se piden una vez por usuario.
   useEffect(() => {
@@ -287,6 +299,7 @@ export function useDirectMessages(
     (
       content: string,
       attachmentIds: readonly string[] = [],
+      clientId?: string,
     ): Promise<SendDmResult> => {
       if (!activePartnerId) {
         return Promise.resolve({ ok: false, message: DM_SEND_FAILED });
@@ -303,6 +316,7 @@ export function useDirectMessages(
             message: sent.message,
           }),
         attachmentIds,
+        clientId,
       );
     },
     [activePartnerId, applyDm],
@@ -319,8 +333,10 @@ export function useDirectMessages(
     isLoading: isLoading || isResolvingPartners,
     loadError,
     reload,
+    retry,
     activeSummary,
     openConversation,
     sendMessage,
+    isConnected,
   };
 }
