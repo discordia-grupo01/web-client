@@ -32,6 +32,7 @@ function renderEmpty(isOffline: boolean, onRetryLoad = vi.fn()) {
       isOffline={isOffline}
       onRetryLoad={onRetryLoad}
       onOpenPartnerProfile={vi.fn()}
+      onOpenProfile={vi.fn()}
     />,
   );
 }

@@ -1091,6 +1091,18 @@ export function ServerView({
                 )}
                 isCheckingPermissions={isCheckingChannelPermissions}
                 onAccessRevoked={handleAccessRevoked}
+                onOpenProfile={(userId, member) => {
+                  if (userId === String(ownProfile?.id ?? user?.id)) {
+                    onOpenOwnProfile(server.id);
+                    return;
+                  }
+                  setViewingMutedUntil(
+                    member && isMemberMuted(member)
+                      ? (member.muted_until ?? null)
+                      : null,
+                  );
+                  setViewingUserId(userId);
+                }}
               />
             ) : (
               <VoiceChannelView

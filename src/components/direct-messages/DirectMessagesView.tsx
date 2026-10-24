@@ -82,6 +82,11 @@ export function DirectMessagesView({
           isOffline={loadError !== null && !isConnected}
           onRetryLoad={retry}
           onOpenPartnerProfile={setProfileUserId}
+          onOpenProfile={(userId) =>
+            userId === currentAuthor.id
+              ? onOpenOwnProfile()
+              : setProfileUserId(userId)
+          }
         />
       ) : null}
 

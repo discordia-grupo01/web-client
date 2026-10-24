@@ -39,6 +39,8 @@ interface DmConversationProps {
   /** Vuelve a pedir la lista de conversaciones. */
   onRetryLoad: () => void | Promise<unknown>;
   onOpenPartnerProfile: (partnerId: string) => void;
+  /** Click en el nombre o la foto de un mensaje (puede ser el propio). */
+  onOpenProfile: (userId: string) => void;
 }
 
 export function DmConversation({
@@ -49,6 +51,7 @@ export function DmConversation({
   isOffline,
   onRetryLoad,
   onOpenPartnerProfile,
+  onOpenProfile,
 }: DmConversationProps) {
   const pending = usePendingMessages({
     chatKey: activeSummary?.conversationId ?? activeSummary?.partner.id ?? "",
@@ -128,6 +131,7 @@ export function DmConversation({
           onMessagesChange={pending.reconcile}
           onRetryMessage={pending.retry}
           onDiscardMessage={pending.discard}
+          onOpenProfile={onOpenProfile}
         />
       ) : (
         // Borrador: nadie escribio todavia, no hay nada que pedirle al back.
@@ -144,6 +148,7 @@ export function DmConversation({
           onDeleteMessage={() => {}}
           onRetryMessage={pending.retry}
           onDiscardMessage={pending.discard}
+          onOpenProfile={onOpenProfile}
         />
       )}
 

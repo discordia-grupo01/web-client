@@ -26,6 +26,7 @@ interface DmHistoryProps {
   onMessagesChange: (messages: Message[]) => void;
   onRetryMessage: (clientId: string) => void;
   onDiscardMessage: (clientId: string) => void;
+  onOpenProfile: (userId: string) => void;
 }
 
 /**
@@ -42,6 +43,7 @@ export function DmHistory({
   onMessagesChange,
   onRetryMessage,
   onDiscardMessage,
+  onOpenProfile,
 }: DmHistoryProps) {
   const {
     status,
@@ -107,6 +109,7 @@ export function DmHistory({
           onDeleteMessage={handleDelete}
           onRetryMessage={onRetryMessage}
           onDiscardMessage={onDiscardMessage}
+          onOpenProfile={onOpenProfile}
         />
       )}
       {deleteError ? (

@@ -44,6 +44,7 @@ interface MessageListProps {
   /** Reintenta / elimina un mensaje propio que no se pudo enviar (por su `client_id`). */
   onRetryMessage?: (clientId: string) => void;
   onDiscardMessage?: (clientId: string) => void;
+  onOpenProfile?: (userId: string) => void;
 }
 
 /** Historial del canal. Baja solo al fondo cuando llega un mensaje nuevo. */
@@ -64,6 +65,7 @@ export function MessageList({
   onDeleteMessage,
   onRetryMessage,
   onDiscardMessage,
+  onOpenProfile,
 }: MessageListProps) {
   const scroll = useStickyScroll(messages);
 
@@ -123,6 +125,7 @@ export function MessageList({
                   onToggleReaction(message.id, emoji)
                 }
                 canAddReactions={canAddReactions}
+                onOpenProfile={onOpenProfile}
                 onEdit={(content) => onEditMessage(message.id, content)}
                 onDelete={() => onDeleteMessage(message.id)}
                 onRetry={

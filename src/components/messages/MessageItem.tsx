@@ -62,6 +62,8 @@ interface MessageItemProps {
   /** Solo en un mensaje fallido. */
   onRetry?: () => void;
   onDiscard?: () => void;
+  /** Sin esto el nombre y la foto no son cliqueables. */
+  onOpenProfile?: (userId: string) => void;
 }
 
 export function MessageItem({
@@ -76,6 +78,7 @@ export function MessageItem({
   onDelete,
   onRetry,
   onDiscard,
+  onOpenProfile,
 }: MessageItemProps) {
   const { me } = useMessageMentions();
   const delivery = message.delivery;
@@ -116,12 +119,28 @@ export function MessageItem({
       aria-busy={delivery === "sending" || delivery === "waiting" || undefined}
     >
       {isGroupStart ? (
-        <Avatar
-          name={author.name}
-          src={author.avatarUrl}
-          size={AVATAR_SIZE}
-          className="mt-0.5 rounded-full"
-        />
+        onOpenProfile ? (
+          <button
+            type="button"
+            onClick={() => onOpenProfile(message.user_id)}
+            aria-label={`Ver perfil de ${author.name}`}
+            className="mt-0.5 h-fit shrink-0 cursor-pointer rounded-full"
+          >
+            <Avatar
+              name={author.name}
+              src={author.avatarUrl}
+              size={AVATAR_SIZE}
+              className="rounded-full"
+            />
+          </button>
+        ) : (
+          <Avatar
+            name={author.name}
+            src={author.avatarUrl}
+            size={AVATAR_SIZE}
+            className="mt-0.5 rounded-full"
+          />
+        )
       ) : (
         <time
           dateTime={message.inserted_at}
@@ -133,7 +152,13 @@ export function MessageItem({
 
       <div className="min-w-0 flex-1">
         {isGroupStart ? (
-          <MessageHeader author={author} createdAt={message.inserted_at} />
+          <MessageHeader
+            author={author}
+            createdAt={message.inserted_at}
+            onOpenProfile={
+              onOpenProfile ? () => onOpenProfile(message.user_id) : undefined
+            }
+          />
         ) : null}
 
         {isEditing ? (
