@@ -22,7 +22,7 @@ import { cn } from "@/lib/cn";
 
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageActions } from "./MessageActions";
-import { useMessageMentions } from "./MentionsContext";
+import { useMessageMentions } from "@/contexts/MentionsContext";
 import { MessageContent } from "./MessageContent";
 import { DeleteMessageModal } from "./DeleteMessageModal";
 import { MessageEditForm } from "./MessageEditForm";
@@ -64,6 +64,8 @@ interface MessageItemProps {
   onDiscard?: () => void;
   /** Sin esto el nombre y la foto no son cliqueables. */
   onOpenProfile?: (userId: string) => void;
+  /** Recien se salto a este mensaje (desde la busqueda). */
+  isFocused?: boolean;
 }
 
 export function MessageItem({
@@ -79,6 +81,7 @@ export function MessageItem({
   onRetry,
   onDiscard,
   onOpenProfile,
+  isFocused = false,
 }: MessageItemProps) {
   const { me } = useMessageMentions();
   const delivery = message.delivery;
@@ -112,6 +115,9 @@ export function MessageItem({
           ? "bg-highlight/10 hover:bg-highlight/15 border-highlight rounded-none border-l-2"
           : "hover:bg-surface-hover",
         isGroupStart && "mt-4",
+        "transition-colors duration-700",
+        isFocused &&
+          "bg-accent-strong/15 hover:bg-accent-strong/20 rounded-none shadow-[inset_2px_0_0_var(--accent-bright)]",
         delivery === "failed" &&
           "rounded-none shadow-[inset_2px_0_0_var(--border-strong)]",
         delivery === "waiting" && "opacity-60",

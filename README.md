@@ -65,7 +65,7 @@ discordia-web/
 │   │   └── <feature>/           componentes propios de una feature de UI
 │   │       ├── hooks/           hooks que usa solo esta feature (ej. messages/hooks/useStickyScroll)
 │   │       ├── utils/           funciones auxiliares de esta feature (ej. voice/utils/voiceGrid)
-│   │       └── <Algo>Context.tsx  contexto que usa solo esta feature (ej. messages/MentionsContext)
+│   │       └── <Algo>Context.tsx  contexto que usa solo esta feature
 │   ├── services/                codigo agrupado por dominio del backend (auth, servers, channels, ...)
 │   │   └── <dominio>/           client (browser), service (server) y sus helpers de servidor
 │   ├── types/                   tipos por dominio: <dominio>.types.ts (Channel, Role, User, ...)

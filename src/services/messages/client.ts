@@ -1,6 +1,11 @@
 import {
+  type ListMessagesOptions,
   type ListMessagesResult,
+  MESSAGE_SEARCH_FAILED,
+  type MessageSearchQuery,
   MESSAGES_LOAD_FAILED,
+  messageSearchParams,
+  type SearchMessagesResult,
   type SocketTicketResult,
 } from "@discordia/client-shared";
 
@@ -33,11 +38,12 @@ export async function fetchSocketTicketRequest(): Promise<SocketTicketResult> {
 /**
  * Una pagina del historial del canal (de mas viejo a mas nuevo). Para la pagina
  * anterior se pasa el `nextCursor` de la respuesta como `before`; para traer lo
- * posterior a un mensaje, su id como `after`.
+ * posterior a un mensaje, su id como `after`; para saltar a un mensaje, su id
+ * como `around`.
  */
 export async function fetchMessagesRequest(
   channelId: string,
-  options: { limit?: number; before?: string; after?: string } = {},
+  options: ListMessagesOptions = {},
 ): Promise<ListMessagesResult> {
   try {
     const { data } = await api.get<ListMessagesResult>(
@@ -50,5 +56,25 @@ export async function fetchMessagesRequest(
     return data;
   } catch {
     return { ok: false, message: MESSAGES_LOAD_FAILED };
+  }
+}
+
+/** Una pagina de resultados de la busqueda (de mas nuevo a mas viejo). */
+export async function searchMessagesRequest(
+  serverId: string,
+  query: MessageSearchQuery,
+  before: string | null = null,
+): Promise<SearchMessagesResult> {
+  try {
+    const { data } = await api.get<SearchMessagesResult>(
+      `/servers/${encodeURIComponent(serverId)}/messages/search`,
+      { params: messageSearchParams(query, before) },
+    );
+    if (typeof data?.ok !== "boolean") {
+      return { ok: false, message: MESSAGE_SEARCH_FAILED };
+    }
+    return data;
+  } catch {
+    return { ok: false, message: MESSAGE_SEARCH_FAILED };
   }
 }

@@ -804,3 +804,134 @@ describe("useChannelMessages: sin conexion", () => {
     expect(acquireSocket).toHaveBeenCalledTimes(2);
   });
 });
+
+describe("useChannelMessages: saltar a un mensaje", () => {
+  const OLD1 = message("o1", "2026-09-01T12:00:00.000Z");
+  const OLD2 = message("o2", "2026-09-01T12:01:00.000Z");
+  const OLD3 = message("o3", "2026-09-01T12:02:00.000Z");
+
+  function around(newerCursor: string | null): ListMessagesResult {
+    return {
+      ok: true,
+      messages: [OLD1, OLD2, OLD3],
+      nextCursor: "o1",
+      newerCursor,
+    };
+  }
+
+  it("si el mensaje ya esta cargado solo lo enfoca", async () => {
+    const { result } = await mountAndJoin();
+    vi.mocked(fetchMessagesRequest).mockClear();
+
+    await act(() => result.current.jumpToMessage("m1"));
+
+    expect(fetchMessagesRequest).not.toHaveBeenCalled();
+    expect(result.current.focusedMessage?.id).toBe("m1");
+    expect(result.current.hasNewer).toBe(false);
+  });
+
+  it("si no esta cargado trae el historial alrededor y queda viendo el pasado", async () => {
+    const { result } = await mountAndJoin();
+    vi.mocked(fetchMessagesRequest).mockResolvedValueOnce(around("o3"));
+
+    await act(() => result.current.jumpToMessage("o2"));
+
+    expect(fetchMessagesRequest).toHaveBeenLastCalledWith("ch1", {
+      around: "o2",
+      limit: 50,
+    });
+    expect(result.current.messages?.map((m) => m.id)).toEqual([
+      "o1",
+      "o2",
+      "o3",
+    ]);
+    expect(result.current.focusedMessage?.id).toBe("o2");
+    expect(result.current.hasNewer).toBe(true);
+    expect(result.current.hasMore).toBe(true);
+  });
+
+  it("mientras ve el pasado no agrega lo que llega por el socket ni mueve el last_message_id", async () => {
+    const { result } = await mountAndJoin();
+    vi.mocked(fetchMessagesRequest).mockResolvedValueOnce(around("o3"));
+    await act(() => result.current.jumpToMessage("o2"));
+
+    act(() => room.handlers.new_message(M3));
+
+    expect(result.current.messages?.map((m) => m.id)).toEqual([
+      "o1",
+      "o2",
+      "o3",
+    ]);
+    expect(channelParams).toMatchObject({ last_message_id: "m2" });
+  });
+
+  it("cargar lo mas nuevo pagina con after hasta llegar al presente", async () => {
+    const { result } = await mountAndJoin();
+    vi.mocked(fetchMessagesRequest).mockResolvedValueOnce(around("o3"));
+    await act(() => result.current.jumpToMessage("o2"));
+    vi.mocked(fetchMessagesRequest)
+      .mockResolvedValueOnce(history([M1, M2], null))
+      .mockResolvedValueOnce(history([], null));
+
+    await act(() => result.current.loadNewer());
+
+    expect(fetchMessagesRequest).toHaveBeenCalledWith("ch1", { after: "o3" });
+    expect(result.current.hasNewer).toBe(false);
+    expect(result.current.messages?.map((m) => m.id)).toEqual([
+      "o1",
+      "o2",
+      "o3",
+      "m1",
+      "m2",
+    ]);
+    await waitFor(() =>
+      expect(fetchMessagesRequest).toHaveBeenLastCalledWith("ch1", {
+        after: "m2",
+      }),
+    );
+  });
+
+  it("ir al presente recarga lo ultimo y vuelve a agregar lo del socket", async () => {
+    const { result } = await mountAndJoin();
+    vi.mocked(fetchMessagesRequest).mockResolvedValueOnce(around("o3"));
+    await act(() => result.current.jumpToMessage("o2"));
+    vi.mocked(fetchMessagesRequest).mockResolvedValueOnce(
+      history([M2, M3], "m2"),
+    );
+
+    act(() => result.current.jumpToPresent());
+    await waitFor(() =>
+      expect(result.current.messages?.map((m) => m.id)).toEqual(["m2", "m3"]),
+    );
+    act(() => room.handlers.new_message(M4));
+
+    expect(result.current.hasNewer).toBe(false);
+    expect(result.current.focusedMessage).toBeNull();
+    expect(result.current.messages?.map((m) => m.id)).toEqual([
+      "m2",
+      "m3",
+      "m4",
+    ]);
+  });
+
+  it("un mensaje borrado devuelve el motivo y deja la lista como estaba", async () => {
+    const { result } = await mountAndJoin();
+    vi.mocked(fetchMessagesRequest).mockResolvedValueOnce({
+      ok: false,
+      message: "Este mensaje ya no existe.",
+      code: "MESSAGE_NOT_FOUND",
+    });
+
+    let outcome: Awaited<ReturnType<typeof result.current.jumpToMessage>>;
+    await act(async () => {
+      outcome = await result.current.jumpToMessage("borrado");
+    });
+
+    expect(outcome!).toEqual({
+      ok: false,
+      message: "Este mensaje ya no existe.",
+    });
+    expect(result.current.messages?.map((m) => m.id)).toEqual(["m1", "m2"]);
+    expect(result.current.hasNewer).toBe(false);
+  });
+});
