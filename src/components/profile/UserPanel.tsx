@@ -15,7 +15,8 @@ import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal
 import { Avatar } from "@/components/ui/Avatar";
 import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
 import { cn } from "@/lib/cn";
-import { useOptionalVoiceSession } from "@/services/voice/VoiceSessionContext";
+import { usePresenceOf } from "@/hooks/usePresence";
+import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
 interface UserPanelProps {
   user: User;
@@ -25,6 +26,7 @@ interface UserPanelProps {
 export function UserPanel({ user, onClick }: UserPanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const voice = useOptionalVoiceSession();
+  const status = usePresenceOf(user.id);
   const isMuted = voice?.state.muted ?? false;
   const canSpeak = voice?.state.canSpeak ?? true;
   const micLabel = !canSpeak
@@ -55,9 +57,8 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
               size={32}
               className="rounded-full"
             />
-            {/* Estado de actividad mock: no hay presencia real en identify-service. */}
             <ActivityStatusDot
-              status="online"
+              status={status}
               size={11}
               ringColor="var(--bg-user-panel)"
               className="absolute right-0 bottom-0"

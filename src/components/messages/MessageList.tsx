@@ -15,7 +15,7 @@ import {
 
 import type { ReactNode } from "react";
 
-import { useStickyScroll } from "@/hooks/useStickyScroll";
+import { useStickyScroll } from "@/components/messages/hooks/useStickyScroll";
 
 import { MessageItem, type MessageEditOutcome } from "./MessageItem";
 

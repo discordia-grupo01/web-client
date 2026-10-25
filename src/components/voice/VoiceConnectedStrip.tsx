@@ -11,7 +11,7 @@ import {
 import { PhoneOff, TriangleAlert, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
-import { useOptionalVoiceSession } from "@/services/voice/VoiceSessionContext";
+import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
 const STATUS_LABEL = {
   connecting: VOICE_CONNECTING,

@@ -1,6 +1,6 @@
 import { ShieldBan } from "lucide-react";
 
-import { type ProfileSummary } from "@/lib/userProfile";
+import { type ProfileSummary } from "@/utils/userProfile";
 
 import { UserRow, type UserRowAction } from "./UserRow";
 

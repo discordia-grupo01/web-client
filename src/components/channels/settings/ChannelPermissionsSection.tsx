@@ -20,7 +20,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { cn } from "@/lib/cn";
-import type { ChannelOverridesState } from "@/services/channel-permissions/useChannelOverrides";
+import type { ChannelOverridesState } from "@/hooks/useChannelOverrides";
 
 import { RoleOverrideEditor } from "./RoleOverrideEditor";
 

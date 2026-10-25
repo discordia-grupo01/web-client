@@ -24,7 +24,7 @@ import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { useMemberPages } from "@/hooks/useMemberPages";
 import { cn } from "@/lib/cn";
-import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
+import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 import {
   assignRoleRequest,
   listRoleMembersRequest,

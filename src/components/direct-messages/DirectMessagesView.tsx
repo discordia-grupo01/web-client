@@ -8,11 +8,11 @@ import type {
 
 import { useState } from "react";
 
-import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
+import { useMobilePanels } from "@/contexts/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { PublicProfileModal } from "@/components/profile/PublicProfileModal";
-import { useDmCandidates } from "@/services/conversations/useDmCandidates";
-import type { useDirectMessages } from "@/services/conversations/useDirectMessages";
+import { useDmCandidates } from "@/components/direct-messages/hooks/useDmCandidates";
+import type { useDirectMessages } from "@/hooks/useDirectMessages";
 
 import { DmConversation } from "./DmConversation";
 import { DmRailList } from "./DmRailList";

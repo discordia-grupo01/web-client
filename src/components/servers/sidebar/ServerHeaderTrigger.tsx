@@ -5,7 +5,7 @@ import { ChevronDown } from "lucide-react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { ServerBanner } from "@/components/ui/ServerBanner";
-import { serverBannerSrc, serverIconSrc } from "@/services/servers/image-urls";
+import { serverBannerSrc, serverIconSrc } from "@/utils/image-urls";
 import { cn } from "@/lib/cn";
 
 /** Igual que `BANNER_HEIGHT` en app-mobile, para que las dos se vean igual. */

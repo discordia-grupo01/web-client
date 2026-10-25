@@ -23,7 +23,7 @@ import { cn } from "@/lib/cn";
 import { DeleteServerModal } from "../DeleteServerModal";
 import { BannerPresetPicker } from "./BannerPresetPicker";
 import { ServerIdentityEditor } from "./ServerIdentityEditor";
-import { useServerSettingsForm } from "./useServerSettingsForm";
+import { useServerSettingsForm } from "@/components/servers/hooks/useServerSettingsForm";
 import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";

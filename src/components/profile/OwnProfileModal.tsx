@@ -1,7 +1,6 @@
 "use client";
 
 import {
-  displayedStatus,
   type ActivityStatusChoice,
   ALLOWED_AVATAR_TYPES,
   CANCEL_NAME_EDIT_LABEL,
@@ -33,6 +32,7 @@ import {
   updateOwnProfileRequest,
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
+import { useOwnStatus, usePresenceOf } from "@/hooks/usePresence";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";
 import { ActivityStatusRow } from "./ActivityStatusRow";
@@ -70,11 +70,9 @@ export function OwnProfileModal({
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Estado de actividad: mock puramente visual, no hay presencia real en
-  // identify-service. Se resetea a "En línea" al reabrir el modal a
-  // propósito -- no hay nada real que persistir.
-  const [activityStatus, setActivityStatus] =
-    useState<ActivityStatusChoice>("online");
+  const { choice: ownChoice, setOwnStatus } = useOwnStatus();
+  const displayedOwnStatus = usePresenceOf(profile.id);
+  const [statusError, setStatusError] = useState("");
 
   const avatarSrc =
     imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
@@ -90,6 +88,12 @@ export function OwnProfileModal({
     document.addEventListener("keydown", onKeyDown, true);
     return () => document.removeEventListener("keydown", onKeyDown, true);
   }, [isAvatarMenuOpen]);
+
+  async function changeActivityStatus(choice: ActivityStatusChoice) {
+    setStatusError("");
+    const result = await setOwnStatus(choice);
+    if (!result.ok) setStatusError(result.message);
+  }
 
   async function submitProfile(overrides: {
     name?: string;
@@ -263,7 +267,7 @@ export function OwnProfileModal({
             )}
           </span>
           <ActivityStatusDot
-            status={displayedStatus(activityStatus)}
+            status={displayedOwnStatus}
             ringWidth={3}
             size={16}
             className="absolute right-1 bottom-1"
@@ -387,8 +391,9 @@ export function OwnProfileModal({
           </div>
 
           <ActivityStatusRow
-            status={activityStatus}
-            onChange={setActivityStatus}
+            status={ownChoice}
+            error={statusError}
+            onChange={changeActivityStatus}
           />
 
           <CustomStatusEditor

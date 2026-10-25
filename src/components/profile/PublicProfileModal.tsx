@@ -26,7 +26,10 @@ import { useEffect, useState } from "react";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { MemberRoleBadges } from "@/components/roles/MemberRoleBadges";
-import { useBlockedUsersContext } from "@/services/blocks/BlockedUsersContext";
+import { useBlockedUsersContext } from "@/contexts/BlockedUsersContext";
+import { usePresenceContext } from "@/contexts/PresenceContext";
+import { usePresenceOf } from "@/hooks/usePresence";
+import { useLoadPresence } from "@/hooks/useLoadPresence";
 import { getPublicProfileRequest } from "@/services/profile/client";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";
@@ -63,16 +66,6 @@ interface PublicProfileModalProps {
   onClose: () => void;
 }
 
-/**
- * Perfil público de otro usuario: nombre, foto, descripción, estado de
- * actividad, estado personalizado y servidores en común (CA1 de
- * "Visualización de perfil público" es una lista cerrada -- "únicamente los
- * datos públicos" -- que no incluye fecha de registro, a diferencia del
- * perfil propio). Nunca expone email ni mensajes directos (CA2): esos campos
- * ni siquiera vienen en `PublicUser`. Los roles son de solo lectura acá
- * salvo que `canManageRoles` sea true (el owner del server puede
- * agregar/quitar desde el mismo modal, ver `MemberRoleBadges`).
- */
 export function PublicProfileModal({
   serverId,
   userId,
@@ -93,6 +86,9 @@ export function PublicProfileModal({
   const [errorMessage, setErrorMessage] = useState("");
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const { blockedIds, blockUser, unblockUser } = useBlockedUsersContext();
+  const { store: presenceStore } = usePresenceContext();
+  const status = usePresenceOf(userId);
+  useLoadPresence(presenceStore, [userId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -223,9 +219,8 @@ export function PublicProfileModal({
             }
           />
           <ProfileAvatarFrame name={profile.name} src={avatarSrc}>
-            {/* Estado de actividad mock: no hay presencia real en identify-service. */}
             <ActivityStatusDot
-              status="online"
+              status={status}
               ringWidth={3}
               size={16}
               className="absolute right-1 bottom-1"

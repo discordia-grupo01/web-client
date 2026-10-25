@@ -16,11 +16,11 @@ import {
 
 import { useEffect, useMemo, useState } from "react";
 
-import { avatarSrcOf } from "@/lib/userProfile";
-import { useServerMembers } from "@/services/members/useServerMembers";
-import { useChannelMessages } from "@/services/messages/useChannelMessages";
-import { usePendingMessages } from "@/services/messages/usePendingMessages";
-import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
+import { avatarSrcOf } from "@/utils/userProfile";
+import { useServerMembers } from "@/components/messages/hooks/useServerMembers";
+import { useChannelMessages } from "@/hooks/useChannelMessages";
+import { usePendingMessages } from "@/hooks/usePendingMessages";
+import { useMessageAuthors } from "@/components/messages/hooks/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
 import { ChatStatusNotice } from "./ChatStatusNotice";

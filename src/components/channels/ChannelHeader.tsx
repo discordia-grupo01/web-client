@@ -4,7 +4,7 @@ import type { Channel } from "@discordia/client-shared";
 import { Bell, Eye, EyeOff, Hash, Users, Volume2 } from "lucide-react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
-import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
+import { useMobilePanels } from "@/contexts/MobilePanelsContext";
 import { IconButton } from "@/components/ui/IconButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { cn } from "@/lib/cn";

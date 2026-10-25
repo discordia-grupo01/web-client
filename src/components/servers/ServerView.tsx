@@ -68,7 +68,7 @@ import {
   BanMemberModal,
   type BanTarget,
 } from "@/components/bans/BanMemberModal";
-import { avatarSrcOf } from "@/lib/userProfile";
+import { avatarSrcOf } from "@/utils/userProfile";
 import { KickMemberModal } from "@/components/moderation/KickMemberModal";
 import { MuteMemberModal } from "@/components/moderation/MuteMemberModal";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
@@ -86,31 +86,33 @@ import {
   ChannelSettingsModal,
 } from "@/components/channels/settings/ChannelSettingsModal";
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
-import { useMobilePanels } from "@/components/layout/MobilePanelsContext";
+import { useMobilePanels } from "@/contexts/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { MembersSidebar } from "@/components/members/MembersSidebar";
 import { ChannelChat } from "@/components/messages/ChannelChat";
-import { ownAvatarSrc } from "@/components/voice/ownAvatar";
+import { ownAvatarSrc } from "@/utils/ownAvatar";
 import {
   VoiceChannelParticipants,
   type SidebarVoiceParticipant,
 } from "@/components/voice/VoiceChannelParticipants";
 import { VoiceChannelView } from "@/components/voice/VoiceChannelView";
-import { useAuth } from "@/services/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { usePresenceContext } from "@/contexts/PresenceContext";
+import { useServerPresence } from "@/components/servers/hooks/useServerPresence";
 import { reorderCategoriesRequest } from "@/services/categories/client";
 import {
   moveChannelToCategoryRequest,
   reorderChannelsRequest,
 } from "@/services/channels/client";
-import { useMyChannelPermissions } from "@/services/channel-permissions/useChannelOverrides";
-import { authorFromProfile } from "@/services/messages/author";
+import { useMyChannelPermissions } from "@/hooks/useChannelOverrides";
+import { authorFromProfile } from "@/utils/author";
 import {
   listMemberRolesRequest,
   listRolesRequest,
 } from "@/services/roles/client";
 import { listServersRequest } from "@/services/servers/client";
-import { useVoicePresence } from "@/services/voice/useVoicePresence";
-import { useVoiceSession } from "@/services/voice/VoiceSessionContext";
+import { useVoicePresence } from "@/components/servers/hooks/useVoicePresence";
+import { useVoiceSession } from "@/contexts/VoiceSessionContext";
 import { cn } from "@/lib/cn";
 
 import { ServerSidebarHeader } from "./sidebar/ServerSidebarHeader";
@@ -364,6 +366,8 @@ export function ServerView({
 }: ServerViewProps) {
   const { user } = useAuth();
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
+  const { store: presenceStore } = usePresenceContext();
+  useServerPresence(presenceStore, server.id);
   const isOwner = user !== null && String(user.id) === server.owner_id;
   const currentAuthor = useMemo(
     () => (ownProfile ? authorFromProfile(ownProfile) : null),

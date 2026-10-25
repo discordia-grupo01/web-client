@@ -2,7 +2,7 @@
 
 import { LogOut, X } from "lucide-react";
 
-import { useAuth } from "@/services/auth/AuthContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface LogoutConfirmModalProps {
   onClose: () => void;
