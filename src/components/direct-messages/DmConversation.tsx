@@ -18,8 +18,8 @@ import { Avatar } from "@/components/ui/Avatar";
 import type {
   ConversationSummary,
   SendDmResult,
-} from "@/services/conversations/useDirectMessages";
-import { usePendingMessages } from "@/services/messages/usePendingMessages";
+} from "@/hooks/useDirectMessages";
+import { usePendingMessages } from "@/hooks/usePendingMessages";
 
 import { DmHistory } from "./DmHistory";
 import { DmWelcome } from "./DmWelcome";

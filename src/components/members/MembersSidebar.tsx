@@ -19,10 +19,10 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { Avatar } from "@/components/ui/Avatar";
-import { useMemberScroll } from "@/hooks/useMemberScroll";
-import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
+import { useMemberScroll } from "@/components/members/hooks/useMemberScroll";
+import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 import { listMembersRequest } from "@/services/members/client";
-import { usePresenceOf } from "@/services/presence/PresenceContext";
+import { usePresenceOf } from "@/hooks/usePresence";
 
 /** A cuantos px del fondo se pide la pagina siguiente. */
 const LOAD_MORE_THRESHOLD_PX = 160;

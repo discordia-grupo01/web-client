@@ -14,7 +14,7 @@ import { createPortal } from "react-dom";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useFloatingPanel } from "@/hooks/useFloatingPanel";
-import { useMediaQuery } from "@/hooks/useMediaQuery";
+import { useMediaQuery } from "@/components/profile/hooks/useMediaQuery";
 import { cn } from "@/lib/cn";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";

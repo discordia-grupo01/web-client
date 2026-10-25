@@ -13,9 +13,9 @@ import { Loader2, Plus } from "lucide-react";
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { UserPanel } from "@/components/profile/UserPanel";
 import { Avatar } from "@/components/ui/Avatar";
-import type { ConversationSummary } from "@/services/conversations/useDirectMessages";
+import type { ConversationSummary } from "@/hooks/useDirectMessages";
 import { cn } from "@/lib/cn";
-import { usePresenceOf } from "@/services/presence/PresenceContext";
+import { usePresenceOf } from "@/hooks/usePresence";
 
 import { DmListError } from "./DmListError";
 

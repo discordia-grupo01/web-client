@@ -15,8 +15,8 @@ import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal
 import { Avatar } from "@/components/ui/Avatar";
 import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
 import { cn } from "@/lib/cn";
-import { usePresenceOf } from "@/services/presence/PresenceContext";
-import { useOptionalVoiceSession } from "@/services/voice/VoiceSessionContext";
+import { usePresenceOf } from "@/hooks/usePresence";
+import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
 interface UserPanelProps {
   user: User;

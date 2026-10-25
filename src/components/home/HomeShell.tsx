@@ -16,32 +16,35 @@ import { LoadingScreen } from "@/components/home/LoadingScreen";
 import { ServerRail } from "@/components/home/ServerRail";
 import { JoinServerModal } from "@/components/invites/JoinServerModal";
 import { DrawerBackdrop } from "@/components/layout/DrawerBackdrop";
-import { MobilePanelsProvider } from "@/components/layout/MobilePanelsContext";
+import { MobilePanelsProvider } from "@/contexts/MobilePanelsContext";
 import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
 import { CreateServerModal } from "@/components/servers/CreateServerModal";
 import { ServerView } from "@/components/servers/ServerView";
-import { useLoadingGate } from "@/hooks/useLoadingGate";
-import { useAuth } from "@/services/auth/AuthContext";
-import { BlockedUsersProvider } from "@/services/blocks/BlockedUsersContext";
+import { useLoadingGate } from "@/components/home/hooks/useLoadingGate";
+import { useAuth } from "@/contexts/AuthContext";
+import { BlockedUsersProvider } from "@/contexts/BlockedUsersContext";
 import {
   useVoiceSession,
   VoiceSessionProvider,
-} from "@/services/voice/VoiceSessionContext";
-import { useDirectMessages } from "@/services/conversations/useDirectMessages";
-import { PresenceProvider } from "@/services/presence/PresenceContext";
-import { useIdleReporter } from "@/services/presence/useIdleReporter";
-import { useLoadPresence } from "@/services/presence/useLoadPresence";
+} from "@/contexts/VoiceSessionContext";
+import { useDirectMessages } from "@/hooks/useDirectMessages";
+import { PresenceProvider } from "@/contexts/PresenceContext";
+import { useIdleReporter } from "@/components/home/hooks/useIdleReporter";
+import { useLoadPresence } from "@/hooks/useLoadPresence";
 import {
   usePresenceProviderValue,
   usePresenceSession,
-} from "@/services/presence/usePresenceSession";
-import { useMentions } from "@/services/mentions/useMentions";
-import { authorFromProfile } from "@/services/messages/author";
+} from "@/components/home/hooks/usePresenceSession";
+import { useMentions } from "@/components/home/hooks/useMentions";
+import { authorFromProfile } from "@/utils/author";
 import { getOwnProfileRequest } from "@/services/profile/client";
 import { listServersRequest } from "@/services/servers/client";
-import { avatarSrcOf } from "@/lib/userProfile";
+import { avatarSrcOf } from "@/utils/userProfile";
 import { ROUTES } from "@/lib/constants";
-import { readLastLocation, writeLastLocation } from "@/lib/lastLocation";
+import {
+  readLastLocation,
+  writeLastLocation,
+} from "@/components/home/utils/lastLocation";
 
 type MainView = "servers" | "direct-messages";
 

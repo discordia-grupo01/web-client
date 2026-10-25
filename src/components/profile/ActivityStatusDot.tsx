@@ -1,6 +1,6 @@
 import { type ActivityStatus } from "@discordia/client-shared";
 
-import { ACTIVITY_STATUS_DOT_CLASS } from "./activityStatus";
+import { ACTIVITY_STATUS_DOT_CLASS } from "@/components/profile/utils/activityStatus";
 import { cn } from "@/lib/cn";
 
 interface ActivityStatusDotProps {

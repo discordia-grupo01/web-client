@@ -26,12 +26,10 @@ import { useEffect, useState } from "react";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { MemberRoleBadges } from "@/components/roles/MemberRoleBadges";
-import { useBlockedUsersContext } from "@/services/blocks/BlockedUsersContext";
-import {
-  usePresenceContext,
-  usePresenceOf,
-} from "@/services/presence/PresenceContext";
-import { useLoadPresence } from "@/services/presence/useLoadPresence";
+import { useBlockedUsersContext } from "@/contexts/BlockedUsersContext";
+import { usePresenceContext } from "@/contexts/PresenceContext";
+import { usePresenceOf } from "@/hooks/usePresence";
+import { useLoadPresence } from "@/hooks/useLoadPresence";
 import { getPublicProfileRequest } from "@/services/profile/client";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";

@@ -13,7 +13,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import {
   createVoiceEmbedSession,
   type VoiceEmbedSession,
-} from "@/services/voice/voiceEmbedSession";
+} from "@/components/voice/utils/voiceEmbedSession";
 
 import { VoiceParticipantGrid } from "./VoiceParticipantGrid";
 

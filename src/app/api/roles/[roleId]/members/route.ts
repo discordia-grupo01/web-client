@@ -5,7 +5,7 @@ import {
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/apiRoute";
-import { memberPageQueryFrom } from "@/lib/memberPageQuery";
+import { memberPageQueryFrom } from "@/utils/memberPageQuery";
 import { getValidSession } from "@/services/auth/session";
 import { listRoleMembers } from "@/services/roles/service";
 

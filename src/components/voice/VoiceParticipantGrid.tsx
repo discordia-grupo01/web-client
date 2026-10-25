@@ -2,20 +2,20 @@
 
 import type { VoiceParticipant } from "@discordia/client-shared";
 
-import { useElementSize } from "@/hooks/useElementSize";
+import { useElementSize } from "@/components/voice/hooks/useElementSize";
 import { cn } from "@/lib/cn";
-import type { TileVideo } from "@/services/voice/livekitParticipants";
+import type { TileVideo } from "@/utils/livekitParticipants";
 import {
   NARROW_GRID,
   NARROW_GRID_BREAKPOINT,
   voiceGridLayout,
   WIDE_GRID,
-} from "@/lib/voiceGrid";
+} from "@/components/voice/utils/voiceGrid";
 
 import { VoiceFocusLayout, type RenderTile } from "./VoiceFocusLayout";
 import { VoiceOverflowTile } from "./VoiceOverflowTile";
 import { VoiceParticipantTile } from "./VoiceParticipantTile";
-import { useVisibleParticipants } from "./useVisibleParticipants";
+import { useVisibleParticipants } from "@/components/voice/hooks/useVisibleParticipants";
 
 interface VoiceParticipantGridProps {
   participants: readonly VoiceParticipant[];

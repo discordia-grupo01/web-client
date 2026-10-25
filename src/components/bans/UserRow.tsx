@@ -4,7 +4,7 @@ import {
   avatarSrcOf,
   displayNameOf,
   type ProfileSummary,
-} from "@/lib/userProfile";
+} from "@/utils/userProfile";
 import { cn } from "@/lib/cn";
 
 export interface UserRowAction {

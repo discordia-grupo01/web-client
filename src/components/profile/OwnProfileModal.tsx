@@ -32,10 +32,7 @@ import {
   updateOwnProfileRequest,
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
-import {
-  useOwnStatus,
-  usePresenceOf,
-} from "@/services/presence/PresenceContext";
+import { useOwnStatus, usePresenceOf } from "@/hooks/usePresence";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";
 import { ActivityStatusRow } from "./ActivityStatusRow";
