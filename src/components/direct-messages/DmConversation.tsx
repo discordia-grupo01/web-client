@@ -14,12 +14,14 @@ import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageComposer } from "@/components/messages/MessageComposer";
+import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { Avatar } from "@/components/ui/Avatar";
 import type {
   ConversationSummary,
   SendDmResult,
 } from "@/hooks/useDirectMessages";
 import { usePendingMessages } from "@/hooks/usePendingMessages";
+import { usePresenceOf } from "@/hooks/usePresence";
 
 import { DmHistory } from "./DmHistory";
 import { DmWelcome } from "./DmWelcome";
@@ -60,6 +62,7 @@ export function DmConversation({
     isReady: isConnected,
     send: onSend,
   });
+  const partnerStatus = usePresenceOf(activeSummary?.partner.id);
 
   if (!activeSummary) {
     return (
@@ -104,12 +107,20 @@ export function DmConversation({
           aria-label={`Ver perfil de ${partner.name}`}
           className="hover:bg-surface-hover flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 transition-colors"
         >
-          <Avatar
-            name={partner.name}
-            src={partner.avatarUrl}
-            size={24}
-            className="rounded-full"
-          />
+          <span className="relative shrink-0">
+            <Avatar
+              name={partner.name}
+              src={partner.avatarUrl}
+              size={24}
+              className="rounded-full"
+            />
+            <ActivityStatusDot
+              status={partnerStatus}
+              size={10}
+              ringColor="var(--bg-chat)"
+              className="absolute -right-0.5 -bottom-0.5"
+            />
+          </span>
           <span className="font-display text-content truncate text-sm font-semibold">
             {partner.name}
           </span>
