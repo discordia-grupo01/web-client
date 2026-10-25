@@ -13,7 +13,7 @@ vi.mock("@/services/attachments/client", () => ({
 
 import { uploadAttachmentRequest } from "@/services/attachments/client";
 
-import { MessageMentionsProvider } from "./MentionsContext";
+import { MessageMentionsProvider } from "@/contexts/MentionsContext";
 import { MessageComposer } from "./MessageComposer";
 
 function renderComposer(onSend = vi.fn()) {

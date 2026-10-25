@@ -9,12 +9,13 @@ import {
   type ReactNode,
 } from "react";
 
-type MobilePanel = "nav" | "members";
+type MobilePanel = "nav" | "members" | "search";
 
 interface MobilePanelsValue {
   openPanel: MobilePanel | null;
   openNav: () => void;
   openMembers: () => void;
+  openSearch: () => void;
   close: () => void;
 }
 
@@ -37,6 +38,7 @@ export function MobilePanelsProvider({ children }: { children: ReactNode }) {
       openPanel,
       openNav: () => setOpenPanel("nav"),
       openMembers: () => setOpenPanel("members"),
+      openSearch: () => setOpenPanel("search"),
       close: () => setOpenPanel(null),
     }),
     [openPanel],

@@ -33,7 +33,7 @@ import { AttachmentChips, type PendingAttachment } from "./AttachmentChips";
 import { EmojiPicker } from "./EmojiPicker";
 import { MentionSuggestions } from "./MentionSuggestions";
 import { MentionTextarea } from "./MentionTextarea";
-import { useMessageMentions } from "./MentionsContext";
+import { useMessageMentions } from "@/contexts/MentionsContext";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 

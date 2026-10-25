@@ -81,10 +81,11 @@ body {
   }
 }
 
+/* Entra desde arriba; un globito pegado abajo usa `--pill-from: 6px`. */
 @keyframes pill-in {
   from {
     opacity: 0;
-    transform: translateY(-6px);
+    transform: translateY(var(--pill-from, -6px));
   }
   to {
     opacity: 1;

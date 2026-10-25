@@ -11,11 +11,15 @@ import {
   type ChatStatus,
   type DeleteMessageResult,
   type EditMessageResult,
+  type FocusedMessage,
   joinMessageChannel,
+  JUMP_TO_MESSAGE_FAILED,
   MESSAGE_DELETE_FAILED,
   MESSAGE_EDIT_FAILED,
+  MESSAGE_JUMP_WINDOW,
   MESSAGE_SEND_FAILED,
   type Message,
+  type MessageActionResult,
   type MessageChannelJoinParams,
   type MessageUpdatedPayload,
   mergeMessages,
@@ -63,12 +67,23 @@ export function useChannelMessages(
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [isLoadingOlder, setIsLoadingOlder] = useState(false);
+  const [newerCursor, setNewerCursor] = useState<string | null>(null);
+  const [isLoadingNewer, setIsLoadingNewer] = useState(false);
+  const [focusedMessage, setFocusedMessage] = useState<FocusedMessage | null>(
+    null,
+  );
   const [attempt, setAttempt] = useState(0);
 
   const phoenixChannel = useRef<PhoenixChannel | null>(null);
   const joinParams = useRef<MessageChannelJoinParams>({});
   const statusRef = useRef<ChatStatus>("loading");
   const loadingOlderRef = useRef(false);
+  const loadingNewerRef = useRef(false);
+  const newerCursorRef = useRef<string | null>(null);
+  // Sube con cada salto (a un mensaje o al presente): una respuesta pedida
+  // para una vista anterior ya no se aplica.
+  const viewRef = useRef(0);
+  const focusNonce = useRef(0);
   const messagesRef = useRef<Message[] | null>(null);
   const currentUserIdRef = useRef(currentUserId);
   const onAccessRevokedRef = useRef(onAccessRevoked);
@@ -89,11 +104,18 @@ export function useChannelMessages(
     statusRef.current = status;
   }, [status]);
 
+  const setNewer = useCallback((cursor: string | null) => {
+    newerCursorRef.current = cursor;
+    setNewerCursor(cursor);
+  }, []);
+
   // El `last_message_id` de cada re-join es el mensaje mas nuevo que ya se vio. Phoenix
   // manda el mismo objeto de params en cada join, asi que alcanza con mutarlo.
+  // Mientras se ve el pasado queda el del presente.
   useEffect(() => {
+    if (newerCursor !== null) return;
     joinParams.current.last_message_id = messages?.[messages.length - 1]?.id;
-  }, [messages]);
+  }, [messages, newerCursor]);
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +143,7 @@ export function useChannelMessages(
         mergeMessages(replace ? [] : (prev ?? []), result.messages),
       );
       if (isFirstLoad || replace) setNextCursor(result.nextCursor);
+      if (replace) setNewer(null);
     }
 
     async function start() {
@@ -170,6 +193,7 @@ export function useChannelMessages(
         get currentUserId() {
           return currentUserIdRef.current;
         },
+        isViewingPast: () => newerCursorRef.current !== null,
       });
     }
 
@@ -193,20 +217,24 @@ export function useChannelMessages(
       phoenixChannel.current = null;
       release?.();
     };
-  }, [channel.id, attempt]);
+  }, [channel.id, attempt, setNewer]);
 
   // `ChannelChat` se remonta por canal (`key`), asi que el estado inicial ya es
   // el de "cargando": solo un reintento tiene que volver a el a mano.
   const retry = useCallback(() => {
+    viewRef.current += 1;
+    setNewer(null);
+    setFocusedMessage(null);
     setMessages(null);
     setNextCursor(null);
     setStatus("loading");
     setStatusMessage(null);
     setAttempt((value) => value + 1);
-  }, []);
+  }, [setNewer]);
 
   const loadOlder = useCallback(async () => {
     if (!nextCursor || loadingOlderRef.current) return;
+    const view = viewRef.current;
     loadingOlderRef.current = true;
     setIsLoadingOlder(true);
     const result = await fetchMessagesRequest(channel.id, {
@@ -214,10 +242,100 @@ export function useChannelMessages(
     });
     loadingOlderRef.current = false;
     setIsLoadingOlder(false);
-    if (!result.ok) return;
+    if (!result.ok || viewRef.current !== view) return;
     setMessages((prev) => mergeMessages(prev ?? [], result.messages));
     setNextCursor(result.nextCursor);
   }, [channel.id, nextCursor]);
+
+  // Lo que haya llegado mientras se pedia la ultima pagina se perdio (el
+  // socket no agrega nada mientras se ve el pasado): se trae por REST.
+  const catchUpFrom = useCallback(
+    (afterId: string, view: number) =>
+      void catchUpMessages(
+        (cursor) => fetchMessagesRequest(channel.id, { after: cursor }),
+        afterId,
+        (page) => setMessages((prev) => mergeMessages(prev ?? [], page)),
+        () => viewRef.current !== view,
+      ),
+    [channel.id],
+  );
+
+  const jumpToMessage = useCallback(
+    async (messageId: string): Promise<MessageActionResult> => {
+      const focus = () =>
+        setFocusedMessage({ id: messageId, nonce: ++focusNonce.current });
+      if (messagesRef.current?.some((message) => message.id === messageId)) {
+        focus();
+        return { ok: true };
+      }
+
+      const view = ++viewRef.current;
+      const result = await fetchMessagesRequest(channel.id, {
+        around: messageId,
+        limit: MESSAGE_JUMP_WINDOW,
+      });
+      if (viewRef.current !== view) return { ok: true };
+      if (!result.ok) {
+        return {
+          ok: false,
+          message:
+            result.code === "MESSAGE_NOT_FOUND"
+              ? result.message
+              : JUMP_TO_MESSAGE_FAILED,
+        };
+      }
+
+      const newer = result.newerCursor ?? null;
+      setNewer(newer);
+      setMessages(result.messages);
+      setNextCursor(result.nextCursor);
+      focus();
+      const last = result.messages[result.messages.length - 1]?.id;
+      if (newer === null && last) catchUpFrom(last, view);
+      return { ok: true };
+    },
+    [channel.id, setNewer, catchUpFrom],
+  );
+
+  const loadNewer = useCallback(async () => {
+    const cursor = newerCursorRef.current;
+    if (!cursor || loadingNewerRef.current) return;
+    const view = viewRef.current;
+    loadingNewerRef.current = true;
+    setIsLoadingNewer(true);
+    const result = await fetchMessagesRequest(channel.id, { after: cursor });
+    loadingNewerRef.current = false;
+    setIsLoadingNewer(false);
+    if (!result.ok || viewRef.current !== view) return;
+    setMessages((prev) => mergeMessages(prev ?? [], result.messages));
+    setNewer(result.nextCursor);
+    if (result.nextCursor === null) {
+      catchUpFrom(
+        result.messages[result.messages.length - 1]?.id ?? cursor,
+        view,
+      );
+    }
+  }, [channel.id, setNewer, catchUpFrom]);
+
+  // Se vacia la lista en vez de reemplazarla al final: lo que llegue por el
+  // socket mientras tanto se agrega y queda junto con lo ultimo del REST.
+  const jumpToPresent = useCallback(() => {
+    if (newerCursorRef.current === null) return;
+    const view = ++viewRef.current;
+    setNewer(null);
+    setFocusedMessage(null);
+    setMessages(null);
+    setNextCursor(null);
+    void fetchMessagesRequest(channel.id).then((result) => {
+      if (viewRef.current !== view) return;
+      if (!result.ok) {
+        retry();
+        return;
+      }
+      setMessages((prev) => mergeMessages(prev ?? [], result.messages));
+      setNextCursor(result.nextCursor);
+    });
+  }, [channel.id, setNewer, retry]);
 
   const sendMessage = useCallback(
     (
@@ -313,6 +431,12 @@ export function useChannelMessages(
     hasMore: nextCursor !== null,
     isLoadingOlder,
     loadOlder,
+    hasNewer: newerCursor !== null,
+    isLoadingNewer,
+    loadNewer,
+    jumpToMessage,
+    jumpToPresent,
+    focusedMessage,
     retry,
     sendMessage,
     toggleReaction,

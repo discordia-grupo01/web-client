@@ -9,6 +9,7 @@ import {
   hasPermission,
   isMemberMuted,
   isUnassignedCategory,
+  type MessageJumpTarget,
   type PublicUser,
   type Role,
   UNMUTE_ACTION_LABEL,
@@ -89,6 +90,8 @@ import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { useMobilePanels } from "@/contexts/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { MembersSidebar } from "@/components/members/MembersSidebar";
+import { MessageSearchProvider } from "@/contexts/MessageSearchContext";
+import { MessageSearchPanel } from "@/components/message-search/MessageSearchPanel";
 import { ChannelChat } from "@/components/messages/ChannelChat";
 import { ownAvatarSrc } from "@/utils/ownAvatar";
 import {
@@ -352,7 +355,45 @@ function unmuteConfirmBody(name: string): string {
   return `${name} va a poder volver a escribir y hablar en el servidor desde ahora.`;
 }
 
-export function ServerView({
+/** Envuelve la vista con la busqueda de mensajes del servidor. */
+export function ServerView(props: ServerViewProps) {
+  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const [jumpTarget, setJumpTarget] = useState<MessageJumpTarget | null>(null);
+  const jumpNonce = useRef(0);
+  const clearJumpTarget = useCallback(() => setJumpTarget(null), []);
+
+  return (
+    <MessageSearchProvider
+      serverId={props.server.id}
+      serverName={props.server.name}
+      isOpen={isSearchOpen}
+      onOpenChange={setIsSearchOpen}
+      onOpenResult={(message) =>
+        setJumpTarget({
+          channelId: message.channel_id,
+          messageId: message.id,
+          nonce: ++jumpNonce.current,
+        })
+      }
+    >
+      <ServerViewContent
+        {...props}
+        isSearchOpen={isSearchOpen}
+        jumpTarget={jumpTarget}
+        onJumpHandled={clearJumpTarget}
+      />
+    </MessageSearchProvider>
+  );
+}
+
+interface ServerViewContentProps extends ServerViewProps {
+  isSearchOpen: boolean;
+  /** Resultado de busqueda a mostrar: abre su canal y salta al mensaje. */
+  jumpTarget: MessageJumpTarget | null;
+  onJumpHandled: () => void;
+}
+
+function ServerViewContent({
   server,
   onLeft,
   onServerUpdate,
@@ -363,7 +404,10 @@ export function ServerView({
   onChannelRead,
   initialChannelId = null,
   onChannelChange,
-}: ServerViewProps) {
+  isSearchOpen,
+  jumpTarget,
+  onJumpHandled,
+}: ServerViewContentProps) {
   const { user } = useAuth();
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
   const { store: presenceStore } = usePresenceContext();
@@ -497,6 +541,9 @@ export function ServerView({
       server.channels[0]?.id ??
       "",
   );
+  useEffect(() => {
+    if (jumpTarget) setActiveChannelId(jumpTarget.channelId);
+  }, [jumpTarget]);
   useEffect(() => {
     if (activeChannelId) onChannelChange?.(activeChannelId);
   }, [activeChannelId, onChannelChange]);
@@ -1043,114 +1090,144 @@ export function ServerView({
         </div>
       </SidePanel>
 
-      {/* Content area */}
+      {/* El header cruza el chat y la columna derecha: el campo de busqueda
+          queda justo arriba de sus resultados. */}
       <div
         className="flex min-w-0 flex-1 flex-col overflow-hidden"
         style={{ background: "var(--bg-chat)" }}
       >
         {activeChannel ? (
-          <>
-            <ChannelHeader
-              channel={activeChannel}
-              hasBanner={server.banner_url !== null}
-              isBannerVisible={isBannerVisible}
-              onToggleBanner={() => setIsBannerVisible((prev) => !prev)}
-              isMembersVisible={isMembersVisible}
-              onToggleMembers={() => setIsMembersVisible((prev) => !prev)}
-              voicePill={
-                activeChannel.id === voiceChannelId
-                  ? {
-                      label:
-                        voiceState.status === "connected"
-                          ? voiceConnectedCount(liveVoiceParticipants.length)
-                          : voiceState.status === "reconnecting"
-                            ? VOICE_RECONNECTING
-                            : VOICE_CONNECTING,
-                      isLive: voiceState.status === "connected",
+          <ChannelHeader
+            channel={activeChannel}
+            hasBanner={server.banner_url !== null}
+            isBannerVisible={isBannerVisible}
+            onToggleBanner={() => setIsBannerVisible((prev) => !prev)}
+            isMembersVisible={isMembersVisible}
+            onToggleMembers={() => setIsMembersVisible((prev) => !prev)}
+            voicePill={
+              activeChannel.id === voiceChannelId
+                ? {
+                    label:
+                      voiceState.status === "connected"
+                        ? voiceConnectedCount(liveVoiceParticipants.length)
+                        : voiceState.status === "reconnecting"
+                          ? VOICE_RECONNECTING
+                          : VOICE_CONNECTING,
+                    isLive: voiceState.status === "connected",
+                  }
+                : null
+            }
+          />
+        ) : null}
+        <div className="flex min-h-0 flex-1 overflow-hidden">
+          {/* Content area */}
+          <div className="flex min-w-0 flex-1 flex-col overflow-hidden">
+            {activeChannel ? (
+              <>
+                {activeChannel.kind === "text" ? (
+                  <ChannelChat
+                    key={activeChannel.id}
+                    serverId={server.id}
+                    channel={activeChannel}
+                    currentAuthor={currentAuthor}
+                    serverRoles={serverRoles}
+                    myRoleIds={myRoleIds}
+                    canManageMessages={canInActiveChannel(
+                      "MANAGE_MESSAGES",
+                      canManageMessages,
+                    )}
+                    canSendMessages={canInActiveChannel(
+                      "SEND_MESSAGES",
+                      canSendMessages,
+                    )}
+                    canMentionEveryone={canMentionEveryone}
+                    canAddReactions={canInActiveChannel(
+                      "ADD_REACTIONS",
+                      canAddReactions,
+                    )}
+                    isCheckingPermissions={isCheckingChannelPermissions}
+                    onAccessRevoked={handleAccessRevoked}
+                    jumpTarget={
+                      jumpTarget?.channelId === activeChannel.id
+                        ? jumpTarget
+                        : null
                     }
-                  : null
-              }
-            />
+                    onJumpHandled={onJumpHandled}
+                    onOpenProfile={(userId, member) => {
+                      if (userId === String(ownProfile?.id ?? user?.id)) {
+                        onOpenOwnProfile(server.id);
+                        return;
+                      }
+                      setViewingMutedUntil(
+                        member && isMemberMuted(member)
+                          ? (member.muted_until ?? null)
+                          : null,
+                      );
+                      setViewingUserId(userId);
+                    }}
+                  />
+                ) : (
+                  <VoiceChannelView
+                    channel={activeChannel}
+                    serverId={server.id}
+                    serverName={server.name}
+                    canConnect={canInActiveChannel("CONNECT", canConnect)}
+                    isCheckingAccess={isCheckingChannelPermissions}
+                    ownProfile={ownProfile}
+                    presence={voicePresence[activeChannel.id] ?? []}
+                  />
+                )}
+              </>
+            ) : (
+              <div className="p-2 md:hidden">
+                <MobileNavButton />
+              </div>
+            )}
+          </div>
 
-            {activeChannel.kind === "text" ? (
-              <ChannelChat
-                key={activeChannel.id}
-                serverId={server.id}
-                channel={activeChannel}
+          {/* En mobile es un drawer (siempre montado); en desktop se oculta con
+          el boton de miembros del header. */}
+          <SidePanel
+            position="right"
+            isOpen={openPanel === "members"}
+            className={
+              isMembersVisible && !isSearchOpen ? undefined : "md:hidden"
+            }
+          >
+            <MembersSidebar
+              key={`${server.id}:${server.owner_id}:${membersVersion}`}
+              serverId={server.id}
+              serverRoles={serverRoles}
+              currentUserId={ownProfile?.id ?? user?.id ?? null}
+              ownProfile={ownProfile}
+              onOpenOwnProfile={() => onOpenOwnProfile(server.id)}
+              onOpenPublicProfile={(userId, member) => {
+                setViewingMutedUntil(
+                  member && isMemberMuted(member)
+                    ? (member.muted_until ?? null)
+                    : null,
+                );
+                setViewingUserId(userId);
+              }}
+            />
+          </SidePanel>
+
+          <SidePanel
+            position="right"
+            isOpen={openPanel === "search"}
+            className={isSearchOpen ? undefined : "md:hidden"}
+          >
+            {isSearchOpen ? (
+              <MessageSearchPanel
+                channels={server.channels}
                 currentAuthor={currentAuthor}
                 serverRoles={serverRoles}
                 myRoleIds={myRoleIds}
-                canManageMessages={canInActiveChannel(
-                  "MANAGE_MESSAGES",
-                  canManageMessages,
-                )}
-                canSendMessages={canInActiveChannel(
-                  "SEND_MESSAGES",
-                  canSendMessages,
-                )}
-                canMentionEveryone={canMentionEveryone}
-                canAddReactions={canInActiveChannel(
-                  "ADD_REACTIONS",
-                  canAddReactions,
-                )}
-                isCheckingPermissions={isCheckingChannelPermissions}
-                onAccessRevoked={handleAccessRevoked}
-                onOpenProfile={(userId, member) => {
-                  if (userId === String(ownProfile?.id ?? user?.id)) {
-                    onOpenOwnProfile(server.id);
-                    return;
-                  }
-                  setViewingMutedUntil(
-                    member && isMemberMuted(member)
-                      ? (member.muted_until ?? null)
-                      : null,
-                  );
-                  setViewingUserId(userId);
-                }}
               />
-            ) : (
-              <VoiceChannelView
-                channel={activeChannel}
-                serverId={server.id}
-                serverName={server.name}
-                canConnect={canInActiveChannel("CONNECT", canConnect)}
-                isCheckingAccess={isCheckingChannelPermissions}
-                ownProfile={ownProfile}
-                presence={voicePresence[activeChannel.id] ?? []}
-              />
-            )}
-          </>
-        ) : (
-          <div className="p-2 md:hidden">
-            <MobileNavButton />
-          </div>
-        )}
+            ) : null}
+          </SidePanel>
+        </div>
       </div>
-
-      {/* En mobile es un drawer (siempre montado); en desktop se oculta con
-          el boton de miembros del header. */}
-      <SidePanel
-        position="right"
-        isOpen={openPanel === "members"}
-        className={isMembersVisible ? undefined : "md:hidden"}
-      >
-        <MembersSidebar
-          key={`${server.id}:${server.owner_id}:${membersVersion}`}
-          serverId={server.id}
-          serverRoles={serverRoles}
-          currentUserId={ownProfile?.id ?? user?.id ?? null}
-          ownProfile={ownProfile}
-          onOpenOwnProfile={() => onOpenOwnProfile(server.id)}
-          onOpenPublicProfile={(userId, member) => {
-            setViewingMutedUntil(
-              member && isMemberMuted(member)
-                ? (member.muted_until ?? null)
-                : null,
-            );
-            setViewingUserId(userId);
-          }}
-        />
-      </SidePanel>
 
       {isCreateChannelOpen ? (
         <CreateChannelModal

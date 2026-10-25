@@ -12,8 +12,9 @@ import { listMessages } from "@/services/messages/service";
 
 /**
  * BFF de `GET /v1/channels/:id/messages` (historial). Query opcional:
- * `limit`, `before` (el `next_cursor` de la pagina anterior) y `after` (id del
- * ultimo mensaje que el cliente tiene, para ponerse al dia).
+ * `limit`, `before` (el `next_cursor` de la pagina anterior), `after` (id del
+ * ultimo mensaje que el cliente tiene, para ponerse al dia) y `around` (id de
+ * un mensaje, para saltar a el).
  */
 export async function GET(
   request: NextRequest,
@@ -30,11 +31,13 @@ export async function GET(
     Number.isInteger(rawLimit) && rawLimit > 0 ? rawLimit : undefined;
   const before = searchParams.get("before") ?? undefined;
   const after = searchParams.get("after") ?? undefined;
+  const around = searchParams.get("around") ?? undefined;
 
   const result = await listMessages(session.token, params.channelId, {
     limit,
     before,
     after,
+    around,
   });
 
   if (!result.ok) {
@@ -58,5 +61,6 @@ export async function GET(
     ok: true,
     messages: result.data.messages,
     nextCursor: result.data.next_cursor,
+    ...(around ? { newerCursor: result.data.newer_cursor ?? null } : {}),
   });
 }

@@ -2,6 +2,7 @@ import {
   isActiveMention,
   MENTION_DELETED_ROLE_NAME,
   type MessageMentions,
+  splitHighlight,
   tokenizeMessageContent,
   UNKNOWN_USER_NAME,
 } from "@discordia/client-shared";
@@ -9,7 +10,7 @@ import {
 import { Fragment, type ReactNode } from "react";
 
 import { MentionChip } from "./MentionChip";
-import { useMessageMentions } from "./MentionsContext";
+import { useMessageMentions } from "@/contexts/MentionsContext";
 
 interface MessageContentProps {
   content: string;
@@ -20,12 +21,15 @@ interface MessageContentProps {
   mentions?: MessageMentions;
   /** Va pegado al final del texto, en el mismo renglon si entra (ej. "(editado)"). */
   suffix?: ReactNode;
+  /** Termino a resaltar en el texto (resultados de busqueda). */
+  highlight?: string;
 }
 
 export function MessageContent({
   content,
   mentions = {},
   suffix,
+  highlight,
 }: MessageContentProps) {
   const { resolveMention } = useMessageMentions();
 
@@ -33,7 +37,24 @@ export function MessageContent({
     <p className="text-content text-sm leading-relaxed break-words whitespace-pre-wrap">
       {tokenizeMessageContent(content).map((token, index) => {
         if (token.kind === "text") {
-          return <Fragment key={index}>{token.value}</Fragment>;
+          return (
+            <Fragment key={index}>
+              {highlight
+                ? splitHighlight(token.value, highlight).map((part, i) =>
+                    part.isMatch ? (
+                      <mark
+                        key={i}
+                        className="bg-highlight/30 text-content rounded-sm"
+                      >
+                        {part.text}
+                      </mark>
+                    ) : (
+                      part.text
+                    ),
+                  )
+                : token.value}
+            </Fragment>
+          );
         }
         if (token.kind === "channel") {
           return <MentionChip key={index} text={token.value} />;
