@@ -86,7 +86,6 @@ function MemberRow({
         <span
           className="text-content-muted block truncate text-sm"
           style={roleColor ? { color: roleColor } : undefined}
-          title={member.user_id}
         >
           {displayName}
           {isOwn ? " (vos)" : ""}

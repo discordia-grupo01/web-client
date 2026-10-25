@@ -2,12 +2,8 @@ import { act, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const listVoiceParticipantsRequest = vi.hoisted(() => vi.fn());
-const fetchVoiceSocketTicketRequest = vi.hoisted(() => vi.fn());
 const connectVoicePresence = vi.hoisted(() => vi.fn());
-vi.mock("./client", () => ({
-  listVoiceParticipantsRequest,
-  fetchVoiceSocketTicketRequest,
-}));
+vi.mock("./client", () => ({ listVoiceParticipantsRequest }));
 vi.mock("./socket", () => ({ connectVoicePresence }));
 
 import { useVoicePresence } from "./useVoicePresence";
@@ -18,10 +14,6 @@ beforeEach(() => {
   listVoiceParticipantsRequest.mockReset().mockResolvedValue({
     ok: true,
     byChannel: {},
-  });
-  fetchVoiceSocketTicketRequest.mockReset().mockResolvedValue({
-    ok: true,
-    ticket: "voice-ticket",
   });
   connectVoicePresence.mockReset().mockReturnValue(() => {});
   vi.useFakeTimers();
@@ -51,10 +43,10 @@ describe("useVoicePresence", () => {
     expect(listVoiceParticipantsRequest).toHaveBeenCalledWith("s1");
     expect(connectVoicePresence).toHaveBeenCalledWith(
       "s1",
-      "voice-ticket",
       expect.objectContaining({
         joined: expect.any(Function),
         left: expect.any(Function),
+        rejoined: expect.any(Function),
       }),
     );
     expect(result.current.byChannel).toEqual({ c1: [ana] });
@@ -68,7 +60,7 @@ describe("useVoicePresence", () => {
 
     const { result } = renderHook(() => useVoicePresence("s1"));
     await flush();
-    const handlers = connectVoicePresence.mock.calls[0][2];
+    const handlers = connectVoicePresence.mock.calls[0][1];
 
     act(() =>
       handlers.joined({
@@ -108,7 +100,7 @@ describe("useVoicePresence", () => {
 
     const { result } = renderHook(() => useVoicePresence("s1"));
     await flush();
-    const handlers = connectVoicePresence.mock.calls[0][2];
+    const handlers = connectVoicePresence.mock.calls[0][1];
 
     act(() =>
       handlers.joined({
@@ -143,6 +135,23 @@ describe("useVoicePresence", () => {
       rerender({ serverId: "s2" });
     });
     expect(disconnect).toHaveBeenCalledOnce();
+  });
+
+  it("vuelve a pedir el snapshot al reconectarse el socket", async () => {
+    const { result } = renderHook(() => useVoicePresence("s1"));
+    await flush();
+    expect(listVoiceParticipantsRequest).toHaveBeenCalledOnce();
+
+    listVoiceParticipantsRequest.mockResolvedValue({
+      ok: true,
+      byChannel: { c1: [ana] },
+    });
+    const handlers = connectVoicePresence.mock.calls[0][1];
+    act(() => handlers.rejoined());
+    await flush();
+
+    expect(listVoiceParticipantsRequest).toHaveBeenCalledTimes(2);
+    expect(result.current.byChannel).toEqual({ c1: [ana] });
   });
 
   it("no inicia polling periódico", async () => {
