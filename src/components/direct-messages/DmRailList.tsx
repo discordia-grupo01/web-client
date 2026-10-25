@@ -15,6 +15,7 @@ import { UserPanel } from "@/components/profile/UserPanel";
 import { Avatar } from "@/components/ui/Avatar";
 import type { ConversationSummary } from "@/services/conversations/useDirectMessages";
 import { cn } from "@/lib/cn";
+import { usePresenceOf } from "@/services/presence/PresenceContext";
 
 import { DmListError } from "./DmListError";
 
@@ -33,18 +34,20 @@ interface DmRailListProps {
 }
 
 function DmPartnerAvatar({
+  partnerId,
   name,
   avatarUrl,
 }: {
+  partnerId: string;
   name: string;
   avatarUrl: string | null;
 }) {
+  const status = usePresenceOf(partnerId);
   return (
     <div className="relative shrink-0">
       <Avatar name={name} src={avatarUrl} size={32} className="rounded-full" />
-      {/* Presencia mock: no hay estado de actividad real para otros usuarios. */}
       <ActivityStatusDot
-        status="online"
+        status={status}
         size={11}
         ringColor="var(--bg-channels)"
         className="absolute right-0 bottom-0"
@@ -134,6 +137,7 @@ export function DmRailList({
                   )}
                 >
                   <DmPartnerAvatar
+                    partnerId={partner.id}
                     name={partner.name}
                     avatarUrl={partner.avatarUrl}
                   />

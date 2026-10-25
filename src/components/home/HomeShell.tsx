@@ -28,6 +28,13 @@ import {
   VoiceSessionProvider,
 } from "@/services/voice/VoiceSessionContext";
 import { useDirectMessages } from "@/services/conversations/useDirectMessages";
+import { PresenceProvider } from "@/services/presence/PresenceContext";
+import { useIdleReporter } from "@/services/presence/useIdleReporter";
+import { useLoadPresence } from "@/services/presence/useLoadPresence";
+import {
+  usePresenceProviderValue,
+  usePresenceSession,
+} from "@/services/presence/usePresenceSession";
 import { useMentions } from "@/services/mentions/useMentions";
 import { authorFromProfile } from "@/services/messages/author";
 import { getOwnProfileRequest } from "@/services/profile/client";
@@ -53,8 +60,6 @@ function HomeShellContent({
   const [selectedServerId, setSelectedServerId] = useState<string | null>(
     initialSelectedServerId,
   );
-  // Se entra en Mensajes Directos: si no, el login cae en "Inicio" sin lista y
-  // parece que los DMs no funcionan. Venir de una invitacion abre el servidor.
   const [view, setView] = useState<MainView>(
     initialSelectedServerId ? "servers" : "direct-messages",
   );
@@ -89,10 +94,24 @@ function HomeShellContent({
     [ownProfile],
   );
   const mentions = useMentions(currentAuthor?.id ?? null);
+  const presence = usePresenceSession(currentAuthor?.id ?? null);
   const directMessages = useDirectMessages(
     currentAuthor,
     view === "direct-messages",
-    { onMention: mentions.receive, onRejoined: mentions.reload },
+    {
+      onMention: mentions.receive,
+      onRejoined: mentions.reload,
+      ...presence.userRoomCallbacks,
+    },
+  );
+  const presenceValue = usePresenceProviderValue(
+    presence.store,
+    directMessages.pushToUserRoom,
+  );
+  useIdleReporter(presence.store, directMessages.pushToUserRoom);
+  useLoadPresence(
+    presence.store,
+    directMessages.conversations.map((c) => c.partner.id),
   );
   const unreadDmCount = directMessages.conversations.filter(
     (c) => c.isUnread,
@@ -223,91 +242,93 @@ function HomeShellContent({
   }
 
   return (
-    <MobilePanelsProvider>
-      <div
-        className="relative flex h-dvh w-full overflow-hidden"
-        style={{ background: "var(--bg-chat)" }}
-      >
-        <ServerRail
-          servers={servers}
-          selectedServerId={selectedServerId}
-          isDirectMessagesActive={view === "direct-messages"}
-          unreadDmCount={unreadDmCount}
-          unreadMentionsByServer={mentions.byServer}
-          onSelect={(serverId) => {
-            setView("servers");
-            setSelectedServerId(serverId);
-            setLastChannelId(null);
-          }}
-          onOpenDirectMessages={() => setView("direct-messages")}
-          onCreateClick={() => setIsCreateModalOpen(true)}
-        />
-
-        {!isRestored ? null : view === "direct-messages" ? (
-          <DirectMessagesView
-            currentAuthor={currentAuthor}
-            ownProfile={ownProfile}
-            onOpenOwnProfile={() => setOwnProfileServerId(null)}
+    <PresenceProvider value={presenceValue}>
+      <MobilePanelsProvider>
+        <div
+          className="relative flex h-dvh w-full overflow-hidden"
+          style={{ background: "var(--bg-chat)" }}
+        >
+          <ServerRail
             servers={servers}
-            directMessages={directMessages}
-          />
-        ) : selectedServer ? (
-          <ServerView
-            key={selectedServer.id}
-            server={selectedServer}
-            onLeft={() => removeServer(selectedServer.id)}
-            onServerUpdate={updateServer}
-            ownProfile={ownProfile}
-            onOpenOwnProfile={(serverId) =>
-              setOwnProfileServerId(serverId ?? null)
-            }
-            onMessageUser={messageUser}
-            unreadMentionsByChannel={mentions.byChannel}
-            onChannelRead={mentions.markChannelRead}
-            initialChannelId={lastChannelId}
-            onChannelChange={setLastChannelId}
-          />
-        ) : (
-          <HomeView
-            hasServers={servers.length > 0}
-            userName={user?.name}
-            ownProfile={ownProfile}
-            onOpenOwnProfile={() => setOwnProfileServerId(null)}
-            onCreateClick={() => setIsCreateModalOpen(true)}
-            onJoinClick={() => setIsJoinModalOpen(true)}
-          />
-        )}
-
-        <DrawerBackdrop />
-
-        {isCreateModalOpen ? (
-          <CreateServerModal
-            onClose={() => setIsCreateModalOpen(false)}
-            onCreated={addAndSelect}
-            onJoinClick={() => {
-              setIsCreateModalOpen(false);
-              setIsJoinModalOpen(true);
+            selectedServerId={selectedServerId}
+            isDirectMessagesActive={view === "direct-messages"}
+            unreadDmCount={unreadDmCount}
+            unreadMentionsByServer={mentions.byServer}
+            onSelect={(serverId) => {
+              setView("servers");
+              setSelectedServerId(serverId);
+              setLastChannelId(null);
             }}
+            onOpenDirectMessages={() => setView("direct-messages")}
+            onCreateClick={() => setIsCreateModalOpen(true)}
           />
-        ) : null}
 
-        {isJoinModalOpen ? (
-          <JoinServerModal
-            onClose={() => setIsJoinModalOpen(false)}
-            onJoined={addAndSelect}
-          />
-        ) : null}
+          {!isRestored ? null : view === "direct-messages" ? (
+            <DirectMessagesView
+              currentAuthor={currentAuthor}
+              ownProfile={ownProfile}
+              onOpenOwnProfile={() => setOwnProfileServerId(null)}
+              servers={servers}
+              directMessages={directMessages}
+            />
+          ) : selectedServer ? (
+            <ServerView
+              key={selectedServer.id}
+              server={selectedServer}
+              onLeft={() => removeServer(selectedServer.id)}
+              onServerUpdate={updateServer}
+              ownProfile={ownProfile}
+              onOpenOwnProfile={(serverId) =>
+                setOwnProfileServerId(serverId ?? null)
+              }
+              onMessageUser={messageUser}
+              unreadMentionsByChannel={mentions.byChannel}
+              onChannelRead={mentions.markChannelRead}
+              initialChannelId={lastChannelId}
+              onChannelChange={setLastChannelId}
+            />
+          ) : (
+            <HomeView
+              hasServers={servers.length > 0}
+              userName={user?.name}
+              ownProfile={ownProfile}
+              onOpenOwnProfile={() => setOwnProfileServerId(null)}
+              onCreateClick={() => setIsCreateModalOpen(true)}
+              onJoinClick={() => setIsJoinModalOpen(true)}
+            />
+          )}
 
-        {ownProfileServerId !== undefined && ownProfile ? (
-          <OwnProfileModal
-            serverId={ownProfileServerId ?? undefined}
-            profile={ownProfile}
-            onClose={() => setOwnProfileServerId(undefined)}
-            onUpdated={setOwnProfile}
-          />
-        ) : null}
-      </div>
-    </MobilePanelsProvider>
+          <DrawerBackdrop />
+
+          {isCreateModalOpen ? (
+            <CreateServerModal
+              onClose={() => setIsCreateModalOpen(false)}
+              onCreated={addAndSelect}
+              onJoinClick={() => {
+                setIsCreateModalOpen(false);
+                setIsJoinModalOpen(true);
+              }}
+            />
+          ) : null}
+
+          {isJoinModalOpen ? (
+            <JoinServerModal
+              onClose={() => setIsJoinModalOpen(false)}
+              onJoined={addAndSelect}
+            />
+          ) : null}
+
+          {ownProfileServerId !== undefined && ownProfile ? (
+            <OwnProfileModal
+              serverId={ownProfileServerId ?? undefined}
+              profile={ownProfile}
+              onClose={() => setOwnProfileServerId(undefined)}
+              onUpdated={setOwnProfile}
+            />
+          ) : null}
+        </div>
+      </MobilePanelsProvider>
+    </PresenceProvider>
   );
 }
 

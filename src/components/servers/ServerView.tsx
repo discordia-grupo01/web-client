@@ -97,6 +97,8 @@ import {
 } from "@/components/voice/VoiceChannelParticipants";
 import { VoiceChannelView } from "@/components/voice/VoiceChannelView";
 import { useAuth } from "@/services/auth/AuthContext";
+import { usePresenceContext } from "@/services/presence/PresenceContext";
+import { useServerPresence } from "@/services/presence/useServerPresence";
 import { reorderCategoriesRequest } from "@/services/categories/client";
 import {
   moveChannelToCategoryRequest,
@@ -364,6 +366,8 @@ export function ServerView({
 }: ServerViewProps) {
   const { user } = useAuth();
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
+  const { store: presenceStore } = usePresenceContext();
+  useServerPresence(presenceStore, server.id);
   const isOwner = user !== null && String(user.id) === server.owner_id;
   const currentAuthor = useMemo(
     () => (ownProfile ? authorFromProfile(ownProfile) : null),

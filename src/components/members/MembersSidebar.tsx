@@ -22,6 +22,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { useMemberScroll } from "@/hooks/useMemberScroll";
 import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
 import { listMembersRequest } from "@/services/members/client";
+import { usePresenceOf } from "@/services/presence/PresenceContext";
 
 /** A cuantos px del fondo se pide la pagina siguiente. */
 const LOAD_MORE_THRESHOLD_PX = 160;
@@ -38,6 +39,7 @@ interface MembersSidebarProps {
 }
 
 function MemberAvatar({ member }: { member: Member }) {
+  const status = usePresenceOf(member.user_id);
   return (
     <div className="relative shrink-0">
       <Avatar
@@ -47,7 +49,7 @@ function MemberAvatar({ member }: { member: Member }) {
         className="rounded-full"
       />
       <ActivityStatusDot
-        status="online"
+        status={status}
         size={10}
         ringColor="var(--bg-channels)"
         className="absolute right-0 bottom-0"

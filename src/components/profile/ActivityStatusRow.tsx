@@ -4,6 +4,7 @@ import {
   ACTIVITY_STATUS_CHOICE_DESCRIPTION,
   ACTIVITY_STATUS_CHOICE_LABEL,
   ACTIVITY_STATUS_CHOICES,
+  ACTIVITY_STATUS_LABEL,
   displayedStatus,
   type ActivityStatusChoice,
 } from "@discordia/client-shared";
@@ -19,18 +20,20 @@ import { cn } from "@/lib/cn";
 import { ActivityStatusDot } from "./ActivityStatusDot";
 
 interface ActivityStatusRowProps {
-  status: ActivityStatusChoice;
+  /** `null` mientras no hay conexion con el back: no se puede elegir. */
+  status: ActivityStatusChoice | null;
+  error?: string;
   onChange: (status: ActivityStatusChoice) => void;
 }
 
 /**
  * Selector de estado de actividad del perfil propio. La fila muestra el
  * estado actual; las opciones se abren al costado derecho (desde `sm`) o
- * debajo de la fila en pantallas angostas. Mock puramente visual: no hay
- * presencia real todavia.
+ * debajo de la fila en pantallas angostas.
  */
 export function ActivityStatusRow({
   status,
+  error,
   onChange,
 }: ActivityStatusRowProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -99,19 +102,23 @@ export function ActivityStatusRow({
           type="button"
           aria-haspopup="listbox"
           aria-expanded={isOpen}
+          disabled={status === null}
           onClick={() => setIsOpen((prev) => !prev)}
           className={cn(
             "bg-surface-input border-line hover:border-line-strong flex w-full cursor-pointer items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
             isOpen && "border-line-strong",
+            status === null && "cursor-default opacity-60",
           )}
         >
           <ActivityStatusDot
-            status={displayedStatus(status)}
+            status={status ? displayedStatus(status) : "offline"}
             size={10}
             className="shrink-0 border-0"
           />
           <span className="text-content min-w-0 flex-1 text-sm font-semibold">
-            {ACTIVITY_STATUS_CHOICE_LABEL[status]}
+            {status
+              ? ACTIVITY_STATUS_CHOICE_LABEL[status]
+              : ACTIVITY_STATUS_LABEL.offline}
           </span>
           <ChevronRight
             size={16}
@@ -126,6 +133,11 @@ export function ActivityStatusRow({
           <div className="bg-surface-raised border-line-strong mt-1.5 overflow-hidden rounded-lg border">
             {options}
           </div>
+        ) : null}
+        {error ? (
+          <p role="alert" className="text-danger mt-1 text-xs">
+            {error}
+          </p>
         ) : null}
       </div>
 

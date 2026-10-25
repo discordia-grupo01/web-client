@@ -14,10 +14,12 @@ import {
   type MessageAuthor,
   messageAuthorOf,
   type NewDmPayload,
+  pushToChannel,
   partnerIdsMissingProfile,
   sendDirectMessage,
   type SendDmResult,
   type UserRoomCallbacks,
+  type UserRoomPush,
   unknownAuthor,
   withActiveRead,
   withDraftConversations,
@@ -42,26 +44,6 @@ export type {
   SendDmResult,
 } from "@discordia/client-shared";
 
-/**
- * Mensajes directos de la sesion actual: la lista de conversaciones, la
- * conversacion abierta y el envio.
- *
- * - La lista sale de `GET /v1/conversations` y se mantiene viva con el evento
- *   `new_dm` de la sala personal `user:<id>` (tambien llega a quien todavia no
- *   tenia la conversacion). Al re-unirse tras un corte se vuelve a pedir, que es
- *   como se ven los mensajes recibidos sin conexion.
- * - El historial, editar y borrar de la conversacion abierta son los de un canal
- *   (`useChannelMessages` con el id de la conversacion), en `DmHistory`.
- * - Enviar es `send_dm` por la sala personal (`sendDirectMessage`).
- * - "Bloqueado" sale de los bloqueos del usuario (`BlockedUsersContext`).
- *
- * `isViewActive`: solo con la vista de mensajes directos a la vista se marca
- * como leida la conversacion abierta.
- *
- * Esta es la unica sala `user:<id>` de la sesion, asi que tambien le entrega a
- * quien lo pida los eventos `mention` y avisa cuando se vuelve a unir tras un
- * corte (`callbacks`).
- */
 export function useDirectMessages(
   currentAuthor: MessageAuthor | null,
   isViewActive: boolean,
@@ -136,13 +118,19 @@ export function useDirectMessages(
       joinUserChannel(room, {
         newDm: applyDm,
         mention: (payload) => callbacksRef.current.onMention?.(payload),
+        presenceUpdated: (entry) =>
+          callbacksRef.current.onPresenceUpdated?.(entry),
+        ownStatusUpdated: (payload) =>
+          callbacksRef.current.onOwnStatusUpdated?.(payload),
         connectionLost: () => {
           isJoined.current = false;
           setIsConnected(false);
+          callbacksRef.current.onConnectionLost?.();
         },
-        joined: (isFirstJoin) => {
+        joined: (isFirstJoin, reply) => {
           isJoined.current = true;
           setIsConnected(true);
+          callbacksRef.current.onJoined?.(reply);
           if (!isFirstJoin) {
             void reload();
             callbacksRef.current.onRejoined?.();
@@ -322,6 +310,18 @@ export function useDirectMessages(
     [activePartnerId, applyDm],
   );
 
+  const pushToUserRoom = useCallback<UserRoomPush>(
+    (event, payload, options) =>
+      pushToChannel(
+        userRoom.current,
+        isJoined.current,
+        event,
+        payload,
+        options,
+      ),
+    [],
+  );
+
   // Con la lista cargada faltan nombre y foto de cada contacto: hasta tenerlos
   // se muestra el spinner, para no pasar por "Usuario desconocido".
   const isResolvingPartners = conversations.some(
@@ -337,6 +337,7 @@ export function useDirectMessages(
     activeSummary,
     openConversation,
     sendMessage,
+    pushToUserRoom,
     isConnected,
   };
 }
