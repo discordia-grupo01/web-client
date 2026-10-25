@@ -4,10 +4,7 @@ import { type VoicePresenceByChannel } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import {
-  fetchVoiceSocketTicketRequest,
-  listVoiceParticipantsRequest,
-} from "./client";
+import { listVoiceParticipantsRequest } from "./client";
 import { connectVoicePresence, type VoicePresenceEvent } from "./socket";
 
 const EMPTY: VoicePresenceByChannel = {};
@@ -105,21 +102,16 @@ export function useVoicePresence(serverId: string | null): {
 
   useEffect(() => {
     if (!serverId) return;
-    let disposed = false;
-    let disconnect: (() => void) | null = null;
 
     refresh();
-    void fetchVoiceSocketTicketRequest().then((result) => {
-      if (disposed || !result.ok) return;
-      disconnect = connectVoicePresence(serverId, result.ticket, {
-        joined: (event) => applyEvent(event, true),
-        left: (event) => applyEvent(event, false),
-      });
+    const disconnect = connectVoicePresence(serverId, {
+      joined: (event) => applyEvent(event, true),
+      left: (event) => applyEvent(event, false),
+      rejoined: refresh,
     });
 
     return () => {
-      disposed = true;
-      disconnect?.();
+      disconnect();
       requestId.current += 1;
     };
   }, [serverId, refresh, applyEvent]);
