@@ -25,7 +25,7 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { Pagination } from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { useMemberPages } from "@/hooks/useMemberPages";
-import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
+import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { listMembersRequest } from "@/services/members/client";
 import {

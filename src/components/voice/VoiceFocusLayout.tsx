@@ -8,12 +8,12 @@ import {
 import { LayoutGrid } from "lucide-react";
 import type { ReactNode } from "react";
 
-import type { ElementSize } from "@/hooks/useElementSize";
+import type { ElementSize } from "@/components/voice/hooks/useElementSize";
 import { cn } from "@/lib/cn";
-import { voiceFocusLayout } from "@/lib/voiceGrid";
+import { voiceFocusLayout } from "@/components/voice/utils/voiceGrid";
 
 import { VoiceOverflowTile } from "./VoiceOverflowTile";
-import { useVisibleParticipants } from "./useVisibleParticipants";
+import { useVisibleParticipants } from "@/components/voice/hooks/useVisibleParticipants";
 
 const GAP = 8;
 const BACK_ROW_HEIGHT = 40;

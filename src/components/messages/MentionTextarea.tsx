@@ -17,7 +17,7 @@ import { AutoGrowTextarea } from "@/components/ui/AutoGrowTextarea";
 import { useTheme } from "@/hooks/useTheme";
 import { cn } from "@/lib/cn";
 
-import { useMessageMentions } from "./MentionsContext";
+import { useMessageMentions } from "@/contexts/MentionsContext";
 
 interface MentionTextareaProps extends Omit<
   TextareaHTMLAttributes<HTMLTextAreaElement>,

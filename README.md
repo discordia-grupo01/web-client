@@ -63,13 +63,20 @@ discordia-web/
 │   ├── components/
 │   │   ├── ui/                  piezas genericas reutilizables (Button, TextField, ...)
 │   │   └── <feature>/           componentes propios de una feature de UI
+│   │       ├── hooks/           hooks que usa solo esta feature (ej. messages/hooks/useStickyScroll)
+│   │       ├── utils/           funciones auxiliares de esta feature (ej. voice/utils/voiceGrid)
+│   │       └── <Algo>Context.tsx  contexto que usa solo esta feature
 │   ├── services/                codigo agrupado por dominio del backend (auth, servers, channels, ...)
-│   │   └── <dominio>/           validacion, service (server), client (browser), hooks
+│   │   └── <dominio>/           client (browser), service (server) y sus helpers de servidor
 │   ├── types/                   tipos por dominio: <dominio>.types.ts (Channel, Role, User, ...)
-│   ├── hooks/                   hooks de React reutilizables entre features
+│   ├── hooks/                   hooks de React que usan varias features (useTheme, useDirectMessages)
+│   ├── contexts/                contextos que usan varias features (AuthContext, PresenceContext)
+│   ├── utils/                   funciones auxiliares sin UI que usan varias features (userProfile, author)
 │   └── lib/
 │       ├── apiClient.ts          cliente HTTP hacia el Gateway (server-only)
 │       ├── browserApiClient.ts   cliente HTTP compartido para navegador (BFF, `/api/*`)
+│       ├── apiRoute.ts           respuestas estandar de los route handlers
+│       ├── setCookie.ts          lee cookies del header `Set-Cookie` del backend
 │       ├── constants.ts          constantes de la app (APP_NAME, rutas, ...)
 │       ├── env.ts                lectura centralizada de variables de entorno
 │       └── cn.ts                 helper para componer clases de Tailwind

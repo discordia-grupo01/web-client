@@ -2,36 +2,32 @@
 
 import {
   type AccessRevokedReason,
-  authorFromMember,
-  buildMentionResolver,
   type Channel,
   LOADING_MESSAGES_LABEL,
-  type MentionSources,
   type Member,
   messageInputPlaceholder,
   type MessageAuthor,
+  type MessageJumpTarget,
   type Role,
   SEND_MESSAGES_DENIED_PLACEHOLDER,
 } from "@discordia/client-shared";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
-import { avatarSrcOf } from "@/lib/userProfile";
-import { useServerMembers } from "@/services/members/useServerMembers";
-import { useChannelMessages } from "@/services/messages/useChannelMessages";
-import { usePendingMessages } from "@/services/messages/usePendingMessages";
-import { useMessageAuthors } from "@/services/messages/useMessageAuthors";
+import { useMessageMentionsValue } from "@/hooks/useMessageMentionsValue";
+import { useServerMembers } from "@/hooks/useServerMembers";
+import { useChannelMessages } from "@/hooks/useChannelMessages";
+import { usePendingMessages } from "@/hooks/usePendingMessages";
+import { useMessageAuthors } from "@/hooks/useMessageAuthors";
 
 import { ChannelWelcome } from "./ChannelWelcome";
 import { ChatStatusNotice } from "./ChatStatusNotice";
 import { ConnectionPill } from "./ConnectionPill";
 import { ConnectionLostNotice } from "./ConnectionLostNotice";
-import {
-  MessageMentionsProvider,
-  type MessageMentionsValue,
-} from "./MentionsContext";
+import { MessageMentionsProvider } from "@/contexts/MentionsContext";
 import { MessageComposer } from "./MessageComposer";
 import { MessageList } from "./MessageList";
+import { ViewingPastBar } from "./ViewingPastBar";
 
 interface ChannelChatProps {
   serverId: string;
@@ -48,6 +44,10 @@ interface ChannelChatProps {
   onAccessRevoked?: (reason: AccessRevokedReason) => void;
   /** Click en el nombre o la foto de un autor (puede ser el usuario actual). */
   onOpenProfile?: (userId: string, member?: Member) => void;
+  /** Resultado de busqueda a mostrar en este canal. */
+  jumpTarget?: MessageJumpTarget | null;
+  /** El salto ya se hizo: quien lo pidio lo descarta para no repetirlo al volver al canal. */
+  onJumpHandled?: () => void;
 }
 
 export function ChannelChat({
@@ -63,6 +63,8 @@ export function ChannelChat({
   isCheckingPermissions = false,
   onAccessRevoked,
   onOpenProfile,
+  jumpTarget = null,
+  onJumpHandled,
 }: ChannelChatProps) {
   const {
     status,
@@ -71,6 +73,12 @@ export function ChannelChat({
     hasMore,
     isLoadingOlder,
     loadOlder,
+    hasNewer,
+    isLoadingNewer,
+    loadNewer,
+    jumpToMessage,
+    jumpToPresent,
+    focusedMessage,
     retry,
     sendMessage,
     toggleReaction,
@@ -99,6 +107,22 @@ export function ChannelChat({
   );
   const [actionError, setActionError] = useState<string | null>(null);
 
+  // Se salta recien con el historial cargado: si no, la primera carga de lo
+  // ultimo se mezclaria con el tramo del pasado.
+  const isLoaded = messages !== null;
+  const handledJump = useRef<number | null>(null);
+  useEffect(() => {
+    if (!jumpTarget || !isLoaded || handledJump.current === jumpTarget.nonce) {
+      return;
+    }
+    handledJump.current = jumpTarget.nonce;
+    onJumpHandled?.();
+    setActionError(null);
+    void jumpToMessage(jumpTarget.messageId).then((result) => {
+      if (!result.ok) setActionError(result.message);
+    });
+  }, [jumpTarget, isLoaded, jumpToMessage, onJumpHandled]);
+
   async function handleDelete(messageId: string) {
     setActionError(null);
     const result = await deleteMessage(messageId);
@@ -111,32 +135,14 @@ export function ChannelChat({
     if (!result.ok) setActionError(result.message);
   }
 
-  const currentUserId = currentAuthor?.id ?? null;
-  const mentions = useMemo<MessageMentionsValue>(() => {
-    const sources: MentionSources = {
-      members: (members ?? []).map((member) =>
-        authorFromMember(
-          member,
-          avatarSrcOf(member.user_id, member.profile),
-          serverRoles,
-        ),
-      ),
-      roles: serverRoles,
-      canMentionEveryone,
-    };
-    return {
-      resolveMention: buildMentionResolver(authors, serverRoles),
-      sources,
-      me: { userId: currentUserId, roleIds: myRoleIds },
-    };
-  }, [
-    authors,
+  const mentions = useMessageMentionsValue({
     members,
+    authors,
     serverRoles,
     canMentionEveryone,
-    currentUserId,
+    currentUserId: currentAuthor?.id ?? null,
     myRoleIds,
-  ]);
+  });
 
   // Estados de los que no se sale solos: el canal no se puede mostrar.
   if (statusMessage && status !== "ready") {
@@ -163,7 +169,7 @@ export function ChannelChat({
         <MessageList
           welcome={<ChannelWelcome channelName={channel.name} />}
           label={`Mensajes de #${channel.name}`}
-          messages={pending.withPending(messages)}
+          messages={hasNewer ? messages : pending.withPending(messages)}
           authors={authors}
           currentUserId={currentAuthor?.id ?? null}
           canManageMessages={canManageMessages}
@@ -172,6 +178,10 @@ export function ChannelChat({
           hasMore={hasMore}
           isLoadingOlder={isLoadingOlder}
           onLoadOlder={loadOlder}
+          hasNewer={hasNewer}
+          isLoadingNewer={isLoadingNewer}
+          onLoadNewer={loadNewer}
+          focusedMessage={focusedMessage}
           onToggleReaction={handleToggleReaction}
           onEditMessage={editMessage}
           onDeleteMessage={handleDelete}
@@ -188,6 +198,9 @@ export function ChannelChat({
           }
         />
       )}
+      {hasNewer && messages !== null ? (
+        <ViewingPastBar onJumpToPresent={jumpToPresent} />
+      ) : null}
       {actionError ? (
         <p
           role="alert"
@@ -202,7 +215,11 @@ export function ChannelChat({
             ? messageInputPlaceholder(channel.name)
             : SEND_MESSAGES_DENIED_PLACEHOLDER
         }
-        onSend={pending.onSend}
+        onSend={(...args) => {
+          // Lo propio llega por el socket, que no agrega nada mientras se ve el pasado.
+          jumpToPresent();
+          return pending.onSend(...args);
+        }}
         uploadTarget={{ channelId: channel.id }}
         disabled={
           !currentAuthor ||

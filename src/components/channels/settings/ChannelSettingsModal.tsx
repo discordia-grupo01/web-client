@@ -23,7 +23,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { cn } from "@/lib/cn";
-import { useChannelOverrides } from "@/services/channel-permissions/useChannelOverrides";
+import { useChannelOverrides } from "@/hooks/useChannelOverrides";
 
 import {
   ChannelOverviewSection,

@@ -31,15 +31,15 @@ import { ModalShell } from "@/components/ui/ModalShell";
 import { Pagination } from "@/components/ui/Pagination";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
-import { usePagination } from "@/hooks/usePagination";
-import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
+import { usePagination } from "@/components/bans/hooks/usePagination";
+import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 
 import { BanModalHeader } from "./BanModalHeader";
 import { type BanTarget } from "./BanMemberModal";
 import { UserList, type UserListItem } from "./UserList";
 import { type UserRowAction } from "./UserRow";
-import { useBanCandidates } from "./useBanCandidates";
-import { useBanList } from "./useBanList";
+import { useBanCandidates } from "@/components/bans/hooks/useBanCandidates";
+import { useBanList } from "@/components/bans/hooks/useBanList";
 
 const TITLE_ID = "bans-modal-title";
 

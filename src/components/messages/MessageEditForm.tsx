@@ -8,10 +8,10 @@ import {
 
 import { useId, useRef, useState, type KeyboardEvent } from "react";
 
-import { useMentionDraft } from "@/services/messages/useMentionDraft";
+import { useMentionDraft } from "@/components/messages/hooks/useMentionDraft";
 
 import { MentionSuggestions } from "./MentionSuggestions";
-import { useMessageMentions } from "./MentionsContext";
+import { useMessageMentions } from "@/contexts/MentionsContext";
 
 interface MessageEditFormProps {
   initialContent: string;

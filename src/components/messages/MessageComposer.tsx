@@ -25,15 +25,15 @@ import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FieldError } from "@/components/ui/FieldError";
 import { cn } from "@/lib/cn";
 
-import { useAttachmentUploads } from "@/services/attachments/useAttachmentUploads";
-import type { SendMessageResult } from "@/services/messages/useChannelMessages";
-import { useMentionDraft } from "@/services/messages/useMentionDraft";
+import { useAttachmentUploads } from "@/components/messages/hooks/useAttachmentUploads";
+import type { SendMessageResult } from "@/hooks/useChannelMessages";
+import { useMentionDraft } from "@/components/messages/hooks/useMentionDraft";
 
 import { AttachmentChips, type PendingAttachment } from "./AttachmentChips";
 import { EmojiPicker } from "./EmojiPicker";
 import { MentionSuggestions } from "./MentionSuggestions";
 import { MentionTextarea } from "./MentionTextarea";
-import { useMessageMentions } from "./MentionsContext";
+import { useMessageMentions } from "@/contexts/MentionsContext";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 

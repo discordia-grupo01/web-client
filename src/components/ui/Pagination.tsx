@@ -15,6 +15,8 @@ interface PaginationProps {
   page: number;
   pageCount: number;
   onPageChange: (page: number) => void;
+  /** Flechas en los extremos aunque la pantalla sea ancha (paneles angostos). */
+  isCompact?: boolean;
 }
 
 const CELL =
@@ -26,7 +28,12 @@ const CELL =
  * textos de los extremos pasan a ser flechas para que entre en un modal de
  * celular.
  */
-export function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
+export function Pagination({
+  page,
+  pageCount,
+  onPageChange,
+  isCompact = false,
+}: PaginationProps) {
   const isFirst = page <= 1;
   const isLast = page >= pageCount;
 
@@ -42,8 +49,14 @@ export function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
         aria-label={PAGINATION_PREVIOUS}
         className={cn(CELL, "text-content-muted hover:bg-surface-hover")}
       >
-        <ChevronLeft size={16} className="sm:hidden" aria-hidden="true" />
-        <span className="hidden sm:inline">{PAGINATION_PREVIOUS}</span>
+        <ChevronLeft
+          size={16}
+          className={isCompact ? undefined : "sm:hidden"}
+          aria-hidden="true"
+        />
+        {isCompact ? null : (
+          <span className="hidden sm:inline">{PAGINATION_PREVIOUS}</span>
+        )}
       </button>
 
       {visiblePages(page, pageCount).map((number) => {
@@ -75,8 +88,14 @@ export function Pagination({ page, pageCount, onPageChange }: PaginationProps) {
         aria-label={PAGINATION_NEXT}
         className={cn(CELL, "text-content-muted hover:bg-surface-hover")}
       >
-        <ChevronRight size={16} className="sm:hidden" aria-hidden="true" />
-        <span className="hidden sm:inline">{PAGINATION_NEXT}</span>
+        <ChevronRight
+          size={16}
+          className={isCompact ? undefined : "sm:hidden"}
+          aria-hidden="true"
+        />
+        {isCompact ? null : (
+          <span className="hidden sm:inline">{PAGINATION_NEXT}</span>
+        )}
       </button>
     </nav>
   );

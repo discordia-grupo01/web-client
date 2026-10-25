@@ -4,7 +4,7 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
 
-import { MessageMentionsProvider } from "./MentionsContext";
+import { MessageMentionsProvider } from "@/contexts/MentionsContext";
 import { MessageEditForm } from "./MessageEditForm";
 
 const sources: MentionSources = {

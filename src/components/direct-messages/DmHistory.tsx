@@ -12,7 +12,7 @@ import { ChatStatusNotice } from "@/components/messages/ChatStatusNotice";
 import { ConnectionPill } from "@/components/messages/ConnectionPill";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
-import { useChannelMessages } from "@/services/messages/useChannelMessages";
+import { useChannelMessages } from "@/hooks/useChannelMessages";
 
 import { DmWelcome } from "./DmWelcome";
 

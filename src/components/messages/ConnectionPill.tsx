@@ -14,14 +14,13 @@ import { useEffect, useState } from "react";
 
 import { useRetryAction } from "@/hooks/useRetryAction";
 
+import { FloatingPill, PILL_CLASS } from "./FloatingPill";
+
 interface ConnectionPillProps {
   status: ChatStatus;
   /** Vuelve a conectar el chat; se ofrece cuando se agotaron los reintentos. */
   onRetry: () => void | Promise<unknown>;
 }
-
-const PILL_CLASS =
-  "pill-in bg-surface-hover/95 border-line text-content flex max-w-full items-center gap-2 rounded-full border px-3.5 py-1.5 text-xs shadow-lg backdrop-blur";
 
 /**
  * Globito flotante arriba del chat con el estado de la conexion. Va encima de los
@@ -86,11 +85,5 @@ export function ConnectionPill({ status, onRetry }: ConnectionPillProps) {
 
   if (!pill) return null;
 
-  return (
-    <div className="pointer-events-none relative z-10 h-0 shrink-0">
-      <div className="absolute inset-x-0 top-3 flex justify-center px-4">
-        {pill}
-      </div>
-    </div>
-  );
+  return <FloatingPill position="top">{pill}</FloatingPill>;
 }

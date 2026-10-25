@@ -21,12 +21,12 @@ import { TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
 import { useCallback, useState, type ReactNode } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
-import { useVoiceSession } from "@/services/voice/VoiceSessionContext";
+import { useVoiceSession } from "@/contexts/VoiceSessionContext";
 
 import { VoiceControls } from "./VoiceControls";
 import { VoiceParticipantGrid } from "./VoiceParticipantGrid";
 import { VoiceParticipantsPanel } from "./VoiceParticipantsPanel";
-import { ownAvatarSrc } from "./ownAvatar";
+import { ownAvatarSrc } from "@/utils/ownAvatar";
 
 interface VoiceChannelViewProps {
   channel: Channel;

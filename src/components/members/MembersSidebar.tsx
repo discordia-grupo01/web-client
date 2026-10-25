@@ -19,9 +19,10 @@ import { useCallback, useEffect, useId, useRef, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { Avatar } from "@/components/ui/Avatar";
-import { useMemberScroll } from "@/hooks/useMemberScroll";
-import { avatarSrcOf, displayNameOf } from "@/lib/userProfile";
+import { useMemberScroll } from "@/components/members/hooks/useMemberScroll";
+import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 import { listMembersRequest } from "@/services/members/client";
+import { usePresenceOf } from "@/hooks/usePresence";
 
 /** A cuantos px del fondo se pide la pagina siguiente. */
 const LOAD_MORE_THRESHOLD_PX = 160;
@@ -38,6 +39,7 @@ interface MembersSidebarProps {
 }
 
 function MemberAvatar({ member }: { member: Member }) {
+  const status = usePresenceOf(member.user_id);
   return (
     <div className="relative shrink-0">
       <Avatar
@@ -47,7 +49,7 @@ function MemberAvatar({ member }: { member: Member }) {
         className="rounded-full"
       />
       <ActivityStatusDot
-        status="online"
+        status={status}
         size={10}
         ringColor="var(--bg-channels)"
         className="absolute right-0 bottom-0"
@@ -86,7 +88,6 @@ function MemberRow({
         <span
           className="text-content-muted block truncate text-sm"
           style={roleColor ? { color: roleColor } : undefined}
-          title={member.user_id}
         >
           {displayName}
           {isOwn ? " (vos)" : ""}
@@ -121,40 +122,86 @@ function MemberRow({
   );
 }
 
-/** Buscador chico, a la medida del panel (el `SearchInput` de los modales no entra). */
-function MemberSearch({
+/**
+ * Titulo de la lista con un filtro por nombre que se despliega en la misma
+ * linea. Plegado, la columna no arranca con un segundo campo de busqueda que
+ * compita con el de mensajes del header.
+ */
+function MembersHeader({
+  title,
   value,
   onChange,
 }: {
+  title: string;
   value: string;
   onChange: (value: string) => void;
 }) {
   const id = useId();
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [isOpen, setIsOpen] = useState(false);
+
+  useEffect(() => {
+    if (isOpen) inputRef.current?.focus();
+  }, [isOpen]);
+
+  function close() {
+    onChange("");
+    setIsOpen(false);
+  }
+
+  if (!isOpen && !value) {
+    return (
+      <div className="flex h-7 items-center justify-between gap-2 px-1.5">
+        <p className="text-content-subtle text-[11px] font-semibold tracking-wider uppercase">
+          {title}
+        </p>
+        <button
+          type="button"
+          onClick={() => setIsOpen(true)}
+          aria-label={MEMBERS_SEARCH_LABEL}
+          title={MEMBERS_SEARCH_LABEL}
+          className="text-content-subtle hover:text-content hover:bg-surface-hover flex size-6 cursor-pointer items-center justify-center rounded-md transition-colors"
+        >
+          <Search size={13} aria-hidden />
+        </button>
+      </div>
+    );
+  }
+
   return (
-    <div className="bg-surface-input border-line focus-within:border-accent flex items-center gap-1.5 rounded-md border px-2 py-1 transition-colors">
+    <div className="bg-surface-input border-accent flex h-7 items-center gap-1.5 rounded-md border px-2">
       <label htmlFor={id} className="sr-only">
         {MEMBERS_SEARCH_LABEL}
       </label>
       <Search size={12} className="text-content-subtle shrink-0" aria-hidden />
       <input
+        ref={inputRef}
         id={id}
         type="search"
         value={value}
         onChange={(event) => onChange(event.target.value)}
+        onKeyDown={(event) => {
+          if (event.key === "Escape") {
+            event.preventDefault();
+            close();
+          }
+        }}
+        onBlur={() => {
+          if (!value) setIsOpen(false);
+        }}
         placeholder={MEMBERS_SEARCH_PLACEHOLDER}
         autoComplete="off"
         className="text-content placeholder:text-content-subtle min-w-0 flex-1 appearance-none border-none bg-transparent text-xs outline-none [&::-webkit-search-cancel-button]:hidden"
       />
-      {value ? (
-        <button
-          type="button"
-          onClick={() => onChange("")}
-          aria-label="Limpiar búsqueda"
-          className="text-content-subtle hover:text-content flex shrink-0 cursor-pointer items-center"
-        >
-          <X size={12} />
-        </button>
-      ) : null}
+      <button
+        type="button"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={close}
+        aria-label="Cerrar búsqueda de miembros"
+        className="text-content-subtle hover:text-content flex shrink-0 cursor-pointer items-center"
+      >
+        <X size={12} />
+      </button>
     </div>
   );
 }
@@ -252,13 +299,14 @@ export function MembersSidebar({
       style={{ background: "var(--bg-channels)" }}
     >
       <div
-        className="sticky -top-4 z-10 -mx-2 -mt-4 mb-3 space-y-2 px-2 pt-4 pb-1"
+        className="sticky -top-4 z-10 -mx-2 -mt-4 mb-3 px-2 pt-4 pb-1"
         style={{ background: "var(--bg-channels)" }}
       >
-        <p className="text-content-subtle px-1.5 text-[11px] font-semibold tracking-wider uppercase">
-          Miembros{members !== null && !isSearching ? ` — ${total}` : ""}
-        </p>
-        <MemberSearch value={search} onChange={setSearch} />
+        <MembersHeader
+          title={`Miembros${members !== null && !isSearching ? ` — ${total}` : ""}`}
+          value={search}
+          onChange={setSearch}
+        />
       </div>
 
       {members === null ? (

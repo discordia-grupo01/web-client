@@ -3,6 +3,8 @@
 import {
   canDeleteMessage,
   canEditMessage,
+  type FocusedMessage,
+  LOAD_NEWER_MESSAGES_LABEL,
   LOAD_OLDER_MESSAGES_LABEL,
   LOADING_MESSAGES_LABEL,
   formatMemberSince,
@@ -15,7 +17,10 @@ import {
 
 import type { ReactNode } from "react";
 
-import { useStickyScroll } from "@/hooks/useStickyScroll";
+import { cn } from "@/lib/cn";
+
+import { useMessageHighlight } from "@/components/messages/hooks/useMessageHighlight";
+import { useStickyScroll } from "@/components/messages/hooks/useStickyScroll";
 
 import { MessageItem, type MessageEditOutcome } from "./MessageItem";
 
@@ -35,6 +40,12 @@ interface MessageListProps {
   hasMore?: boolean;
   isLoadingOlder?: boolean;
   onLoadOlder?: () => void;
+  /** Hay mensajes mas nuevos sin cargar (se salto a un mensaje viejo). */
+  hasNewer?: boolean;
+  isLoadingNewer?: boolean;
+  onLoadNewer?: () => void;
+  /** Mensaje al que se salto: se centra y se resalta un momento. */
+  focusedMessage?: FocusedMessage | null;
   onToggleReaction: (messageId: string, emoji: string) => void;
   onEditMessage: (
     messageId: string,
@@ -60,6 +71,10 @@ export function MessageList({
   hasMore = false,
   isLoadingOlder = false,
   onLoadOlder,
+  hasNewer = false,
+  isLoadingNewer = false,
+  onLoadNewer,
+  focusedMessage = null,
   onToggleReaction,
   onEditMessage,
   onDeleteMessage,
@@ -67,23 +82,28 @@ export function MessageList({
   onDiscardMessage,
   onOpenProfile,
 }: MessageListProps) {
-  const scroll = useStickyScroll(messages);
+  const scroll = useStickyScroll(messages, {
+    isViewingPast: hasNewer,
+    focusedMessage,
+  });
+  const highlightedId = useMessageHighlight(focusedMessage);
 
   return (
-    <div {...scroll} className="flex-1 overflow-y-auto px-2 py-4 md:px-4">
+    <div
+      {...scroll}
+      // Con el globito de "Ir al presente" abajo, aire para que no tape el final.
+      className={cn(
+        "flex-1 overflow-y-auto px-2 py-4 md:px-4",
+        hasNewer && "pb-14",
+      )}
+    >
       {hasMore && onLoadOlder ? (
-        <div className="mb-2 flex justify-center">
-          <button
-            type="button"
-            onClick={onLoadOlder}
-            disabled={isLoadingOlder}
-            className="text-content-muted hover:text-content cursor-pointer rounded-md px-3 py-1 text-xs disabled:cursor-wait disabled:opacity-60"
-          >
-            {isLoadingOlder
-              ? LOADING_MESSAGES_LABEL
-              : LOAD_OLDER_MESSAGES_LABEL}
-          </button>
-        </div>
+        <LoadMoreButton
+          label={LOAD_OLDER_MESSAGES_LABEL}
+          isLoading={isLoadingOlder}
+          onClick={onLoadOlder}
+          className="mb-2"
+        />
       ) : (
         welcome
       )}
@@ -96,7 +116,7 @@ export function MessageList({
             message.inserted_at,
           );
           return (
-            <li key={message.id}>
+            <li key={message.id} data-message-id={message.id}>
               {newDay ? (
                 <div
                   role="separator"
@@ -113,6 +133,7 @@ export function MessageList({
                   authors[message.user_id] ?? unknownAuthor(message.user_id)
                 }
                 isGroupStart={newDay || startsMessageGroup(previous, message)}
+                isFocused={message.id === highlightedId}
                 canEdit={
                   currentUserId !== null &&
                   canEditMessage(message, currentUserId, canSendMessages)
@@ -143,6 +164,40 @@ export function MessageList({
           );
         })}
       </ol>
+
+      {hasNewer && onLoadNewer ? (
+        <LoadMoreButton
+          label={LOAD_NEWER_MESSAGES_LABEL}
+          isLoading={isLoadingNewer}
+          onClick={onLoadNewer}
+          className="mt-2"
+        />
+      ) : null}
+    </div>
+  );
+}
+
+function LoadMoreButton({
+  label,
+  isLoading,
+  onClick,
+  className,
+}: {
+  label: string;
+  isLoading: boolean;
+  onClick: () => void;
+  className?: string;
+}) {
+  return (
+    <div className={cn("flex justify-center", className)}>
+      <button
+        type="button"
+        onClick={onClick}
+        disabled={isLoading}
+        className="text-content-muted hover:text-content cursor-pointer rounded-md px-3 py-1 text-xs disabled:cursor-wait disabled:opacity-60"
+      >
+        {isLoading ? LOADING_MESSAGES_LABEL : label}
+      </button>
     </div>
   );
 }
