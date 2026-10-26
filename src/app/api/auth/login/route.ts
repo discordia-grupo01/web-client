@@ -1,8 +1,10 @@
 import {
+  ACCOUNT_SUSPENDED_MESSAGE,
   hasErrors,
   EMAIL_NOT_VERIFIED,
   INVALID_CREDENTIALS,
   INVALID_DATA_MESSAGE,
+  isAccountSuspended,
   isTwoFactorChallenge,
   LOGIN_UNAVAILABLE,
   type LoginResult,
@@ -49,6 +51,13 @@ export async function POST(
   });
 
   if (!result.ok) {
+    if (isAccountSuspended(result)) {
+      return NextResponse.json(
+        { ok: false, message: ACCOUNT_SUSPENDED_MESSAGE },
+        { status: 403 },
+      );
+    }
+
     if (result.status === 403 || result.code === "EMAIL_NOT_VERIFIED") {
       return NextResponse.json(
         {
