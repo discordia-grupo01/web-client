@@ -22,7 +22,6 @@ interface AuthorFilterProps {
   onChange: (authorId: string | null) => void;
 }
 
-/** CA 2: "De: …", elige un miembro del servidor como autor. */
 export function AuthorFilter({
   members,
   authorId,
