@@ -10,6 +10,13 @@ export const SESSION_COOKIE = "discordia_session";
  */
 export const TWO_FACTOR_CHALLENGE_COOKIE = "discordia_2fa_challenge";
 
+/**
+ * Cookie legible desde JS que el BFF pone cuando el backend responde
+ * ACCOUNT_SUSPENDED. Las rutas BFF no reenvian el codigo del backend, asi que
+ * el navegador se entera por aca (ver `utils/accountSuspension.ts`).
+ */
+export const ACCOUNT_SUSPENDED_COOKIE = "discordia_account_suspended";
+
 /** Clave para almacenar el tema en el localStorage. */
 export const THEME_STORAGE_KEY = "discordia:theme";
 

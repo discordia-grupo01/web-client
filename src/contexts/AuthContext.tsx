@@ -6,6 +6,7 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useState,
   useTransition,
@@ -13,6 +14,10 @@ import {
 } from "react";
 
 import { ROUTES } from "@/lib/constants";
+import {
+  hasAccountSuspendedMark,
+  onAccountSuspended,
+} from "@/utils/accountSuspension";
 import { clearPendingMessages } from "@/utils/pendingMessages";
 
 import { logoutRequest } from "@/services/auth/client";
@@ -22,14 +27,11 @@ interface AuthContextValue {
   isAuthenticated: boolean;
   isLoggingOut: boolean;
   logout: () => void;
+  isAccountSuspended: boolean;
 }
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
-/**
- * Expone el usuario de la sesion (resuelto en el servidor) y el logout.
- * El `initialUser` viene del RootLayout, que lo lee de la cookie httpOnly.
- */
 export function AuthProvider({
   initialUser,
   children,
@@ -39,6 +41,12 @@ export function AuthProvider({
 }) {
   const [user] = useState(initialUser);
   const [isLoggingOut, startLogout] = useTransition();
+  const [isAccountSuspended, setIsAccountSuspended] = useState(false);
+
+  useEffect(() => {
+    if (hasAccountSuspendedMark()) setIsAccountSuspended(true);
+    return onAccountSuspended(() => setIsAccountSuspended(true));
+  }, []);
 
   const userId = user?.id;
   const logout = useCallback(() => {
@@ -55,8 +63,9 @@ export function AuthProvider({
       isAuthenticated: user !== null,
       isLoggingOut,
       logout,
+      isAccountSuspended,
     }),
-    [user, isLoggingOut, logout],
+    [user, isLoggingOut, logout, isAccountSuspended],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
