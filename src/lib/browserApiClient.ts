@@ -1,5 +1,7 @@
 import axios from "axios";
 
+import { checkAccountSuspended } from "@/utils/accountSuspension";
+
 /**
  * Instancia de axios compartida por todos los `services/<x>/client.ts`.
  */
@@ -78,3 +80,14 @@ api.interceptors.request.use(async (config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => {
+    checkAccountSuspended();
+    return response;
+  },
+  (error: unknown) => {
+    checkAccountSuspended();
+    return Promise.reject(error);
+  },
+);

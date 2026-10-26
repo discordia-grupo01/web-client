@@ -4,7 +4,7 @@ import "server-only";
 
 import { cookies } from "next/headers";
 
-import { SESSION_COOKIE } from "@/lib/constants";
+import { ACCOUNT_SUSPENDED_COOKIE, SESSION_COOKIE } from "@/lib/constants";
 import { isProduction } from "@/lib/env";
 import { refresh } from "@/services/auth/service";
 import { parseSessionCookie } from "@/services/auth/session-shape";
@@ -80,6 +80,7 @@ export function createSession(session: Session): void {
 
 export function destroySession(): void {
   cookies().delete(SESSION_COOKIE);
+  cookies().delete(ACCOUNT_SUSPENDED_COOKIE);
 }
 
 /**
@@ -115,7 +116,9 @@ export async function getValidSession(): Promise<Session | null> {
 
   const { result, newRefreshToken } = await refreshOnce(session.refreshToken);
   if (!result.ok) {
-    destroySession();
+    // Solo la sesion: si fallo por suspension, la marca de cuenta suspendida
+    // tiene que llegar al navegador.
+    cookies().delete(SESSION_COOKIE);
     return null;
   }
 
