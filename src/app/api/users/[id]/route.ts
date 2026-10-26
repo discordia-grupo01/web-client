@@ -1,6 +1,7 @@
 import {
   type GetPublicProfileResult,
   PROFILE_LOAD_FAILED,
+  PROFILE_UNAVAILABLE,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
@@ -27,6 +28,12 @@ export async function GET(
   if (!result.ok) {
     if (result.status === 401) {
       return unauthorizedResponse();
+    }
+    if (result.status === 404) {
+      return NextResponse.json(
+        { ok: false, message: PROFILE_UNAVAILABLE, unavailable: true },
+        { status: 404 },
+      );
     }
     return NextResponse.json(
       { ok: false, message: PROFILE_LOAD_FAILED },

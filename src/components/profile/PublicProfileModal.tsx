@@ -84,6 +84,7 @@ export function PublicProfileModal({
 }: PublicProfileModalProps) {
   const [profile, setProfile] = useState<PublicUser | null>(null);
   const [errorMessage, setErrorMessage] = useState("");
+  const [isUnavailable, setIsUnavailable] = useState(false);
   const [isBlockModalOpen, setIsBlockModalOpen] = useState(false);
   const { blockedIds, blockUser, unblockUser } = useBlockedUsersContext();
   const { store: presenceStore } = usePresenceContext();
@@ -94,11 +95,13 @@ export function PublicProfileModal({
     let cancelled = false;
     setProfile(null);
     setErrorMessage("");
+    setIsUnavailable(false);
 
     getPublicProfileRequest(userId).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
-        setErrorMessage(result.message);
+        if (result.unavailable) setIsUnavailable(true);
+        else setErrorMessage(result.message);
         return;
       }
       setProfile(result.user);
@@ -109,7 +112,7 @@ export function PublicProfileModal({
     };
   }, [userId]);
 
-  if (profile?.is_suspended) {
+  if (isUnavailable || profile?.is_suspended) {
     return (
       <ProfileModalOverlay onClose={onClose}>
         <SuspendedProfile onClose={onClose} />

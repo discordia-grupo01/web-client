@@ -39,7 +39,6 @@ export function MessageSearchHint() {
   );
 }
 
-/** CA 3: la busqueda no encontro nada. */
 export function MessageSearchEmpty() {
   return (
     <StatusBlock
