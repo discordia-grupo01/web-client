@@ -1,15 +1,11 @@
+import { PROFILE_UNAVAILABLE } from "@discordia/client-shared";
+
 import { AlertCircle } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
 
 import { ProfileBanner } from "./ProfileBanner";
 
-/**
- * "Perfil no disponible" (CA3 de "Visualización de perfil público"). Hoy
- * nunca se renderiza: identify-service no tiene ningún concepto de
- * suspensión de usuarios (sin campo, sin código de error) — ver
- * `PublicUser.is_suspended` en profile.types.ts.
- */
 export function SuspendedProfile({ onClose }: { onClose: () => void }) {
   return (
     <>
@@ -22,8 +18,7 @@ export function SuspendedProfile({ onClose }: { onClose: () => void }) {
           Perfil no disponible
         </h2>
         <p className="text-content-subtle max-w-[220px] text-sm leading-relaxed">
-          Este usuario fue suspendido por el equipo de moderación y su perfil no
-          es accesible.
+          {PROFILE_UNAVAILABLE} Es posible que la cuenta haya sido suspendida.
         </p>
         <Button
           type="button"
