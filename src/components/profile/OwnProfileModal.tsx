@@ -24,6 +24,7 @@ import {
 } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { MemberRoleBadges } from "@/components/roles/MemberRoleBadges";
 import {
@@ -69,6 +70,8 @@ export function OwnProfileModal({
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [isAvatarMenuOpen, setIsAvatarMenuOpen] = useState(false);
+  const [isConfirmingRemoveAvatar, setIsConfirmingRemoveAvatar] =
+    useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { choice: ownChoice, setOwnStatus } = useOwnStatus();
@@ -218,16 +221,13 @@ export function OwnProfileModal({
     fileInputRef.current?.click();
   }
 
-  async function removeAvatar() {
+  function askRemoveAvatar() {
     setIsAvatarMenuOpen(false);
-    if (!hasAvatar) return;
-    if (
-      !window.confirm(
-        "¿Querés eliminar tu foto de perfil? Se mostrará tu avatar con inicial.",
-      )
-    ) {
-      return;
-    }
+    if (hasAvatar) setIsConfirmingRemoveAvatar(true);
+  }
+
+  async function removeAvatar() {
+    setIsConfirmingRemoveAvatar(false);
     setImageError("");
     setIsUploadingAvatar(true);
     const ok = await submitProfile({ removeImage: true });
@@ -236,249 +236,264 @@ export function OwnProfileModal({
   }
 
   return (
-    <ProfileModalOverlay onClose={onClose}>
-      <div className="relative shrink-0">
-        <ProfileBanner onClose={onClose} />
+    <>
+      <ProfileModalOverlay onClose={onClose}>
+        <div className="relative shrink-0">
+          <ProfileBanner onClose={onClose} />
 
-        <ProfileAvatarFrame
-          name={profile.name}
-          src={avatarSrc}
-          onClick={handleAvatarClick}
-          ariaLabel={CHANGE_AVATAR_LABEL}
-          ariaHasPopup={hasAvatar ? "menu" : undefined}
-          ariaExpanded={hasAvatar ? isAvatarMenuOpen : undefined}
-        >
-          <span
-            className={cn(
-              "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/55 opacity-0 transition-opacity group-hover:opacity-100",
-              isUploadingAvatar && "opacity-100",
-            )}
+          <ProfileAvatarFrame
+            name={profile.name}
+            src={avatarSrc}
+            onClick={handleAvatarClick}
+            ariaLabel={CHANGE_AVATAR_LABEL}
+            ariaHasPopup={hasAvatar ? "menu" : undefined}
+            ariaExpanded={hasAvatar ? isAvatarMenuOpen : undefined}
           >
-            {isUploadingAvatar ? (
-              <span className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
-            ) : (
-              <>
-                <Camera size={18} className="text-white" />
-                <span className="text-[9px] font-semibold text-white">
-                  Cambiar
-                </span>
-              </>
-            )}
-          </span>
-          <ActivityStatusDot
-            status={displayedOwnStatus}
-            ringWidth={3}
-            size={16}
-            className="absolute right-1 bottom-1"
-          />
-        </ProfileAvatarFrame>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept={ALLOWED_AVATAR_TYPES.join(",")}
-          className="hidden"
-          onChange={handleFileInput}
-        />
-        {imageError ? (
-          <p className="text-danger mt-1 px-6 text-xs">{imageError}</p>
-        ) : null}
-        {isAvatarMenuOpen ? (
-          <>
-            <button
-              type="button"
-              aria-label="Cerrar menú"
-              tabIndex={-1}
-              onClick={() => setIsAvatarMenuOpen(false)}
-              className="fixed inset-0 z-10 cursor-default"
-            />
-            <div
-              role="menu"
-              className="bg-surface-modal border-line absolute top-full left-6 z-20 mt-1 w-56 rounded-xl border p-1.5 shadow-xl"
+            <span
+              className={cn(
+                "absolute inset-0 flex flex-col items-center justify-center gap-1 rounded-full bg-black/55 opacity-0 transition-opacity group-hover:opacity-100",
+                isUploadingAvatar && "opacity-100",
+              )}
             >
-              <button
-                type="button"
-                role="menuitem"
-                onClick={pickNewAvatar}
-                autoFocus
-                className="text-content hover:bg-surface-input flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors"
-              >
-                <Camera size={16} />
-                {CHANGE_AVATAR_LABEL}
-              </button>
-              <button
-                type="button"
-                role="menuitem"
-                onClick={removeAvatar}
-                disabled={isUploadingAvatar}
-                className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
-              >
-                <Trash2 size={16} />
-                {REMOVE_AVATAR_LABEL}
-              </button>
-            </div>
-          </>
-        ) : null}
-      </div>
-
-      <div className="flex-1 overflow-y-auto">
-        <div className="space-y-4 px-6 pt-3 pb-6">
-          {globalError ? (
-            <div className="border-danger/30 bg-danger/10 text-danger flex items-start gap-3 rounded-xl border px-4 py-3 text-sm">
-              <AlertCircle size={16} className="mt-0.5 shrink-0" />
-              <span>{globalError}</span>
-            </div>
-          ) : null}
-
-          <div>
-            {/* Nombre -- el lapiz de aca edita solo el nombre. */}
-            {editingField === "name" ? (
-              <div className="flex items-center gap-2">
-                <input
-                  value={nameDraft}
-                  onChange={(event) => {
-                    setNameDraft(event.target.value);
-                    setNameError("");
-                  }}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter") saveName();
-                    if (event.key === "Escape") cancelEditing();
-                  }}
-                  maxLength={MAX_NAME}
-                  autoFocus
-                  className="bg-surface-input border-line text-content focus:border-accent min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-lg font-bold outline-none"
-                />
-                <button
-                  type="button"
-                  onClick={saveName}
-                  disabled={isSubmitting}
-                  aria-label="Guardar nombre"
-                  className="bg-success/15 text-success flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <Check size={14} />
-                </button>
-                <button
-                  type="button"
-                  onClick={cancelEditing}
-                  disabled={isSubmitting}
-                  aria-label={CANCEL_NAME_EDIT_LABEL}
-                  className="bg-danger/15 text-danger flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <X size={14} />
-                </button>
-              </div>
-            ) : (
-              <div className="group/name flex items-center gap-1.5">
-                <h2 className="font-display text-content text-lg font-bold">
-                  {profile.name}
-                </h2>
-                <button
-                  type="button"
-                  onClick={startEditingName}
-                  aria-label="Editar nombre"
-                  title="Editar nombre"
-                  className="text-content-subtle hover:text-accent-strong flex size-6 cursor-pointer items-center justify-center rounded-md opacity-0 transition-opacity group-hover/name:opacity-100"
-                >
-                  <Pencil size={13} />
-                </button>
-              </div>
-            )}
-            {editingField === "name" && nameError ? (
-              <p className="text-danger mt-1 text-xs">{nameError}</p>
-            ) : null}
-
-            <p className="text-content-subtle mt-1 text-xs">{profile.email}</p>
-          </div>
-
-          <ActivityStatusRow
-            status={ownChoice}
-            error={statusError}
-            onChange={changeActivityStatus}
-          />
-
-          <CustomStatusEditor
-            statusText={profile.status_text}
-            onSave={saveCustomStatus}
-            onClear={clearCustomStatus}
-          />
-
-          <div className="bg-line h-px" />
-
-          {/* Sobre mi -- el lapiz de aca edita solo la descripcion. */}
-          <div className="group/desc">
-            <div className="mb-1.5 flex items-center gap-1.5">
-              <SectionLabel>Sobre mí</SectionLabel>
-              {editingField !== "description" ? (
-                <button
-                  type="button"
-                  onClick={startEditingDescription}
-                  aria-label="Editar descripción"
-                  title="Editar descripción"
-                  className="text-content-subtle hover:text-accent-strong flex size-5 cursor-pointer items-center justify-center rounded-md opacity-0 transition-opacity group-hover/desc:opacity-100"
-                >
-                  <Pencil size={12} />
-                </button>
-              ) : null}
-            </div>
-
-            {editingField === "description" ? (
-              <div className="space-y-2">
-                <div className="flex items-center justify-end">
-                  <span className="text-content-subtle font-mono text-[11px] tabular-nums">
-                    {descriptionDraft.length}/{MAX_DESCRIPTION}
+              {isUploadingAvatar ? (
+                <span className="size-5 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+              ) : (
+                <>
+                  <Camera size={18} className="text-white" />
+                  <span className="text-[9px] font-semibold text-white">
+                    Cambiar
                   </span>
-                </div>
-                <textarea
-                  value={descriptionDraft}
-                  onChange={(event) =>
-                    setDescriptionDraft(
-                      event.target.value.slice(0, MAX_DESCRIPTION),
-                    )
-                  }
-                  rows={3}
-                  autoFocus
-                  placeholder={DESCRIPTION_PLACEHOLDER}
-                  className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
-                />
-                <div className="flex items-center justify-end gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={cancelEditing}
-                    disabled={isSubmitting}
-                    className="w-auto"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={saveDescription}
-                    isLoading={isSubmitting}
-                    className="w-auto"
-                  >
-                    Guardar
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <p className="text-content-muted text-sm leading-relaxed">
-                {profile.description || NO_DESCRIPTION_YET}
-              </p>
-            )}
-          </div>
-
-          <div className="bg-line h-px" />
-
-          <MemberSince isoDate={profile.created_at} />
-
-          {serverId ? (
-            <MemberRoleBadges
-              serverId={serverId}
-              userId={profile.id}
-              canManage={false}
+                </>
+              )}
+            </span>
+            <ActivityStatusDot
+              status={displayedOwnStatus}
+              ringWidth={3}
+              size={16}
+              className="absolute right-1 bottom-1"
             />
+          </ProfileAvatarFrame>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept={ALLOWED_AVATAR_TYPES.join(",")}
+            className="hidden"
+            onChange={handleFileInput}
+          />
+          {imageError ? (
+            <p className="text-danger mt-1 px-6 text-xs">{imageError}</p>
+          ) : null}
+          {isAvatarMenuOpen ? (
+            <>
+              <button
+                type="button"
+                aria-label="Cerrar menú"
+                tabIndex={-1}
+                onClick={() => setIsAvatarMenuOpen(false)}
+                className="fixed inset-0 z-10 cursor-default"
+              />
+              <div
+                role="menu"
+                className="bg-surface-modal border-line absolute top-full left-6 z-20 mt-1 w-56 rounded-xl border p-1.5 shadow-xl"
+              >
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={pickNewAvatar}
+                  autoFocus
+                  className="text-content hover:bg-surface-input flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors"
+                >
+                  <Camera size={16} />
+                  {CHANGE_AVATAR_LABEL}
+                </button>
+                <button
+                  type="button"
+                  role="menuitem"
+                  onClick={askRemoveAvatar}
+                  disabled={isUploadingAvatar}
+                  className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-2.5 rounded-lg px-2.5 py-2 text-sm font-medium transition-colors disabled:pointer-events-none disabled:opacity-50"
+                >
+                  <Trash2 size={16} />
+                  {REMOVE_AVATAR_LABEL}
+                </button>
+              </div>
+            </>
           ) : null}
         </div>
-      </div>
-    </ProfileModalOverlay>
+
+        <div className="flex-1 overflow-y-auto">
+          <div className="space-y-4 px-6 pt-3 pb-6">
+            {globalError ? (
+              <div className="border-danger/30 bg-danger/10 text-danger flex items-start gap-3 rounded-xl border px-4 py-3 text-sm">
+                <AlertCircle size={16} className="mt-0.5 shrink-0" />
+                <span>{globalError}</span>
+              </div>
+            ) : null}
+
+            <div>
+              {/* Nombre -- el lapiz de aca edita solo el nombre. */}
+              {editingField === "name" ? (
+                <div className="flex items-center gap-2">
+                  <input
+                    value={nameDraft}
+                    onChange={(event) => {
+                      setNameDraft(event.target.value);
+                      setNameError("");
+                    }}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter") saveName();
+                      if (event.key === "Escape") cancelEditing();
+                    }}
+                    maxLength={MAX_NAME}
+                    autoFocus
+                    className="bg-surface-input border-line text-content focus:border-accent min-w-0 flex-1 rounded-lg border px-3 py-1.5 text-lg font-bold outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={saveName}
+                    disabled={isSubmitting}
+                    aria-label="Guardar nombre"
+                    className="bg-success/15 text-success flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <Check size={14} />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={cancelEditing}
+                    disabled={isSubmitting}
+                    aria-label={CANCEL_NAME_EDIT_LABEL}
+                    className="bg-danger/15 text-danger flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full disabled:cursor-not-allowed disabled:opacity-50"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              ) : (
+                <div className="group/name flex items-center gap-1.5">
+                  <h2 className="font-display text-content text-lg font-bold">
+                    {profile.name}
+                  </h2>
+                  <button
+                    type="button"
+                    onClick={startEditingName}
+                    aria-label="Editar nombre"
+                    title="Editar nombre"
+                    className="text-content-subtle hover:text-accent-strong flex size-6 cursor-pointer items-center justify-center rounded-md opacity-0 transition-opacity group-hover/name:opacity-100"
+                  >
+                    <Pencil size={13} />
+                  </button>
+                </div>
+              )}
+              {editingField === "name" && nameError ? (
+                <p className="text-danger mt-1 text-xs">{nameError}</p>
+              ) : null}
+
+              <p className="text-content-subtle mt-1 text-xs">
+                {profile.email}
+              </p>
+            </div>
+
+            <ActivityStatusRow
+              status={ownChoice}
+              error={statusError}
+              onChange={changeActivityStatus}
+            />
+
+            <CustomStatusEditor
+              statusText={profile.status_text}
+              onSave={saveCustomStatus}
+              onClear={clearCustomStatus}
+            />
+
+            <div className="bg-line h-px" />
+
+            {/* Sobre mi -- el lapiz de aca edita solo la descripcion. */}
+            <div className="group/desc">
+              <div className="mb-1.5 flex items-center gap-1.5">
+                <SectionLabel>Sobre mí</SectionLabel>
+                {editingField !== "description" ? (
+                  <button
+                    type="button"
+                    onClick={startEditingDescription}
+                    aria-label="Editar descripción"
+                    title="Editar descripción"
+                    className="text-content-subtle hover:text-accent-strong flex size-5 cursor-pointer items-center justify-center rounded-md opacity-0 transition-opacity group-hover/desc:opacity-100"
+                  >
+                    <Pencil size={12} />
+                  </button>
+                ) : null}
+              </div>
+
+              {editingField === "description" ? (
+                <div className="space-y-2">
+                  <div className="flex items-center justify-end">
+                    <span className="text-content-subtle font-mono text-[11px] tabular-nums">
+                      {descriptionDraft.length}/{MAX_DESCRIPTION}
+                    </span>
+                  </div>
+                  <textarea
+                    value={descriptionDraft}
+                    onChange={(event) =>
+                      setDescriptionDraft(
+                        event.target.value.slice(0, MAX_DESCRIPTION),
+                      )
+                    }
+                    rows={3}
+                    autoFocus
+                    placeholder={DESCRIPTION_PLACEHOLDER}
+                    className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full resize-none rounded-xl border px-4 py-3 text-sm outline-none"
+                  />
+                  <div className="flex items-center justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={cancelEditing}
+                      disabled={isSubmitting}
+                      className="w-auto"
+                    >
+                      Cancelar
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={saveDescription}
+                      isLoading={isSubmitting}
+                      className="w-auto"
+                    >
+                      Guardar
+                    </Button>
+                  </div>
+                </div>
+              ) : (
+                <p className="text-content-muted text-sm leading-relaxed">
+                  {profile.description || NO_DESCRIPTION_YET}
+                </p>
+              )}
+            </div>
+
+            <div className="bg-line h-px" />
+
+            <MemberSince isoDate={profile.created_at} />
+
+            {serverId ? (
+              <MemberRoleBadges
+                serverId={serverId}
+                userId={profile.id}
+                canManage={false}
+              />
+            ) : null}
+          </div>
+        </div>
+      </ProfileModalOverlay>
+
+      {isConfirmingRemoveAvatar ? (
+        <ConfirmDialog
+          icon={Trash2}
+          title={REMOVE_AVATAR_LABEL}
+          body="¿Querés eliminar tu foto de perfil? Se mostrará tu avatar con inicial."
+          confirmLabel="Eliminar"
+          onConfirm={removeAvatar}
+          onCancel={() => setIsConfirmingRemoveAvatar(false)}
+        />
+      ) : null}
+    </>
   );
 }
