@@ -38,6 +38,7 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   AlertCircle,
   Check,
+  ChevronLeft,
   ChevronRight,
   EyeOff,
   GripVertical,
@@ -440,6 +441,9 @@ interface RolesModalProps {
 
 type RightView = "edit" | "members" | "create";
 
+/** Por debajo de `sm` se muestra una sola columna a la vez, como en la app. */
+type MobileView = "list" | "detail";
+
 /**
  * Panel maestro-detalle de roles: lista a la izquierda, edicion/creacion a la
  * derecha, tab de miembros por rol. Owner-only del lado del back
@@ -459,6 +463,7 @@ export function RolesModal({
   const [loadError, setLoadError] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [rightView, setRightView] = useState<RightView>("edit");
+  const [mobileView, setMobileView] = useState<MobileView>("list");
   const [defaultRoleId, setDefaultRoleId] = useState<string | null>(null);
 
   // Edit form
@@ -565,6 +570,7 @@ export function RolesModal({
   function selectRole(id: string) {
     setSelectedId(id);
     setRightView("edit");
+    setMobileView("detail");
   }
 
   const selectedMemberCount = roleMemberCounts[selectedId];
@@ -602,6 +608,7 @@ export function RolesModal({
   function openCreateForm() {
     setNewPerms(everyoneRole ? [...everyoneRole.permissions] : []);
     setRightView("create");
+    setMobileView("detail");
   }
 
   function handleDiscard() {
@@ -720,6 +727,7 @@ export function RolesModal({
     setRoles(remaining);
     setSelectedId(remaining[0]?.id ?? "");
     setDeleteConfirm(false);
+    setMobileView("list");
     showToast(`Rol "${selectedRole.name}" eliminado`);
   }
 
@@ -822,22 +830,23 @@ export function RolesModal({
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm sm:p-4"
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
     >
       <div
-        className="border-line-strong relative flex w-full overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
-        style={{
-          maxWidth: 740,
-          height: "88dvh",
-          background: "var(--bg-modal)",
-        }}
+        className="border-line-strong relative flex h-dvh w-full overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.55)] sm:h-[88dvh] sm:max-w-[740px] sm:rounded-[20px] sm:border"
+        style={{ background: "var(--bg-modal)" }}
         onClick={(event) => event.stopPropagation()}
       >
         {/* Left panel */}
-        <div className="bg-surface-sunken border-line flex w-[220px] shrink-0 flex-col overflow-hidden border-r">
+        <div
+          className={cn(
+            "bg-surface-sunken border-line w-full shrink-0 flex-col overflow-hidden sm:flex sm:w-[220px] sm:border-r",
+            mobileView === "list" ? "flex" : "hidden",
+          )}
+        >
           <div className="border-line flex-shrink-0 border-b px-4 pt-5 pb-3">
             <div className="mb-3 flex items-center gap-2">
               <Shield size={16} className="text-content" />
@@ -929,10 +938,33 @@ export function RolesModal({
         </div>
 
         {/* Right panel */}
-        <div className="flex flex-1 flex-col overflow-hidden">
+        <div
+          className={cn(
+            "min-w-0 flex-1 flex-col overflow-hidden sm:flex",
+            mobileView === "detail" ? "flex" : "hidden",
+          )}
+        >
+          <div className="border-line flex shrink-0 items-center justify-between border-b px-2 py-2 sm:hidden">
+            <button
+              type="button"
+              onClick={() => setMobileView("list")}
+              className="text-content-muted hover:text-content flex cursor-pointer items-center gap-1 rounded-xl px-2 py-1.5 text-sm font-semibold"
+            >
+              <ChevronLeft size={18} />
+              Roles
+            </button>
+            <button
+              type="button"
+              onClick={onClose}
+              aria-label="Cerrar"
+              className="text-content-subtle hover:text-content flex size-8 cursor-pointer items-center justify-center rounded-xl"
+            >
+              <X size={16} />
+            </button>
+          </div>
           {rightView === "create" ? (
             <div className="flex h-full flex-col">
-              <div className="border-line flex-shrink-0 border-b px-7 pt-7 pb-4">
+              <div className="border-line flex-shrink-0 border-b px-4 pt-5 pb-4 sm:px-7 sm:pt-7">
                 <h3 className="text-content font-display text-lg font-bold">
                   Crear rol
                 </h3>
@@ -941,7 +973,7 @@ export function RolesModal({
                   ajustarlos antes de crear o después.
                 </p>
               </div>
-              <div className="flex-1 space-y-6 overflow-y-auto px-7 py-6">
+              <div className="flex-1 space-y-6 overflow-y-auto px-4 py-6 sm:px-7">
                 <div>
                   <div className="mb-2 flex items-center justify-between">
                     <label className="text-content-subtle text-xs font-bold tracking-wider uppercase">
@@ -1031,10 +1063,13 @@ export function RolesModal({
                 </div>
               </div>
 
-              <div className="border-line flex flex-shrink-0 items-center justify-end gap-3 border-t px-7 py-4">
+              <div className="border-line flex flex-shrink-0 items-center justify-end gap-3 border-t px-4 py-4 sm:px-7">
                 <button
                   type="button"
-                  onClick={() => setRightView("edit")}
+                  onClick={() => {
+                    setRightView("edit");
+                    setMobileView("list");
+                  }}
                   className="bg-surface-input border-line text-content-muted cursor-pointer rounded-xl border px-5 py-2.5 text-sm font-semibold transition-all hover:brightness-110"
                 >
                   Cancelar
@@ -1058,7 +1093,7 @@ export function RolesModal({
             </div>
           ) : selectedRole ? (
             <>
-              <div className="flex-shrink-0 px-7 pt-6 pb-0">
+              <div className="flex-shrink-0 px-4 pt-5 pb-0 sm:px-7 sm:pt-6">
                 <div className="mb-4 flex items-center gap-3">
                   <span
                     className="size-10 shrink-0 rounded-full"
@@ -1105,7 +1140,7 @@ export function RolesModal({
               </div>
 
               {rightView === "edit" ? (
-                <div className="flex-1 space-y-6 overflow-y-auto px-7 py-5">
+                <div className="flex-1 space-y-6 overflow-y-auto px-4 py-5 sm:px-7">
                   <div>
                     <div className="mb-2 flex items-center justify-between">
                       <label className="text-content-subtle text-xs font-bold tracking-wider uppercase">
@@ -1332,7 +1367,7 @@ export function RolesModal({
               )}
 
               {rightView === "edit" ? (
-                <div className="border-line flex flex-shrink-0 items-center justify-end gap-3 border-t px-7 py-4">
+                <div className="border-line flex flex-shrink-0 items-center justify-end gap-3 border-t px-4 py-4 sm:px-7">
                   <button
                     type="button"
                     onClick={handleDiscard}

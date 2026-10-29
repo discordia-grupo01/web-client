@@ -154,7 +154,7 @@ export function RoleMembersPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-line shrink-0 space-y-3 border-b px-7 py-4">
+      <div className="border-line shrink-0 space-y-3 border-b px-4 py-4 sm:px-7">
         {isEveryone ? (
           <p className="text-content-subtle text-sm">
             {ROLE_MEMBERS_EVERYONE_HINT}
@@ -183,7 +183,7 @@ export function RoleMembersPanel({
 
       <div
         role={isEveryone ? undefined : "tabpanel"}
-        className="min-h-0 flex-1 space-y-2 overflow-y-auto px-7 py-4"
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 sm:px-7"
       >
         <FormAlert message={list.errorMessage} />
         {list.members === null ? (
@@ -213,7 +213,7 @@ export function RoleMembersPanel({
       </div>
 
       {list.pageCount > 1 ? (
-        <div className="border-line flex shrink-0 flex-col items-center gap-2 border-t px-7 py-3">
+        <div className="border-line flex shrink-0 flex-col items-center gap-2 border-t px-4 py-3 sm:px-7">
           <p aria-live="polite" className="text-content-muted text-xs">
             {paginationSummary(
               list.range.from,

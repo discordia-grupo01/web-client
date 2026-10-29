@@ -48,8 +48,9 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
       onClose={onClose}
       labelledBy="account-settings-title"
       maxWidth={880}
+      isFullScreenOnMobile
     >
-      <div className="flex h-[min(720px,85dvh)] w-full">
+      <div className="flex min-h-0 w-full flex-1 sm:h-[min(720px,85dvh)] sm:flex-none">
         <aside className="border-line bg-surface-sunken hidden w-56 shrink-0 flex-col p-4 sm:flex">
           <div className="px-3 pt-2 pb-5">
             <p className="text-content-subtle text-xs font-bold tracking-widest uppercase">

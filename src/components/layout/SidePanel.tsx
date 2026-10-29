@@ -8,10 +8,17 @@ const POSITION = {
   right: { anchor: "right-0", closed: "translate-x-full" },
 } as const;
 
+const DOCKED = {
+  md: "md:static md:z-auto md:translate-none",
+  lg: "lg:static lg:z-auto lg:translate-none",
+} as const;
+
 interface SidePanelProps {
   position: keyof typeof POSITION;
-  /** Solo aplica en mobile: en desktop el panel esta siempre en su lugar. */
   isOpen: boolean;
+  dockFrom?: keyof typeof DOCKED;
+  /** Fijo en el layout tambien en mobile, sin drawer. */
+  isDocked?: boolean;
   className?: string;
   children: ReactNode;
 }
@@ -19,6 +26,8 @@ interface SidePanelProps {
 export function SidePanel({
   position,
   isOpen,
+  dockFrom = "md",
+  isDocked = false,
   className,
   children,
 }: SidePanelProps) {
@@ -27,10 +36,15 @@ export function SidePanel({
   return (
     <div
       className={cn(
-        "fixed inset-y-0 z-40 flex shrink-0 transition-transform duration-300 ease-in-out",
-        "md:static md:z-auto md:translate-none",
-        anchor,
-        isOpen ? "translate-none" : closed,
+        "flex shrink-0 transition-transform duration-300 ease-in-out",
+        isDocked
+          ? "static z-auto translate-none"
+          : [
+              "fixed inset-y-0 z-40",
+              DOCKED[dockFrom],
+              anchor,
+              isOpen ? "translate-none" : closed,
+            ],
         className,
       )}
     >

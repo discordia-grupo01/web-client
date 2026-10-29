@@ -20,6 +20,7 @@ import { usePresenceOf } from "@/hooks/usePresence";
 import { DmListError } from "./DmListError";
 
 interface DmRailListProps {
+  className?: string;
   conversations: ConversationSummary[];
   isLoading: boolean;
   loadError: string | null;
@@ -67,10 +68,11 @@ export function DmRailList({
   onStartNew,
   ownProfile,
   onOpenOwnProfile,
+  className,
 }: DmRailListProps) {
   return (
     <div
-      className="flex w-60 shrink-0 flex-col overflow-hidden"
+      className={cn("flex w-60 shrink-0 flex-col overflow-hidden", className)}
       style={{ background: "var(--bg-channels)" }}
     >
       <div

@@ -255,6 +255,9 @@ function HomeShellContent({
             servers={servers}
             selectedServerId={selectedServerId}
             isDirectMessagesActive={view === "direct-messages"}
+            isDockedOnMobile={
+              view === "direct-messages" && !directMessages.activeSummary
+            }
             unreadDmCount={unreadDmCount}
             unreadMentionsByServer={mentions.byServer}
             onSelect={(serverId) => {
