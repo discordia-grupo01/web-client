@@ -18,6 +18,7 @@ import {
 } from "@/components/servers/utils/presetBanner";
 import { updateServerRequest } from "@/services/servers/client";
 import { serverBannerSrc, serverIconSrc } from "@/utils/image-urls";
+import { readFileAsDataUrl } from "@/utils/readFileAsDataUrl";
 
 /**
  * Los cuatro estados en los que puede quedar el banner. Es una union y no
@@ -36,22 +37,8 @@ interface UseServerSettingsFormArgs {
   onUpdated: (server: ServerSummary) => void;
 }
 
-function readPreview(file: File, onLoad: (dataUrl: string) => void): void {
-  const reader = new FileReader();
-  reader.onload = (event) => onLoad(event.target?.result as string);
-  reader.readAsDataURL(file);
-}
+export type ServerSettingsForm = ReturnType<typeof useServerSettingsForm>;
 
-/**
- * Estado y envio del formulario de configuracion del servidor.
- *
- * Vive aparte del modal para que los componentes sean solo markup: el modal
- * arma la pantalla, `ServerIdentityEditor` y `BannerPresetPicker` reciben
- * props y no saben que existe un backend.
- *
- * El modal se monta recien cuando se abre, asi que no hace falta resetear
- * nada: cerrar y volver a abrir arranca de cero.
- */
 export function useServerSettingsForm({
   server,
   onUpdated,
@@ -109,7 +96,9 @@ export function useServerSettingsForm({
       setIconError(error);
       return;
     }
-    readPreview(file, (previewUrl) => setIcon({ file, previewUrl }));
+    void readFileAsDataUrl(file).then((previewUrl) =>
+      setIcon({ file, previewUrl }),
+    );
   }
 
   function pickBanner(file: File) {
@@ -123,7 +112,7 @@ export function useServerSettingsForm({
       setBannerError(error);
       return;
     }
-    readPreview(file, (previewUrl) =>
+    void readFileAsDataUrl(file).then((previewUrl) =>
       setBanner({ kind: "upload", file, previewUrl }),
     );
   }

@@ -18,7 +18,7 @@ import { JoinServerModal } from "@/components/invites/JoinServerModal";
 import { DrawerBackdrop } from "@/components/layout/DrawerBackdrop";
 import { MobilePanelsProvider } from "@/contexts/MobilePanelsContext";
 import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
-import { CreateServerModal } from "@/components/servers/CreateServerModal";
+import { CreateServerModal } from "@/components/servers/create/CreateServerModal";
 import { ServerView } from "@/components/servers/ServerView";
 import { useLoadingGate } from "@/components/home/hooks/useLoadingGate";
 import { useAuth } from "@/contexts/AuthContext";
@@ -255,6 +255,9 @@ function HomeShellContent({
             servers={servers}
             selectedServerId={selectedServerId}
             isDirectMessagesActive={view === "direct-messages"}
+            isDockedOnMobile={
+              view === "direct-messages" && !directMessages.activeSummary
+            }
             unreadDmCount={unreadDmCount}
             unreadMentionsByServer={mentions.byServer}
             onSelect={(serverId) => {

@@ -1,14 +1,17 @@
 "use client";
 
+import type { TwoFactorStatus } from "@discordia/client-shared";
+
 import { ChevronLeft, ChevronRight, LogOut, Moon, Shield } from "lucide-react";
 import { useState } from "react";
 
 import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
+import { TwoFactorPanel } from "@/components/security/TwoFactorPanel";
 import { ModalShell } from "@/components/ui/ModalShell";
-import { TwoFactorSummaryRow } from "@/components/security/TwoFactorSummaryRow";
 import { cn } from "@/lib/cn";
 
 import { AppearanceSettings } from "./AppearanceSettings";
+import { SecuritySettings } from "./SecuritySettings";
 
 type Section = "appearance" | "security";
 
@@ -40,16 +43,30 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
   const [section, setSection] = useState<Section>("appearance");
   const [mobileMenuOpen, setMobileMenuOpen] = useState(true);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
+  const [twoFactorStatus, setTwoFactorStatus] =
+    useState<TwoFactorStatus | null>(null);
 
   const activeSection = SECTIONS.find((item) => item.id === section);
+  const isTwoFactorOpen = section === "security" && twoFactorStatus !== null;
+
+  function selectSection(next: Section) {
+    setSection(next);
+    setTwoFactorStatus(null);
+  }
+
+  function goBack() {
+    if (isTwoFactorOpen) setTwoFactorStatus(null);
+    else setMobileMenuOpen(true);
+  }
 
   return (
     <ModalShell
       onClose={onClose}
       labelledBy="account-settings-title"
       maxWidth={880}
+      isFullScreenOnMobile
     >
-      <div className="flex h-[min(720px,85dvh)] w-full">
+      <div className="flex min-h-0 w-full flex-1 sm:h-[min(720px,85dvh)] sm:flex-none">
         <aside className="border-line bg-surface-sunken hidden w-56 shrink-0 flex-col p-4 sm:flex">
           <div className="px-3 pt-2 pb-5">
             <p className="text-content-subtle text-xs font-bold tracking-widest uppercase">
@@ -70,7 +87,7 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
                 <button
                   key={item.id}
                   type="button"
-                  onClick={() => setSection(item.id)}
+                  onClick={() => selectSection(item.id)}
                   className={cn(
                     "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors",
                     active
@@ -104,12 +121,15 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
         <main className="flex min-w-0 flex-1 flex-col">
           <header className="border-line flex shrink-0 items-center justify-between border-b px-4 py-4 sm:px-6">
             <div className="flex items-center gap-2">
-              {!mobileMenuOpen ? (
+              {!mobileMenuOpen || isTwoFactorOpen ? (
                 <button
                   type="button"
-                  onClick={() => setMobileMenuOpen(true)}
-                  aria-label="Volver a configuración"
-                  className="bg-surface-input text-content-muted flex size-10 cursor-pointer items-center justify-center rounded-xl sm:hidden"
+                  onClick={goBack}
+                  aria-label="Volver"
+                  className={cn(
+                    "bg-surface-input text-content-muted hover:bg-surface-hover sm:hover:text-content flex size-10 cursor-pointer items-center justify-center rounded-xl transition-colors sm:-ml-1 sm:size-7 sm:bg-transparent sm:hover:bg-transparent",
+                    !isTwoFactorOpen && "sm:hidden",
+                  )}
                 >
                   <ChevronLeft size={18} />
                 </button>
@@ -119,7 +139,11 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
                   Configuración de cuenta
                 </p>
                 <h2 className="text-content font-display text-lg font-bold">
-                  {mobileMenuOpen ? "Mi cuenta" : activeSection?.label}
+                  {isTwoFactorOpen
+                    ? "Verificación en dos pasos"
+                    : mobileMenuOpen
+                      ? "Mi cuenta"
+                      : activeSection?.label}
                 </h2>
               </div>
             </div>
@@ -137,7 +161,7 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
                     key={item.id}
                     type="button"
                     onClick={() => {
-                      setSection(item.id);
+                      selectSection(item.id);
                       setMobileMenuOpen(false);
                     }}
                     className="bg-surface-raised border-line text-content-muted flex min-h-16 w-full cursor-pointer items-center gap-4 rounded-2xl border p-4 text-left"
@@ -180,18 +204,13 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
           >
             {section === "appearance" ? (
               <AppearanceSettings />
+            ) : twoFactorStatus ? (
+              <TwoFactorPanel
+                initialStatus={twoFactorStatus}
+                onBack={() => setTwoFactorStatus(null)}
+              />
             ) : (
-              <div className="mx-auto max-w-2xl">
-                <div className="mb-6">
-                  <h3 className="text-content font-display text-xl font-bold">
-                    Seguridad y acceso
-                  </h3>
-                  <p className="text-content-muted mt-1 text-sm">
-                    Administrá las medidas que protegen tu cuenta.
-                  </p>
-                </div>
-                <TwoFactorSummaryRow />
-              </div>
+              <SecuritySettings onOpenTwoFactor={setTwoFactorStatus} />
             )}
           </div>
         </main>

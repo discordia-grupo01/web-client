@@ -67,12 +67,9 @@ export function DmConversation({
   if (!activeSummary) {
     return (
       <div
-        className="flex flex-1 flex-col overflow-hidden"
+        className="hidden flex-1 flex-col overflow-hidden md:flex"
         style={{ background: "var(--bg-chat)" }}
       >
-        <div className="p-2 md:hidden">
-          <MobileNavButton />
-        </div>
         {isOffline ? (
           <ConnectionLostNotice onRetry={onRetryLoad} />
         ) : (

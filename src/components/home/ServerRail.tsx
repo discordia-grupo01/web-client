@@ -17,6 +17,8 @@ interface ServerRailProps {
   selectedServerId: string | null;
   /** El botón "Inicio" abre Mensajes Directos: se resalta cuando esa vista está activa. */
   isDirectMessagesActive: boolean;
+  /** En mobile se muestra fijo en vez de como drawer. */
+  isDockedOnMobile: boolean;
   unreadDmCount: number;
   /** Menciones sin leer por servidor. */
   unreadMentionsByServer: Record<string, number>;
@@ -29,6 +31,7 @@ export function ServerRail({
   servers,
   selectedServerId,
   isDirectMessagesActive,
+  isDockedOnMobile,
   unreadDmCount,
   unreadMentionsByServer,
   onSelect,
@@ -38,7 +41,11 @@ export function ServerRail({
   const { openPanel } = useMobilePanels();
 
   return (
-    <SidePanel position="left" isOpen={openPanel === "nav"}>
+    <SidePanel
+      position="left"
+      isOpen={openPanel === "nav"}
+      isDocked={isDockedOnMobile}
+    >
       <div
         className="flex w-[72px] shrink-0 flex-col items-center gap-2 overflow-y-auto py-3"
         style={{ background: "var(--bg-servers)" }}

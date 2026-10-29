@@ -97,9 +97,7 @@ export function ChannelHeader({
             <IconButton icon={Bell} label="Notificaciones" disabled />
           </div>
 
-          {/* En desktop muestra/oculta la columna; en mobile abre el drawer.
-            Con la busqueda abierta la columna esta tapada: el boton la vuelve a mostrar. */}
-          <div className="hidden md:flex">
+          <div className="hidden lg:flex">
             <IconButton
               icon={Users}
               label={areMembersShown ? "Ocultar miembros" : "Mostrar miembros"}
@@ -115,7 +113,7 @@ export function ChannelHeader({
               isPressed={areMembersShown}
             />
           </div>
-          <div className="flex md:hidden">
+          <div className="flex lg:hidden">
             <IconButton
               icon={Users}
               label="Ver miembros"
