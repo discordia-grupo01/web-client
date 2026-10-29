@@ -6,7 +6,7 @@ import type {
   User,
 } from "@discordia/client-shared";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useMobilePanels } from "@/contexts/MobilePanelsContext";
 import { SidePanel } from "@/components/layout/SidePanel";
@@ -47,6 +47,13 @@ export function DirectMessagesView({
     isConnected,
     retry,
   } = directMessages;
+  const isListDocked = !activeSummary;
+
+  // Con la lista fija no hay drawer: si venia abierto, su backdrop la taparia.
+  useEffect(() => {
+    if (isListDocked && openPanel === "nav") closeMobilePanel();
+  }, [isListDocked, openPanel, closeMobilePanel]);
+
   const { candidates, isLoading: isLoadingCandidates } = useDmCandidates(
     servers,
     currentAuthor?.id ?? null,
@@ -55,8 +62,16 @@ export function DirectMessagesView({
 
   return (
     <div className="flex min-w-0 flex-1 overflow-hidden">
-      <SidePanel position="afterRail" isOpen={openPanel === "nav"}>
+      {/* Sin conversacion abierta, en mobile la lista ocupa la pantalla en vez
+        de dejar un estado vacio detras del drawer. */}
+      <SidePanel
+        position="afterRail"
+        isOpen={openPanel === "nav"}
+        isDocked={isListDocked}
+        className={isListDocked ? "flex-1 md:flex-none" : undefined}
+      >
         <DmRailList
+          className={isListDocked ? "w-full md:w-60" : undefined}
           conversations={conversations}
           isLoading={isLoading}
           loadError={loadError}

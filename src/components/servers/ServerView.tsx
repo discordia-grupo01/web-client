@@ -1185,13 +1185,12 @@ function ServerViewContent({
             )}
           </div>
 
-          {/* En mobile es un drawer (siempre montado); en desktop se oculta con
-          el boton de miembros del header. */}
           <SidePanel
             position="right"
             isOpen={openPanel === "members"}
+            dockFrom="lg"
             className={
-              isMembersVisible && !isSearchOpen ? undefined : "md:hidden"
+              isMembersVisible && !isSearchOpen ? undefined : "lg:hidden"
             }
           >
             <MembersSidebar
@@ -1215,7 +1214,8 @@ function ServerViewContent({
           <SidePanel
             position="right"
             isOpen={openPanel === "search"}
-            className={isSearchOpen ? undefined : "md:hidden"}
+            dockFrom="lg"
+            className={isSearchOpen ? undefined : "lg:hidden"}
           >
             {isSearchOpen ? (
               <MessageSearchPanel

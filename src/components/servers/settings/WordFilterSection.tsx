@@ -107,7 +107,7 @@ export function WordFilterSection({
 
   return (
     <div className="flex flex-1 flex-col overflow-y-auto">
-      <div className="px-7 pt-8 pb-2">
+      <div className="px-4 pt-6 pb-2 sm:px-7 sm:pt-8">
         <h2
           id={titleId}
           className="font-display text-content mb-1 text-xl font-bold"
@@ -119,7 +119,7 @@ export function WordFilterSection({
         </p>
       </div>
 
-      <div className="flex-1 space-y-5 px-7 py-6">
+      <div className="flex-1 space-y-5 px-4 py-6 sm:px-7">
         <FormAlert message={loadError ?? saveError} />
 
         {saved === null && !loadError ? (
@@ -194,7 +194,7 @@ export function WordFilterSection({
         ) : null}
       </div>
 
-      <div className="border-line flex items-center justify-end gap-3 border-t px-7 py-5">
+      <div className="border-line flex items-center justify-end gap-3 border-t px-4 py-5 sm:px-7">
         {savedNotice && !isDirty ? (
           <span role="status" className="text-content-muted mr-auto text-sm">
             {WORD_FILTER_SAVED}

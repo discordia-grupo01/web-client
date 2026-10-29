@@ -1,12 +1,16 @@
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { cn } from "@/lib/cn";
+
 interface ModalShellProps {
   onClose: () => void;
   children: ReactNode;
   maxWidth?: number;
   /** Id del `<h2>` del modal, para `aria-labelledby`. */
   labelledBy?: string;
+  /** Por debajo de `sm` ocupa toda la pantalla, sin bordes ni margen. */
+  isFullScreenOnMobile?: boolean;
 }
 
 /**
@@ -20,10 +24,14 @@ export function ModalShell({
   children,
   maxWidth = 460,
   labelledBy,
+  isFullScreenOnMobile = false,
 }: ModalShellProps) {
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm sm:p-6"
+      className={cn(
+        "fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm sm:p-6",
+        !isFullScreenOnMobile && "p-4",
+      )}
       onClick={(event) => {
         if (event.target === event.currentTarget) onClose();
       }}
@@ -32,12 +40,13 @@ export function ModalShell({
         role="dialog"
         aria-modal="true"
         aria-labelledby={labelledBy}
-        className="border-line-strong relative flex w-full flex-col overflow-hidden rounded-[20px] border shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
-        style={{
-          maxWidth,
-          maxHeight: "95dvh",
-          background: "var(--bg-modal)",
-        }}
+        className={cn(
+          "border-line-strong relative flex w-full flex-col overflow-hidden shadow-[0_32px_80px_rgba(0,0,0,0.55)]",
+          isFullScreenOnMobile
+            ? "h-dvh sm:h-auto sm:max-h-[95dvh] sm:rounded-[20px] sm:border"
+            : "max-h-[95dvh] rounded-[20px] border",
+        )}
+        style={{ maxWidth, background: "var(--bg-modal)" }}
       >
         <button
           type="button"
