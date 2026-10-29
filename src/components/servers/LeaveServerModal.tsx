@@ -13,11 +13,6 @@ interface LeaveServerModalProps {
   onLeft: () => void;
 }
 
-/**
- * Solo self-leave (ver `services/servers/service.ts`): el owner no puede
- * abandonar su propio servidor, el backend lo rechaza con 409. Si lo sabemos
- * de antemano (`isOwner`) saltamos directo a ese estado.
- */
 export function LeaveServerModal({
   serverId,
   serverName,

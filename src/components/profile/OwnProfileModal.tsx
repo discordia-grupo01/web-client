@@ -32,6 +32,7 @@ import {
   updateOwnProfileRequest,
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
+import { readFileAsDataUrl } from "@/utils/readFileAsDataUrl";
 import { useOwnStatus, usePresenceOf } from "@/hooks/usePresence";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";
@@ -193,14 +194,12 @@ export function OwnProfileModal({
       return;
     }
 
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      setImagePreview(event.target?.result as string);
+    void readFileAsDataUrl(file).then(async (previewUrl) => {
+      setImagePreview(previewUrl);
       setIsUploadingAvatar(true);
       await submitProfile({ image: file });
       setIsUploadingAvatar(false);
-    };
-    reader.readAsDataURL(file);
+    });
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function handleFileInput(event: ChangeEvent<HTMLInputElement>) {
