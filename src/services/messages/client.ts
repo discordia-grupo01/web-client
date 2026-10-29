@@ -10,6 +10,7 @@ import {
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browserApiClient";
+import { hasAccountSuspendedMark } from "@/utils/accountSuspension";
 
 /**
  * Llamadas del navegador hacia el BFF de mensajes (`/api/*`, mismo origen).
@@ -29,7 +30,11 @@ export async function fetchSocketTicketRequest(): Promise<SocketTicketResult> {
     if (status === 200 && typeof data?.ticket === "string") {
       return { ok: true, ticket: data.ticket };
     }
-    return { ok: false, sessionExpired: status === 401 };
+    return {
+      ok: false,
+      sessionExpired: status === 401,
+      accountSuspended: hasAccountSuspendedMark(),
+    };
   } catch {
     return { ok: false, sessionExpired: false };
   }
