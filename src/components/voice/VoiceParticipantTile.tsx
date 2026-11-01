@@ -2,23 +2,35 @@
 
 import {
   VOICE_CAMERA_ON_LABEL,
+  VOICE_FULLSCREEN_ENTER,
   VOICE_MUTE_FOR_ME,
   VOICE_MUTED_FOR_ME_LABEL,
   VOICE_MUTED_LABEL,
   VOICE_SCREEN_SHARING,
   VOICE_SPEAKING_LABEL,
   VOICE_UNMUTE_FOR_ME,
+  voiceFullscreenLabel,
   type VoiceParticipant,
 } from "@discordia/client-shared";
 
 import type { Track } from "livekit-client";
-import { MicOff, MonitorUp, Video, Volume2, VolumeX } from "lucide-react";
-import type { ReactNode } from "react";
+import {
+  Maximize2,
+  MicOff,
+  MonitorUp,
+  Video,
+  Volume2,
+  VolumeX,
+} from "lucide-react";
+import { useEffect } from "react";
 
-import { Tooltip } from "@/components/ui/Tooltip";
 import { Avatar } from "@/components/ui/Avatar";
+import { useFullscreen } from "@/components/voice/hooks/useFullscreen";
+import { useIdleVisibility } from "@/components/voice/hooks/useIdleVisibility";
 import { cn } from "@/lib/cn";
 
+import { VoiceFullscreenOverlay } from "./VoiceFullscreenOverlay";
+import { TileBadge, TileCornerButton } from "./VoiceTileActions";
 import { VoiceVideo } from "./VoiceVideo";
 
 const SPEAKING_BAR_HEIGHTS = [4, 7, 11, 7, 4];
@@ -26,6 +38,8 @@ const SPEAKING_BAR_HEIGHTS = [4, 7, 11, 7, 4];
 const COMPACT_TILE_WIDTH = 200;
 const MIN_AVATAR = 24;
 const MAX_AVATAR = 88;
+const REVEAL_ON_HOVER =
+  "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100";
 
 interface VoiceParticipantTileProps {
   participant: VoiceParticipant;
@@ -38,6 +52,8 @@ interface VoiceParticipantTileProps {
   onToggleMutedForMe?: () => void;
   onTogglePin?: () => void;
   onPress?: () => void;
+  /** `false` en el embed de mobile, donde la pantalla completa no anda. */
+  canExpand?: boolean;
 }
 
 export function VoiceParticipantTile({
@@ -49,6 +65,7 @@ export function VoiceParticipantTile({
   onToggleMutedForMe,
   onTogglePin,
   onPress,
+  canExpand = true,
 }: VoiceParticipantTileProps) {
   const { name, speaking, muted, cameraOn, screenSharing, mutedForMe } =
     participant;
@@ -58,9 +75,48 @@ export function VoiceParticipantTile({
   const avatarSize = Math.round(
     Math.min(MAX_AVATAR, Math.max(MIN_AVATAR, height * 0.42)),
   );
+  const fullscreen = useFullscreen<HTMLDivElement>();
+  const { isFullscreen, exit: exitFullscreen } = fullscreen;
+  const overlay = useIdleVisibility(isFullscreen);
+  const isOwnScreenShare = participant.isLocal && video?.source === "screen";
+  const canShowExpand =
+    canExpand && fullscreen.isSupported && video !== null && !isOwnScreenShare;
+  const hasVideo = video !== null;
+
+  useEffect(() => {
+    if (isFullscreen && !hasVideo) exitFullscreen();
+  }, [isFullscreen, hasVideo, exitFullscreen]);
+
+  if (isFullscreen && video) {
+    return (
+      <div
+        ref={fullscreen.ref}
+        onPointerMove={overlay.onActivity}
+        onPointerDown={overlay.onActivity}
+        onKeyDown={overlay.onActivity}
+        className={cn(
+          "relative flex items-center justify-center bg-black",
+          !overlay.isVisible && "cursor-none",
+        )}
+      >
+        <VoiceVideo
+          track={video.track}
+          fit="contain"
+          isMirrored={participant.isLocal && video.source === "camera"}
+        />
+        <VoiceFullscreenOverlay
+          name={name}
+          source={video.source}
+          isVisible={overlay.isVisible}
+          onExit={exitFullscreen}
+        />
+      </div>
+    );
+  }
 
   return (
     <div
+      ref={fullscreen.ref}
       onClick={onPress}
       onDoubleClick={onTogglePin}
       className={cn(
@@ -118,40 +174,44 @@ export function VoiceParticipantTile({
         </span>
       ) : null}
 
-      {onToggleMutedForMe ? (
-        <span
-          className={cn(
-            "absolute transition-opacity",
-            isCompact ? "top-1 right-1" : "top-2 right-2",
-            mutedForMe
-              ? "opacity-100"
-              : "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100 pointer-coarse:opacity-100",
-          )}
-        >
-          <Tooltip label={muteForMeLabel} align="end">
-            <button
-              type="button"
-              onClick={(event) => {
-                event.stopPropagation();
-                onToggleMutedForMe();
-              }}
-              onDoubleClick={(event) => event.stopPropagation()}
-              aria-label={`${muteForMeLabel}: ${name}`}
-              aria-pressed={mutedForMe}
-              className={cn(
-                "flex cursor-pointer items-center justify-center rounded-lg backdrop-blur transition-colors",
-                "focus-visible:ring-accent focus-visible:ring-2 focus-visible:outline-none",
-                isCompact ? "size-7" : "size-8 pointer-coarse:size-10",
-                mutedForMe
-                  ? "bg-danger/20 text-danger hover:bg-danger/30"
-                  : "bg-black/35 text-white hover:bg-black/50",
-              )}
+      <div
+        className={cn(
+          "absolute flex gap-1",
+          isCompact ? "top-1 right-1" : "top-2 right-2",
+        )}
+      >
+        {canShowExpand ? (
+          <span className={cn("transition-opacity", REVEAL_ON_HOVER)}>
+            <TileCornerButton
+              label={VOICE_FULLSCREEN_ENTER}
+              ariaLabel={voiceFullscreenLabel(name)}
+              isCompact={isCompact}
+              onClick={fullscreen.enter}
+            >
+              <Maximize2 size={14} />
+            </TileCornerButton>
+          </span>
+        ) : null}
+        {onToggleMutedForMe ? (
+          <span
+            className={cn(
+              "transition-opacity",
+              mutedForMe ? "opacity-100" : REVEAL_ON_HOVER,
+            )}
+          >
+            <TileCornerButton
+              label={muteForMeLabel}
+              ariaLabel={`${muteForMeLabel}: ${name}`}
+              isCompact={isCompact}
+              isPressed={mutedForMe}
+              isDanger={mutedForMe}
+              onClick={onToggleMutedForMe}
             >
               {mutedForMe ? <VolumeX size={14} /> : <Volume2 size={14} />}
-            </button>
-          </Tooltip>
-        </span>
-      ) : null}
+            </TileCornerButton>
+          </span>
+        ) : null}
+      </div>
 
       {isSpeaking && !isCompact ? (
         <div
@@ -222,31 +282,5 @@ export function VoiceParticipantTile({
         </div>
       </div>
     </div>
-  );
-}
-
-function TileBadge({
-  label,
-  tone,
-  children,
-}: {
-  label: string;
-  tone: "danger" | "sky";
-  children: ReactNode;
-}) {
-  return (
-    <span
-      role="img"
-      aria-label={label}
-      title={label}
-      className={cn(
-        "rounded p-0.5",
-        tone === "danger"
-          ? "bg-danger/25 text-danger"
-          : "bg-accent/70 text-white",
-      )}
-    >
-      {children}
-    </span>
   );
 }

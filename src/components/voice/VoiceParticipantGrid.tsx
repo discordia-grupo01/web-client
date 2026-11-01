@@ -28,6 +28,8 @@ interface VoiceParticipantGridProps {
   onPinChange?: (identity: string | null) => void;
   /** En mobile tocar un tile abre la lista, asi que ahi no se fija con doble toque. */
   onTilePress?: () => void;
+  /** Boton de pantalla grande en los tiles con video. */
+  canExpand?: boolean;
 }
 
 export function VoiceParticipantGrid({
@@ -40,6 +42,7 @@ export function VoiceParticipantGrid({
   pinnedIdentity,
   onPinChange,
   onTilePress,
+  canExpand = true,
 }: VoiceParticipantGridProps) {
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const isNarrow = size.width < NARROW_GRID_BREAKPOINT;
@@ -87,6 +90,7 @@ export function VoiceParticipantGrid({
             : undefined
         }
         onPress={onTilePress}
+        canExpand={canExpand}
       />
     );
   };
