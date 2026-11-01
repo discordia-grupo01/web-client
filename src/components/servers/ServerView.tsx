@@ -619,7 +619,8 @@ function ServerViewContent({
     () => (voiceChannelId ? voiceParticipantsOf(voiceState) : []),
     [voiceChannelId, voiceState],
   );
-  const { byChannel: socketVoicePresence } = useVoicePresence(server.id);
+  const { byChannel: socketVoicePresence, startsByChannel: voiceCallStarts } =
+    useVoicePresence(server.id);
   const voicePresence = useMemo(
     () =>
       voiceChannelId
@@ -959,6 +960,9 @@ function ServerViewContent({
         onEditPermissions={() => openChannelSettings(channel, "permissions")}
         onDelete={() => setDeletingChannel(channel)}
         isVoiceConnected={channel.id === voiceChannelId}
+        callStartedAt={
+          channel.kind === "voice" ? voiceCallStarts[channel.id] : undefined
+        }
       >
         {channel.kind === "voice" ? (
           <VoiceChannelParticipants

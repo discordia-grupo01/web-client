@@ -102,6 +102,7 @@ export function VoiceEmbed() {
         pinnedIdentity={pinnedIdentity}
         onPinChange={requestPin}
         onTilePress={requestParticipants}
+        canExpand={false}
       />
       <div ref={audioHostRef} hidden />
     </main>

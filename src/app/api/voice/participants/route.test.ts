@@ -37,6 +37,7 @@ describe("GET /api/voice/participants", () => {
         channels: [
           {
             channel_id: "c1",
+            started_at: "2026-11-01T16:00:00.123Z",
             participants: [
               { participant_id: "u2", name: "Zoe" },
               { participant_id: "u1", name: "Ana" },
@@ -57,6 +58,7 @@ describe("GET /api/voice/participants", () => {
           { participant_id: "u2", name: "Zoe" },
         ],
       },
+      startsByChannel: { c1: Date.parse("2026-11-01T16:00:00.123Z") },
     });
   });
 

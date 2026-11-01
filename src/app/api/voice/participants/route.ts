@@ -1,4 +1,5 @@
 import {
+  callStartsByChannel,
   presenceByChannel,
   VOICE_PARTICIPANTS_FAILED,
   voiceErrorMessage,
@@ -42,7 +43,11 @@ export async function GET(
   }
 
   return NextResponse.json(
-    { ok: true, byChannel: presenceByChannel(result.data) },
+    {
+      ok: true,
+      byChannel: presenceByChannel(result.data),
+      startsByChannel: callStartsByChannel(result.data),
+    },
     { headers: { "Cache-Control": "no-store" } },
   );
 }

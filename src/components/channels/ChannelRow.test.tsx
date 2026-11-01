@@ -1,4 +1,7 @@
-import type { Channel } from "@discordia/client-shared";
+import {
+  VOICE_CALL_DURATION_LABEL,
+  type Channel,
+} from "@discordia/client-shared";
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -89,5 +92,41 @@ describe("ChannelRow", () => {
 
     expect(screen.getByText("Editar canal")).toBeInTheDocument();
     expect(screen.queryByText("Sobrescribir permisos")).toBeNull();
+  });
+
+  describe("duracion de la llamada", () => {
+    const voiceChannel = { ...channel, kind: "voice" } as Channel;
+    const START = Date.parse("2026-11-01T16:00:00Z");
+
+    function renderVoiceRow(callStartedAt?: number) {
+      render(
+        <SortableChannelRow
+          channel={voiceChannel}
+          active={false}
+          canManage
+          onClick={vi.fn()}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+          callStartedAt={callStartedAt}
+        />,
+      );
+    }
+
+    it("con una llamada en curso muestra hace cuanto empezo", () => {
+      vi.useFakeTimers();
+      vi.setSystemTime(START + 65_000);
+
+      renderVoiceRow(START);
+
+      expect(
+        screen.getByLabelText(`${VOICE_CALL_DURATION_LABEL}: 1:05`),
+      ).toBeInTheDocument();
+      vi.useRealTimers();
+    });
+
+    it("sin llamada no muestra duracion", () => {
+      renderVoiceRow(undefined);
+      expect(screen.queryByTitle(VOICE_CALL_DURATION_LABEL)).toBeNull();
+    });
   });
 });
