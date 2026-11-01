@@ -20,6 +20,7 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
+import { CallDuration } from "@/components/voice/CallDuration";
 import { cn } from "@/lib/cn";
 
 interface ChannelRowProps {
@@ -36,6 +37,7 @@ interface ChannelRowProps {
   onEditPermissions?: () => void;
   onDelete: () => void;
   isVoiceConnected?: boolean;
+  callStartedAt?: number;
   children?: ReactNode;
 }
 
@@ -78,10 +80,12 @@ function ChannelRow({
   onEditPermissions,
   onDelete,
   isVoiceConnected = false,
+  callStartedAt,
   children,
 }: ChannelRowProps) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const hasMenu = canManage || canManagePermissions;
 
   return (
     <div>
@@ -121,15 +125,24 @@ function ChannelRow({
           />
           <span
             className={cn(
-              "truncate",
+              "min-w-0 truncate",
               unreadMentions > 0 && !active && "text-content font-semibold",
             )}
           >
             {channel.name}
           </span>
+          {callStartedAt !== undefined ? (
+            <CallDuration
+              startedAt={callStartedAt}
+              className={cn(
+                "ml-auto text-xs transition-opacity",
+                hasMenu && "group-hover:opacity-0",
+              )}
+            />
+          ) : null}
         </button>
 
-        {canManage || canManagePermissions ? (
+        {hasMenu ? (
           <>
             <button
               type="button"
