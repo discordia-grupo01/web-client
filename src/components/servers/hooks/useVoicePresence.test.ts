@@ -14,6 +14,7 @@ beforeEach(() => {
   listVoiceParticipantsRequest.mockReset().mockResolvedValue({
     ok: true,
     byChannel: {},
+    startsByChannel: {},
   });
   connectVoicePresence.mockReset().mockReturnValue(() => {});
   vi.useFakeTimers();
@@ -35,6 +36,7 @@ describe("useVoicePresence", () => {
     listVoiceParticipantsRequest.mockResolvedValue({
       ok: true,
       byChannel: { c1: [ana] },
+      startsByChannel: {},
     });
 
     const { result } = renderHook(() => useVoicePresence("s1"));
@@ -56,6 +58,7 @@ describe("useVoicePresence", () => {
     listVoiceParticipantsRequest.mockResolvedValue({
       ok: true,
       byChannel: { c1: [ana] },
+      startsByChannel: {},
     });
 
     const { result } = renderHook(() => useVoicePresence("s1"));
@@ -113,7 +116,11 @@ describe("useVoicePresence", () => {
     );
 
     await act(async () => {
-      resolveSnapshot?.({ ok: true, byChannel: { c1: [ana] } });
+      resolveSnapshot?.({
+        ok: true,
+        byChannel: { c1: [ana] },
+        startsByChannel: {},
+      });
       await Promise.resolve();
     });
 
@@ -145,6 +152,7 @@ describe("useVoicePresence", () => {
     listVoiceParticipantsRequest.mockResolvedValue({
       ok: true,
       byChannel: { c1: [ana] },
+      startsByChannel: {},
     });
     const handlers = connectVoicePresence.mock.calls[0][1];
     act(() => handlers.rejoined());
@@ -162,5 +170,69 @@ describe("useVoicePresence", () => {
     });
     expect(listVoiceParticipantsRequest).toHaveBeenCalledOnce();
     unmount();
+  });
+
+  describe("inicio de las llamadas", () => {
+    const START = "2026-11-01T16:00:00.123Z";
+    const START_MS = Date.parse(START);
+    const join = (room_started_at: string | null) => ({
+      event_type: "voice.participant_joined" as const,
+      server_id: "s1",
+      room_id: "c1",
+      participant_id: "u2",
+      name: "Beto",
+      room_started_at,
+    });
+
+    it("toma el inicio del snapshot", async () => {
+      listVoiceParticipantsRequest.mockResolvedValue({
+        ok: true,
+        byChannel: { c1: [ana] },
+        startsByChannel: { c1: START_MS },
+      });
+
+      const { result } = renderHook(() => useVoicePresence("s1"));
+      await flush();
+
+      expect(result.current.startsByChannel).toEqual({ c1: START_MS });
+    });
+
+    it("lo actualiza con cada push y lo borra cuando el canal se vacia", async () => {
+      const { result } = renderHook(() => useVoicePresence("s1"));
+      await flush();
+      const handlers = connectVoicePresence.mock.calls[0][1];
+
+      act(() => handlers.joined(join(START)));
+      expect(result.current.startsByChannel).toEqual({ c1: START_MS });
+
+      act(() =>
+        handlers.left({
+          ...join(null),
+          event_type: "voice.participant_left",
+        }),
+      );
+      expect(result.current.startsByChannel).toEqual({});
+    });
+
+    it("conserva un inicio recibido mientras llega el snapshot", async () => {
+      let resolveSnapshot: ((value: unknown) => void) | undefined;
+      listVoiceParticipantsRequest.mockReturnValue(
+        new Promise((resolve) => {
+          resolveSnapshot = resolve;
+        }),
+      );
+
+      const { result } = renderHook(() => useVoicePresence("s1"));
+      await flush();
+      const handlers = connectVoicePresence.mock.calls[0][1];
+      act(() => handlers.joined(join(START)));
+
+      await act(async () => {
+        resolveSnapshot?.({ ok: true, byChannel: {}, startsByChannel: {} });
+        await Promise.resolve();
+      });
+
+      expect(result.current.startsByChannel).toEqual({ c1: START_MS });
+    });
   });
 });

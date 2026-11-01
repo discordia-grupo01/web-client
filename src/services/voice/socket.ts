@@ -1,17 +1,12 @@
-import { createSocketManager } from "@discordia/client-shared";
+import {
+  createSocketManager,
+  type VoicePresenceEvent,
+} from "@discordia/client-shared";
 import { type Channel, Socket } from "phoenix";
 
 import { env } from "@/lib/env";
 
 import { fetchVoiceSocketTicketRequest } from "./client";
-
-export interface VoicePresenceEvent {
-  event_type: "voice.participant_joined" | "voice.participant_left";
-  server_id: string;
-  room_id: string;
-  participant_id: string;
-  name: string;
-}
 
 interface VoicePresenceHandlers {
   joined: (event: VoicePresenceEvent) => void;
