@@ -14,7 +14,9 @@ import {
   createVoiceEmbedSession,
   type VoiceEmbedSession,
 } from "@/components/voice/utils/voiceEmbedSession";
+import { cn } from "@/lib/cn";
 
+import { VoiceExpandedStage } from "./VoiceExpandedStage";
 import { VoiceParticipantGrid } from "./VoiceParticipantGrid";
 
 declare global {
@@ -34,6 +36,8 @@ export function VoiceEmbed() {
   const [status, setStatus] = useState<VoiceConnectionStatus>("idle");
   const [localAvatarUrl, setLocalAvatarUrl] = useState<string | null>(null);
   const [pinnedIdentity, setPinnedIdentity] = useState<string | null>(null);
+  const [canExpand, setCanExpand] = useState(false);
+  const [expandedIdentity, setExpandedIdentity] = useState<string | null>(null);
 
   useEffect(() => {
     const audioHost = audioHostRef.current;
@@ -46,6 +50,7 @@ export function VoiceEmbed() {
       else if (event.type === "disconnected") {
         setParticipants([]);
         setStatus("idle");
+        setExpandedIdentity(null);
       }
     };
 
@@ -57,6 +62,11 @@ export function VoiceEmbed() {
       if (command.type === "setAppearance") {
         document.documentElement.dataset.theme = command.theme;
         setLocalAvatarUrl(command.localAvatarUrl);
+        setCanExpand(command.canExpand === true);
+        return;
+      }
+      if (command.type === "setExpanded") {
+        setExpandedIdentity(command.identity);
         return;
       }
       if (command.type === "setPinned") {
@@ -89,21 +99,43 @@ export function VoiceEmbed() {
   const requestPin = useCallback((identity: string | null) => {
     postToApp({ type: "pinRequested", identity });
   }, []);
+  const requestExpand = useCallback((identity: string) => {
+    postToApp({ type: "expandRequested", identity });
+  }, []);
+
+  const expanded = participants.find(
+    (participant) => participant.identity === expandedIdentity,
+  );
+  const expandedVideo = expanded ? videoOf(expanded.identity) : null;
 
   return (
-    <main className="bg-surface flex h-dvh flex-col">
-      <VoiceParticipantGrid
-        participants={participants}
-        isConnecting={status === "connecting"}
-        ownAvatarSrc={localAvatarUrl}
-        videoOf={videoOf}
-        onToggleMutedForMe={requestMuteForMe}
-        onShowParticipants={requestParticipants}
-        pinnedIdentity={pinnedIdentity}
-        onPinChange={requestPin}
-        onTilePress={requestParticipants}
-        canExpand={false}
-      />
+    <main
+      className={cn(
+        "flex h-dvh flex-col",
+        expandedVideo ? "bg-black" : "bg-surface",
+      )}
+    >
+      {expanded && expandedVideo ? (
+        <VoiceExpandedStage
+          name={expanded.name}
+          video={expandedVideo}
+          isMirrored={expanded.isLocal && expandedVideo.source === "camera"}
+        />
+      ) : (
+        <VoiceParticipantGrid
+          participants={participants}
+          isConnecting={status === "connecting"}
+          ownAvatarSrc={localAvatarUrl}
+          videoOf={videoOf}
+          onToggleMutedForMe={requestMuteForMe}
+          onShowParticipants={requestParticipants}
+          pinnedIdentity={pinnedIdentity}
+          onPinChange={requestPin}
+          onTilePress={requestParticipants}
+          canExpand={canExpand}
+          onExpand={requestExpand}
+        />
+      )}
       <div ref={audioHostRef} hidden />
     </main>
   );

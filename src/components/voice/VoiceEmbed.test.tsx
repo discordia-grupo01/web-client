@@ -1,0 +1,128 @@
+import {
+  serializeVoiceBridgeMessage,
+  voiceFullscreenLabel,
+  type VoiceBridgeCommand,
+  type VoiceBridgeEvent,
+  type VoiceParticipant,
+} from "@discordia/client-shared";
+
+import { act, fireEvent, render, screen } from "@testing-library/react";
+import type { Track } from "livekit-client";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+import { VoiceEmbed } from "./VoiceEmbed";
+
+const track = { attach: vi.fn(), detach: vi.fn() } as unknown as Track;
+
+const session = vi.hoisted(() => ({
+  post: null as ((event: VoiceBridgeEvent) => void) | null,
+}));
+
+vi.mock("@/components/voice/utils/voiceEmbedSession", () => ({
+  createVoiceEmbedSession: (post: (event: VoiceBridgeEvent) => void) => {
+    session.post = post;
+    return {
+      handle: vi.fn(),
+      dispose: vi.fn(),
+      videoOf: (identity: string) =>
+        identity === "u-pixel" ? { track, source: "screen" } : null,
+    };
+  },
+}));
+
+vi.mock("@/components/voice/hooks/useElementSize", () => ({
+  useElementSize: () => [{ current: null }, { width: 800, height: 600 }],
+}));
+
+const pixel: VoiceParticipant = {
+  identity: "u-pixel",
+  name: "PixelHunter",
+  isLocal: false,
+  muted: false,
+  speaking: false,
+  cameraOn: false,
+  screenSharing: true,
+  mutedForMe: false,
+};
+
+const postMessage = vi.fn();
+
+beforeEach(() => {
+  window.ReactNativeWebView = { postMessage };
+});
+
+afterEach(() => {
+  delete window.ReactNativeWebView;
+  postMessage.mockClear();
+});
+
+function sendCommand(command: VoiceBridgeCommand) {
+  act(() => {
+    window.dispatchEvent(
+      new MessageEvent("message", {
+        data: serializeVoiceBridgeMessage(command),
+      }),
+    );
+  });
+}
+
+function joinCall(canExpand?: boolean) {
+  render(<VoiceEmbed />);
+  sendCommand({
+    type: "setAppearance",
+    theme: "dark",
+    localAvatarUrl: null,
+    ...(canExpand === undefined ? {} : { canExpand }),
+  });
+  act(() => session.post?.({ type: "participants", participants: [pixel] }));
+}
+
+const expandButton = () =>
+  screen.queryByRole("button", { name: voiceFullscreenLabel("PixelHunter") });
+
+describe("VoiceEmbed en pantalla grande", () => {
+  it("no ofrece pantalla grande si la app no la soporta", () => {
+    joinCall();
+    expect(expandButton()).not.toBeInTheDocument();
+  });
+
+  it("si la app la soporta, el boton le pide ampliar a la app", () => {
+    joinCall(true);
+
+    act(() => fireEvent.click(expandButton()!));
+
+    expect(postMessage).toHaveBeenCalledWith(
+      serializeVoiceBridgeMessage({
+        type: "expandRequested",
+        identity: "u-pixel",
+      }),
+    );
+  });
+
+  it("muestra solo a quien la app amplio y vuelve a la grilla con null", () => {
+    joinCall(true);
+
+    sendCommand({ type: "setExpanded", identity: "u-pixel" });
+    expect(
+      screen.getByRole("img", { name: "PixelHunter" }),
+    ).toBeInTheDocument();
+    expect(expandButton()).not.toBeInTheDocument();
+
+    sendCommand({ type: "setExpanded", identity: null });
+    expect(
+      screen.queryByRole("img", { name: "PixelHunter" }),
+    ).not.toBeInTheDocument();
+    expect(expandButton()).toBeInTheDocument();
+  });
+
+  it("sigue en la grilla si la persona ya no tiene video", () => {
+    joinCall(true);
+
+    sendCommand({ type: "setExpanded", identity: "u-otro" });
+
+    expect(
+      screen.queryByRole("img", { name: "PixelHunter" }),
+    ).not.toBeInTheDocument();
+    expect(expandButton()).toBeInTheDocument();
+  });
+});
