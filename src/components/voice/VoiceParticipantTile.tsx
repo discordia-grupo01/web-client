@@ -52,8 +52,10 @@ interface VoiceParticipantTileProps {
   onToggleMutedForMe?: () => void;
   onTogglePin?: () => void;
   onPress?: () => void;
-  /** `false` en el embed de mobile, donde la pantalla completa no anda. */
+  /** `false` en el embed de mobile si la app no sabe mostrar pantalla grande. */
   canExpand?: boolean;
+  /** Reemplaza la Fullscreen API: en el embed de mobile amplia la app. */
+  onExpand?: () => void;
 }
 
 export function VoiceParticipantTile({
@@ -66,6 +68,7 @@ export function VoiceParticipantTile({
   onTogglePin,
   onPress,
   canExpand = true,
+  onExpand,
 }: VoiceParticipantTileProps) {
   const { name, speaking, muted, cameraOn, screenSharing, mutedForMe } =
     participant;
@@ -80,7 +83,10 @@ export function VoiceParticipantTile({
   const overlay = useIdleVisibility(isFullscreen);
   const isOwnScreenShare = participant.isLocal && video?.source === "screen";
   const canShowExpand =
-    canExpand && fullscreen.isSupported && video !== null && !isOwnScreenShare;
+    canExpand &&
+    (onExpand !== undefined || fullscreen.isSupported) &&
+    video !== null &&
+    !isOwnScreenShare;
   const hasVideo = video !== null;
 
   useEffect(() => {
@@ -186,7 +192,7 @@ export function VoiceParticipantTile({
               label={VOICE_FULLSCREEN_ENTER}
               ariaLabel={voiceFullscreenLabel(name)}
               isCompact={isCompact}
-              onClick={fullscreen.enter}
+              onClick={onExpand ?? fullscreen.enter}
             >
               <Maximize2 size={14} />
             </TileCornerButton>

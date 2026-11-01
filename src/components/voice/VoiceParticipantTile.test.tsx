@@ -152,4 +152,33 @@ describe("VoiceParticipantTile en pantalla grande", () => {
       screen.queryByRole("button", { name: VOICE_FULLSCREEN_EXIT_LABEL }),
     ).not.toBeInTheDocument();
   });
+
+  it("con onExpand pide ampliar en vez de usar la pantalla completa", () => {
+    const onExpand = vi.fn();
+    const onTogglePin = vi.fn();
+    renderTile({ onExpand, onTogglePin });
+
+    act(() => fireEvent.click(expandButton()!));
+
+    expect(onExpand).toHaveBeenCalledTimes(1);
+    expect(onTogglePin).not.toHaveBeenCalled();
+    expect(HTMLElement.prototype.requestFullscreen).not.toHaveBeenCalled();
+  });
+
+  it("con onExpand la ofrece aunque no haya pantalla completa (WebView)", () => {
+    Object.defineProperty(document, "fullscreenEnabled", {
+      configurable: true,
+      get: () => false,
+    });
+    renderTile({ onExpand: vi.fn() });
+    expect(expandButton()).toBeInTheDocument();
+  });
+
+  it("con onExpand tampoco la ofrece en tu propia pantalla compartida", () => {
+    renderTile({
+      participant: { ...participant, isLocal: true },
+      onExpand: vi.fn(),
+    });
+    expect(expandButton()).not.toBeInTheDocument();
+  });
 });

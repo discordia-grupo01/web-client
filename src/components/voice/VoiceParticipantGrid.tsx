@@ -30,6 +30,7 @@ interface VoiceParticipantGridProps {
   onTilePress?: () => void;
   /** Boton de pantalla grande en los tiles con video. */
   canExpand?: boolean;
+  onExpand?: (identity: string) => void;
 }
 
 export function VoiceParticipantGrid({
@@ -43,6 +44,7 @@ export function VoiceParticipantGrid({
   onPinChange,
   onTilePress,
   canExpand = true,
+  onExpand,
 }: VoiceParticipantGridProps) {
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const isNarrow = size.width < NARROW_GRID_BREAKPOINT;
@@ -91,6 +93,7 @@ export function VoiceParticipantGrid({
         }
         onPress={onTilePress}
         canExpand={canExpand}
+        onExpand={onExpand ? () => onExpand(identity) : undefined}
       />
     );
   };
