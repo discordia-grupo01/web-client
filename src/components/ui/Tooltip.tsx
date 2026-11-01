@@ -23,7 +23,7 @@ export function Tooltip({
 
   return (
     <span
-      className={cn("group relative inline-flex", className)}
+      className={cn("group/tooltip relative inline-flex", className)}
       onClickCapture={() => setIsSuppressed(true)}
       onMouseMove={() => {
         if (isSuppressed) setIsSuppressed(false);
@@ -40,7 +40,7 @@ export function Tooltip({
           align === "end" ? "right-0" : "left-1/2 -translate-x-1/2",
           "opacity-0 transition-opacity",
           !isSuppressed &&
-            "group-hover:opacity-100 group-has-[:focus-visible]:opacity-100",
+            "group-hover/tooltip:opacity-100 group-has-[:focus-visible]/tooltip:opacity-100",
         )}
       >
         {label}
