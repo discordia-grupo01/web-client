@@ -11,10 +11,13 @@ import {
   VOICE_SCREEN_SHARING,
   VOICE_UNMUTE_FOR_ME,
   VOICE_UNPIN,
+  isScreenShareIdentity,
   voiceConnectedCount,
   voiceParticipantName,
-  voicePinLabel,
+  voiceParticipantRows,
   voiceSidebarPreview,
+  voiceTileName,
+  voiceTilePinLabel,
   type VoiceParticipant,
 } from "@discordia/client-shared";
 
@@ -51,6 +54,7 @@ export function VoiceParticipantsPanel({
   }, [onClose]);
 
   const { shown } = voiceSidebarPreview(participants, participants.length);
+  const rows = voiceParticipantRows(shown);
 
   return (
     <div
@@ -83,7 +87,7 @@ export function VoiceParticipantsPanel({
         </header>
 
         <ul className="min-h-0 flex-1 overflow-y-auto p-2">
-          {shown.map((participant) => (
+          {rows.map((participant) => (
             <ParticipantRow
               key={participant.identity}
               participant={participant}
@@ -130,6 +134,27 @@ function ParticipantRow({
     mutedForMe,
   } = participant;
   const muteForMeLabel = mutedForMe ? VOICE_UNMUTE_FOR_ME : VOICE_MUTE_FOR_ME;
+  const pinButton = (
+    <PinButton
+      label={voiceTilePinLabel(participant, isPinned)}
+      isPinned={isPinned}
+      onClick={onTogglePin}
+    />
+  );
+
+  if (isScreenShareIdentity(participant.identity)) {
+    return (
+      <li className="hover:bg-surface-hover flex items-center gap-3 rounded-xl px-2 py-2 transition-colors">
+        <span className="bg-accent/18 text-accent flex size-9 shrink-0 items-center justify-center rounded-full">
+          <MonitorUp size={16} />
+        </span>
+        <p className="font-display text-content min-w-0 flex-1 truncate text-sm font-semibold">
+          {voiceTileName(participant)}
+        </p>
+        {pinButton}
+      </li>
+    );
+  }
 
   return (
     <li className="hover:bg-surface-hover flex items-center gap-3 rounded-xl px-2 py-2 transition-colors">
@@ -192,21 +217,35 @@ function ParticipantRow({
           <VolumeX size={14} />
         </button>
       )}
-      <button
-        type="button"
-        onClick={onTogglePin}
-        aria-label={voicePinLabel(name, isPinned)}
-        aria-pressed={isPinned}
-        className={cn(
-          "shrink-0 cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors",
-          isPinned
-            ? "bg-accent text-on-accent"
-            : "bg-surface-input text-content-muted hover:text-content",
-        )}
-      >
-        {isPinned ? VOICE_UNPIN : VOICE_PIN}
-      </button>
+      {pinButton}
     </li>
+  );
+}
+
+function PinButton({
+  label,
+  isPinned,
+  onClick,
+}: {
+  label: string;
+  isPinned: boolean;
+  onClick: () => void;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-pressed={isPinned}
+      className={cn(
+        "shrink-0 cursor-pointer rounded-lg px-2.5 py-1.5 text-[11px] font-semibold transition-colors",
+        isPinned
+          ? "bg-accent text-on-accent"
+          : "bg-surface-input text-content-muted hover:text-content",
+      )}
+    >
+      {isPinned ? VOICE_UNPIN : VOICE_PIN}
+    </button>
   );
 }
 

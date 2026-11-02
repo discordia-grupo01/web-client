@@ -155,4 +155,43 @@ describe("voiceFocusLayout", () => {
       layout.stageHeight + 8 + rows * layout.tileHeight + (rows - 1) * 8,
     ).toBeLessThanOrEqual(560);
   });
+
+  describe("con una pantalla vertical fijada", () => {
+    const PHONE = 9 / 19.5;
+
+    it("en la web el escenario es vertical y el resto usa el costado", () => {
+      const layout = voiceFocusLayout(1300, 600, 4, false, PHONE);
+      const othersWidth =
+        layout.columns * layout.tileWidth + (layout.columns - 1) * 8;
+
+      expect(layout.mode).toBe("side");
+      expect(layout.stageHeight).toBeGreaterThan(590);
+      expect(layout.stageHeight).toBeLessThanOrEqual(600);
+      expect(layout.stageWidth).toBeLessThan(layout.stageHeight);
+      expect(layout.columns).toBeGreaterThan(1);
+      expect(layout.stageWidth + 8 + othersWidth).toBeLessThanOrEqual(1300);
+    });
+
+    it("en el celular deja lugar al costado para los demas", () => {
+      const layout = voiceFocusLayout(374, 560, 2, true, PHONE);
+
+      expect(layout.mode).toBe("side");
+      expect(layout.stageWidth / layout.stageHeight).toBeCloseTo(PHONE, 2);
+      expect(layout.tileWidth).toBeGreaterThanOrEqual(104);
+      expect(layout.stageWidth + 8 + layout.tileWidth).toBeLessThanOrEqual(374);
+    });
+
+    it("sin nadie mas ocupa todo el alto", () => {
+      const layout = voiceFocusLayout(374, 560, 0, true, PHONE);
+      expect(layout.stageHeight).toBeLessThanOrEqual(560);
+      expect(layout.stageWidth).toBe(Math.floor(560 * PHONE));
+    });
+
+    it("una pantalla horizontal sigue como antes", () => {
+      expect(voiceFocusLayout(1300, 600, 4, false, 16 / 9)).toEqual(
+        voiceFocusLayout(1300, 600, 4, false),
+      );
+      expect(voiceFocusLayout(374, 560, 1, true, 16 / 10).mode).toBe("stacked");
+    });
+  });
 });

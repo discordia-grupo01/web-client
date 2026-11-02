@@ -183,7 +183,18 @@ export function voiceFocusLayout(
   height: number,
   othersCount: number,
   isNarrow: boolean,
+  stageAspect: number = VOICE_TILE_ASPECT,
 ): VoiceFocusLayout {
+  if (stageAspect > 0 && stageAspect < 1) {
+    return portraitFocusLayout(
+      width,
+      height,
+      othersCount,
+      stageAspect,
+      isNarrow ? NARROW_GRID : WIDE_GRID,
+    );
+  }
+
   if (!isNarrow && width >= SIDE_STRIP_MIN_WIDTH) {
     const tileHeight = SIDE_STRIP_TILE_WIDTH / VOICE_TILE_ASPECT;
     const stripWidth = othersCount > 0 ? SIDE_STRIP_TILE_WIDTH + FOCUS_GAP : 0;
@@ -234,5 +245,35 @@ export function voiceFocusLayout(
     tileHeight: tileWidth / VOICE_TILE_ASPECT,
     columns,
     capacity: grid.capacity,
+  };
+}
+
+function portraitFocusLayout(
+  width: number,
+  height: number,
+  othersCount: number,
+  stageAspect: number,
+  grid: VoiceGridOptions,
+): VoiceFocusLayout {
+  const reservedForOthers = othersCount > 0 ? grid.minTileWidth + FOCUS_GAP : 0;
+  const stageWidth = Math.max(
+    0,
+    Math.floor(Math.min(height * stageAspect, width - reservedForOthers)),
+  );
+  const stageHeight = stageWidth / stageAspect;
+  const others = voiceGridLayout(
+    Math.max(0, width - stageWidth - FOCUS_GAP),
+    height,
+    othersCount,
+    grid,
+  );
+  return {
+    mode: "side",
+    stageWidth,
+    stageHeight,
+    tileWidth: others.tileWidth,
+    tileHeight: others.tileHeight,
+    columns: others.columns,
+    capacity: others.capacity,
   };
 }

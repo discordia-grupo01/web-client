@@ -6,6 +6,8 @@ import {
   type VoiceBridgeEvent,
   type VoiceConnectionStatus,
   type VoiceParticipant,
+  voiceTileName,
+  voiceTilesOf,
 } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -103,7 +105,7 @@ export function VoiceEmbed() {
     postToApp({ type: "expandRequested", identity });
   }, []);
 
-  const expanded = participants.find(
+  const expanded = voiceTilesOf(participants).find(
     (participant) => participant.identity === expandedIdentity,
   );
   const expandedVideo = expanded ? videoOf(expanded.identity) : null;
@@ -117,7 +119,7 @@ export function VoiceEmbed() {
     >
       {expanded && expandedVideo ? (
         <VoiceExpandedStage
-          name={expanded.name}
+          name={voiceTileName(expanded)}
           video={expandedVideo}
           isMirrored={expanded.isLocal && expandedVideo.source === "camera"}
         />

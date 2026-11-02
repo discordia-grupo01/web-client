@@ -1,6 +1,6 @@
 import {
   serializeVoiceBridgeMessage,
-  voiceFullscreenLabel,
+  voiceTileFullscreenLabel,
   type VoiceBridgeCommand,
   type VoiceBridgeEvent,
   type VoiceParticipant,
@@ -25,7 +25,7 @@ vi.mock("@/components/voice/utils/voiceEmbedSession", () => ({
       handle: vi.fn(),
       dispose: vi.fn(),
       videoOf: (identity: string) =>
-        identity === "u-pixel" ? { track, source: "screen" } : null,
+        identity === "u-pixel:screen" ? { track, source: "screen" } : null,
     };
   },
 }));
@@ -78,7 +78,9 @@ function joinCall(canExpand?: boolean) {
 }
 
 const expandButton = () =>
-  screen.queryByRole("button", { name: voiceFullscreenLabel("PixelHunter") });
+  screen.queryByRole("button", {
+    name: voiceTileFullscreenLabel({ ...pixel, identity: "u-pixel:screen" }),
+  });
 
 describe("VoiceEmbed en pantalla grande", () => {
   it("no ofrece pantalla grande si la app no la soporta", () => {
@@ -94,7 +96,7 @@ describe("VoiceEmbed en pantalla grande", () => {
     expect(postMessage).toHaveBeenCalledWith(
       serializeVoiceBridgeMessage({
         type: "expandRequested",
-        identity: "u-pixel",
+        identity: "u-pixel:screen",
       }),
     );
   });
@@ -102,17 +104,23 @@ describe("VoiceEmbed en pantalla grande", () => {
   it("muestra solo a quien la app amplio y vuelve a la grilla con null", () => {
     joinCall(true);
 
-    sendCommand({ type: "setExpanded", identity: "u-pixel" });
+    sendCommand({ type: "setExpanded", identity: "u-pixel:screen" });
     expect(
-      screen.getByRole("img", { name: "PixelHunter" }),
+      screen.getByRole("img", { name: "Pantalla de PixelHunter" }),
     ).toBeInTheDocument();
     expect(expandButton()).not.toBeInTheDocument();
 
     sendCommand({ type: "setExpanded", identity: null });
     expect(
-      screen.queryByRole("img", { name: "PixelHunter" }),
+      screen.queryByRole("img", { name: "Pantalla de PixelHunter" }),
     ).not.toBeInTheDocument();
     expect(expandButton()).toBeInTheDocument();
+  });
+
+  it("muestra a la persona y a su pantalla en tiles separados", () => {
+    joinCall(true);
+    expect(screen.getByText("PixelHunter")).toBeInTheDocument();
+    expect(screen.getByText("Pantalla de PixelHunter")).toBeInTheDocument();
   });
 
   it("sigue en la grilla si la persona ya no tiene video", () => {
@@ -121,7 +129,7 @@ describe("VoiceEmbed en pantalla grande", () => {
     sendCommand({ type: "setExpanded", identity: "u-otro" });
 
     expect(
-      screen.queryByRole("img", { name: "PixelHunter" }),
+      screen.queryByRole("img", { name: "Pantalla de PixelHunter" }),
     ).not.toBeInTheDocument();
     expect(expandButton()).toBeInTheDocument();
   });

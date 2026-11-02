@@ -164,8 +164,15 @@ describe("tileVideoOf", () => {
     ]),
   };
 
-  it("la pantalla compartida le gana a la camara", () => {
+  it("el tile de la persona muestra su camara aunque comparta", () => {
     expect(tileVideoOf(room, "beto")).toEqual({
+      track: "camara-beto",
+      source: "camera",
+    });
+  });
+
+  it("el tile de pantalla muestra la pantalla compartida desde la web", () => {
+    expect(tileVideoOf(room, "beto:screen")).toEqual({
       track: "pantalla-beto",
       source: "screen",
     });
@@ -178,7 +185,7 @@ describe("tileVideoOf", () => {
     });
   });
 
-  it("muestra en la tarjeta del dueño la pantalla que comparte desde el celular", () => {
+  it("el tile de pantalla muestra la que se comparte desde el celular", () => {
     const withPhone = {
       ...room,
       remoteParticipants: new Map([
@@ -195,13 +202,14 @@ describe("tileVideoOf", () => {
       ]),
     };
 
-    expect(tileVideoOf(withPhone, "caro")).toEqual({
+    expect(tileVideoOf(withPhone, "caro:screen")).toEqual({
       track: "pantalla-caro",
       source: "screen",
     });
+    expect(tileVideoOf(withPhone, "caro")).toBeNull();
   });
 
-  it("sin el track bajado no hay video de pantalla", () => {
+  it("sin el track bajado tu pantalla no tiene video y tu camara sigue", () => {
     const ownPhone = {
       ...room,
       remoteParticipants: new Map([
@@ -215,6 +223,7 @@ describe("tileVideoOf", () => {
       ]),
     };
 
+    expect(tileVideoOf(ownPhone, "ana:screen")).toBeNull();
     expect(tileVideoOf(ownPhone, "ana")).toEqual({
       track: "camara-ana",
       source: "camera",
@@ -224,5 +233,6 @@ describe("tileVideoOf", () => {
   it("una camara apagada o alguien que no esta no tienen video", () => {
     expect(tileVideoOf(room, "caro")).toBeNull();
     expect(tileVideoOf(room, "nadie")).toBeNull();
+    expect(tileVideoOf(room, "caro:screen")).toBeNull();
   });
 });
