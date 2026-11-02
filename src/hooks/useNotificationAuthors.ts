@@ -1,0 +1,47 @@
+"use client";
+
+import {
+  type MessageAuthor,
+  messageAuthorOf,
+  type NotificationHistoryItem,
+} from "@discordia/client-shared";
+
+import { useEffect, useRef, useState } from "react";
+
+import { getPublicProfileRequest } from "@/services/profile/client";
+import { avatarSrcOf } from "@/utils/userProfile";
+
+export function useNotificationAuthors(
+  items: readonly NotificationHistoryItem[],
+): Record<string, MessageAuthor> {
+  const [authors, setAuthors] = useState<Record<string, MessageAuthor>>({});
+  const requested = useRef(new Set<string>());
+  const isMounted = useRef(true);
+
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    const missing = [...new Set(items.map((item) => item.author_id))].filter(
+      (id) => !requested.current.has(id),
+    );
+    missing.forEach((id) => requested.current.add(id));
+
+    missing.forEach((id) => {
+      void getPublicProfileRequest(id).then((result) => {
+        if (!isMounted.current || !result.ok) return;
+        const { user } = result;
+        setAuthors((previous) => ({
+          ...previous,
+          [id]: messageAuthorOf(user.id, user.name, avatarSrcOf(user.id, user)),
+        }));
+      });
+    });
+  }, [items]);
+
+  return authors;
+}
