@@ -38,6 +38,24 @@ interface MembersSidebarProps {
   onOpenPublicProfile: (userId: string, member?: Member) => void;
 }
 
+/**
+ * La fila propia muestra el perfil que el usuario acaba de editar, no la copia
+ * que vino con la lista de miembros: asi la foto, el nombre y el estado se
+ * actualizan al cerrar el modal de perfil sin recargar la lista.
+ */
+function withOwnProfile(member: Member, ownProfile: User): Member {
+  return {
+    ...member,
+    profile: {
+      name: ownProfile.name,
+      avatar_url: ownProfile.avatar_url,
+      description: ownProfile.description,
+      status_text: ownProfile.status_text,
+      status_emoji: ownProfile.status_emoji,
+    },
+  };
+}
+
 function MemberAvatar({ member }: { member: Member }) {
   const status = usePresenceOf(member.user_id);
   return (
@@ -235,17 +253,17 @@ function MemberGroup({
       <div className="space-y-0.5">
         {members.map((member) => {
           const isOwn = member.user_id === currentUserId;
-          const statusSource =
-            isOwn && ownProfile ? ownProfile : member.profile;
+          const shownMember =
+            isOwn && ownProfile ? withOwnProfile(member, ownProfile) : member;
           return (
             <MemberRow
               key={member.user_id}
-              member={member}
+              member={shownMember}
               roleColor={
                 highestRoleOf(member.role_ids, serverRoles)?.color ?? null
               }
-              statusText={statusSource?.status_text ?? ""}
-              statusEmoji={statusSource?.status_emoji ?? ""}
+              statusText={shownMember.profile?.status_text ?? ""}
+              statusEmoji={shownMember.profile?.status_emoji ?? ""}
               isOwn={isOwn}
               onOpenOwnProfile={onOpenOwnProfile}
               onOpenPublicProfile={() =>
