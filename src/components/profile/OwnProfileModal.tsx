@@ -33,6 +33,7 @@ import {
   updateOwnProfileRequest,
 } from "@/services/profile/client";
 import { cn } from "@/lib/cn";
+import { ownAvatarSrc } from "@/utils/ownAvatar";
 import { readFileAsDataUrl } from "@/utils/readFileAsDataUrl";
 import { useOwnStatus, usePresenceOf } from "@/hooks/usePresence";
 
@@ -78,8 +79,7 @@ export function OwnProfileModal({
   const displayedOwnStatus = usePresenceOf(profile.id);
   const [statusError, setStatusError] = useState("");
 
-  const avatarSrc =
-    imagePreview ?? (profile.avatar_url ? "/api/profile/avatar" : null);
+  const avatarSrc = imagePreview ?? ownAvatarSrc(profile);
   const hasAvatar = Boolean(avatarSrc);
 
   useEffect(() => {
