@@ -37,6 +37,7 @@ import {
   requestVoiceTokenRequest,
 } from "@/services/voice/client";
 import {
+  audioOwnerOf,
   PARTICIPANT_EVENTS,
   roomParticipants,
   type TileVideo,
@@ -88,7 +89,8 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   const applyVolumes = useCallback((room: Room) => {
     const { mutedForMe } = stateRef.current;
     room.remoteParticipants.forEach((participant) => {
-      participant.setVolume(mutedForMe.includes(participant.identity) ? 0 : 1);
+      const owner = audioOwnerOf(participant.identity);
+      participant.setVolume(mutedForMe.includes(owner) ? 0 : 1);
     });
   }, []);
 
