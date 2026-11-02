@@ -1,5 +1,9 @@
 import type { User } from "@discordia/client-shared";
 
-export function ownAvatarSrc(profile: User): string | null {
-  return profile.avatar_url ? "/api/profile/avatar" : null;
+import { withAvatarVersion } from "./userProfile";
+
+export function ownAvatarSrc(profile: Pick<User, "avatar_url">): string | null {
+  return profile.avatar_url
+    ? withAvatarVersion("/api/profile/avatar", profile.avatar_url)
+    : null;
 }
