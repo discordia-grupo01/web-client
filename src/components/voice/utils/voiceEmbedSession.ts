@@ -1,4 +1,5 @@
 import {
+  ownerOfScreenShareIdentity,
   type VoiceBridgeCommand,
   type VoiceBridgeEvent,
   VOICE_BRIDGE_PARTICIPANTS_THROTTLE_MS,
@@ -9,13 +10,16 @@ import {
   type DisconnectReason,
   type LocalTrackPublication,
   type Participant,
+  type RemoteParticipant,
   type RemoteTrack,
+  type RemoteTrackPublication,
   Room,
   RoomEvent,
   Track,
 } from "livekit-client";
 
 import {
+  audioOwnerOf,
   PARTICIPANT_EVENTS,
   roomParticipants,
   type TileVideo,
@@ -108,7 +112,31 @@ export function createVoiceEmbedSession(
 
   const applyVolumes = (current: Room) => {
     current.remoteParticipants.forEach((participant) => {
-      participant.setVolume(mutedForMe.has(participant.identity) ? 0 : 1);
+      const owner = audioOwnerOf(participant.identity);
+      participant.setVolume(mutedForMe.has(owner) ? 0 : 1);
+    });
+  };
+
+  // Tu propia pantalla, la que publica la conexion `<id>:screen` de este mismo
+  // celular, no se baja: se veria la grilla adentro de si misma y gasta datos.
+  const isOwnScreenShare = (current: Room, participant: RemoteParticipant) =>
+    ownerOfScreenShareIdentity(participant.identity) ===
+    current.localParticipant.identity;
+
+  const skipOwnScreenShare = (
+    current: Room,
+    publication: RemoteTrackPublication,
+    participant: RemoteParticipant,
+  ) => {
+    if (!isOwnScreenShare(current, participant)) return;
+    publication.setSubscribed(false);
+  };
+
+  const skipOwnScreenShares = (current: Room) => {
+    current.remoteParticipants.forEach((participant) => {
+      participant.trackPublications.forEach((publication) =>
+        skipOwnScreenShare(current, publication, participant),
+      );
     });
   };
 
@@ -129,6 +157,11 @@ export function createVoiceEmbedSession(
     const sync = () => syncParticipants(current);
     PARTICIPANT_EVENTS.forEach((event) => current.on(event, sync));
 
+    current.on(
+      RoomEvent.TrackPublished,
+      (publication: RemoteTrackPublication, participant: RemoteParticipant) =>
+        skipOwnScreenShare(current, publication, participant),
+    );
     current.on(RoomEvent.TrackSubscribed, (track: RemoteTrack) => {
       if (track.kind === Track.Kind.Audio) {
         audioHost.append(track.attach());
@@ -213,6 +246,7 @@ export function createVoiceEmbedSession(
 
     post({ type: "status", status: "connected" });
     post({ type: "speakPermission", allowed: canPublish(current) });
+    skipOwnScreenShares(current);
     syncParticipants(current);
     if (!current.canPlaybackAudio) {
       post({ type: "error", error: "audio_blocked" });

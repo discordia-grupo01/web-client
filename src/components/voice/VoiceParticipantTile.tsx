@@ -6,6 +6,7 @@ import {
   VOICE_MUTE_FOR_ME,
   VOICE_MUTED_FOR_ME_LABEL,
   VOICE_MUTED_LABEL,
+  VOICE_SCREEN_SHARE_SELF,
   VOICE_SCREEN_SHARING,
   VOICE_SPEAKING_LABEL,
   VOICE_UNMUTE_FOR_ME,
@@ -88,6 +89,7 @@ export function VoiceParticipantTile({
     video !== null &&
     !isOwnScreenShare;
   const hasVideo = video !== null;
+  const isSharingFromPhone = participant.isLocal && screenSharing && !video;
 
   useEffect(() => {
     if (isFullscreen && !hasVideo) exitFullscreen();
@@ -172,6 +174,16 @@ export function VoiceParticipantTile({
           className="rounded-full"
         />
       </div>
+
+      {isSharingFromPhone && !isCompact ? (
+        <span
+          className="text-content-muted absolute inset-x-3 flex items-center justify-center gap-1.5 text-xs font-medium"
+          style={{ top: `calc(50% + ${avatarSize / 2 + 10}px)` }}
+        >
+          <MonitorUp size={13} />
+          {VOICE_SCREEN_SHARE_SELF}
+        </span>
+      ) : null}
 
       {screenSharing && !isCompact ? (
         <span className="bg-accent text-on-accent absolute top-2.5 left-2.5 flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold">
