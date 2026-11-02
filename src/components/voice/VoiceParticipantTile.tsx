@@ -10,7 +10,8 @@ import {
   VOICE_SCREEN_SHARING,
   VOICE_SPEAKING_LABEL,
   VOICE_UNMUTE_FOR_ME,
-  voiceFullscreenLabel,
+  voiceTileFullscreenLabel,
+  voiceTileName,
   type VoiceParticipant,
 } from "@discordia/client-shared";
 
@@ -57,6 +58,8 @@ interface VoiceParticipantTileProps {
   canExpand?: boolean;
   /** Reemplaza la Fullscreen API: en el embed de mobile amplia la app. */
   onExpand?: () => void;
+  /** Proporcion real del video, para que la grilla adapte el tile fijado. */
+  onVideoAspectRatioChange?: (aspectRatio: number) => void;
 }
 
 export function VoiceParticipantTile({
@@ -70,10 +73,12 @@ export function VoiceParticipantTile({
   onPress,
   canExpand = true,
   onExpand,
+  onVideoAspectRatioChange,
 }: VoiceParticipantTileProps) {
   const { name, speaking, muted, cameraOn, screenSharing, mutedForMe } =
     participant;
   const isSpeaking = speaking && !mutedForMe;
+  const tileName = voiceTileName(participant);
   const isCompact = width < COMPACT_TILE_WIDTH;
   const muteForMeLabel = mutedForMe ? VOICE_UNMUTE_FOR_ME : VOICE_MUTE_FOR_ME;
   const avatarSize = Math.round(
@@ -103,17 +108,18 @@ export function VoiceParticipantTile({
         onPointerDown={overlay.onActivity}
         onKeyDown={overlay.onActivity}
         className={cn(
-          "relative flex items-center justify-center bg-black",
+          "relative flex items-center justify-center overflow-hidden bg-black",
           !overlay.isVisible && "cursor-none",
         )}
       >
         <VoiceVideo
           track={video.track}
           fit="contain"
+          hasBackdrop={video.source === "screen"}
           isMirrored={participant.isLocal && video.source === "camera"}
         />
         <VoiceFullscreenOverlay
-          name={name}
+          name={tileName}
           source={video.source}
           isVisible={overlay.isVisible}
           onExit={exitFullscreen}
@@ -151,7 +157,9 @@ export function VoiceParticipantTile({
         <VoiceVideo
           track={video.track}
           fit={video.source === "screen" ? "contain" : "cover"}
+          hasBackdrop={video.source === "screen"}
           isMirrored={participant.isLocal && video.source === "camera"}
+          onAspectRatioChange={onVideoAspectRatioChange}
         />
       ) : null}
 
@@ -202,7 +210,7 @@ export function VoiceParticipantTile({
           <span className={cn("transition-opacity", REVEAL_ON_HOVER)}>
             <TileCornerButton
               label={VOICE_FULLSCREEN_ENTER}
-              ariaLabel={voiceFullscreenLabel(name)}
+              ariaLabel={voiceTileFullscreenLabel(participant)}
               isCompact={isCompact}
               onClick={onExpand ?? fullscreen.enter}
             >
@@ -273,7 +281,7 @@ export function VoiceParticipantTile({
               isCompact ? "text-[11px]" : "text-sm",
             )}
           >
-            {name}
+            {tileName}
           </span>
         </div>
         <div className="flex shrink-0 items-center gap-1">

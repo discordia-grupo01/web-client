@@ -184,6 +184,25 @@ describe("VoiceParticipantTile en pantalla grande", () => {
   });
 });
 
+describe("VoiceParticipantTile de una pantalla compartida", () => {
+  const screenTile = { ...participant, identity: "u-pixel:screen" };
+
+  it("dice de quien es la pantalla", () => {
+    renderTile({ participant: screenTile });
+    expect(screen.getByText("Pantalla de PixelHunter")).toBeInTheDocument();
+  });
+
+  it("tu propia pantalla dice 'Tu pantalla'", () => {
+    renderTile({ participant: { ...screenTile, isLocal: true }, video: null });
+    expect(screen.getByText("Tu pantalla")).toBeInTheDocument();
+  });
+
+  it("el tile de la persona sigue diciendo su nombre", () => {
+    renderTile();
+    expect(screen.getByText("PixelHunter")).toBeInTheDocument();
+  });
+});
+
 describe("VoiceParticipantTile compartiendo desde el celular", () => {
   const me = { ...participant, isLocal: true };
 
