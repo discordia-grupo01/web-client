@@ -1,6 +1,7 @@
 import {
   type ListMessagesOptions,
   type ListMessagesResult,
+  type LookupMessagesResult,
   MESSAGE_SEARCH_FAILED,
   type MessageSearchQuery,
   MESSAGES_LOAD_FAILED,
@@ -81,5 +82,21 @@ export async function searchMessagesRequest(
     return data;
   } catch {
     return { ok: false, message: MESSAGE_SEARCH_FAILED };
+  }
+}
+
+export async function lookupMessagesRequest(
+  ids: readonly string[],
+): Promise<LookupMessagesResult> {
+  try {
+    const { data } = await api.get<LookupMessagesResult>("/messages", {
+      params: { ids: ids.join(",") },
+    });
+    if (typeof data?.ok !== "boolean") {
+      return { ok: false, message: MESSAGES_LOAD_FAILED };
+    }
+    return data;
+  } catch {
+    return { ok: false, message: MESSAGES_LOAD_FAILED };
   }
 }
