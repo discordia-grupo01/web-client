@@ -59,8 +59,21 @@ export function useMentions(currentUserId: string | null) {
     void markChannelMentionsReadRequest(channelId);
   }, []);
 
+  const isUnread = useCallback(
+    (messageId: string) => messageId in unread,
+    [unread],
+  );
+
   const byChannel = useMemo(() => unreadByChannel(unread), [unread]);
   const byServer = useMemo(() => unreadByServer(unread), [unread]);
 
-  return { byChannel, byServer, isLoaded, receive, reload, markChannelRead };
+  return {
+    byChannel,
+    byServer,
+    isLoaded,
+    isUnread,
+    receive,
+    reload,
+    markChannelRead,
+  };
 }

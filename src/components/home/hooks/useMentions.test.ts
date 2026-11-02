@@ -86,4 +86,19 @@ describe("useMentions", () => {
 
     expect(result.current.byChannel).toEqual({});
   });
+  it("isUnread dice si una mencion concreta sigue sin leer", async () => {
+    listUnreadMentionsRequest.mockResolvedValue({
+      ok: true,
+      mentions: [stored("m1", "c1", "s1")],
+    });
+
+    const { result } = renderHook(() => useMentions("me"));
+
+    await waitFor(() => expect(result.current.isUnread("m1")).toBe(true));
+    expect(result.current.isUnread("m2")).toBe(false);
+
+    act(() => result.current.markChannelRead("c1"));
+
+    expect(result.current.isUnread("m1")).toBe(false);
+  });
 });
