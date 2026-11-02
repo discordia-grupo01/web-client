@@ -1,4 +1,5 @@
 import {
+  VOICE_SCREEN_SHARE_SELF,
   VOICE_FULLSCREEN_EXIT_LABEL,
   VOICE_FULLSCREEN_HINT,
   voiceFullscreenLabel,
@@ -180,5 +181,24 @@ describe("VoiceParticipantTile en pantalla grande", () => {
       onExpand: vi.fn(),
     });
     expect(expandButton()).not.toBeInTheDocument();
+  });
+});
+
+describe("VoiceParticipantTile compartiendo desde el celular", () => {
+  const me = { ...participant, isLocal: true };
+
+  it("en tu tarjeta avisa que compartis en vez de mostrar tu pantalla", () => {
+    renderTile({ participant: me, video: null });
+    expect(screen.getByText(VOICE_SCREEN_SHARE_SELF)).toBeInTheDocument();
+  });
+
+  it("no lo muestra en la tarjeta de los demas", () => {
+    renderTile({ video: null });
+    expect(screen.queryByText(VOICE_SCREEN_SHARE_SELF)).not.toBeInTheDocument();
+  });
+
+  it("no lo muestra si se ve tu pantalla, como en la web", () => {
+    renderTile({ participant: me });
+    expect(screen.queryByText(VOICE_SCREEN_SHARE_SELF)).not.toBeInTheDocument();
   });
 });

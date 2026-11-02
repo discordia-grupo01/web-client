@@ -1,6 +1,9 @@
-import type {
-  VoiceDisconnectReason,
-  VoiceParticipant,
+import {
+  mergeScreenShareCompanions,
+  ownerOfScreenShareIdentity,
+  screenShareIdentityOf,
+  type VoiceDisconnectReason,
+  type VoiceParticipant,
 } from "@discordia/client-shared";
 
 import {
@@ -54,20 +57,22 @@ export function toVoiceParticipant(
   };
 }
 
-/** Todos los de la sala, vos incluido. */
 export function roomParticipants(room: {
   localParticipant: ParticipantState;
   remoteParticipants: ReadonlyMap<string, ParticipantState>;
 }): VoiceParticipant[] {
-  return [
+  return mergeScreenShareCompanions([
     toVoiceParticipant(room.localParticipant, true),
     ...Array.from(room.remoteParticipants.values(), (participant) =>
       toVoiceParticipant(participant, false),
     ),
-  ];
+  ]);
 }
 
-/** El video de una tarjeta. La pantalla compartida le gana a la camara. */
+/** De quien es el audio: el de la pantalla del celular es de su dueño. */
+export function audioOwnerOf(identity: string): string {
+  return ownerOfScreenShareIdentity(identity) ?? identity;
+}
 export interface TileVideo<T = Track> {
   track: T;
   source: "camera" | "screen";
@@ -104,7 +109,12 @@ export function tileVideoOf<T>(
     room.localParticipant.identity === identity
       ? room.localParticipant
       : room.remoteParticipants.get(identity);
-  const screen = publishedVideo(participant, Track.Source.ScreenShare);
+  const screen =
+    publishedVideo(participant, Track.Source.ScreenShare) ??
+    publishedVideo(
+      room.remoteParticipants.get(screenShareIdentityOf(identity)),
+      Track.Source.ScreenShare,
+    );
   if (screen) return { track: screen, source: "screen" };
   const camera = publishedVideo(participant, Track.Source.Camera);
   return camera ? { track: camera, source: "camera" } : null;

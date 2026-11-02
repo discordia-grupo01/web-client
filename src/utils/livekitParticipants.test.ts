@@ -2,6 +2,7 @@ import { DisconnectReason, Track } from "livekit-client";
 import { describe, expect, it } from "vitest";
 
 import {
+  audioOwnerOf,
   roomParticipants,
   tileVideoOf,
   toVoiceDisconnectReason,
@@ -66,6 +67,55 @@ describe("roomParticipants", () => {
   });
 });
 
+describe("roomParticipants con pantalla compartida desde el celular", () => {
+  it("pega la conexion de pantalla a la tarjeta de su dueño", () => {
+    const room = {
+      localParticipant: participant("yo"),
+      remoteParticipants: new Map([
+        ["ana", participant("ana")],
+        [
+          "ana:screen",
+          participant("ana:screen", {
+            isMicrophoneEnabled: false,
+            isScreenShareEnabled: true,
+          }),
+        ],
+      ]),
+    };
+
+    const result = roomParticipants(room);
+
+    expect(result.map((p) => [p.identity, p.screenSharing])).toEqual([
+      ["yo", false],
+      ["ana", true],
+    ]);
+  });
+
+  it("tambien cuando la pantalla es la tuya", () => {
+    const room = {
+      localParticipant: participant("yo"),
+      remoteParticipants: new Map([
+        ["yo:screen", participant("yo:screen", { isScreenShareEnabled: true })],
+      ]),
+    };
+
+    expect(roomParticipants(room)).toEqual([
+      expect.objectContaining({
+        identity: "yo",
+        isLocal: true,
+        screenSharing: true,
+      }),
+    ]);
+  });
+});
+
+describe("audioOwnerOf", () => {
+  it("el audio de la pantalla del celular es de su dueño", () => {
+    expect(audioOwnerOf("ana:screen")).toBe("ana");
+    expect(audioOwnerOf("ana")).toBe("ana");
+  });
+});
+
 describe("toVoiceDisconnectReason", () => {
   it.each([
     [DisconnectReason.CLIENT_INITIATED, "client"],
@@ -82,7 +132,7 @@ describe("toVoiceDisconnectReason", () => {
 describe("tileVideoOf", () => {
   function videoParticipant(
     identity: string,
-    tracks: Partial<Record<Track.Source, { isMuted: boolean; track: string }>>,
+    tracks: Partial<Record<Track.Source, { isMuted: boolean; track?: string }>>,
   ) {
     return {
       identity,
@@ -123,6 +173,49 @@ describe("tileVideoOf", () => {
 
   it("encuentra la camara propia", () => {
     expect(tileVideoOf(room, "ana")).toEqual({
+      track: "camara-ana",
+      source: "camera",
+    });
+  });
+
+  it("muestra en la tarjeta del dueño la pantalla que comparte desde el celular", () => {
+    const withPhone = {
+      ...room,
+      remoteParticipants: new Map([
+        ...room.remoteParticipants,
+        [
+          "caro:screen",
+          videoParticipant("caro:screen", {
+            [Track.Source.ScreenShare]: {
+              isMuted: false,
+              track: "pantalla-caro",
+            },
+          }),
+        ],
+      ]),
+    };
+
+    expect(tileVideoOf(withPhone, "caro")).toEqual({
+      track: "pantalla-caro",
+      source: "screen",
+    });
+  });
+
+  it("sin el track bajado no hay video de pantalla", () => {
+    const ownPhone = {
+      ...room,
+      remoteParticipants: new Map([
+        ...room.remoteParticipants,
+        [
+          "ana:screen",
+          videoParticipant("ana:screen", {
+            [Track.Source.ScreenShare]: { isMuted: false },
+          }),
+        ],
+      ]),
+    };
+
+    expect(tileVideoOf(ownPhone, "ana")).toEqual({
       track: "camara-ana",
       source: "camera",
     });
