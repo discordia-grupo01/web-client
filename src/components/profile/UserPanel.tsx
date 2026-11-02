@@ -16,6 +16,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
 import { cn } from "@/lib/cn";
 import { usePresenceOf } from "@/hooks/usePresence";
+import { ownAvatarSrc } from "@/utils/ownAvatar";
 import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
 interface UserPanelProps {
@@ -53,7 +54,7 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
           <div className="relative shrink-0">
             <Avatar
               name={user.name}
-              src={user.avatar_url ? "/api/profile/avatar" : null}
+              src={ownAvatarSrc(user)}
               size={32}
               className="rounded-full"
             />

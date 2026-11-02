@@ -31,6 +31,7 @@ import { usePresenceContext } from "@/contexts/PresenceContext";
 import { usePresenceOf } from "@/hooks/usePresence";
 import { useLoadPresence } from "@/hooks/useLoadPresence";
 import { getPublicProfileRequest } from "@/services/profile/client";
+import { avatarSrcOf } from "@/utils/userProfile";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";
 import { BlockUserModal } from "./BlockUserModal";
@@ -142,9 +143,7 @@ export function PublicProfileModal({
     );
   }
 
-  const avatarSrc = profile.avatar_url
-    ? `/api/users/${profile.id}/avatar`
-    : null;
+  const avatarSrc = avatarSrcOf(profile.id, profile);
 
   const isBlocked = blockedIds.has(profile.id);
   const blockLabel = isBlocked ? UNBLOCK_USER_LABEL : BLOCK_USER_LABEL;
