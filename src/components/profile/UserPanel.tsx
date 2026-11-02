@@ -7,16 +7,18 @@ import {
   VOICE_UNMUTE_LABEL,
 } from "@discordia/client-shared";
 
-import { Headphones, Mic, MicOff, Settings } from "lucide-react";
+import { Bell, Headphones, Mic, MicOff, Settings } from "lucide-react";
 import { useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
+import { CountBadge } from "@/components/ui/CountBadge";
 import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
 import { cn } from "@/lib/cn";
 import { usePresenceOf } from "@/hooks/usePresence";
 import { ownAvatarSrc } from "@/utils/ownAvatar";
+import { useOptionalNotifications } from "@/contexts/NotificationsContext";
 import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
 interface UserPanelProps {
@@ -27,6 +29,7 @@ interface UserPanelProps {
 export function UserPanel({ user, onClick }: UserPanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
   const voice = useOptionalVoiceSession();
+  const notifications = useOptionalNotifications();
   const status = usePresenceOf(user.id);
   const isMuted = voice?.state.muted ?? false;
   const canSpeak = voice?.state.canSpeak ?? true;
@@ -76,6 +79,32 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
         </button>
 
         <div className="flex shrink-0 items-center gap-0.5">
+          {notifications ? (
+            <div ref={notifications.anchorRef} className="relative">
+              <button
+                type="button"
+                title="Notificaciones"
+                aria-label="Notificaciones"
+                aria-expanded={notifications.isOpen}
+                onClick={notifications.toggle}
+                className={cn(
+                  "flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors",
+                  notifications.isOpen
+                    ? "bg-surface-hover text-content"
+                    : "text-content-muted hover:bg-surface-hover",
+                )}
+              >
+                <Bell size={15} />
+              </button>
+              {notifications.unreadCount > 0 ? (
+                <CountBadge
+                  count={notifications.unreadCount}
+                  label={`${notifications.unreadCount} notificaciones sin leer`}
+                  className="pointer-events-none absolute -top-1 -right-1 h-4 min-w-4 text-[9px]"
+                />
+              ) : null}
+            </div>
+          ) : null}
           <button
             type="button"
             title={micLabel}

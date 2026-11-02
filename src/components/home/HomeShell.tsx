@@ -1,14 +1,16 @@
 "use client";
 
 import {
+  type MessageAuthor,
   messageAuthorOf,
+  type NotificationHistoryItem,
   type PublicUser,
   type ServerSummary,
   type User,
 } from "@discordia/client-shared";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DirectMessagesView } from "@/components/direct-messages/DirectMessagesView";
 import { HomeView } from "@/components/home/HomeView";
@@ -16,7 +18,14 @@ import { LoadingScreen } from "@/components/home/LoadingScreen";
 import { ServerRail } from "@/components/home/ServerRail";
 import { JoinServerModal } from "@/components/invites/JoinServerModal";
 import { DrawerBackdrop } from "@/components/layout/DrawerBackdrop";
+import { NotificationCenter } from "@/components/notifications/NotificationCenter";
 import { MobilePanelsProvider } from "@/contexts/MobilePanelsContext";
+import {
+  type NotificationsValue,
+  NotificationsProvider,
+} from "@/contexts/NotificationsContext";
+import { useNotificationHistory } from "@/hooks/useNotificationHistory";
+import { useNotificationReads } from "@/hooks/useNotificationReads";
 import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
 import { CreateServerModal } from "@/components/servers/create/CreateServerModal";
 import { ServerView } from "@/components/servers/ServerView";
@@ -48,6 +57,24 @@ import {
 
 type MainView = "servers" | "direct-messages";
 
+const NOTIFICATIONS_REFRESH_DELAY_MS = 1_500;
+const NOTIFICATIONS_POLL_INTERVAL_MS = 30_000;
+
+function latestIncomingDirectMessageId(
+  conversations: readonly {
+    lastMessage: { id: string; user_id: string; inserted_at: string } | null;
+  }[],
+  currentUserId: string | null,
+): string | null {
+  let latest: { id: string; at: number } | null = null;
+  for (const { lastMessage: message } of conversations) {
+    if (!message || message.user_id === currentUserId) continue;
+    const at = Date.parse(message.inserted_at);
+    if (latest === null || at > latest.at) latest = { id: message.id, at };
+  }
+  return latest?.id ?? null;
+}
+
 interface HomeShellProps {
   initialServers: ServerSummary[];
   initialSelectedServerId?: string | null;
@@ -72,6 +99,10 @@ function HomeShellContent({
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
+  const [isNotificationsOpen, setIsNotificationsOpen] = useState(false);
+  const notificationsAnchorRef = useRef<HTMLDivElement>(null);
+  const [serverViewNonce, setServerViewNonce] = useState(0);
+  const [notificationsSignal, setNotificationsSignal] = useState(0);
   const [ownProfile, setOwnProfile] = useState<User | null>(null);
   const [isProfileLoaded, setIsProfileLoaded] = useState(false);
   const [areServersLoaded, setAreServersLoaded] = useState(false);
@@ -102,7 +133,10 @@ function HomeShellContent({
     currentAuthor,
     view === "direct-messages",
     {
-      onMention: mentions.receive,
+      onMention: (payload) => {
+        mentions.receive(payload);
+        setNotificationsSignal((signal) => signal + 1);
+      },
       onRejoined: mentions.reload,
       ...presence.userRoomCallbacks,
     },
@@ -119,6 +153,140 @@ function HomeShellContent({
   const unreadDmCount = directMessages.conversations.filter(
     (c) => c.isUnread,
   ).length;
+
+  const notificationHistory = useNotificationHistory();
+  const unreadByConversation = useMemo(
+    () =>
+      new Map(
+        directMessages.conversations.flatMap((conversation) =>
+          conversation.conversationId
+            ? [[conversation.conversationId, conversation.isUnread] as const]
+            : [],
+        ),
+      ),
+    [directMessages.conversations],
+  );
+  const { isLoaded: areMentionsLoaded, isUnread: isMentionUnread } = mentions;
+  const isDirectMessagesLoading = directMessages.isLoading;
+  const isUnreadInMessaging = useCallback(
+    (item: NotificationHistoryItem) => {
+      if (item.kind === "mention") {
+        return !areMentionsLoaded || isMentionUnread(item.message_id);
+      }
+      if (isDirectMessagesLoading) return true;
+      return unreadByConversation.get(item.conversation_id ?? "") ?? true;
+    },
+    [
+      areMentionsLoaded,
+      isMentionUnread,
+      isDirectMessagesLoading,
+      unreadByConversation,
+    ],
+  );
+  const notificationReads = useNotificationReads(
+    currentAuthor?.id ?? null,
+    notificationHistory.items,
+    isUnreadInMessaging,
+  );
+  const refreshNotificationsRef = useRef(notificationHistory.refresh);
+  useEffect(() => {
+    refreshNotificationsRef.current = notificationHistory.refresh;
+  }, [notificationHistory.refresh]);
+
+  useEffect(() => {
+    if (notificationsSignal === 0) return;
+    const timer = window.setTimeout(
+      () => void refreshNotificationsRef.current(),
+      NOTIFICATIONS_REFRESH_DELAY_MS,
+    );
+    return () => window.clearTimeout(timer);
+  }, [notificationsSignal]);
+
+  const latestIncomingDmId = useMemo(
+    () =>
+      latestIncomingDirectMessageId(
+        directMessages.conversations,
+        currentAuthor?.id ?? null,
+      ),
+    [directMessages.conversations, currentAuthor?.id],
+  );
+  const knownIncomingDmId = useRef<string | null | undefined>(undefined);
+  useEffect(() => {
+    if (directMessages.isLoading) return;
+    if (knownIncomingDmId.current === undefined) {
+      knownIncomingDmId.current = latestIncomingDmId;
+      return;
+    }
+    if (
+      latestIncomingDmId &&
+      latestIncomingDmId !== knownIncomingDmId.current
+    ) {
+      knownIncomingDmId.current = latestIncomingDmId;
+      setNotificationsSignal((signal) => signal + 1);
+    }
+  }, [directMessages.isLoading, latestIncomingDmId]);
+
+  useEffect(() => {
+    const refreshIfVisible = () => {
+      if (document.visibilityState === "visible") {
+        void refreshNotificationsRef.current();
+      }
+    };
+    const interval = window.setInterval(
+      refreshIfVisible,
+      NOTIFICATIONS_POLL_INTERVAL_MS,
+    );
+    document.addEventListener("visibilitychange", refreshIfVisible);
+    return () => {
+      window.clearInterval(interval);
+      document.removeEventListener("visibilitychange", refreshIfVisible);
+    };
+  }, []);
+
+  const {
+    markChannelRead: markNotificationChannelRead,
+    markConversationRead: markNotificationConversationRead,
+  } = notificationReads;
+  const openedConversationId =
+    view === "direct-messages"
+      ? (directMessages.activeSummary?.conversationId ?? null)
+      : null;
+  useEffect(() => {
+    if (view === "servers" && selectedServerId && lastChannelId) {
+      markNotificationChannelRead(lastChannelId);
+    }
+  }, [
+    view,
+    selectedServerId,
+    lastChannelId,
+    notificationHistory.items,
+    markNotificationChannelRead,
+  ]);
+  useEffect(() => {
+    if (openedConversationId) {
+      markNotificationConversationRead(openedConversationId);
+    }
+  }, [
+    openedConversationId,
+    notificationHistory.items,
+    markNotificationConversationRead,
+  ]);
+
+  const toggleNotifications = useCallback(() => {
+    setIsNotificationsOpen((isOpen) => {
+      if (!isOpen) void refreshNotificationsRef.current();
+      return !isOpen;
+    });
+  }, []);
+  const notificationsValue = useMemo<NotificationsValue>(
+    () => ({
+      unreadCount: notificationReads.unreadCount,
+      isOpen: isNotificationsOpen,
+      anchorRef: notificationsAnchorRef,
+      toggle: toggleNotifications,
+    }),
+    [notificationReads.unreadCount, isNotificationsOpen, toggleNotifications],
+  );
 
   // Al recargar se vuelve a donde se estaba (servidor + canal, o un DM). Se lee
   // despues de montar porque localStorage no existe en el render del servidor.
@@ -220,6 +388,22 @@ function HomeShellContent({
     setView("direct-messages");
   }
 
+  function openMention(serverId: string, channelId: string) {
+    setView("servers");
+    setSelectedServerId(serverId);
+    setLastChannelId(channelId);
+    setServerViewNonce((nonce) => nonce + 1);
+  }
+
+  function openNotificationConversation(partner: MessageAuthor | string) {
+    if (typeof partner === "string") {
+      directMessages.openConversation(partner);
+    } else {
+      directMessages.openConversation(partner.id, partner);
+    }
+    setView("direct-messages");
+  }
+
   function addAndSelect(server: ServerSummary) {
     setServers((prev) => {
       const withoutDuplicate = prev.filter(
@@ -246,94 +430,109 @@ function HomeShellContent({
 
   return (
     <PresenceProvider value={presenceValue}>
-      <MobilePanelsProvider>
-        <div
-          className="relative flex h-dvh w-full overflow-hidden"
-          style={{ background: "var(--bg-chat)" }}
-        >
-          <ServerRail
-            servers={servers}
-            selectedServerId={selectedServerId}
-            isDirectMessagesActive={view === "direct-messages"}
-            isDockedOnMobile={
-              view === "direct-messages" && !directMessages.activeSummary
-            }
-            unreadDmCount={unreadDmCount}
-            unreadMentionsByServer={mentions.byServer}
-            onSelect={(serverId) => {
-              setView("servers");
-              setSelectedServerId(serverId);
-              setLastChannelId(null);
-            }}
-            onOpenDirectMessages={() => setView("direct-messages")}
-            onCreateClick={() => setIsCreateModalOpen(true)}
-          />
-
-          {!isRestored ? null : view === "direct-messages" ? (
-            <DirectMessagesView
-              currentAuthor={currentAuthor}
-              ownProfile={ownProfile}
-              onOpenOwnProfile={() => setOwnProfileServerId(null)}
+      <NotificationsProvider value={notificationsValue}>
+        <MobilePanelsProvider>
+          <div
+            className="relative flex h-dvh w-full overflow-hidden"
+            style={{ background: "var(--bg-chat)" }}
+          >
+            <ServerRail
               servers={servers}
-              directMessages={directMessages}
-            />
-          ) : selectedServer ? (
-            <ServerView
-              key={selectedServer.id}
-              server={selectedServer}
-              onLeft={() => removeServer(selectedServer.id)}
-              onServerUpdate={updateServer}
-              ownProfile={ownProfile}
-              onOpenOwnProfile={(serverId) =>
-                setOwnProfileServerId(serverId ?? null)
+              selectedServerId={selectedServerId}
+              isDirectMessagesActive={view === "direct-messages"}
+              isDockedOnMobile={
+                view === "direct-messages" && !directMessages.activeSummary
               }
-              onMessageUser={messageUser}
-              unreadMentionsByChannel={mentions.byChannel}
-              onChannelRead={mentions.markChannelRead}
-              initialChannelId={lastChannelId}
-              onChannelChange={setLastChannelId}
-            />
-          ) : (
-            <HomeView
-              hasServers={servers.length > 0}
-              userName={user?.name}
-              ownProfile={ownProfile}
-              onOpenOwnProfile={() => setOwnProfileServerId(null)}
-              onCreateClick={() => setIsCreateModalOpen(true)}
-              onJoinClick={() => setIsJoinModalOpen(true)}
-            />
-          )}
-
-          <DrawerBackdrop />
-
-          {isCreateModalOpen ? (
-            <CreateServerModal
-              onClose={() => setIsCreateModalOpen(false)}
-              onCreated={addAndSelect}
-              onJoinClick={() => {
-                setIsCreateModalOpen(false);
-                setIsJoinModalOpen(true);
+              unreadDmCount={unreadDmCount}
+              unreadMentionsByServer={mentions.byServer}
+              onSelect={(serverId) => {
+                setView("servers");
+                setSelectedServerId(serverId);
+                setLastChannelId(null);
               }}
+              onOpenDirectMessages={() => setView("direct-messages")}
+              onCreateClick={() => setIsCreateModalOpen(true)}
             />
-          ) : null}
 
-          {isJoinModalOpen ? (
-            <JoinServerModal
-              onClose={() => setIsJoinModalOpen(false)}
-              onJoined={addAndSelect}
-            />
-          ) : null}
+            {!isRestored ? null : view === "direct-messages" ? (
+              <DirectMessagesView
+                currentAuthor={currentAuthor}
+                ownProfile={ownProfile}
+                onOpenOwnProfile={() => setOwnProfileServerId(null)}
+                servers={servers}
+                directMessages={directMessages}
+              />
+            ) : selectedServer ? (
+              <ServerView
+                key={`${selectedServer.id}:${serverViewNonce}`}
+                server={selectedServer}
+                onLeft={() => removeServer(selectedServer.id)}
+                onServerUpdate={updateServer}
+                ownProfile={ownProfile}
+                onOpenOwnProfile={(serverId) =>
+                  setOwnProfileServerId(serverId ?? null)
+                }
+                onMessageUser={messageUser}
+                unreadMentionsByChannel={mentions.byChannel}
+                onChannelRead={mentions.markChannelRead}
+                initialChannelId={lastChannelId}
+                onChannelChange={setLastChannelId}
+              />
+            ) : (
+              <HomeView
+                hasServers={servers.length > 0}
+                userName={user?.name}
+                ownProfile={ownProfile}
+                onOpenOwnProfile={() => setOwnProfileServerId(null)}
+                onCreateClick={() => setIsCreateModalOpen(true)}
+                onJoinClick={() => setIsJoinModalOpen(true)}
+              />
+            )}
 
-          {ownProfileServerId !== undefined && ownProfile ? (
-            <OwnProfileModal
-              serverId={ownProfileServerId ?? undefined}
-              profile={ownProfile}
-              onClose={() => setOwnProfileServerId(undefined)}
-              onUpdated={setOwnProfile}
-            />
-          ) : null}
-        </div>
-      </MobilePanelsProvider>
+            <DrawerBackdrop />
+
+            {isCreateModalOpen ? (
+              <CreateServerModal
+                onClose={() => setIsCreateModalOpen(false)}
+                onCreated={addAndSelect}
+                onJoinClick={() => {
+                  setIsCreateModalOpen(false);
+                  setIsJoinModalOpen(true);
+                }}
+              />
+            ) : null}
+
+            {isJoinModalOpen ? (
+              <JoinServerModal
+                onClose={() => setIsJoinModalOpen(false)}
+                onJoined={addAndSelect}
+              />
+            ) : null}
+
+            {isNotificationsOpen ? (
+              <NotificationCenter
+                history={notificationHistory}
+                reads={notificationReads}
+                servers={servers}
+                me={currentAuthor}
+                anchorRef={notificationsAnchorRef}
+                onClose={() => setIsNotificationsOpen(false)}
+                onOpenMention={openMention}
+                onOpenDirectMessage={openNotificationConversation}
+              />
+            ) : null}
+
+            {ownProfileServerId !== undefined && ownProfile ? (
+              <OwnProfileModal
+                serverId={ownProfileServerId ?? undefined}
+                profile={ownProfile}
+                onClose={() => setOwnProfileServerId(undefined)}
+                onUpdated={setOwnProfile}
+              />
+            ) : null}
+          </div>
+        </MobilePanelsProvider>
+      </NotificationsProvider>
     </PresenceProvider>
   );
 }
