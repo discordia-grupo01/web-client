@@ -1,7 +1,6 @@
 import {
   mergeScreenShareCompanions,
   ownerOfScreenShareIdentity,
-  screenShareIdentityOf,
   type VoiceDisconnectReason,
   type VoiceParticipant,
 } from "@discordia/client-shared";
@@ -101,22 +100,33 @@ function publishedVideo<T>(
     : null;
 }
 
+function participantOf<T>(
+  room: VideoRoom<T>,
+  identity: string,
+): VideoParticipant<T> | undefined {
+  return room.localParticipant.identity === identity
+    ? room.localParticipant
+    : room.remoteParticipants.get(identity);
+}
+
 export function tileVideoOf<T>(
   room: VideoRoom<T>,
   identity: string,
 ): TileVideo<T> | null {
-  const participant =
-    room.localParticipant.identity === identity
-      ? room.localParticipant
-      : room.remoteParticipants.get(identity);
-  const screen =
-    publishedVideo(participant, Track.Source.ScreenShare) ??
-    publishedVideo(
-      room.remoteParticipants.get(screenShareIdentityOf(identity)),
-      Track.Source.ScreenShare,
-    );
-  if (screen) return { track: screen, source: "screen" };
-  const camera = publishedVideo(participant, Track.Source.Camera);
+  const owner = ownerOfScreenShareIdentity(identity);
+  if (owner !== null) {
+    const screen =
+      publishedVideo(participantOf(room, owner), Track.Source.ScreenShare) ??
+      publishedVideo(
+        room.remoteParticipants.get(identity),
+        Track.Source.ScreenShare,
+      );
+    return screen ? { track: screen, source: "screen" } : null;
+  }
+  const camera = publishedVideo(
+    participantOf(room, identity),
+    Track.Source.Camera,
+  );
   return camera ? { track: camera, source: "camera" } : null;
 }
 

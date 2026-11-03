@@ -1,6 +1,12 @@
 "use client";
 
-import type { VoiceParticipant } from "@discordia/client-shared";
+import {
+  isScreenShareIdentity,
+  voiceTilesOf,
+  type VoiceParticipant,
+} from "@discordia/client-shared";
+
+import { useCallback, useState } from "react";
 
 import { useElementSize } from "@/components/voice/hooks/useElementSize";
 import { cn } from "@/lib/cn";
@@ -18,6 +24,7 @@ import { VoiceParticipantTile } from "./VoiceParticipantTile";
 import { useVisibleParticipants } from "@/components/voice/hooks/useVisibleParticipants";
 
 interface VoiceParticipantGridProps {
+  /** Las personas de la llamada; la grilla le agrega un tile a cada pantalla. */
   participants: readonly VoiceParticipant[];
   isConnecting: boolean;
   ownAvatarSrc: string | null;
@@ -34,7 +41,7 @@ interface VoiceParticipantGridProps {
 }
 
 export function VoiceParticipantGrid({
-  participants,
+  participants: people,
   isConnecting,
   ownAvatarSrc,
   videoOf,
@@ -49,6 +56,19 @@ export function VoiceParticipantGrid({
   const [containerRef, size] = useElementSize<HTMLDivElement>();
   const isNarrow = size.width < NARROW_GRID_BREAKPOINT;
   const options = isNarrow ? NARROW_GRID : WIDE_GRID;
+  const participants = voiceTilesOf(people);
+  const [aspectRatios, setAspectRatios] = useState<
+    Readonly<Record<string, number>>
+  >({});
+  const rememberAspectRatio = useCallback(
+    (identity: string, aspectRatio: number) =>
+      setAspectRatios((current) =>
+        current[identity] === aspectRatio
+          ? current
+          : { ...current, [identity]: aspectRatio },
+      ),
+    [],
+  );
 
   const focus =
     participants.find(
@@ -84,7 +104,9 @@ export function VoiceParticipantGrid({
         avatarSrc={isLocal ? ownAvatarSrc : null}
         video={videoOf(identity)}
         onToggleMutedForMe={
-          isLocal ? undefined : () => onToggleMutedForMe(identity)
+          isLocal || isScreenShareIdentity(identity)
+            ? undefined
+            : () => onToggleMutedForMe(identity)
         }
         onTogglePin={
           onPinChange && !onTilePress
@@ -94,6 +116,9 @@ export function VoiceParticipantGrid({
         onPress={onTilePress}
         canExpand={canExpand}
         onExpand={onExpand ? () => onExpand(identity) : undefined}
+        onVideoAspectRatioChange={(aspectRatio) =>
+          rememberAspectRatio(identity, aspectRatio)
+        }
       />
     );
   };
@@ -119,6 +144,11 @@ export function VoiceParticipantGrid({
           renderTile={renderTile}
           onShowParticipants={onShowParticipants}
           onBackToGrid={backToGrid}
+          stageAspect={
+            isScreenShareIdentity(focus.identity)
+              ? aspectRatios[focus.identity]
+              : undefined
+          }
         />
       ) : (
         <div

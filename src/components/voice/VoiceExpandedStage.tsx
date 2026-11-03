@@ -17,9 +17,14 @@ export function VoiceExpandedStage({
     <div
       role="img"
       aria-label={name}
-      className="relative min-h-0 flex-1 bg-black"
+      className="relative min-h-0 flex-1 overflow-hidden bg-black"
     >
-      <VoiceVideo track={video.track} fit="contain" isMirrored={isMirrored} />
+      <VoiceVideo
+        track={video.track}
+        fit="contain"
+        hasBackdrop={video.source === "screen"}
+        isMirrored={isMirrored}
+      />
     </div>
   );
 }

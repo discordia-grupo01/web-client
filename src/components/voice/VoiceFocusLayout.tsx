@@ -32,6 +32,8 @@ interface VoiceFocusLayoutProps {
   renderTile: RenderTile;
   onShowParticipants: () => void;
   onBackToGrid?: () => void;
+  /** Proporcion del video fijado; si es vertical el escenario toma esa forma. */
+  stageAspect?: number;
 }
 
 export function VoiceFocusLayout({
@@ -42,6 +44,7 @@ export function VoiceFocusLayout({
   renderTile,
   onShowParticipants,
   onBackToGrid,
+  stageAspect,
 }: VoiceFocusLayoutProps) {
   const backRow = isNarrow && onBackToGrid ? BACK_ROW_HEIGHT : 0;
   const layout = voiceFocusLayout(
@@ -49,6 +52,7 @@ export function VoiceFocusLayout({
     size.height - backRow,
     others.length,
     isNarrow,
+    stageAspect,
   );
   const hasOverflow = others.length > layout.capacity;
   const visible = useVisibleParticipants(
@@ -96,16 +100,14 @@ export function VoiceFocusLayout({
 
       {others.length > 0 ? (
         <div
-          className={cn(
-            "flex shrink-0 flex-wrap content-center justify-center",
-            layout.mode === "side" && "flex-col",
-          )}
+          className="flex shrink-0 flex-wrap content-center justify-center"
           style={{
             gap: GAP,
             width:
-              layout.mode === "stacked"
-                ? layout.columns * layout.tileWidth + (layout.columns - 1) * GAP
-                : undefined,
+              layout.mode === "bottom"
+                ? undefined
+                : layout.columns * layout.tileWidth +
+                  (layout.columns - 1) * GAP,
           }}
         >
           {visible.map((participant) =>

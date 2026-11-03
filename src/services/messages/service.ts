@@ -1,6 +1,7 @@
 import {
   type ListMessagesOptions,
   type MessageHistory,
+  type MessageLookupResponse,
   type MessageSearchQuery,
   type MessageSearchResponse,
   messageSearchParams,
@@ -42,6 +43,19 @@ export function listMessages(
   return apiRequest<MessageHistory>(
     `/v1/channels/${encodeURIComponent(channelId)}/messages${query}`,
     { token },
+  );
+}
+
+export function lookupMessages(
+  token: string,
+  ids: readonly string[],
+): Promise<ApiResult<MessageLookupResponse>> {
+  const params = new URLSearchParams({ ids: ids.join(",") });
+  return apiRequest<MessageLookupResponse>(
+    `/v1/messages?${params.toString()}`,
+    {
+      token,
+    },
   );
 }
 
