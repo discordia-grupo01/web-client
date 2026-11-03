@@ -10,11 +10,13 @@ import { useEffect, useState } from "react";
 import { type BanTarget } from "@/components/bans/BanMemberModal";
 import { BansModal } from "@/components/bans/BansModal";
 import { InviteModal } from "@/components/invites/InviteModal";
+import { NotificationSettingsModal } from "@/components/notifications/NotificationSettingsModal";
 import { RolesModal } from "@/components/roles/RolesModal";
 import { LeaveServerModal } from "@/components/servers/LeaveServerModal";
 import { ServerSettingsModal } from "@/components/servers/settings/ServerSettingsModal";
 import { TransferOwnershipModal } from "@/components/servers/TransferOwnershipModal";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
 import { getPendingTransferRequest } from "@/services/ownership-transfers/client";
 
 import { ServerHeaderTrigger } from "./ServerHeaderTrigger";
@@ -22,7 +24,14 @@ import { ServerMenu } from "./ServerMenu";
 
 /** Que modal esta abierto. Nunca hay dos a la vez. */
 type OpenModal =
-  null | "invite" | "settings" | "roles" | "bans" | "leave" | "transfer";
+  | null
+  | "invite"
+  | "settings"
+  | "roles"
+  | "bans"
+  | "leave"
+  | "transfer"
+  | "notifications";
 
 interface ServerSidebarHeaderProps {
   server: ServerSummary;
@@ -71,6 +80,7 @@ export function ServerSidebarHeader({
   onPermissionsChanged,
 }: ServerSidebarHeaderProps) {
   const { user } = useAuth();
+  const notificationSettings = useOptionalNotificationSettings();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const [openModal, setOpenModal] = useState<OpenModal>(null);
   const [pendingTransfer, setPendingTransfer] =
@@ -137,6 +147,11 @@ export function ServerSidebarHeader({
           transferLabel={transferLabel}
           onClose={() => setIsMenuOpen(false)}
           onInvite={() => setOpenModal("invite")}
+          onNotifications={
+            notificationSettings
+              ? () => setOpenModal("notifications")
+              : undefined
+          }
           onOpenSettings={() => setOpenModal("settings")}
           onCreateChannel={onCreateChannel}
           onCreateCategory={onCreateCategory}
@@ -151,6 +166,16 @@ export function ServerSidebarHeader({
         <InviteModal
           serverId={server.id}
           serverName={server.name}
+          onClose={closeModal}
+        />
+      ) : null}
+
+      {openModal === "notifications" && notificationSettings ? (
+        <NotificationSettingsModal
+          scope="server"
+          targetId={server.id}
+          serverId={server.id}
+          name={server.name}
           onClose={closeModal}
         />
       ) : null}
