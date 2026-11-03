@@ -21,6 +21,11 @@ export function useNotificationHistory() {
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
   const generation = useRef(0);
   const isFetchingMore = useRef(false);
+  const knownIds = useRef<ReadonlySet<string>>(new Set());
+
+  useEffect(() => {
+    knownIds.current = new Set(items.map((entry) => entry.message_id));
+  }, [items]);
 
   const reload = useCallback(() => {
     const current = ++generation.current;
@@ -75,15 +80,19 @@ export function useNotificationHistory() {
     });
   }, [status, nextCursor]);
 
-  const refresh = useCallback(() => {
-    if (status !== "ready") return reload();
+  const refresh = useCallback((): Promise<boolean> => {
+    if (status !== "ready") return reload().then(() => false);
 
     const current = generation.current;
     return listNotificationHistoryRequest({
       limit: NOTIFICATION_HISTORY_PAGE_SIZE,
     }).then((result) => {
-      if (current !== generation.current || !result.ok) return;
+      if (current !== generation.current || !result.ok) return false;
+      const hasNew = result.items.some(
+        (entry) => !knownIds.current.has(entry.message_id),
+      );
       setItems((previous) => appendNotificationHistory(result.items, previous));
+      return hasNew;
     });
   }, [status, reload]);
 
