@@ -4,12 +4,16 @@ import {
   type Channel,
   DELETE_CHANNEL_LABEL,
   EDIT_CHANNEL_LABEL,
+  NOTIFICATION_SETTINGS_MENU_LABEL,
+  NOTIFICATION_SETTINGS_MUTED_TITLE,
   OVERRIDE_CHANNEL_PERMISSIONS_LABEL,
 } from "@discordia/client-shared";
 
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import {
+  Bell,
+  BellOff,
   Hash,
   MoreVertical,
   Pencil,
@@ -32,6 +36,8 @@ interface ChannelRowProps {
   canManagePermissions?: boolean;
   /** Menciones sin leer en este canal; con 0 no se muestra nada. */
   unreadMentions?: number;
+  isMuted?: boolean;
+  onNotifications?: () => void;
   onClick: () => void;
   onEdit: () => void;
   onEditPermissions?: () => void;
@@ -75,6 +81,8 @@ function ChannelRow({
   canManage,
   canManagePermissions = false,
   unreadMentions = 0,
+  isMuted = false,
+  onNotifications,
   onClick,
   onEdit,
   onEditPermissions,
@@ -85,7 +93,8 @@ function ChannelRow({
 }: ChannelRowProps) {
   const Icon = channel.kind === "text" ? Hash : Volume2;
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const hasMenu = canManage || canManagePermissions;
+  const hasMenu =
+    canManage || canManagePermissions || onNotifications !== undefined;
 
   return (
     <div>
@@ -131,6 +140,13 @@ function ChannelRow({
           >
             {channel.name}
           </span>
+          {isMuted ? (
+            <BellOff
+              size={12}
+              aria-label={NOTIFICATION_SETTINGS_MUTED_TITLE}
+              className="text-content-subtle shrink-0"
+            />
+          ) : null}
           {callStartedAt !== undefined ? (
             <CallDuration
               startedAt={callStartedAt}
@@ -162,6 +178,16 @@ function ChannelRow({
                   className="fixed inset-0 z-40 cursor-default"
                 />
                 <div className="bg-surface-raised border-line absolute top-full right-0 z-50 mt-1 w-52 overflow-hidden rounded-xl border shadow-2xl">
+                  {onNotifications ? (
+                    <MenuItem
+                      icon={Bell}
+                      label={NOTIFICATION_SETTINGS_MENU_LABEL}
+                      onSelect={() => {
+                        setIsMenuOpen(false);
+                        onNotifications();
+                      }}
+                    />
+                  ) : null}
                   {canManage ? (
                     <MenuItem
                       icon={Pencil}

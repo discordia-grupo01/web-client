@@ -94,6 +94,54 @@ describe("ChannelRow", () => {
     expect(screen.queryByText("Sobrescribir permisos")).toBeNull();
   });
 
+  describe("notificaciones", () => {
+    function renderNotificationRow(isMuted = false) {
+      const onNotifications = vi.fn();
+      render(
+        <SortableChannelRow
+          channel={channel}
+          active={false}
+          canManage={false}
+          isMuted={isMuted}
+          onNotifications={onNotifications}
+          onClick={vi.fn()}
+          onEdit={vi.fn()}
+          onDelete={vi.fn()}
+        />,
+      );
+      return { onNotifications };
+    }
+
+    it("cualquier miembro ve el menu con la opcion de notificaciones", () => {
+      const { onNotifications } = renderNotificationRow();
+      openMenu();
+
+      expect(screen.queryByText("Editar canal")).toBeNull();
+      expect(screen.queryByText("Eliminar canal")).toBeNull();
+      fireEvent.click(screen.getByText("Notificaciones"));
+      expect(onNotifications).toHaveBeenCalled();
+    });
+
+    it("sin la opcion de notificaciones no se agrega al menu de gestion", () => {
+      renderRow(0, true, false);
+      openMenu();
+
+      expect(screen.queryByText("Notificaciones")).toBeNull();
+    });
+
+    it("un canal silenciado lo indica junto al nombre", () => {
+      renderNotificationRow(true);
+
+      expect(screen.getByLabelText("Silenciado")).toBeInTheDocument();
+    });
+
+    it("un canal que no esta silenciado no muestra el indicador", () => {
+      renderNotificationRow(false);
+
+      expect(screen.queryByLabelText("Silenciado")).toBeNull();
+    });
+  });
+
   describe("duracion de la llamada", () => {
     const voiceChannel = { ...channel, kind: "voice" } as Channel;
     const START = Date.parse("2026-11-01T16:00:00Z");

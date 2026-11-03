@@ -249,6 +249,54 @@ describe("useNotificationHistory", () => {
       });
     });
 
+    it("avisa si trajo algo nuevo", async () => {
+      listNotificationHistoryRequest
+        .mockResolvedValueOnce(page(["m1"], null))
+        .mockResolvedValueOnce(page(["m2", "m1"], null));
+
+      const { result } = renderHook(() => useNotificationHistory());
+      await waitFor(() => expect(result.current.status).toBe("ready"));
+
+      let found: boolean | undefined;
+      await act(async () => {
+        found = await result.current.refresh();
+      });
+
+      expect(found).toBe(true);
+    });
+
+    it("avisa que no hay nada nuevo si todo ya estaba", async () => {
+      listNotificationHistoryRequest
+        .mockResolvedValueOnce(page(["m2", "m1"], null))
+        .mockResolvedValueOnce(page(["m2", "m1"], null));
+
+      const { result } = renderHook(() => useNotificationHistory());
+      await waitFor(() => expect(result.current.status).toBe("ready"));
+
+      let found: boolean | undefined;
+      await act(async () => {
+        found = await result.current.refresh();
+      });
+
+      expect(found).toBe(false);
+    });
+
+    it("avisa que no hay nada nuevo si el pedido falla", async () => {
+      listNotificationHistoryRequest
+        .mockResolvedValueOnce(page(["m1"], null))
+        .mockResolvedValueOnce({ ok: false, message: "No se pudo" });
+
+      const { result } = renderHook(() => useNotificationHistory());
+      await waitFor(() => expect(result.current.status).toBe("ready"));
+
+      let found: boolean | undefined;
+      await act(async () => {
+        found = await result.current.refresh();
+      });
+
+      expect(found).toBe(false);
+    });
+
     it("no repite lo que ya estaba", async () => {
       listNotificationHistoryRequest
         .mockResolvedValueOnce(page(["m2", "m1"], null))

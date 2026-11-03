@@ -1,8 +1,12 @@
 "use client";
 
-import { BANS_TITLE } from "@discordia/client-shared";
+import {
+  BANS_TITLE,
+  NOTIFICATION_SETTINGS_MENU_LABEL,
+} from "@discordia/client-shared";
 import {
   ArrowLeftRight,
+  Bell,
   FolderPlus,
   LogOut,
   Plus,
@@ -24,6 +28,7 @@ interface ServerMenuProps {
   transferLabel: string | null;
   onClose: () => void;
   onInvite: () => void;
+  onNotifications?: () => void;
   onOpenSettings: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
@@ -43,6 +48,7 @@ export function ServerMenu({
   transferLabel,
   onClose,
   onInvite,
+  onNotifications,
   onOpenSettings,
   onCreateChannel,
   onCreateCategory,
@@ -73,6 +79,14 @@ export function ServerMenu({
             icon={UserPlus}
             label="Invitar miembros"
             onClick={run(onInvite)}
+          />
+        ) : null}
+
+        {onNotifications ? (
+          <ServerMenuItem
+            icon={Bell}
+            label={NOTIFICATION_SETTINGS_MENU_LABEL}
+            onClick={run(onNotifications)}
           />
         ) : null}
 
