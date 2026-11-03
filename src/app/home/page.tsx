@@ -20,7 +20,7 @@ import { ROUTES } from "@/lib/constants";
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: { server?: string };
+  searchParams: { server?: string; channel?: string; dm?: string };
 }) {
   const session = getSession();
   if (!session) {
@@ -34,6 +34,10 @@ export default async function HomePage({
     <HomeShell
       initialServers={initialServers}
       initialSelectedServerId={searchParams.server ?? null}
+      initialChannelId={
+        searchParams.server ? (searchParams.channel ?? null) : null
+      }
+      initialPartnerId={searchParams.server ? null : (searchParams.dm ?? null)}
     />
   );
 }

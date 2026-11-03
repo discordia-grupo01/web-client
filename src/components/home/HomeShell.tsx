@@ -83,11 +83,15 @@ function latestIncomingDirectMessageId(
 interface HomeShellProps {
   initialServers: ServerSummary[];
   initialSelectedServerId?: string | null;
+  initialChannelId?: string | null;
+  initialPartnerId?: string | null;
 }
 
 function HomeShellContent({
   initialServers,
   initialSelectedServerId = null,
+  initialChannelId = null,
+  initialPartnerId = null,
 }: HomeShellProps) {
   const router = useRouter();
   const { user } = useAuth();
@@ -99,9 +103,11 @@ function HomeShellContent({
   const [view, setView] = useState<MainView>(
     initialSelectedServerId ? "servers" : "direct-messages",
   );
-  const [lastChannelId, setLastChannelId] = useState<string | null>(null);
+  const [lastChannelId, setLastChannelId] = useState<string | null>(
+    initialSelectedServerId !== null ? initialChannelId : null,
+  );
   const [isRestored, setIsRestored] = useState(
-    initialSelectedServerId !== null,
+    initialSelectedServerId !== null || initialPartnerId !== null,
   );
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [isJoinModalOpen, setIsJoinModalOpen] = useState(false);
@@ -313,6 +319,13 @@ function HomeShellContent({
     setIsRestored(true);
   }, [isRestored, userId, initialServers, openConversation]);
 
+  const hasOpenedInitialPartner = useRef(false);
+  useEffect(() => {
+    if (!initialPartnerId || !userId || hasOpenedInitialPartner.current) return;
+    hasOpenedInitialPartner.current = true;
+    openConversation(initialPartnerId);
+  }, [initialPartnerId, userId, openConversation]);
+
   const activePartnerId = directMessages.activeSummary?.partner.id ?? null;
   useEffect(() => {
     if (!isRestored || !userId) return;
@@ -362,7 +375,7 @@ function HomeShellContent({
   // aceptar una invitacion); lo sacamos de la URL para que un refresh no
   // vuelva a "reseleccionar" el mismo server por las dudas.
   useEffect(() => {
-    if (initialSelectedServerId !== null) {
+    if (initialSelectedServerId !== null || initialPartnerId !== null) {
       router.replace(ROUTES.home);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
