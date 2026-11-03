@@ -29,6 +29,7 @@ import {
   useOptionalNotificationSettings,
 } from "@/contexts/NotificationSettingsContext";
 import { useNotificationHistory } from "@/hooks/useNotificationHistory";
+import { usePushDeviceSync } from "@/hooks/usePushNotifications";
 import { useNotificationRefreshOnSignal } from "@/hooks/useNotificationRefreshOnSignal";
 import { useNotificationReads } from "@/hooks/useNotificationReads";
 import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
@@ -90,6 +91,7 @@ function HomeShellContent({
 }: HomeShellProps) {
   const router = useRouter();
   const { user } = useAuth();
+  usePushDeviceSync(user ? String(user.id) : null);
   const [servers, setServers] = useState<ServerSummary[]>(initialServers);
   const [selectedServerId, setSelectedServerId] = useState<string | null>(
     initialSelectedServerId,
