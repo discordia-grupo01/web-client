@@ -21,6 +21,7 @@ import {
 import { clearPendingMessages } from "@/utils/pendingMessages";
 
 import { logoutRequest } from "@/services/auth/client";
+import { unregisterOnLogout } from "@/services/push/browser";
 
 interface AuthContextValue {
   user: User | null;
@@ -51,6 +52,7 @@ export function AuthProvider({
   const userId = user?.id;
   const logout = useCallback(() => {
     startLogout(async () => {
+      if (userId !== undefined) await unregisterOnLogout(String(userId));
       await logoutRequest();
       if (userId !== undefined) clearPendingMessages(String(userId));
       window.location.href = ROUTES.login;

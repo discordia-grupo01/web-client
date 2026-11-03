@@ -5,6 +5,7 @@ import {
   type Category,
   type Channel,
   type ChannelOverridePermission,
+  channelHasNotifications,
   channelsOfCategory,
   hasPermission,
   isChannelSilenced,
@@ -959,6 +960,7 @@ function ServerViewContent({
         canManagePermissions={canManageRoles}
         unreadMentions={unreadMentionsByChannel[channel.id]}
         isMuted={
+          channelHasNotifications(channel) &&
           notificationSettings !== null &&
           isChannelSilenced(
             notificationSettings.settings,
@@ -967,7 +969,7 @@ function ServerViewContent({
           )
         }
         onNotifications={
-          notificationSettings
+          channelHasNotifications(channel) && notificationSettings
             ? () => setNotificationChannel(channel)
             : undefined
         }
