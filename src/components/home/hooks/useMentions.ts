@@ -3,9 +3,12 @@
 import {
   addUnreadMention,
   clearChannelMentions,
+  filterHighlightedMentions,
   type MentionEventPayload,
   mergeUnreadMentions,
+  NO_NOTIFICATION_SETTINGS,
   NO_UNREAD_MENTIONS,
+  type NotificationSettings,
   type UnreadMentions,
   unreadByChannel,
   unreadByServer,
@@ -28,7 +31,10 @@ import {
  *   le pasa a `useDirectMessages`, que es quien esta unido a esa sala.
  * - Abrir un canal las marca como leidas (`markChannelRead`).
  */
-export function useMentions(currentUserId: string | null) {
+export function useMentions(
+  currentUserId: string | null,
+  settings: NotificationSettings = NO_NOTIFICATION_SETTINGS,
+) {
   const [unread, setUnread] = useState<UnreadMentions>(NO_UNREAD_MENTIONS);
   const [isLoaded, setIsLoaded] = useState(false);
 
@@ -64,8 +70,12 @@ export function useMentions(currentUserId: string | null) {
     [unread],
   );
 
-  const byChannel = useMemo(() => unreadByChannel(unread), [unread]);
-  const byServer = useMemo(() => unreadByServer(unread), [unread]);
+  const highlighted = useMemo(
+    () => filterHighlightedMentions(unread, settings),
+    [unread, settings],
+  );
+  const byChannel = useMemo(() => unreadByChannel(highlighted), [highlighted]);
+  const byServer = useMemo(() => unreadByServer(highlighted), [highlighted]);
 
   return {
     byChannel,
