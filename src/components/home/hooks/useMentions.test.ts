@@ -1,6 +1,8 @@
-import type {
-  MentionEventPayload,
-  UserMention,
+import {
+  type MentionEventPayload,
+  NO_NOTIFICATION_SETTINGS,
+  type NotificationSettings,
+  type UserMention,
 } from "@discordia/client-shared";
 
 import { act, renderHook, waitFor } from "@testing-library/react";
@@ -100,5 +102,67 @@ describe("useMentions", () => {
     act(() => result.current.markChannelRead("c1"));
 
     expect(result.current.isUnread("m1")).toBe(false);
+  });
+
+  describe("con preferencias de notificacion", () => {
+    const settings = (
+      overrides: Partial<NotificationSettings>,
+    ): NotificationSettings => ({ ...NO_NOTIFICATION_SETTINGS, ...overrides });
+
+    async function renderMentions(current?: NotificationSettings) {
+      listUnreadMentionsRequest.mockResolvedValue({
+        ok: true,
+        mentions: [
+          stored("m1", "c1", "s1"),
+          stored("m2", "c2", "s1"),
+          stored("m3", "c3", "s2"),
+        ],
+      });
+      const hook = renderHook(() => useMentions("me", current));
+      await waitFor(() => expect(hook.result.current.isLoaded).toBe(true));
+      return hook;
+    }
+
+    it("sin preferencias cuenta todas las menciones sin leer", async () => {
+      const { result } = await renderMentions();
+
+      expect(result.current.byChannel).toEqual({ c1: 1, c2: 1, c3: 1 });
+      expect(result.current.byServer).toEqual({ s1: 2, s2: 1 });
+    });
+
+    it("un canal silenciado no suma a los contadores", async () => {
+      const { result } = await renderMentions(
+        settings({ mutedChannels: { c1: true } }),
+      );
+
+      expect(result.current.byChannel).toEqual({ c2: 1, c3: 1 });
+      expect(result.current.byServer).toEqual({ s1: 1, s2: 1 });
+    });
+
+    it("un servidor silenciado no muestra ninguna de sus menciones", async () => {
+      const { result } = await renderMentions(
+        settings({ mutedServers: { s1: true } }),
+      );
+
+      expect(result.current.byChannel).toEqual({ c3: 1 });
+      expect(result.current.byServer).toEqual({ s2: 1 });
+    });
+
+    it("el nivel nada tambien apaga el aviso del canal", async () => {
+      const { result } = await renderMentions(
+        settings({ channelLevels: { c2: "none" } }),
+      );
+
+      expect(result.current.byChannel).toEqual({ c1: 1, c3: 1 });
+    });
+
+    it("una mencion silenciada sigue figurando como sin leer", async () => {
+      const { result } = await renderMentions(
+        settings({ mutedServers: { s1: true } }),
+      );
+
+      expect(result.current.isUnread("m1")).toBe(true);
+      expect(result.current.isUnread("m3")).toBe(true);
+    });
   });
 });

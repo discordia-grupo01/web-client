@@ -1,11 +1,12 @@
 "use client";
 
-import type { ServerSummary } from "@discordia/client-shared";
+import { isServerMuted, type ServerSummary } from "@discordia/client-shared";
 
 import { Home as HomeIcon, Plus } from "lucide-react";
 
 import { SidePanel } from "@/components/layout/SidePanel";
 import { useMobilePanels } from "@/contexts/MobilePanelsContext";
+import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
 import { Avatar } from "@/components/ui/Avatar";
 import { CountBadge } from "@/components/ui/CountBadge";
 import { SideTooltip } from "@/components/ui/Tooltip";
@@ -110,8 +111,13 @@ function ServerRailItem({
   unreadMentions: number;
   onClick: () => void;
 }) {
+  const notificationSettings = useOptionalNotificationSettings();
+  const isMuted =
+    notificationSettings !== null &&
+    isServerMuted(notificationSettings.settings, server.id);
+
   return (
-    <div className="relative shrink-0">
+    <div className={cn("relative shrink-0", isMuted && "opacity-60")}>
       {isActive ? (
         <div className="bg-server-pill absolute top-1/2 -left-2 h-8 w-1 -translate-y-1/2 rounded-r-full" />
       ) : null}

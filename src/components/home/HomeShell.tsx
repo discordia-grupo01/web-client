@@ -24,7 +24,12 @@ import {
   type NotificationsValue,
   NotificationsProvider,
 } from "@/contexts/NotificationsContext";
+import {
+  NotificationSettingsProvider,
+  useOptionalNotificationSettings,
+} from "@/contexts/NotificationSettingsContext";
 import { useNotificationHistory } from "@/hooks/useNotificationHistory";
+import { useNotificationRefreshOnSignal } from "@/hooks/useNotificationRefreshOnSignal";
 import { useNotificationReads } from "@/hooks/useNotificationReads";
 import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
 import { CreateServerModal } from "@/components/servers/create/CreateServerModal";
@@ -57,7 +62,6 @@ import {
 
 type MainView = "servers" | "direct-messages";
 
-const NOTIFICATIONS_REFRESH_DELAY_MS = 1_500;
 const NOTIFICATIONS_POLL_INTERVAL_MS = 30_000;
 
 function latestIncomingDirectMessageId(
@@ -127,7 +131,11 @@ function HomeShellContent({
     () => (ownProfile ? authorFromProfile(ownProfile) : null),
     [ownProfile],
   );
-  const mentions = useMentions(currentAuthor?.id ?? null);
+  const notificationSettings = useOptionalNotificationSettings();
+  const mentions = useMentions(
+    currentAuthor?.id ?? null,
+    notificationSettings?.settings,
+  );
   const presence = usePresenceSession(currentAuthor?.id ?? null);
   const directMessages = useDirectMessages(
     currentAuthor,
@@ -193,14 +201,10 @@ function HomeShellContent({
     refreshNotificationsRef.current = notificationHistory.refresh;
   }, [notificationHistory.refresh]);
 
-  useEffect(() => {
-    if (notificationsSignal === 0) return;
-    const timer = window.setTimeout(
-      () => void refreshNotificationsRef.current(),
-      NOTIFICATIONS_REFRESH_DELAY_MS,
-    );
-    return () => window.clearTimeout(timer);
-  }, [notificationsSignal]);
+  useNotificationRefreshOnSignal(
+    notificationsSignal,
+    notificationHistory.refresh,
+  );
 
   const latestIncomingDmId = useMemo(
     () =>
@@ -540,9 +544,11 @@ function HomeShellContent({
 export function HomeShell(props: HomeShellProps) {
   return (
     <BlockedUsersProvider>
-      <VoiceSessionProvider>
-        <HomeShellContent {...props} />
-      </VoiceSessionProvider>
+      <NotificationSettingsProvider>
+        <VoiceSessionProvider>
+          <HomeShellContent {...props} />
+        </VoiceSessionProvider>
+      </NotificationSettingsProvider>
     </BlockedUsersProvider>
   );
 }

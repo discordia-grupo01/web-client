@@ -7,6 +7,7 @@ import {
   type ChannelOverridePermission,
   channelsOfCategory,
   hasPermission,
+  isChannelSilenced,
   isMemberMuted,
   isUnassignedCategory,
   type MessageJumpTarget,
@@ -81,6 +82,8 @@ import { EditCategoryModal } from "@/components/categories/EditCategoryModal";
 import { ChannelHeader } from "@/components/channels/ChannelHeader";
 import { CreateChannelModal } from "@/components/channels/CreateChannelModal";
 import { DeleteChannelModal } from "@/components/channels/DeleteChannelModal";
+import { NotificationSettingsModal } from "@/components/notifications/NotificationSettingsModal";
+import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
 import { SortableChannelRow } from "@/components/channels/ChannelRow";
 import {
   type ChannelSettingsSection,
@@ -520,6 +523,9 @@ function ServerViewContent({
   const [permissionsVersion, setPermissionsVersion] = useState(0);
   const [lostChannel, setLostChannel] = useState<Channel | null>(null);
   const [deletingChannel, setDeletingChannel] = useState<Channel | null>(null);
+  const [notificationChannel, setNotificationChannel] =
+    useState<Channel | null>(null);
+  const notificationSettings = useOptionalNotificationSettings();
   const [editingCategory, setEditingCategory] = useState<Category | null>(null);
   const [collapsedIds, setCollapsedIds] = useState<Set<string>>(new Set());
   const [draggingChannel, setDraggingChannel] = useState<Channel | null>(null);
@@ -952,6 +958,19 @@ function ServerViewContent({
         canManage={canManageChannels}
         canManagePermissions={canManageRoles}
         unreadMentions={unreadMentionsByChannel[channel.id]}
+        isMuted={
+          notificationSettings !== null &&
+          isChannelSilenced(
+            notificationSettings.settings,
+            server.id,
+            channel.id,
+          )
+        }
+        onNotifications={
+          notificationSettings
+            ? () => setNotificationChannel(channel)
+            : undefined
+        }
         onClick={() => {
           setActiveChannelId(channel.id);
           closeMobilePanel();
@@ -1267,6 +1286,16 @@ function ServerViewContent({
           onChannelUpdated={handleChannelUpdated}
           onPermissionsSaved={() => void handleChannelPermissionsSaved()}
           onDelete={() => setDeletingChannel(settingsChannel)}
+        />
+      ) : null}
+
+      {notificationChannel ? (
+        <NotificationSettingsModal
+          scope="channel"
+          targetId={notificationChannel.id}
+          serverId={server.id}
+          name={notificationChannel.name}
+          onClose={() => setNotificationChannel(null)}
         />
       ) : null}
 
