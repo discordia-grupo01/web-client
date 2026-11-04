@@ -1,17 +1,15 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 export interface ElementSize {
   width: number;
   height: number;
 }
 
-/** El tamaño del contenido de un elemento, al día con `ResizeObserver`. */
 export function useElementSize<T extends HTMLElement>() {
-  const ref = useRef<T>(null);
+  const [element, setElement] = useState<T | null>(null);
   const [size, setSize] = useState<ElementSize>({ width: 0, height: 0 });
 
   useEffect(() => {
-    const element = ref.current;
     if (!element) return;
     const observer = new ResizeObserver(([entry]) => {
       if (!entry) return;
@@ -24,7 +22,7 @@ export function useElementSize<T extends HTMLElement>() {
     });
     observer.observe(element);
     return () => observer.disconnect();
-  }, []);
+  }, [element]);
 
-  return [ref, size] as const;
+  return [setElement, size] as const;
 }
