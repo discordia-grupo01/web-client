@@ -45,8 +45,11 @@ interface VoiceControlsProps {
   onToggleMute: () => void;
   onToggleCamera: () => void;
   onToggleScreenShare: () => void;
-  onShowParticipants: () => void;
+  /** Sin esto no se muestra el boton: en una llamada 1 a 1 no hace falta. */
+  onShowParticipants?: () => void;
   onLeave: () => void;
+  leaveLabel?: string;
+  leaveAriaLabel?: string;
 }
 
 export function VoiceControls({
@@ -59,6 +62,8 @@ export function VoiceControls({
   onToggleScreenShare,
   onShowParticipants,
   onLeave,
+  leaveLabel = VOICE_LEAVE,
+  leaveAriaLabel = VOICE_LEAVE_LABEL,
 }: VoiceControlsProps) {
   return (
     <div className="flex shrink-0 justify-center px-4 pb-6">
@@ -104,20 +109,22 @@ export function VoiceControls({
           onClick={onToggleScreenShare}
         />
 
-        <ControlButton
-          icon={Users}
-          label={VOICE_PARTICIPANTS_BUTTON}
-          ariaLabel={VOICE_PARTICIPANTS_OPEN}
-          tone="neutral"
-          onClick={onShowParticipants}
-        />
+        {onShowParticipants ? (
+          <ControlButton
+            icon={Users}
+            label={VOICE_PARTICIPANTS_BUTTON}
+            ariaLabel={VOICE_PARTICIPANTS_OPEN}
+            tone="neutral"
+            onClick={onShowParticipants}
+          />
+        ) : null}
 
         <span aria-hidden className="bg-line mx-1 h-10 w-px" />
 
         <ControlButton
           icon={PhoneOff}
-          label={VOICE_LEAVE}
-          ariaLabel={VOICE_LEAVE_LABEL}
+          label={leaveLabel}
+          ariaLabel={leaveAriaLabel}
           tone="danger"
           isLeave
           onClick={onLeave}
