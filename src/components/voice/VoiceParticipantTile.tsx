@@ -29,6 +29,7 @@ import { useEffect } from "react";
 import { Avatar } from "@/components/ui/Avatar";
 import { useFullscreen } from "@/components/voice/hooks/useFullscreen";
 import { useIdleVisibility } from "@/components/voice/hooks/useIdleVisibility";
+import { useTapOrDoubleTap } from "@/components/voice/hooks/useTapOrDoubleTap";
 import { cn } from "@/lib/cn";
 
 import { VoiceFullscreenOverlay } from "./VoiceFullscreenOverlay";
@@ -95,6 +96,10 @@ export function VoiceParticipantTile({
     !isOwnScreenShare;
   const hasVideo = video !== null;
   const isSharingFromPhone = participant.isLocal && screenSharing && !video;
+  const handleClick = useTapOrDoubleTap(
+    onPress,
+    onPress ? onTogglePin : undefined,
+  );
 
   useEffect(() => {
     if (isFullscreen && !hasVideo) exitFullscreen();
@@ -131,8 +136,8 @@ export function VoiceParticipantTile({
   return (
     <div
       ref={fullscreen.ref}
-      onClick={onPress}
-      onDoubleClick={onTogglePin}
+      onClick={handleClick}
+      onDoubleClick={onPress ? undefined : onTogglePin}
       className={cn(
         "group bg-surface-raised border-line relative flex shrink-0 items-center justify-center overflow-hidden border-2 transition-colors",
         isCompact ? "rounded-xl" : "rounded-2xl",
