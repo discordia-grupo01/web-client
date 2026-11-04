@@ -16,6 +16,9 @@ import { apiRequestWithBody } from "@/lib/apiClient";
  *   DELETE /api/voice/session                   -> 204 | 400 | 401 | 403 | 503
  *   GET    /api/voice/participants?server_id=   -> 200 VoiceParticipantsResponse | 400 | 401 | 403
  *   POST   /api/voice/socket-ticket             -> 200 { ticket, expires_in } | 401 | 503
+ *   POST   /api/voice/calls                     -> 201 PrivateCall | 400 | 401 | 403 | 409 | 503
+ *   POST   /api/voice/calls/:id/accept          -> 200 AcceptedPrivateCall | 401 | 403 | 404 | 409
+ *   POST   /api/voice/calls/:id/{reject,finish} -> 204 | 401 | 403 | 404 | 409
  *
  * Los errores llegan como `{ error: "<codigo>" }` (ver `voiceErrorCodeOf`).
  */
@@ -78,4 +81,29 @@ export function createVoiceSocketTicket(
     method: "POST",
     token,
   });
+}
+
+export function startPrivateCall(
+  token: string,
+  recipientId: string,
+  conversationId: string,
+): Promise<VoiceServiceResult<unknown>> {
+  return voiceRequest<unknown>("/api/voice/calls", {
+    method: "POST",
+    token,
+    data: { recipient_id: recipientId, conversation_id: conversationId },
+  });
+}
+
+export type PrivateCallAction = "accept" | "reject" | "finish";
+
+export function privateCallAction(
+  token: string,
+  callId: string,
+  action: PrivateCallAction,
+): Promise<VoiceServiceResult<unknown>> {
+  return voiceRequest<unknown>(
+    `/api/voice/calls/${encodeURIComponent(callId)}/${action}`,
+    { method: "POST", token },
+  );
 }
