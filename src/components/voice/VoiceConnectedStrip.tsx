@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  PRIVATE_CALL_HANG_UP,
+  privateCallTitle,
   VOICE_CONNECTED,
   VOICE_CONNECTING,
   VOICE_LEAVE_LABEL,
@@ -11,6 +13,7 @@ import {
 import { PhoneOff, TriangleAlert, X } from "lucide-react";
 
 import { cn } from "@/lib/cn";
+import { useOptionalPrivateCall } from "@/contexts/PrivateCallContext";
 import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
 const STATUS_LABEL = {
@@ -21,6 +24,7 @@ const STATUS_LABEL = {
 
 export function VoiceConnectedStrip() {
   const voice = useOptionalVoiceSession();
+  const privateCall = useOptionalPrivateCall();
   const target = voice?.state.target;
   if (!voice) return null;
   if (!target || voice.state.status === "idle") {
@@ -33,6 +37,17 @@ export function VoiceConnectedStrip() {
   }
 
   const isConnected = voice.state.status === "connected";
+  const isPrivateCall = target.kind === "private_call";
+  const location = isPrivateCall
+    ? privateCallTitle(target.partnerName)
+    : voiceConnectedLocation(target.channelName, target.serverName);
+  const leaveLabel = isPrivateCall ? PRIVATE_CALL_HANG_UP : VOICE_LEAVE_LABEL;
+  const onOpen =
+    isPrivateCall && privateCall
+      ? privateCall.restore
+      : voice.focusConnectedChannel;
+  const onLeave =
+    isPrivateCall && privateCall ? privateCall.hangUp : voice.leave;
 
   return (
     <div
@@ -45,7 +60,7 @@ export function VoiceConnectedStrip() {
     >
       <button
         type="button"
-        onClick={voice.focusConnectedChannel}
+        onClick={onOpen}
         className="hover:bg-success/10 min-w-0 flex-1 cursor-pointer rounded-md px-1 py-0.5 text-left transition-colors"
       >
         <span className="flex items-center gap-2">
@@ -66,14 +81,14 @@ export function VoiceConnectedStrip() {
           </span>
         </span>
         <span className="text-content-subtle mt-0.5 block truncate text-[10px]">
-          {voiceConnectedLocation(target.channelName, target.serverName)}
+          {location}
         </span>
       </button>
       <button
         type="button"
-        onClick={voice.leave}
-        aria-label={VOICE_LEAVE_LABEL}
-        title={VOICE_LEAVE_LABEL}
+        onClick={onLeave}
+        aria-label={leaveLabel}
+        title={leaveLabel}
         className="text-content-muted hover:bg-danger/10 hover:text-danger flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-md transition-colors"
       >
         <PhoneOff size={15} />

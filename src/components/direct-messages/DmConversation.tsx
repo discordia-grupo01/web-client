@@ -11,6 +11,7 @@ import {
 import { MessageCircle } from "lucide-react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
+import { DmCallButton } from "@/components/private-call/DmCallButton";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageComposer } from "@/components/messages/MessageComposer";
@@ -127,6 +128,13 @@ export function DmConversation({
             {BLOCKED_BADGE_LABEL}
           </span>
         ) : null}
+        <div className="ml-auto flex shrink-0 items-center">
+          <DmCallButton
+            partner={partner}
+            conversationId={conversationId}
+            blockedByMe={blockedByMe}
+          />
+        </div>
       </div>
 
       {conversationId ? (
