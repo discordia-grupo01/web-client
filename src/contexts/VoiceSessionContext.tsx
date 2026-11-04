@@ -2,12 +2,16 @@
 
 import {
   initialVoiceSessionState,
+  type PrivateCallCredentials,
+  type PrivateCallTarget,
   VOICE_CONNECT_FAILED,
   VOICE_MIC_DENIED,
+  type VoiceChannelTarget,
   voiceDisconnectMessage,
   voiceSessionReducer,
   type VoiceSessionState,
   type VoiceSessionTarget,
+  voiceTargetKey,
 } from "@discordia/client-shared";
 
 import {
@@ -50,7 +54,11 @@ interface VoiceSessionValue {
   mediaError: string | null;
   isAudioBlocked: boolean;
   leaveSettledCount: number;
-  join: (target: VoiceSessionTarget) => void;
+  join: (target: VoiceChannelTarget) => void;
+  connectWith: (
+    target: PrivateCallTarget,
+    credentials: PrivateCallCredentials,
+  ) => void;
   leave: () => void;
   toggleMute: () => void;
   toggleCamera: () => void;
@@ -63,6 +71,20 @@ interface VoiceSessionValue {
 }
 
 const VoiceSessionContext = createContext<VoiceSessionValue | null>(null);
+
+type CredentialsResult =
+  ({ ok: true } & PrivateCallCredentials) | { ok: false; message: string };
+
+function channelIdOf(target: VoiceSessionTarget | null): string | null {
+  return target?.kind === "channel" ? target.channelId : null;
+}
+
+function isSameTarget(
+  current: VoiceSessionTarget | null,
+  next: VoiceSessionTarget,
+): boolean {
+  return current !== null && voiceTargetKey(current) === voiceTargetKey(next);
+}
 
 export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   const [state, dispatch] = useReducer(
@@ -199,12 +221,18 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     [teardown],
   );
 
-  const join = useCallback(
-    async (target: VoiceSessionTarget) => {
-      if (stateRef.current.target?.channelId === target.channelId) return;
+  const connect = useCallback(
+    async (
+      target: VoiceSessionTarget,
+      fetchCredentials: () => Promise<CredentialsResult>,
+    ) => {
+      if (isSameTarget(stateRef.current.target, target)) return;
       const attempt = ++attemptRef.current;
 
-      // Cambiar de canal: signaling ya saca la sesion vieja al pedir el token.
+      const previousChannelId = channelIdOf(stateRef.current.target);
+      if (previousChannelId && target.kind === "private_call") {
+        void leaveVoiceSessionRequest(previousChannelId);
+      }
       const previous = roomRef.current;
       if (previous) {
         teardown(previous);
@@ -212,7 +240,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       }
       dispatch({ type: "join_requested", target });
 
-      const result = await requestVoiceTokenRequest(target.channelId);
+      const result = await fetchCredentials();
       if (attempt !== attemptRef.current) return;
       if (!result.ok) {
         dispatch({ type: "ended", notice: result.message });
@@ -223,7 +251,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       roomRef.current = room;
       listen(room);
       try {
-        await room.connect(result.token.url, result.token.token);
+        await room.connect(result.url, result.token);
       } catch {
         if (roomRef.current !== room) return;
         teardown(room);
@@ -249,9 +277,26 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     [applyMicrophone, listen, listenForDisconnect, syncParticipants, teardown],
   );
 
+  const join = useCallback(
+    (target: VoiceChannelTarget) =>
+      connect(target, async () => {
+        const result = await requestVoiceTokenRequest(target.channelId);
+        return result.ok
+          ? { ok: true, url: result.token.url, token: result.token.token }
+          : result;
+      }),
+    [connect],
+  );
+
+  const connectWith = useCallback(
+    (target: PrivateCallTarget, credentials: PrivateCallCredentials) =>
+      connect(target, async () => ({ ok: true, ...credentials })),
+    [connect],
+  );
+
   const leave = useCallback(async () => {
     attemptRef.current += 1;
-    const channelId = stateRef.current.target?.channelId;
+    const channelId = channelIdOf(stateRef.current.target);
     const room = roomRef.current;
     if (room) {
       teardown(room);
@@ -306,7 +351,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   useEffect(
     () => () => {
       const room = roomRef.current;
-      const channelId = stateRef.current.target?.channelId;
+      const channelId = channelIdOf(stateRef.current.target);
       if (room) {
         teardown(room);
         void room.disconnect();
@@ -317,8 +362,13 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   );
 
   const startJoin = useCallback(
-    (target: VoiceSessionTarget) => void join(target),
+    (target: VoiceChannelTarget) => void join(target),
     [join],
+  );
+  const startConnectWith = useCallback(
+    (target: PrivateCallTarget, credentials: PrivateCallCredentials) =>
+      void connectWith(target, credentials),
+    [connectWith],
   );
   const startLeave = useCallback(() => void leave(), [leave]);
   const toggleMute = useCallback(() => dispatch({ type: "toggle_mute" }), []);
@@ -358,6 +408,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       isAudioBlocked,
       leaveSettledCount,
       join: startJoin,
+      connectWith: startConnectWith,
       leave: startLeave,
       toggleMute,
       toggleCamera,
@@ -374,6 +425,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       isAudioBlocked,
       leaveSettledCount,
       startJoin,
+      startConnectWith,
       startLeave,
       toggleMute,
       toggleCamera,

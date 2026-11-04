@@ -13,6 +13,10 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DirectMessagesView } from "@/components/direct-messages/DirectMessagesView";
+import { useCallPartnerResolver } from "@/components/private-call/hooks/useCallPartnerResolver";
+import { PrivateCallDialog } from "@/components/private-call/PrivateCallDialog";
+import { PrivateCallNotice } from "@/components/private-call/PrivateCallNotice";
+import { PrivateCallProvider } from "@/contexts/PrivateCallContext";
 import { HomeView } from "@/components/home/HomeView";
 import { LoadingScreen } from "@/components/home/LoadingScreen";
 import { ServerRail } from "@/components/home/ServerRail";
@@ -156,6 +160,9 @@ function HomeShellContent({
       onRejoined: mentions.reload,
       ...presence.userRoomCallbacks,
     },
+  );
+  const resolveCallPartner = useCallPartnerResolver(
+    directMessages.conversations,
   );
   const presenceValue = usePresenceProviderValue(
     presence.store,
@@ -436,7 +443,10 @@ function HomeShellContent({
   }
 
   function removeServer(serverId: string) {
-    if (voice.state.target?.serverId === serverId) voice.leave();
+    const { target } = voice.state;
+    if (target?.kind === "channel" && target.serverId === serverId) {
+      voice.leave();
+    }
     setServers((prev) => prev.filter((server) => server.id !== serverId));
     setSelectedServerId((prev) => (prev === serverId ? null : prev));
   }
@@ -449,109 +459,117 @@ function HomeShellContent({
 
   return (
     <PresenceProvider value={presenceValue}>
-      <NotificationsProvider value={notificationsValue}>
-        <MobilePanelsProvider>
-          <div
-            className="relative flex h-dvh w-full overflow-hidden"
-            style={{ background: "var(--bg-chat)" }}
-          >
-            <ServerRail
-              servers={servers}
-              selectedServerId={selectedServerId}
-              isDirectMessagesActive={view === "direct-messages"}
-              isDockedOnMobile={
-                view === "direct-messages" && !directMessages.activeSummary
-              }
-              unreadDmCount={unreadDmCount}
-              unreadMentionsByServer={mentions.byServer}
-              onSelect={(serverId) => {
-                setView("servers");
-                setSelectedServerId(serverId);
-                setLastChannelId(null);
-              }}
-              onOpenDirectMessages={() => setView("direct-messages")}
-              onCreateClick={() => setIsCreateModalOpen(true)}
-            />
-
-            {!isRestored ? null : view === "direct-messages" ? (
-              <DirectMessagesView
-                currentAuthor={currentAuthor}
-                ownProfile={ownProfile}
-                onOpenOwnProfile={() => setOwnProfileServerId(null)}
+      <PrivateCallProvider
+        currentUserId={currentAuthor?.id ?? null}
+        resolvePartner={resolveCallPartner}
+      >
+        <NotificationsProvider value={notificationsValue}>
+          <MobilePanelsProvider>
+            <div
+              className="relative flex h-dvh w-full overflow-hidden"
+              style={{ background: "var(--bg-chat)" }}
+            >
+              <ServerRail
                 servers={servers}
-                directMessages={directMessages}
-              />
-            ) : selectedServer ? (
-              <ServerView
-                key={`${selectedServer.id}:${serverViewNonce}`}
-                server={selectedServer}
-                onLeft={() => removeServer(selectedServer.id)}
-                onServerUpdate={updateServer}
-                ownProfile={ownProfile}
-                onOpenOwnProfile={(serverId) =>
-                  setOwnProfileServerId(serverId ?? null)
+                selectedServerId={selectedServerId}
+                isDirectMessagesActive={view === "direct-messages"}
+                isDockedOnMobile={
+                  view === "direct-messages" && !directMessages.activeSummary
                 }
-                onMessageUser={messageUser}
-                unreadMentionsByChannel={mentions.byChannel}
-                onChannelRead={mentions.markChannelRead}
-                initialChannelId={lastChannelId}
-                onChannelChange={setLastChannelId}
-              />
-            ) : (
-              <HomeView
-                hasServers={servers.length > 0}
-                userName={user?.name}
-                ownProfile={ownProfile}
-                onOpenOwnProfile={() => setOwnProfileServerId(null)}
-                onCreateClick={() => setIsCreateModalOpen(true)}
-                onJoinClick={() => setIsJoinModalOpen(true)}
-              />
-            )}
-
-            <DrawerBackdrop />
-
-            {isCreateModalOpen ? (
-              <CreateServerModal
-                onClose={() => setIsCreateModalOpen(false)}
-                onCreated={addAndSelect}
-                onJoinClick={() => {
-                  setIsCreateModalOpen(false);
-                  setIsJoinModalOpen(true);
+                unreadDmCount={unreadDmCount}
+                unreadMentionsByServer={mentions.byServer}
+                onSelect={(serverId) => {
+                  setView("servers");
+                  setSelectedServerId(serverId);
+                  setLastChannelId(null);
                 }}
+                onOpenDirectMessages={() => setView("direct-messages")}
+                onCreateClick={() => setIsCreateModalOpen(true)}
               />
-            ) : null}
 
-            {isJoinModalOpen ? (
-              <JoinServerModal
-                onClose={() => setIsJoinModalOpen(false)}
-                onJoined={addAndSelect}
-              />
-            ) : null}
+              {!isRestored ? null : view === "direct-messages" ? (
+                <DirectMessagesView
+                  currentAuthor={currentAuthor}
+                  ownProfile={ownProfile}
+                  onOpenOwnProfile={() => setOwnProfileServerId(null)}
+                  servers={servers}
+                  directMessages={directMessages}
+                />
+              ) : selectedServer ? (
+                <ServerView
+                  key={`${selectedServer.id}:${serverViewNonce}`}
+                  server={selectedServer}
+                  onLeft={() => removeServer(selectedServer.id)}
+                  onServerUpdate={updateServer}
+                  ownProfile={ownProfile}
+                  onOpenOwnProfile={(serverId) =>
+                    setOwnProfileServerId(serverId ?? null)
+                  }
+                  onMessageUser={messageUser}
+                  unreadMentionsByChannel={mentions.byChannel}
+                  onChannelRead={mentions.markChannelRead}
+                  initialChannelId={lastChannelId}
+                  onChannelChange={setLastChannelId}
+                />
+              ) : (
+                <HomeView
+                  hasServers={servers.length > 0}
+                  userName={user?.name}
+                  ownProfile={ownProfile}
+                  onOpenOwnProfile={() => setOwnProfileServerId(null)}
+                  onCreateClick={() => setIsCreateModalOpen(true)}
+                  onJoinClick={() => setIsJoinModalOpen(true)}
+                />
+              )}
 
-            {isNotificationsOpen ? (
-              <NotificationCenter
-                history={notificationHistory}
-                reads={notificationReads}
-                servers={servers}
-                me={currentAuthor}
-                anchorRef={notificationsAnchorRef}
-                onClose={() => setIsNotificationsOpen(false)}
-                onOpenMention={openMention}
-                onOpenDirectMessage={openNotificationConversation}
-              />
-            ) : null}
+              <DrawerBackdrop />
 
-            {ownProfileServerId !== undefined && ownProfile ? (
-              <OwnProfileModal
-                serverId={ownProfileServerId ?? undefined}
-                profile={ownProfile}
-                onClose={() => setOwnProfileServerId(undefined)}
-                onUpdated={setOwnProfile}
-              />
-            ) : null}
-          </div>
-        </MobilePanelsProvider>
-      </NotificationsProvider>
+              {isCreateModalOpen ? (
+                <CreateServerModal
+                  onClose={() => setIsCreateModalOpen(false)}
+                  onCreated={addAndSelect}
+                  onJoinClick={() => {
+                    setIsCreateModalOpen(false);
+                    setIsJoinModalOpen(true);
+                  }}
+                />
+              ) : null}
+
+              {isJoinModalOpen ? (
+                <JoinServerModal
+                  onClose={() => setIsJoinModalOpen(false)}
+                  onJoined={addAndSelect}
+                />
+              ) : null}
+
+              {isNotificationsOpen ? (
+                <NotificationCenter
+                  history={notificationHistory}
+                  reads={notificationReads}
+                  servers={servers}
+                  me={currentAuthor}
+                  anchorRef={notificationsAnchorRef}
+                  onClose={() => setIsNotificationsOpen(false)}
+                  onOpenMention={openMention}
+                  onOpenDirectMessage={openNotificationConversation}
+                />
+              ) : null}
+
+              {ownProfileServerId !== undefined && ownProfile ? (
+                <OwnProfileModal
+                  serverId={ownProfileServerId ?? undefined}
+                  profile={ownProfile}
+                  onClose={() => setOwnProfileServerId(undefined)}
+                  onUpdated={setOwnProfile}
+                />
+              ) : null}
+
+              {currentAuthor ? <PrivateCallDialog me={currentAuthor} /> : null}
+              <PrivateCallNotice />
+            </div>
+          </MobilePanelsProvider>
+        </NotificationsProvider>
+      </PrivateCallProvider>
     </PresenceProvider>
   );
 }

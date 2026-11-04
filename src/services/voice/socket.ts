@@ -1,5 +1,7 @@
 import {
   createSocketManager,
+  PRIVATE_CALL_EVENTS,
+  privateCallTopic,
   type VoicePresenceEvent,
 } from "@discordia/client-shared";
 import { type Channel, Socket } from "phoenix";
@@ -59,6 +61,42 @@ export function connectVoicePresence(
       if (joinedOnce) handlers.rejoined();
       joinedOnce = true;
     });
+  });
+
+  return () => {
+    disposed = true;
+    channel?.leave();
+    release?.();
+  };
+}
+
+export type PrivateCallHandlers = Readonly<
+  Record<keyof typeof PRIVATE_CALL_EVENTS, (payload: unknown) => void>
+>;
+
+export function connectPrivateCalls(
+  userId: string,
+  handlers: PrivateCallHandlers,
+): () => void {
+  let disposed = false;
+  let channel: Channel | null = null;
+  let release: (() => void) | null = null;
+
+  void voiceSocket.acquireSocket().then((acquired) => {
+    if (!acquired.ok) return;
+    if (disposed) {
+      acquired.release();
+      return;
+    }
+    release = acquired.release;
+    channel = acquired.socket.channel(privateCallTopic(userId), {});
+    channel.on(PRIVATE_CALL_EVENTS.incoming, handlers.incoming);
+    channel.on(PRIVATE_CALL_EVENTS.accepted, handlers.accepted);
+    channel.on(PRIVATE_CALL_EVENTS.answered, handlers.answered);
+    channel.on(PRIVATE_CALL_EVENTS.rejected, handlers.rejected);
+    channel.on(PRIVATE_CALL_EVENTS.missed, handlers.missed);
+    channel.on(PRIVATE_CALL_EVENTS.ended, handlers.ended);
+    channel.join();
   });
 
   return () => {
