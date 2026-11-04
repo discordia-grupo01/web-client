@@ -22,16 +22,17 @@ import { cn } from "@/lib/cn";
 
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageActions } from "./MessageActions";
+import { MessageActionsSheet } from "./MessageActionsSheet";
 import { useMessageMentions } from "@/contexts/MentionsContext";
 import { MessageContent } from "./MessageContent";
 import { DeleteMessageModal } from "./DeleteMessageModal";
 import { MessageEditForm } from "./MessageEditForm";
 import { MessageHeader } from "./MessageHeader";
 import { MessageReactions } from "./MessageReactions";
+import { useLongPress } from "./hooks/useLongPress";
 
 const AVATAR_SIZE = 38;
 
-/** Forma minima que necesita esta fila: sirve tanto para `Message` (canal) como para `DmMessage`. */
 export interface MessageItemMessage extends MessageMentions {
   id: string;
   user_id: string;
@@ -40,12 +41,10 @@ export interface MessageItemMessage extends MessageMentions {
   edited_at?: string | null;
   reactions?: MessageReaction[];
   attachments?: MessageAttachment[];
-  /** Mensaje propio que se esta enviando o no se pudo enviar (solo existe en pantalla). */
   delivery?: "sending" | "waiting" | "failed";
   delivery_error?: string;
 }
 
-/** `void` en los mensajes directos (maqueta local, no puede fallar). */
 export type MessageEditOutcome = { ok: true } | { ok: false; message: string };
 
 interface MessageItemProps {
@@ -55,16 +54,12 @@ interface MessageItemProps {
   canEdit: boolean;
   canDelete: boolean;
   onToggleReaction?: (emoji: string) => void;
-  /** `false` sin `ADD_REACTIONS`: no se ofrece reaccionar, solo sacar la propia. */
   canAddReactions?: boolean;
   onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
-  /** Solo en un mensaje fallido. */
   onRetry?: () => void;
   onDiscard?: () => void;
-  /** Sin esto el nombre y la foto no son cliqueables. */
   onOpenProfile?: (userId: string) => void;
-  /** Recien se salto a este mensaje (desde la busqueda). */
   isFocused?: boolean;
 }
 
@@ -91,6 +86,13 @@ export function MessageItem({
   const [isSavingEdit, setIsSavingEdit] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
+  const onReact = canAddReactions ? onToggleReaction : undefined;
+  const hasActions = Boolean(onReact) || canEdit || canDelete;
+  const longPress = useLongPress(
+    () => setIsActionsSheetOpen(true),
+    hasActions && !isEditing && !delivery,
+  );
 
   async function saveEdit(content: string) {
     if (content === message.content) return stopEditing();
@@ -109,6 +111,7 @@ export function MessageItem({
   return (
     <article
       tabIndex={0}
+      {...longPress.handlers}
       className={cn(
         "group/message focus-visible:bg-surface-hover has-[:focus-visible]:bg-surface-hover relative flex gap-3 rounded-md px-2 py-0.5 outline-none",
         isMentioningMe
@@ -121,6 +124,8 @@ export function MessageItem({
         delivery === "failed" &&
           "rounded-none shadow-[inset_2px_0_0_var(--border-strong)]",
         delivery === "waiting" && "opacity-60",
+        "pointer-coarse:select-none pointer-coarse:[-webkit-touch-callout:none]",
+        longPress.isPressing && "bg-surface-hover",
       )}
       aria-busy={delivery === "sending" || delivery === "waiting" || undefined}
     >
@@ -242,9 +247,20 @@ export function MessageItem({
         <MessageActions
           canEdit={canEdit}
           canDelete={canDelete}
-          onToggleReaction={canAddReactions ? onToggleReaction : undefined}
+          onToggleReaction={onReact}
           onEdit={() => setIsEditing(true)}
           onDelete={() => setIsConfirmingDelete(true)}
+        />
+      ) : null}
+
+      {isActionsSheetOpen ? (
+        <MessageActionsSheet
+          canEdit={canEdit}
+          canDelete={canDelete}
+          onReact={onReact}
+          onEdit={() => setIsEditing(true)}
+          onDelete={() => setIsConfirmingDelete(true)}
+          onClose={() => setIsActionsSheetOpen(false)}
         />
       ) : null}
 
