@@ -75,7 +75,7 @@ export function ServerRail({
           ) : null}
         </div>
 
-        <div className="bg-line-strong h-px w-8 shrink-0 rounded-full" />
+        <div className="bg-servers-divider h-px w-8 shrink-0 rounded-full" />
 
         {servers.map((server) => (
           <ServerRailItem
