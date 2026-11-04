@@ -619,7 +619,8 @@ function ServerViewContent({
   const voice = useVoiceSession();
   const voiceState = voice.state;
   const voiceChannelId =
-    voiceState.target?.serverId === server.id
+    voiceState.target?.kind === "channel" &&
+    voiceState.target.serverId === server.id
       ? voiceState.target.channelId
       : null;
   const liveVoiceParticipants = useMemo(

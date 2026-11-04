@@ -17,13 +17,14 @@ import {
   type VoicePresenceParticipant,
 } from "@discordia/client-shared";
 
-import { TriangleAlert, Volume2, VolumeX, X } from "lucide-react";
-import { useCallback, useState, type ReactNode } from "react";
+import { Volume2, VolumeX, X } from "lucide-react";
+import { useCallback, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { useVoiceSession } from "@/contexts/VoiceSessionContext";
 
 import { VoiceControls } from "./VoiceControls";
+import { CallBanner } from "./CallBanner";
 import { VoiceParticipantGrid } from "./VoiceParticipantGrid";
 import { VoiceParticipantsPanel } from "./VoiceParticipantsPanel";
 import { ownAvatarSrc } from "@/utils/ownAvatar";
@@ -51,7 +52,8 @@ export function VoiceChannelView({
 }: VoiceChannelViewProps) {
   const voice = useVoiceSession();
   const { state } = voice;
-  const isInThisChannel = state.target?.channelId === channel.id;
+  const isInThisChannel =
+    state.target?.kind === "channel" && state.target.channelId === channel.id;
   const [pinnedIdentity, setPinnedIdentity] = useState<string | null>(null);
   const [isPanelOpen, setIsPanelOpen] = useState(false);
   const [lastSharingIds, setLastSharingIds] = useState<readonly string[]>([]);
@@ -70,6 +72,7 @@ export function VoiceChannelView({
         onDismissNotice={voice.dismissNotice}
         onJoin={() =>
           voice.join({
+            kind: "channel",
             serverId,
             serverName,
             channelId: channel.id,
@@ -145,17 +148,6 @@ export function VoiceChannelView({
           onClose={closePanel}
         />
       ) : null}
-    </div>
-  );
-}
-
-function CallBanner({ children }: { children: ReactNode }) {
-  return (
-    <div className="flex shrink-0 justify-center px-4 pb-2">
-      <p className="bg-highlight/15 text-content flex items-center gap-2 rounded-lg px-3 py-2 text-sm">
-        <TriangleAlert size={15} className="text-highlight shrink-0" />
-        {children}
-      </p>
     </div>
   );
 }
