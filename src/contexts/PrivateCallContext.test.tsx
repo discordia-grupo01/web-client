@@ -72,11 +72,15 @@ function Probe() {
   );
 }
 
-function renderProvider(currentUserId = "beto") {
+function renderProvider(
+  currentUserId = "beto",
+  resolvePartner: (id: string) => Promise<PrivateCallPartner> = async (id) =>
+    id === "ana" ? ana : beto,
+) {
   const ui = () => (
     <PrivateCallProvider
       currentUserId={currentUserId}
-      resolvePartner={async (id) => (id === "ana" ? ana : beto)}
+      resolvePartner={resolvePartner}
     >
       <Probe />
     </PrivateCallProvider>
@@ -96,6 +100,33 @@ beforeEach(() => {
 });
 
 describe("llamada entrante", () => {
+  it("ignora un incoming enviado por error al propio llamante", () => {
+    renderProvider("ana");
+
+    act(() => socket.handlers?.incoming({ ...ringing, caller_id: "ana" }));
+
+    expect(requests.rejectPrivateCallRequest).not.toHaveBeenCalled();
+    expect(shown()).toBe("idle|");
+  });
+
+  it("no rechaza dos veces el mismo incoming mientras resuelve el perfil", async () => {
+    let resolvePartner: (partner: PrivateCallPartner) => void = () => undefined;
+    const partner = new Promise<PrivateCallPartner>((resolve) => {
+      resolvePartner = resolve;
+    });
+    renderProvider("beto", () => partner);
+
+    act(() => {
+      socket.handlers?.incoming(ringing);
+      socket.handlers?.incoming(ringing);
+    });
+
+    expect(requests.rejectPrivateCallRequest).not.toHaveBeenCalled();
+    resolvePartner(ana);
+    await waitFor(() => expect(shown()).toBe("incoming|"));
+    expect(requests.rejectPrivateCallRequest).not.toHaveBeenCalled();
+  });
+
   it("suena y al atender se conecta a la sala con sus credenciales", async () => {
     requests.acceptPrivateCallRequest.mockResolvedValue({
       ok: true,
