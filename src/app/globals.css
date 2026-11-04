@@ -17,6 +17,11 @@
   --color-override-inherit: var(--override-inherit-bg);
   --color-override-inherit-line: var(--override-inherit-line);
   --color-on-override-inherit: var(--override-inherit-icon);
+  /* Barra de aviso: opaca, porque el color transparente sobre el fondo azulado
+     se ve oliva. Es el color de estado aclarado, con texto oscuro encima. */
+  --color-status-bar-operational: color-mix(in srgb, var(--success) 40%, #fff);
+  --color-status-bar-degraded: color-mix(in srgb, var(--warning) 60%, #fff);
+  --color-status-bar-maintenance: color-mix(in srgb, var(--info) 80%, #fff);
 }
 
 :root {

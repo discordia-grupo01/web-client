@@ -28,7 +28,7 @@ export function PushSettings() {
   return (
     <div className="flex max-w-xl flex-col gap-6">
       <div>
-        <h3 className="text-content font-display text-base font-bold">
+        <h3 className="text-content font-display text-xl font-bold">
           {PUSH_SETTINGS_TITLE}
         </h3>
       </div>
