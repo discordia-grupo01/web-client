@@ -3,6 +3,7 @@
 import type { TwoFactorStatus } from "@discordia/client-shared";
 
 import {
+  Activity,
   Bell,
   ChevronLeft,
   ChevronRight,
@@ -12,6 +13,7 @@ import {
 } from "lucide-react";
 import { useState } from "react";
 
+import { PlatformStatusSettings } from "@/components/platform-status/PlatformStatusSettings";
 import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { TwoFactorPanel } from "@/components/security/TwoFactorPanel";
 import { ModalShell } from "@/components/ui/ModalShell";
@@ -21,7 +23,7 @@ import { AppearanceSettings } from "./AppearanceSettings";
 import { PushSettings } from "./PushSettings";
 import { SecuritySettings } from "./SecuritySettings";
 
-type Section = "appearance" | "notifications" | "security";
+type Section = "appearance" | "notifications" | "security" | "status";
 
 const SECTIONS: {
   id: Section;
@@ -46,6 +48,12 @@ const SECTIONS: {
     label: "Seguridad",
     description: "Acceso y verificación",
     icon: Shield,
+  },
+  {
+    id: "status",
+    label: "Estado de la plataforma",
+    description: "Servicios e incidentes",
+    icon: Activity,
   },
 ];
 
@@ -220,6 +228,8 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
               <AppearanceSettings />
             ) : section === "notifications" ? (
               <PushSettings />
+            ) : section === "status" ? (
+              <PlatformStatusSettings />
             ) : twoFactorStatus ? (
               <TwoFactorPanel
                 initialStatus={twoFactorStatus}
