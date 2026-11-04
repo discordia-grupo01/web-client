@@ -1,5 +1,4 @@
 import {
-  activeIncidentsLabel,
   INCIDENT_TYPE_LABELS,
   incidentSinceLabel,
   PLATFORM_STATUS_LABELS,
@@ -19,102 +18,101 @@ export function PlatformStatusDetails({
 }: PlatformStatusResponse) {
   const tone = STATUS_TONES[status];
   const Icon = tone.icon;
+  const showIncidents = incidents.length > 0 || status !== "operational";
 
   return (
-    <div className="space-y-6">
-      <section
+    <div className="space-y-8">
+      <div
         className={cn(
-          "flex items-start gap-3 rounded-xl border px-4 py-3",
-          tone.surface,
+          "flex items-start gap-4 rounded-2xl border p-4 sm:p-5",
+          tone.panel,
         )}
       >
-        <Icon
-          size={18}
-          className={cn("mt-0.5 shrink-0", tone.text)}
+        <span
           aria-hidden
-        />
+          className={cn(
+            "flex size-11 shrink-0 items-center justify-center rounded-xl",
+            tone.soft,
+          )}
+        >
+          <Icon size={22} />
+        </span>
         <div className="min-w-0">
-          <p className={cn("font-display text-base font-bold", tone.text)}>
+          <h3 className="text-content font-display text-lg leading-tight font-bold">
             {PLATFORM_STATUS_LABELS[status]}
-          </p>
-          <p className="text-content-muted mt-0.5 text-sm">
+          </h3>
+          <p className="text-content-muted mt-1 text-sm leading-relaxed">
             {PLATFORM_STATUS_SUMMARIES[status]}
           </p>
         </div>
-      </section>
+      </div>
 
-      <section aria-labelledby="active-incidents-heading">
-        <div className="mb-3 flex items-center justify-between gap-3">
-          <h3
-            id="active-incidents-heading"
-            className="text-content font-display text-sm font-semibold"
-          >
-            Incidentes activos
-          </h3>
-          <span className="text-content-subtle text-xs">
-            {activeIncidentsLabel(incidents.length)}
-          </span>
-        </div>
-        {incidents.length === 0 ? (
-          <p className="border-line text-content-subtle rounded-2xl border border-dashed px-4 py-8 text-center text-sm">
-            No hay incidentes en este momento.
-          </p>
-        ) : (
-          <ul className="space-y-3">
-            {incidents.map((incident) => (
-              <li key={incident.id}>
-                <IncidentItem incident={incident} />
-              </li>
-            ))}
-          </ul>
-        )}
-      </section>
+      {showIncidents ? (
+        <section aria-labelledby="active-incidents-heading">
+          <div className="mb-3 flex items-center gap-2">
+            <h3
+              id="active-incidents-heading"
+              className="text-content-subtle font-display text-xs font-semibold tracking-wide uppercase"
+            >
+              Incidentes activos
+            </h3>
+            <span className="bg-surface-input text-content-muted rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums">
+              {incidents.length}
+            </span>
+          </div>
+          {incidents.length === 0 ? (
+            <p className="border-line text-content-subtle rounded-2xl border border-dashed px-4 py-8 text-center text-sm">
+              No hay incidentes en este momento.
+            </p>
+          ) : (
+            <ul className="space-y-3">
+              {incidents.map((incident) => (
+                <li key={incident.id}>
+                  <IncidentItem incident={incident} />
+                </li>
+              ))}
+            </ul>
+          )}
+        </section>
+      ) : null}
     </div>
   );
 }
 
 function IncidentItem({ incident }: { incident: Incident }) {
   const tone = STATUS_TONES[incident.platform_status];
+  const services = incident.affected_services.map(platformServiceLabel);
 
   return (
-    <article className="bg-surface-raised border-line rounded-2xl border p-4 sm:p-5">
-      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
-        <h4 className="text-content font-display font-semibold break-words">
+    <article className="bg-surface-raised border-line relative overflow-hidden rounded-2xl border px-4 py-3.5 pl-5 sm:px-5 sm:pl-6">
+      <span
+        aria-hidden
+        className={cn("absolute inset-y-0 left-0 w-1", tone.accent)}
+      />
+      <div className="flex items-start justify-between gap-3">
+        <h4 className="text-content font-display min-w-0 font-semibold break-words">
           {incident.title}
         </h4>
         <span
           className={cn(
-            "rounded-full px-2 py-0.5 text-[11px] font-semibold",
-            tone.chip,
+            "shrink-0 rounded-full px-2 py-0.5 text-xs font-semibold",
+            tone.soft,
           )}
         >
           {INCIDENT_TYPE_LABELS[incident.platform_status]}
         </span>
-        <time
-          dateTime={incident.created_at}
-          className="text-content-subtle ml-auto text-xs"
-        >
+      </div>
+      {incident.description ? (
+        <p className="text-content-muted mt-1.5 text-sm leading-relaxed break-words whitespace-pre-line">
+          {incident.description}
+        </p>
+      ) : null}
+      <p className="text-content-subtle mt-3 text-xs">
+        {services.length > 0 ? `Afecta a ${services.join(", ")} · ` : null}
+        <time dateTime={incident.created_at}>
           {incidentSinceLabel(incident.created_at)}
         </time>
-      </div>
-      <p className="text-content-muted mt-2 text-sm leading-relaxed break-words whitespace-pre-line">
-        {incident.description}
       </p>
-      {incident.affected_services.length > 0 ? (
-        <ul
-          className="mt-3 flex flex-wrap gap-2"
-          aria-label="Servicios afectados"
-        >
-          {incident.affected_services.map((service) => (
-            <li
-              key={service}
-              className="bg-surface-input border-line text-content-muted rounded-md border px-2 py-1 text-xs"
-            >
-              {platformServiceLabel(service)}
-            </li>
-          ))}
-        </ul>
-      ) : null}
     </article>
   );
 }
