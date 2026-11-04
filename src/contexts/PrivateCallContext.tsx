@@ -7,6 +7,7 @@ import {
   parseEndedPrivateCall,
   parsePrivateCall,
   type PrivateCall,
+  type PrivateCallEndReason,
   type PrivateCallPartner,
   privateCallReducer,
   type PrivateCallState,
@@ -42,6 +43,7 @@ interface PrivateCallValue {
   isMinimized: boolean;
   /** Cuando quedaron conectados los dos, para mostrar cuanto lleva la llamada. */
   connectedAt: number | null;
+  endReason: PrivateCallEndReason | null;
   start: (partner: PrivateCallPartner, conversationId: string) => void;
   accept: () => void;
   /** Quien recibe no atiende. */
@@ -90,6 +92,7 @@ export function PrivateCallProvider({
   );
   const [isMinimized, setIsMinimized] = useState(false);
   const [connectedAt, setConnectedAt] = useState<number | null>(null);
+  const [endReason, setEndReason] = useState<PrivateCallEndReason | null>(null);
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -118,7 +121,10 @@ export function PrivateCallProvider({
     if (!currentUserId) return;
     const endFromEvent = (payload: unknown) => {
       const call = parseEndedPrivateCall(payload);
-      if (call) dispatch({ type: "ended", call });
+      if (!call) return;
+      if (stateRef.current.call?.call_id === call.call_id)
+        setEndReason(call.reason);
+      dispatch({ type: "ended", call });
     };
 
     return connectPrivateCalls(currentUserId, {
@@ -193,6 +199,7 @@ export function PrivateCallProvider({
 
   useEffect(() => {
     if (phase === "idle") setIsMinimized(false);
+    else setEndReason(null);
     if (phase === "in_call") setConnectedAt((at) => at ?? Date.now());
     else setConnectedAt(null);
   }, [phase]);
@@ -280,6 +287,7 @@ export function PrivateCallProvider({
       state,
       isMinimized,
       connectedAt,
+      endReason,
       start,
       accept,
       decline,
@@ -293,6 +301,7 @@ export function PrivateCallProvider({
       state,
       isMinimized,
       connectedAt,
+      endReason,
       start,
       accept,
       decline,
