@@ -134,3 +134,27 @@ describe("VoiceEmbed en pantalla grande", () => {
     expect(expandButton()).toBeInTheDocument();
   });
 });
+
+describe("VoiceEmbed con perfiles de la app", () => {
+  const callPartner: VoiceParticipant = {
+    ...pixel,
+    identity: "u-beto",
+    name: "u-beto",
+  };
+
+  it("muestra el nombre que manda la app en vez del id", () => {
+    render(<VoiceEmbed />);
+    act(() =>
+      session.post?.({ type: "participants", participants: [callPartner] }),
+    );
+    expect(screen.getByText("u-beto")).toBeInTheDocument();
+
+    sendCommand({
+      type: "setParticipantProfiles",
+      profiles: [{ identity: "u-beto", name: "Beto", avatarUrl: null }],
+    });
+
+    expect(screen.getByText("Beto")).toBeInTheDocument();
+    expect(screen.queryByText("u-beto")).not.toBeInTheDocument();
+  });
+});
