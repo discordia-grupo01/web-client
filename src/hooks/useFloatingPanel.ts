@@ -97,6 +97,24 @@ export function useFloatingPanel({
         next.top = rect.top - panelHeight - GAP;
       }
 
+      if (panelHeight > 0) {
+        const maxTop = window.innerHeight - VIEWPORT_MARGIN - panelHeight;
+        next.top = Math.max(VIEWPORT_MARGIN, Math.min(next.top, maxTop));
+      }
+
+      if (panelWidth > 0 && align !== "stretch") {
+        const maxOffset = window.innerWidth - VIEWPORT_MARGIN - panelWidth;
+        if (next.right !== undefined) {
+          next.right = Math.max(
+            VIEWPORT_MARGIN,
+            Math.min(next.right, maxOffset),
+          );
+        }
+        if (next.left !== undefined) {
+          next.left = Math.max(VIEWPORT_MARGIN, Math.min(next.left, maxOffset));
+        }
+      }
+
       setPosition(next);
     }
 

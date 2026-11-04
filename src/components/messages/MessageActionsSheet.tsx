@@ -7,15 +7,12 @@ import {
 } from "@discordia/client-shared";
 
 import { Pencil, Smile, Trash2, type LucideIcon } from "lucide-react";
-import dynamic from "next/dynamic";
-import { useEffect, useState } from "react";
-import { createPortal } from "react-dom";
+import { useState } from "react";
 
+import { BottomSheet } from "@/components/ui/BottomSheet";
 import { cn } from "@/lib/cn";
 
-const EmojiPickerPanel = dynamic(() => import("./EmojiPickerPanel"), {
-  ssr: false,
-});
+import { EmojiPickerSheet } from "./EmojiPickerSheet";
 
 interface MessageActionsSheetProps {
   canEdit: boolean;
@@ -36,82 +33,55 @@ export function MessageActionsSheet({
 }: MessageActionsSheetProps) {
   const [isPickingEmoji, setIsPickingEmoji] = useState(false);
 
-  useEffect(() => {
-    function onKeyDown(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    document.addEventListener("keydown", onKeyDown);
-    return () => document.removeEventListener("keydown", onKeyDown);
-  }, [onClose]);
+  if (isPickingEmoji && onReact) {
+    return (
+      <EmojiPickerSheet
+        label={ADD_REACTION_LABEL}
+        onPick={onReact}
+        onClose={onClose}
+      />
+    );
+  }
 
-  return createPortal(
-    <div
-      className="fixed inset-0 z-50 flex flex-col justify-end bg-black/60 transition-opacity duration-300 starting:opacity-0"
-      onClick={(event) => {
-        if (event.target === event.currentTarget) onClose();
-      }}
-    >
-      <div
-        role="dialog"
-        aria-modal="true"
-        aria-label="Acciones del mensaje"
-        className="border-line-strong bg-surface-modal rounded-t-[22px] border-t px-4 pt-2.5 pb-7"
+  return (
+    <BottomSheet label="Acciones del mensaje" onClose={onClose}>
+      {onReact ? (
+        <SheetAction
+          icon={Smile}
+          label={ADD_REACTION_LABEL}
+          onClick={() => setIsPickingEmoji(true)}
+        />
+      ) : null}
+      {canEdit ? (
+        <SheetAction
+          icon={Pencil}
+          label={EDIT_MESSAGE_LABEL}
+          onClick={() => {
+            onClose();
+            onEdit();
+          }}
+        />
+      ) : null}
+      {canDelete ? (
+        <SheetAction
+          icon={Trash2}
+          label={DELETE_MESSAGE_LABEL}
+          isDanger
+          onClick={() => {
+            onClose();
+            onDelete();
+          }}
+        />
+      ) : null}
+
+      <button
+        type="button"
+        onClick={onClose}
+        className="bg-surface-input text-content-muted mt-2 w-full cursor-pointer rounded-xl py-3.5 text-sm font-bold"
       >
-        <div className="bg-line-strong mx-auto mb-4 h-1 w-9 rounded-xs" />
-
-        {isPickingEmoji && onReact ? (
-          <div className="flex justify-center">
-            <EmojiPickerPanel
-              perLine={8}
-              onPick={(emoji) => {
-                onReact(emoji);
-                onClose();
-              }}
-            />
-          </div>
-        ) : (
-          <>
-            {onReact ? (
-              <SheetAction
-                icon={Smile}
-                label={ADD_REACTION_LABEL}
-                onClick={() => setIsPickingEmoji(true)}
-              />
-            ) : null}
-            {canEdit ? (
-              <SheetAction
-                icon={Pencil}
-                label={EDIT_MESSAGE_LABEL}
-                onClick={() => {
-                  onClose();
-                  onEdit();
-                }}
-              />
-            ) : null}
-            {canDelete ? (
-              <SheetAction
-                icon={Trash2}
-                label={DELETE_MESSAGE_LABEL}
-                isDanger
-                onClick={() => {
-                  onClose();
-                  onDelete();
-                }}
-              />
-            ) : null}
-          </>
-        )}
-
-        <button
-          type="button"
-          onClick={onClose}
-          className="bg-surface-input text-content-muted mt-2 w-full cursor-pointer rounded-xl py-3.5 text-sm font-bold"
-        >
-          Cancelar
-        </button>
-      </div>
-    </div>,
-    document.body,
+        Cancelar
+      </button>
+    </BottomSheet>
   );
 }
 
