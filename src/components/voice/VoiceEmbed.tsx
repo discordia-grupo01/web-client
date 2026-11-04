@@ -1,16 +1,19 @@
 "use client";
 
 import {
+  ownerOfScreenShareIdentity,
   parseVoiceBridgeCommand,
   serializeVoiceBridgeMessage,
   type VoiceBridgeEvent,
   type VoiceConnectionStatus,
   type VoiceParticipant,
+  type VoiceParticipantProfile,
   voiceTileName,
   voiceTilesOf,
+  withParticipantProfiles,
 } from "@discordia/client-shared";
 
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   createVoiceEmbedSession,
@@ -40,6 +43,7 @@ export function VoiceEmbed() {
   const [pinnedIdentity, setPinnedIdentity] = useState<string | null>(null);
   const [canExpand, setCanExpand] = useState(false);
   const [expandedIdentity, setExpandedIdentity] = useState<string | null>(null);
+  const [profiles, setProfiles] = useState<VoiceParticipantProfile[]>([]);
 
   useEffect(() => {
     const audioHost = audioHostRef.current;
@@ -75,6 +79,10 @@ export function VoiceEmbed() {
         setPinnedIdentity(command.identity);
         return;
       }
+      if (command.type === "setParticipantProfiles") {
+        setProfiles(command.profiles);
+        return;
+      }
       session.handle(command);
     };
 
@@ -105,7 +113,22 @@ export function VoiceEmbed() {
     postToApp({ type: "expandRequested", identity });
   }, []);
 
-  const expanded = voiceTilesOf(participants).find(
+  const named = useMemo(
+    () => withParticipantProfiles(participants, profiles),
+    [participants, profiles],
+  );
+  const avatarSrcOf = useCallback(
+    (identity: string) => {
+      const owner = ownerOfScreenShareIdentity(identity) ?? identity;
+      return (
+        profiles.find((profile) => profile.identity === owner)?.avatarUrl ??
+        null
+      );
+    },
+    [profiles],
+  );
+
+  const expanded = voiceTilesOf(named).find(
     (participant) => participant.identity === expandedIdentity,
   );
   const expandedVideo = expanded ? videoOf(expanded.identity) : null;
@@ -125,9 +148,10 @@ export function VoiceEmbed() {
         />
       ) : (
         <VoiceParticipantGrid
-          participants={participants}
+          participants={named}
           isConnecting={status === "connecting"}
           ownAvatarSrc={localAvatarUrl}
+          avatarSrcOf={avatarSrcOf}
           videoOf={videoOf}
           onToggleMutedForMe={requestMuteForMe}
           onShowParticipants={requestParticipants}
