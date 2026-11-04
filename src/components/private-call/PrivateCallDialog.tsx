@@ -52,7 +52,7 @@ export function PrivateCallDialog({ me }: { me: MessageAuthor }) {
         role="dialog"
         aria-modal="true"
         aria-label={privateCallDialogLabel(partner.name)}
-        className="bg-surface border-line-strong relative flex h-full w-full flex-col overflow-hidden sm:h-auto sm:min-h-140 sm:max-w-3xl sm:rounded-2xl sm:border sm:shadow-2xl"
+        className="bg-surface border-line-strong relative flex h-full w-full flex-col overflow-hidden sm:h-200 sm:max-h-full sm:max-w-5xl sm:rounded-2xl sm:border sm:shadow-2xl"
       >
         <header className="border-line flex h-14 shrink-0 items-center justify-between border-b px-4 sm:px-6">
           <div className="min-w-0">
