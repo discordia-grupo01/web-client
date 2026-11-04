@@ -9,11 +9,10 @@ import {
 import { useMemo } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
-import { VoiceParticipantGrid } from "@/components/voice/VoiceParticipantGrid";
 import { useVoiceSession } from "@/contexts/VoiceSessionContext";
 import { cn } from "@/lib/cn";
 
-const NO_PANEL = () => undefined;
+import { PrivateCallRoom } from "./PrivateCallRoom";
 
 interface PrivateCallStageProps {
   me: MessageAuthor;
@@ -35,23 +34,17 @@ export function PrivateCallStage({
       })),
     [voice.state, me.name, partner.name],
   );
-  const hasVideo =
-    !isRinging &&
-    participants.some(
-      (participant) => participant.cameraOn || participant.screenSharing,
-    );
+  const local = participants.find((participant) => participant.isLocal);
+  const remote = participants.find((participant) => !participant.isLocal);
 
-  if (hasVideo) {
+  if (!isRinging && local && remote) {
     return (
-      <div className="relative flex min-h-0 flex-1 flex-col p-2 sm:p-4">
-        <VoiceParticipantGrid
-          participants={participants}
-          isConnecting={voice.state.status === "connecting"}
-          ownAvatarSrc={me.avatarUrl}
-          videoOf={voice.videoOf}
-          onToggleMutedForMe={voice.toggleMutedForMe}
-          onShowParticipants={NO_PANEL}
-          pinnedIdentity={null}
+      <div className="flex min-h-0 flex-1 flex-col p-2 sm:p-4">
+        <PrivateCallRoom
+          me={me}
+          partner={partner}
+          local={local}
+          remote={remote}
         />
       </div>
     );
