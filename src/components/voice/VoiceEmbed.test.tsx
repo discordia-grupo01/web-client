@@ -10,6 +10,7 @@ import { act, fireEvent, render, screen } from "@testing-library/react";
 import type { Track } from "livekit-client";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
+import { DOUBLE_TAP_MS } from "./hooks/useTapOrDoubleTap";
 import { VoiceEmbed } from "./VoiceEmbed";
 
 const track = { attach: vi.fn(), detach: vi.fn() } as unknown as Track;
@@ -156,5 +157,47 @@ describe("VoiceEmbed con perfiles de la app", () => {
 
     expect(screen.getByText("Beto")).toBeInTheDocument();
     expect(screen.queryByText("u-beto")).not.toBeInTheDocument();
+  });
+});
+
+describe("VoiceEmbed con doble toque", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+  });
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  const tile = () => screen.getByText("PixelHunter").closest("div.group")!;
+
+  it("un toque pide la lista de participantes", () => {
+    joinCall(true);
+
+    act(() => fireEvent.click(tile()));
+    act(() => vi.advanceTimersByTime(DOUBLE_TAP_MS));
+
+    expect(postMessage).toHaveBeenCalledWith(
+      serializeVoiceBridgeMessage({ type: "participantsRequested" }),
+    );
+  });
+
+  it("dos toques le piden a la app fijar a esa persona", () => {
+    joinCall(true);
+
+    act(() => {
+      fireEvent.click(tile());
+      fireEvent.click(tile());
+    });
+    act(() => vi.advanceTimersByTime(DOUBLE_TAP_MS));
+
+    expect(postMessage).toHaveBeenCalledWith(
+      serializeVoiceBridgeMessage({
+        type: "pinRequested",
+        identity: "u-pixel",
+      }),
+    );
+    expect(postMessage).not.toHaveBeenCalledWith(
+      serializeVoiceBridgeMessage({ type: "participantsRequested" }),
+    );
   });
 });

@@ -34,7 +34,7 @@ interface VoiceParticipantGridProps {
   onShowParticipants: () => void;
   pinnedIdentity: string | null;
   onPinChange?: (identity: string | null) => void;
-  /** En mobile tocar un tile abre la lista, asi que ahi no se fija con doble toque. */
+  /** En mobile un toque abre la lista y el doble toque fija al participante. */
   onTilePress?: () => void;
   /** Boton de pantalla grande en los tiles con video. */
   canExpand?: boolean;
@@ -111,7 +111,7 @@ export function VoiceParticipantGrid({
             : () => onToggleMutedForMe(identity)
         }
         onTogglePin={
-          onPinChange && !onTilePress
+          onPinChange
             ? () => onPinChange(identity === pinnedIdentity ? null : identity)
             : undefined
         }
