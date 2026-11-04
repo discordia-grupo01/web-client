@@ -14,6 +14,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DirectMessagesView } from "@/components/direct-messages/DirectMessagesView";
 import { useCallPartnerResolver } from "@/components/private-call/hooks/useCallPartnerResolver";
+import { PrivateCallBanner } from "@/components/private-call/PrivateCallBanner";
 import { PrivateCallDialog } from "@/components/private-call/PrivateCallDialog";
 import { PrivateCallNotice } from "@/components/private-call/PrivateCallNotice";
 import { PrivateCallProvider } from "@/contexts/PrivateCallContext";
@@ -565,6 +566,7 @@ function HomeShellContent({
               ) : null}
 
               {currentAuthor ? <PrivateCallDialog me={currentAuthor} /> : null}
+              <PrivateCallBanner />
               <PrivateCallNotice />
             </div>
           </MobilePanelsProvider>

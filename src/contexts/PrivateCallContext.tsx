@@ -40,6 +40,8 @@ interface PrivateCallValue {
   state: PrivateCallState;
   /** La llamada sigue, pero el dialogo esta cerrado (se ve en la barra de voz). */
   isMinimized: boolean;
+  /** Cuando quedaron conectados los dos, para mostrar cuanto lleva la llamada. */
+  connectedAt: number | null;
   start: (partner: PrivateCallPartner, conversationId: string) => void;
   accept: () => void;
   /** Quien recibe no atiende. */
@@ -87,6 +89,7 @@ export function PrivateCallProvider({
     initialPrivateCallState,
   );
   const [isMinimized, setIsMinimized] = useState(false);
+  const [connectedAt, setConnectedAt] = useState<number | null>(null);
 
   const stateRef = useRef(state);
   useEffect(() => {
@@ -190,6 +193,8 @@ export function PrivateCallProvider({
 
   useEffect(() => {
     if (phase === "idle") setIsMinimized(false);
+    if (phase === "in_call") setConnectedAt((at) => at ?? Date.now());
+    else setConnectedAt(null);
   }, [phase]);
 
   useEffect(() => {
@@ -274,6 +279,7 @@ export function PrivateCallProvider({
     () => ({
       state,
       isMinimized,
+      connectedAt,
       start,
       accept,
       decline,
@@ -286,6 +292,7 @@ export function PrivateCallProvider({
     [
       state,
       isMinimized,
+      connectedAt,
       start,
       accept,
       decline,
