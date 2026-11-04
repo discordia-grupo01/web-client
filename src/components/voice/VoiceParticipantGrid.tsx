@@ -28,6 +28,7 @@ interface VoiceParticipantGridProps {
   participants: readonly VoiceParticipant[];
   isConnecting: boolean;
   ownAvatarSrc: string | null;
+  avatarSrcOf?: (identity: string) => string | null;
   videoOf: (identity: string) => TileVideo | null;
   onToggleMutedForMe: (identity: string) => void;
   onShowParticipants: () => void;
@@ -44,6 +45,7 @@ export function VoiceParticipantGrid({
   participants: people,
   isConnecting,
   ownAvatarSrc,
+  avatarSrcOf,
   videoOf,
   onToggleMutedForMe,
   onShowParticipants,
@@ -101,7 +103,7 @@ export function VoiceParticipantGrid({
         participant={participant}
         width={width}
         height={height}
-        avatarSrc={isLocal ? ownAvatarSrc : null}
+        avatarSrc={isLocal ? ownAvatarSrc : (avatarSrcOf?.(identity) ?? null)}
         video={videoOf(identity)}
         onToggleMutedForMe={
           isLocal || isScreenShareIdentity(identity)
