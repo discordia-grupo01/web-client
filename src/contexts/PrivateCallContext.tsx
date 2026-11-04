@@ -98,6 +98,7 @@ export function PrivateCallProvider({
   });
   // Se corto mientras `POST /calls` estaba en vuelo: hay que cancelar la que vuelva.
   const isCancelPendingRef = useRef(false);
+  const pendingIncomingCallIdsRef = useRef<Set<string>>(new Set());
 
   const callTarget = useMemo(
     () =>
@@ -113,6 +114,7 @@ export function PrivateCallProvider({
   // --- Eventos del socket `voice_user:<id>` ---
   useEffect(() => {
     if (!currentUserId) return;
+    const pendingIncomingCallIds = pendingIncomingCallIdsRef.current;
     const endFromEvent = (payload: unknown) => {
       const call = parseEndedPrivateCall(payload);
       if (call) dispatch({ type: "ended", call });
@@ -122,14 +124,28 @@ export function PrivateCallProvider({
       incoming: (payload) => {
         const call = parsePrivateCall(payload);
         if (!call) return;
+        if (call.caller_id === currentUserId) return;
+        if (stateRef.current.call?.call_id === call.call_id) return;
+        if (pendingIncomingCallIds.has(call.call_id)) return;
         if (isPrivateCallBusy(stateRef.current)) {
           // Ya estas en otra llamada: para quien llama es como no atender.
           void rejectPrivateCallRequest(call.call_id);
           return;
         }
-        void resolvePartnerRef
-          .current(call.caller_id)
-          .then((partner) => dispatch({ type: "incoming", call, partner }));
+        pendingIncomingCallIds.add(call.call_id);
+        void resolvePartnerRef.current(call.caller_id).then((partner) => {
+          pendingIncomingCallIds.delete(call.call_id);
+          if (
+            stateRef.current.call?.call_id === call.call_id ||
+            stateRef.current.phase !== "idle"
+          ) {
+            if (stateRef.current.call?.call_id !== call.call_id) {
+              void rejectPrivateCallRequest(call.call_id);
+            }
+            return;
+          }
+          dispatch({ type: "incoming", call, partner });
+        });
       },
       accepted: (payload) => {
         const call = parseAcceptedPrivateCall(payload);
@@ -144,6 +160,9 @@ export function PrivateCallProvider({
       missed: endFromEvent,
       ended: endFromEvent,
     });
+    return () => {
+      pendingIncomingCallIds.clear();
+    };
   }, [currentUserId]);
 
   const { credentials, phase } = state;
