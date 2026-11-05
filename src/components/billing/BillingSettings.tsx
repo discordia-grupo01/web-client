@@ -1,12 +1,17 @@
 "use client";
 
-import { formatPoints, PREMIUM_PRICE_CENTS } from "@discordia/client-shared";
+import {
+  formatPoints,
+  PREMIUM_PRICE_CENTS,
+  type PremiumView,
+} from "@discordia/client-shared";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { useAuth } from "@/contexts/AuthContext";
+import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
 
 import { BILLING_COPY } from "./billingCopy";
 import type { BillingSection } from "./billingSections";
@@ -50,8 +55,20 @@ interface BillingSettingsProps {
 export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
   const { user } = useAuth();
   const { state, reload, setPremium } = useBillingOverview();
+  const ownProfile = useOptionalOwnProfile();
+  const refreshOwnProfile = ownProfile?.refresh;
+  const isReady = state.status === "ready";
   const checkout = useCheckout();
   const [item, setItem] = useState<CheckoutItem | null>(null);
+
+  useEffect(() => {
+    if (isReady) void refreshOwnProfile?.();
+  }, [isReady, refreshOwnProfile]);
+
+  function changePremium(premium: PremiumView) {
+    setPremium(premium);
+    void refreshOwnProfile?.();
+  }
 
   function closeCheckout() {
     setItem(null);
@@ -119,7 +136,7 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
             onSubscribe={() =>
               setItem({ kind: "premium", priceCents: PREMIUM_PRICE_CENTS })
             }
-            onChanged={setPremium}
+            onChanged={changePremium}
             onShowPlan={() => onNavigate("premium")}
           />
           <PremiumFacts />
