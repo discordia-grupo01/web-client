@@ -6,6 +6,7 @@ import {
   type AttachmentTarget,
   EMOJI_PICKER_LABEL,
   MAX_MESSAGE_LENGTH,
+  PREMIUM_ATTACHMENT_ACCEPT,
   SEND_MESSAGE_LABEL,
   validateAttachment,
   validateAttachmentCount,
@@ -34,6 +35,7 @@ import { EmojiPicker } from "./EmojiPicker";
 import { MentionSuggestions } from "./MentionSuggestions";
 import { MentionTextarea } from "./MentionTextarea";
 import { useMessageMentions } from "@/contexts/MentionsContext";
+import { useOwnPremium } from "@/contexts/OwnProfileContext";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 
@@ -72,6 +74,7 @@ export function MessageComposer({
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const { uploadAll, forget } = useAttachmentUploads();
+  const premium = useOwnPremium();
   // El limite del back cuenta el texto con los tokens `<@id>`, no lo visible.
   const canSend =
     !disabled &&
@@ -127,9 +130,11 @@ export function MessageComposer({
     if (!files || files.length === 0) return;
     const chosen = Array.from(files);
     const rejected = chosen
-      .map((file) => validateAttachment(file))
+      .map((file) => validateAttachment(file, { premium }))
       .find((error) => error !== undefined);
-    const valid = chosen.filter((file) => !validateAttachment(file));
+    const valid = chosen.filter(
+      (file) => !validateAttachment(file, { premium }),
+    );
     const overLimit = validateAttachmentCount(attachments.length, valid.length);
     if (overLimit) return setSendError(overLimit);
 
@@ -172,7 +177,7 @@ export function MessageComposer({
         type="file"
         multiple
         hidden
-        accept={ATTACHMENT_ACCEPT}
+        accept={premium ? PREMIUM_ATTACHMENT_ACCEPT : ATTACHMENT_ACCEPT}
         onChange={(event) => {
           addFiles(event.target.files);
           // Permite volver a elegir el mismo archivo despues de quitarlo.
