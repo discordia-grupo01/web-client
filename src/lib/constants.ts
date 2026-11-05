@@ -23,6 +23,8 @@ export const THEME_STORAGE_KEY = "discordia:theme";
 /** Clave (por usuario) donde se guardan los mensajes que no se pudieron enviar. */
 export const PENDING_MESSAGES_STORAGE_KEY = "discordia:pending-messages";
 
+export const OPEN_SETTINGS_STORAGE_KEY = "discordia:open-settings";
+
 /** Rutas de la app. Centralizadas para no hardcodear strings sueltos. */
 export const ROUTES = {
   login: "/login",
@@ -33,4 +35,6 @@ export const ROUTES = {
   /** Landing despues de iniciar sesion (por ahora un placeholder). */
   home: "/home",
   invite: "/invite",
+  /** A donde Mercado Pago devuelve al usuario (`PAYMENT_RETURN_PATH`). */
+  billingReturn: "/billing/return",
 } as const;
