@@ -11,9 +11,9 @@ beforeEach(() => {
 
 describe("settingsRequest", () => {
   it("devuelve la sección pedida una sola vez", () => {
-    requestSettingsSection("billing");
+    requestSettingsSection("subscriptions");
 
-    expect(takeRequestedSettingsSection()).toBe("billing");
+    expect(takeRequestedSettingsSection()).toBe("subscriptions");
     expect(takeRequestedSettingsSection()).toBeNull();
   });
 

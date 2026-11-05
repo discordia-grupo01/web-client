@@ -1,14 +1,12 @@
 "use client";
 
 import {
-  CHECKOUT_LEAVING_NOTICE,
   formatArsFromCents,
   formatPoints,
   PREMIUM_RENEWAL_NOTICE,
   validateEmail,
 } from "@discordia/client-shared";
 
-import { Star, Zap } from "lucide-react";
 import { useId, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -17,6 +15,12 @@ import { ModalShell } from "@/components/ui/ModalShell";
 import { TextField } from "@/components/ui/TextField";
 
 import { BILLING_COPY } from "./billingCopy";
+import { DiscordiaPointIcon, DiscordiaPremiumIcon } from "./DiscordiaIcons";
+
+const CHECKOUT_TITLE = {
+  premium: "Estás por suscribirte a",
+  points: "Estás por comprar",
+} as const;
 
 export type CheckoutItem =
   | { kind: "premium"; priceCents: number }
@@ -43,7 +47,6 @@ export function CheckoutConfirmModal({
   const [email, setEmail] = useState(defaultEmail);
   const [emailError, setEmailError] = useState<string>();
   const isPremium = item.kind === "premium";
-  const Icon = isPremium ? Star : Zap;
 
   function submit(event: FormEvent) {
     event.preventDefault();
@@ -63,14 +66,16 @@ export function CheckoutConfirmModal({
     >
       <form onSubmit={submit} className="flex flex-col gap-5 px-7 py-8">
         <p className="text-content-subtle text-xs font-semibold tracking-wider uppercase">
-          {pending
-            ? BILLING_COPY.checkoutPreparing
-            : BILLING_COPY.checkoutTitle}
+          {pending ? BILLING_COPY.checkoutPreparing : CHECKOUT_TITLE[item.kind]}
         </p>
 
         <div className="flex items-center gap-4">
-          <div className="bg-info/15 text-info flex size-14 shrink-0 items-center justify-center rounded-2xl">
-            <Icon size={26} />
+          <div className="bg-surface-input flex size-14 shrink-0 items-center justify-center rounded-2xl">
+            {isPremium ? (
+              <DiscordiaPremiumIcon size={30} />
+            ) : (
+              <DiscordiaPointIcon size={28} />
+            )}
           </div>
           <div>
             <h2
@@ -107,10 +112,6 @@ export function CheckoutConfirmModal({
             }}
           />
         ) : null}
-
-        <p className="bg-surface-input text-content-subtle rounded-xl p-3 text-xs leading-relaxed">
-          {CHECKOUT_LEAVING_NOTICE}
-        </p>
 
         <FormAlert message={error ?? undefined} />
 
