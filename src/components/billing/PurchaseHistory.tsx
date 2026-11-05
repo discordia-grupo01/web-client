@@ -8,77 +8,87 @@ import {
   unrecoveredPointsNote,
 } from "@discordia/client-shared";
 
-import { Zap } from "lucide-react";
-
 import { cn } from "@/lib/cn";
 
 import { BILLING_COPY } from "./billingCopy";
+import { DiscordiaPointIcon } from "./DiscordiaIcons";
+import { EmptyHistory } from "./EmptyHistory";
 import { formatBillingDate } from "./formatBillingDate";
+import { HistoryPagination } from "./HistoryPagination";
+import { BILLING_HISTORY_PAGE_SIZE } from "./billingSections";
+import { usePagedItems } from "./hooks/usePagedItems";
 
 const STATUS_TONE: Record<PurchaseStatus, string> = {
-  pending: "bg-warning/20 text-content",
+  pending: "bg-warning/15 text-warning",
   paid: "bg-success/15 text-success",
   failed: "bg-danger/15 text-danger",
-  expired: "bg-surface-input text-content-muted",
+  expired: "bg-surface-input text-content-subtle",
   refunded: "bg-info/15 text-info",
   charged_back: "bg-danger/15 text-danger",
 };
 
 export function PurchaseHistory({ purchases }: { purchases: PointPurchase[] }) {
+  const paged = usePagedItems(purchases, BILLING_HISTORY_PAGE_SIZE);
+
   return (
-    <section className="space-y-3">
-      <div className="flex items-center justify-between">
+    <section>
+      <div className="mb-3">
         <h4 className="font-display text-content text-base font-bold">
           {BILLING_COPY.historyTitle}
         </h4>
-        <span className="text-content-subtle text-xs">{purchases.length}</span>
+        <p className="text-content-subtle mt-1 text-xs">
+          {BILLING_COPY.historySubtitle}
+        </p>
       </div>
 
       {purchases.length === 0 ? (
-        <p className="border-line-strong bg-surface-raised text-content-muted rounded-2xl border border-dashed px-5 py-8 text-center text-sm">
-          {BILLING_COPY.historyEmpty}
-        </p>
+        <EmptyHistory text={BILLING_COPY.historyEmpty} />
       ) : (
         <ul className="border-line divide-line divide-y overflow-hidden rounded-2xl border">
-          {purchases.map((purchase) => (
-            <li
-              key={purchase.id}
-              className="bg-surface-raised flex flex-wrap items-center gap-3 px-4 py-3"
-            >
-              <div className="bg-surface-input text-highlight flex size-9 shrink-0 items-center justify-center rounded-xl">
-                <Zap size={16} />
-              </div>
-              <div className="min-w-0 flex-1">
-                <div className="font-display text-content text-sm font-semibold">
-                  {formatPoints(purchase.points)}
+          {paged.pageItems.map((purchase) => (
+            <li key={purchase.id} className="bg-surface-raised px-4 py-3">
+              <div className="flex items-center gap-3">
+                <div className="bg-surface-input flex size-9 shrink-0 items-center justify-center rounded-xl">
+                  <DiscordiaPointIcon size={20} />
                 </div>
-                <div className="text-content-subtle text-[11px]">
-                  {formatBillingDate(purchase.created_at)} ·{" "}
-                  {PURCHASE_STATUS_DESCRIPTIONS[purchase.status]}
-                </div>
-                {purchase.points_unrecovered > 0 ? (
-                  <div className="text-danger mt-0.5 text-[11px]">
-                    {unrecoveredPointsNote(purchase.points_unrecovered)}
+                <div className="min-w-0 flex-1">
+                  <div className="font-display text-content text-sm font-semibold">
+                    {formatPoints(purchase.points)}
                   </div>
-                ) : null}
-              </div>
-              <div className="text-right">
-                <div className="text-content-muted mb-1 text-xs font-semibold">
-                  {formatArsFromCents(purchase.price_cents)}
+                  <div className="text-content-subtle text-[11px] tabular-nums">
+                    {formatArsFromCents(purchase.price_cents)} ·{" "}
+                    {formatBillingDate(purchase.created_at)}
+                  </div>
                 </div>
                 <span
                   className={cn(
-                    "rounded-full px-2 py-1 text-[10px] font-bold tracking-wide uppercase",
+                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
                     STATUS_TONE[purchase.status],
                   )}
                 >
                   {PURCHASE_STATUS_LABELS[purchase.status]}
                 </span>
               </div>
+              <p className="text-content-subtle mt-1 ml-12 text-[11px]">
+                {PURCHASE_STATUS_DESCRIPTIONS[purchase.status]}
+              </p>
+              {purchase.points_unrecovered > 0 ? (
+                <p className="bg-danger/10 text-danger mt-2 rounded-lg px-3 py-2 text-[11px]">
+                  {unrecoveredPointsNote(purchase.points_unrecovered)}
+                </p>
+              ) : null}
             </li>
           ))}
         </ul>
       )}
+      <HistoryPagination
+        page={paged.page}
+        pageCount={paged.pageCount}
+        range={paged.range}
+        total={paged.total}
+        noun="compras"
+        onPageChange={paged.setPage}
+      />
     </section>
   );
 }

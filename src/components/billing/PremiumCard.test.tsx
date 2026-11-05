@@ -38,7 +38,7 @@ describe("PremiumCard", () => {
     );
 
     expect(
-      screen.getByRole("button", { name: BILLING_COPY.subscribe }),
+      screen.getByRole("button", { name: BILLING_COPY.subscribeCta }),
     ).toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: BILLING_COPY.cancelRenewal }),

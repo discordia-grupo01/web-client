@@ -5,7 +5,10 @@ const SECTIONS: readonly AccountSettingsSection[] = [
   "appearance",
   "notifications",
   "security",
-  "billing",
+  "premium",
+  "subscriptions",
+  "points",
+  "transactions",
   "status",
 ];
 
