@@ -4,6 +4,7 @@ const LOGO = {
   sky: "#A8C6DF",
   steel: "#6B95BD",
   yellow: "#F0B232",
+  paper: "#F5F2EB",
 } as const;
 
 type IconProps = { size?: number; className?: string };
@@ -89,3 +90,41 @@ export const DiscordiaPremiumMark = ({ size = 120, className }: IconProps) => (
     </g>
   </svg>
 );
+
+const BADGE_HEXAGON = "0,-50 43.3,-25 43.3,25 0,50 -43.3,25 -43.3,-25";
+const BADGE_DETAIL_MIN_SIZE = 28;
+
+export const DiscordiaPremiumBadge = ({ size = 40, className }: IconProps) => {
+  const showModules = size >= BADGE_DETAIL_MIN_SIZE;
+  const outlineWidth = Math.max(2, 108 / size);
+
+  return (
+    <svg
+      width={(size * 96) / 108}
+      height={size}
+      viewBox="-48 -54 96 108"
+      className={className}
+      aria-hidden="true"
+    >
+      <polygon
+        points={BADGE_HEXAGON}
+        fill={LOGO.deep}
+        stroke={LOGO.yellow}
+        strokeWidth={outlineWidth}
+        strokeLinejoin="round"
+      />
+      <g transform="scale(0.8) translate(-340 -100)">
+        <path d="M326 68 H342 A32 32 0 0 1 342 132 H326 Z" fill={LOGO.paper} />
+        <path d="M334 82 H342 A18 18 0 0 1 342 118 H334 Z" fill={LOGO.deep} />
+        {showModules ? (
+          <>
+            <rect x="310" y="70" width="13" height="12" rx="2" fill={LOGO.sky} />
+            <rect x="310" y="85" width="13" height="12" rx="2" fill={LOGO.sky} />
+            <rect x="310" y="118" width="13" height="12" rx="2" fill={LOGO.sky} />
+          </>
+        ) : null}
+        <rect x="306" y="100" width="17" height="15" rx="2" fill={LOGO.yellow} />
+      </g>
+    </svg>
+  );
+};

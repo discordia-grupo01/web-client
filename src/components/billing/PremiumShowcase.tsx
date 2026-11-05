@@ -7,7 +7,7 @@ import {
   type PremiumView,
 } from "@discordia/client-shared";
 
-import { Blocks, ImagePlay, Paperclip, SmilePlus } from "lucide-react";
+import { ImagePlay, Paperclip, SmilePlus } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -19,16 +19,15 @@ import {
   PREMIUM_SHOWCASE_BENEFITS,
   type PremiumBenefitId,
 } from "./billingCopy";
-import { DiscordiaPremiumMark } from "./DiscordiaIcons";
+import { DiscordiaPremiumBadge, DiscordiaPremiumMark } from "./DiscordiaIcons";
 import { PremiumFacts } from "./PremiumFacts";
 import { PremiumPill } from "./PremiumPill";
 import { PremiumSubscribeButton } from "./PremiumSubscribeButton";
 
-const BENEFIT_ICON: Record<PremiumBenefitId, ReactNode> = {
+const BENEFIT_ICON: Record<Exclude<PremiumBenefitId, "badge">, ReactNode> = {
   attachments: <Paperclip size={19} />,
   animated: <ImagePlay size={19} />,
   "global-emojis": <SmilePlus size={19} />,
-  badge: <Blocks size={19} />,
 };
 
 const BENEFIT_EXTRA: Partial<Record<PremiumBenefitId, ReactNode>> = {
@@ -71,16 +70,22 @@ export function PremiumShowcase({ premium, onManage }: PremiumShowcaseProps) {
                 key={benefit.id}
                 className="bg-surface-raised border-line flex gap-3 rounded-2xl border p-4"
               >
-                <div
-                  className={cn(
-                    "flex size-10 shrink-0 items-center justify-center rounded-xl",
-                    actions.benefitsActive
-                      ? "bg-success/15 text-success"
-                      : "bg-warning/10 text-warning",
-                  )}
-                >
-                  {BENEFIT_ICON[benefit.id]}
-                </div>
+                {benefit.id === "badge" ? (
+                  <div className="flex size-10 shrink-0 items-center justify-center">
+                    <DiscordiaPremiumBadge size={40} />
+                  </div>
+                ) : (
+                  <div
+                    className={cn(
+                      "flex size-10 shrink-0 items-center justify-center rounded-xl",
+                      actions.benefitsActive
+                        ? "bg-success/15 text-success"
+                        : "bg-warning/10 text-warning",
+                    )}
+                  >
+                    {BENEFIT_ICON[benefit.id]}
+                  </div>
+                )}
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-center justify-between gap-x-2 gap-y-1">
                     <p className="font-display text-content text-sm font-semibold">
