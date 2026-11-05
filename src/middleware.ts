@@ -4,7 +4,7 @@ import { ROUTES, SESSION_COOKIE } from "@/lib/constants";
 import { parseSessionCookie } from "@/services/auth/session-shape";
 
 /** Rutas que exigen sesion. Al crecer la app se agregan prefijos aca. */
-const PROTECTED_PREFIXES = [ROUTES.home, ROUTES.invite];
+const PROTECTED_PREFIXES = [ROUTES.home, ROUTES.invite, ROUTES.billingReturn];
 
 /** Rutas solo para invitados: si ya hay sesion, se redirige a la home. */
 const GUEST_ONLY = [
@@ -45,7 +45,7 @@ export function middleware(request: NextRequest): NextResponse {
   if (isProtected && !hasSession) {
     const url = request.nextUrl.clone();
     url.pathname = ROUTES.login;
-    url.searchParams.set("next", pathname);
+    url.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
     response = NextResponse.redirect(url);
   } else if (isGuestOnly && hasSession) {
     const url = request.nextUrl.clone();
