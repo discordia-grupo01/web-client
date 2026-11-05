@@ -14,6 +14,7 @@ vi.mock("@/services/attachments/client", () => ({
 import { uploadAttachmentRequest } from "@/services/attachments/client";
 
 import { MessageMentionsProvider } from "@/contexts/MentionsContext";
+import { OwnProfileProvider } from "@/contexts/OwnProfileContext";
 import { MessageComposer } from "./MessageComposer";
 
 function renderComposer(onSend = vi.fn()) {
@@ -358,5 +359,88 @@ describe("MessageComposer con adjuntos", () => {
       await screen.findByText("No se pudo guardar el archivo"),
     ).toBeInTheDocument();
     expect(onSend).not.toHaveBeenCalled();
+  });
+});
+
+describe("MessageComposer con adjuntos Premium", () => {
+  beforeAll(() => {
+    URL.createObjectURL = vi.fn(() => "blob:miniatura");
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  function renderAs(premium: boolean) {
+    render(
+      <OwnProfileProvider
+        value={{
+          profile: {
+            id: "u1",
+            name: "Ana",
+            email: "ana@example.com",
+            description: "",
+            avatar_url: "",
+            status_text: "",
+            status_emoji: "",
+            premium,
+            created_at: "2026-01-01T00:00:00Z",
+          },
+          refresh: vi.fn(),
+        }}
+      >
+        <MessageComposer
+          placeholder="Mensaje en #general"
+          onSend={vi.fn()}
+          uploadTarget={{ channelId: "c1" }}
+        />
+      </OwnProfileProvider>,
+    );
+    return document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  }
+
+  function sized(name: string, type: string, megabytes: number) {
+    const file = new File(["x"], name, { type });
+    Object.defineProperty(file, "size", { value: megabytes * 1024 * 1024 });
+    return file;
+  }
+
+  it("sin Premium rechaza un GIF", async () => {
+    const input = renderAs(false);
+
+    await userEvent.upload(input, [sized("a.gif", "image/gif", 1)], {
+      applyAccept: false,
+    });
+
+    expect(await screen.findByText(/Formato no soportado/)).toBeInTheDocument();
+    expect(input.accept).not.toContain("image/gif");
+  });
+
+  it("con Premium acepta un GIF y un archivo de 40 MB", async () => {
+    const input = renderAs(true);
+
+    await userEvent.upload(
+      input,
+      [
+        sized("a.gif", "image/gif", 1),
+        sized("grande.pdf", "application/pdf", 40),
+      ],
+      { applyAccept: false },
+    );
+
+    expect(await screen.findByText("a.gif")).toBeInTheDocument();
+    expect(screen.getByText("grande.pdf")).toBeInTheDocument();
+    expect(screen.queryByText(/Formato no soportado/)).toBeNull();
+    expect(input.accept).toContain("image/gif");
+  });
+
+  it("con Premium rechaza un archivo de mas de 50 MB", async () => {
+    const input = renderAs(true);
+
+    await userEvent.upload(
+      input,
+      [sized("enorme.pdf", "application/pdf", 51)],
+      { applyAccept: false },
+    );
+
+    expect(await screen.findByText(/tamaño máximo/)).toBeInTheDocument();
+    expect(screen.queryByText("enorme.pdf")).toBeNull();
   });
 });
