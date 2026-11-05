@@ -16,8 +16,7 @@ function isSection(value: string | null): value is AccountSettingsSection {
 export function requestSettingsSection(section: AccountSettingsSection): void {
   try {
     sessionStorage.setItem(OPEN_SETTINGS_STORAGE_KEY, section);
-  } catch {
-  }
+  } catch {}
 }
 
 export function takeRequestedSettingsSection(): AccountSettingsSection | null {
