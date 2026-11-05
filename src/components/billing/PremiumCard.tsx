@@ -22,11 +22,11 @@ import { cancelPremiumRequest } from "@/services/billing/client";
 import { BILLING_COPY } from "./billingCopy";
 
 const STATE_TONE: Record<PremiumView["state"], string> = {
-  none: "text-content-muted",
-  processing_first_payment: "text-highlight",
-  active: "text-success",
-  active_canceled: "text-highlight",
-  expired: "text-danger",
+  none: "bg-surface-input text-content-muted",
+  processing_first_payment: "bg-warning/20 text-content",
+  active: "bg-success/15 text-success",
+  active_canceled: "bg-warning/20 text-content",
+  expired: "bg-danger/15 text-danger",
 };
 
 interface PremiumCardProps {
@@ -61,8 +61,8 @@ export function PremiumCard({
 
   return (
     <section className="border-line-strong bg-surface-raised overflow-hidden rounded-2xl border">
-      <div className="from-accent/30 to-info/10 flex flex-wrap items-start justify-between gap-4 bg-gradient-to-br p-5 sm:p-6">
-        <div className="flex items-start gap-3">
+      <div className="from-accent/10 flex flex-col gap-4 bg-gradient-to-br to-transparent p-5 sm:flex-row sm:items-start sm:justify-between sm:p-6">
+        <div className="flex min-w-0 flex-1 items-start gap-3">
           <div className="bg-highlight/15 text-highlight flex size-11 shrink-0 items-center justify-center rounded-xl">
             <Star size={22} />
           </div>
@@ -73,7 +73,7 @@ export function PremiumCard({
               </h4>
               <span
                 className={cn(
-                  "bg-surface-input rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
+                  "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
                   STATE_TONE[premium.state],
                 )}
               >
@@ -85,7 +85,7 @@ export function PremiumCard({
             </p>
           </div>
         </div>
-        <div className="text-right">
+        <div className="shrink-0 pl-14 sm:pl-0 sm:text-right">
           <div className="font-display text-content text-xl font-bold">
             {formatArsFromCents(PREMIUM_PRICE_CENTS)}
           </div>

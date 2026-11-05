@@ -67,7 +67,7 @@ export function BillingSettings() {
           <div className="text-content-subtle text-[10px] font-bold tracking-wider uppercase">
             {BILLING_COPY.balanceLabel}
           </div>
-          <div className="font-display text-highlight text-lg font-bold">
+          <div className="font-display text-content text-lg font-bold">
             {formatPoints(state.points.balance)}
           </div>
         </div>

@@ -16,10 +16,10 @@ import { BILLING_COPY } from "./billingCopy";
 import { formatBillingDate } from "./formatBillingDate";
 
 const STATUS_TONE: Record<PurchaseStatus, string> = {
-  pending: "bg-highlight/10 text-highlight",
+  pending: "bg-warning/20 text-content",
   paid: "bg-success/15 text-success",
   failed: "bg-danger/15 text-danger",
-  expired: "bg-surface-input text-content-subtle",
+  expired: "bg-surface-input text-content-muted",
   refunded: "bg-info/15 text-info",
   charged_back: "bg-danger/15 text-danger",
 };

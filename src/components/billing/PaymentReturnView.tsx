@@ -33,9 +33,9 @@ const TONE: Record<PaymentOutcome, Tone> = {
 };
 
 const TONE_STYLE: Record<Tone, string> = {
-  progress: "bg-highlight/10 text-highlight",
+  progress: "bg-info/15 text-info",
   success: "bg-success/15 text-success",
-  warning: "bg-highlight/10 text-highlight",
+  warning: "bg-warning/20 text-warning",
   danger: "bg-danger/15 text-danger",
 };
 
@@ -73,7 +73,7 @@ export function PaymentReturnView({
       style={{ background: "var(--bg-chat)" }}
     >
       <div
-        className="border-line-strong flex w-full flex-col items-center gap-5 rounded-[20px] border px-7 py-9 text-center shadow-[0_32px_80px_rgba(0,0,0,0.55)]"
+        className="border-line-strong flex w-full flex-col items-center gap-5 rounded-[20px] border px-7 py-9 text-center shadow-[0_24px_60px_rgba(0,0,0,0.25)]"
         style={{ maxWidth: 440, background: "var(--bg-modal)" }}
       >
         <p className="text-content-subtle text-xs font-semibold tracking-wider uppercase">
