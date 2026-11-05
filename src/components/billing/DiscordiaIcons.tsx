@@ -118,12 +118,40 @@ export const DiscordiaPremiumBadge = ({ size = 40, className }: IconProps) => {
         <path d="M334 82 H342 A18 18 0 0 1 342 118 H334 Z" fill={LOGO.deep} />
         {showModules ? (
           <>
-            <rect x="310" y="70" width="13" height="12" rx="2" fill={LOGO.sky} />
-            <rect x="310" y="85" width="13" height="12" rx="2" fill={LOGO.sky} />
-            <rect x="310" y="118" width="13" height="12" rx="2" fill={LOGO.sky} />
+            <rect
+              x="310"
+              y="70"
+              width="13"
+              height="12"
+              rx="2"
+              fill={LOGO.sky}
+            />
+            <rect
+              x="310"
+              y="85"
+              width="13"
+              height="12"
+              rx="2"
+              fill={LOGO.sky}
+            />
+            <rect
+              x="310"
+              y="118"
+              width="13"
+              height="12"
+              rx="2"
+              fill={LOGO.sky}
+            />
           </>
         ) : null}
-        <rect x="306" y="100" width="17" height="15" rx="2" fill={LOGO.yellow} />
+        <rect
+          x="306"
+          y="100"
+          width="17"
+          height="15"
+          rx="2"
+          fill={LOGO.yellow}
+        />
       </g>
     </svg>
   );
