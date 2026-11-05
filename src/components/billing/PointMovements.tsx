@@ -7,28 +7,39 @@ import {
 import { cn } from "@/lib/cn";
 
 import { BILLING_COPY } from "./billingCopy";
+import { DiscordiaPointIcon } from "./DiscordiaIcons";
+import { EmptyHistory } from "./EmptyHistory";
 import { formatBillingDate } from "./formatBillingDate";
+import { HistoryPagination } from "./HistoryPagination";
+import { BILLING_HISTORY_PAGE_SIZE } from "./billingSections";
+import { usePagedItems } from "./hooks/usePagedItems";
 
 export function PointMovements({ ledger }: { ledger: LedgerEntry[] }) {
+  const paged = usePagedItems(ledger, BILLING_HISTORY_PAGE_SIZE);
+
   return (
-    <section className="space-y-3">
-      <h4 className="font-display text-content text-base font-bold">
-        {BILLING_COPY.movementsTitle}
-      </h4>
+    <section>
+      <div className="mb-3">
+        <h4 className="font-display text-content text-base font-bold">
+          {BILLING_COPY.movementsTitle}
+        </h4>
+        <p className="text-content-subtle mt-1 text-xs">
+          {BILLING_COPY.movementsSubtitle}
+        </p>
+      </div>
 
       {ledger.length === 0 ? (
-        <p className="text-content-muted text-sm">
-          {BILLING_COPY.movementsEmpty}
-        </p>
+        <EmptyHistory text={BILLING_COPY.movementsEmpty} />
       ) : (
         <ul className="border-line divide-line divide-y overflow-hidden rounded-2xl border">
-          {ledger.map((entry, index) => (
+          {paged.pageItems.map((entry, index) => (
             <li
               key={`${entry.created_at}-${index}`}
-              className="bg-surface-raised flex items-center justify-between gap-3 px-4 py-3"
+              className="bg-surface-raised flex items-center gap-3 px-4 py-3"
             >
-              <div className="min-w-0">
-                <div className="text-content text-sm font-medium">
+              <DiscordiaPointIcon size={18} className="shrink-0" />
+              <div className="min-w-0 flex-1">
+                <div className="font-display text-content text-sm font-semibold">
                   {LEDGER_REASON_LABELS[entry.reason]}
                 </div>
                 <div className="text-content-subtle text-[11px]">
@@ -47,6 +58,14 @@ export function PointMovements({ ledger }: { ledger: LedgerEntry[] }) {
           ))}
         </ul>
       )}
+      <HistoryPagination
+        page={paged.page}
+        pageCount={paged.pageCount}
+        range={paged.range}
+        total={paged.total}
+        noun="movimientos"
+        onPageChange={paged.setPage}
+      />
     </section>
   );
 }

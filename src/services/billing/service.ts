@@ -7,6 +7,7 @@ import type {
   PremiumCheckoutRequest,
   PremiumView,
 } from "@discordia/client-shared";
+import { BILLING_HISTORY_MAX_LIMIT } from "@discordia/client-shared";
 
 import "server-only";
 
@@ -65,8 +66,9 @@ export function listPointsPackages(
 
 export function getPointsOverview(
   token: string,
+  limit: number = BILLING_HISTORY_MAX_LIMIT,
 ): Promise<ApiResult<PointsOverview>> {
-  return apiRequest<PointsOverview>("/v1/billing/points", {
+  return apiRequest<PointsOverview>(`/v1/billing/points?limit=${limit}`, {
     method: "GET",
     token,
   });
