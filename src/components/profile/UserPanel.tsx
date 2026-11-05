@@ -8,16 +8,20 @@ import {
 } from "@discordia/client-shared";
 
 import { Bell, Headphones, Mic, MicOff, Settings } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { CountBadge } from "@/components/ui/CountBadge";
-import { AccountSettingsModal } from "@/components/settings/AccountSettingsModal";
+import {
+  AccountSettingsModal,
+  type AccountSettingsSection,
+} from "@/components/settings/AccountSettingsModal";
 import { Avatar } from "@/components/ui/Avatar";
 import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
 import { cn } from "@/lib/cn";
 import { usePresenceOf } from "@/hooks/usePresence";
 import { ownAvatarSrc } from "@/utils/ownAvatar";
+import { takeRequestedSettingsSection } from "@/utils/settingsRequest";
 import { useOptionalNotifications } from "@/contexts/NotificationsContext";
 import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
@@ -28,6 +32,8 @@ interface UserPanelProps {
 
 export function UserPanel({ user, onClick }: UserPanelProps) {
   const [isSettingsOpen, setIsSettingsOpen] = useState(false);
+  const [initialSection, setInitialSection] =
+    useState<AccountSettingsSection>();
   const voice = useOptionalVoiceSession();
   const notifications = useOptionalNotifications();
   const status = usePresenceOf(user.id);
@@ -38,6 +44,18 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
     : isMuted
       ? VOICE_UNMUTE_LABEL
       : VOICE_MUTE_LABEL;
+
+  useEffect(() => {
+    const requested = takeRequestedSettingsSection();
+    if (!requested) return;
+    setInitialSection(requested);
+    setIsSettingsOpen(true);
+  }, []);
+
+  function closeSettings() {
+    setIsSettingsOpen(false);
+    setInitialSection(undefined);
+  }
 
   return (
     <>
@@ -140,7 +158,10 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
       </div>
 
       {isSettingsOpen ? (
-        <AccountSettingsModal onClose={() => setIsSettingsOpen(false)} />
+        <AccountSettingsModal
+          onClose={closeSettings}
+          initialSection={initialSection}
+        />
       ) : null}
     </>
   );

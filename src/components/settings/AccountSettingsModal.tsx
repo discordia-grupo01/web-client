@@ -1,6 +1,10 @@
 "use client";
 
-import type { TwoFactorStatus } from "@discordia/client-shared";
+import {
+  BILLING_SECTION_DESCRIPTION,
+  BILLING_SECTION_TITLE,
+  type TwoFactorStatus,
+} from "@discordia/client-shared";
 
 import {
   Activity,
@@ -10,9 +14,11 @@ import {
   LogOut,
   Moon,
   Shield,
+  Star,
 } from "lucide-react";
 import { useState } from "react";
 
+import { BillingSettings } from "@/components/billing/BillingSettings";
 import { PlatformStatusSettings } from "@/components/platform-status/PlatformStatusSettings";
 import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { TwoFactorPanel } from "@/components/security/TwoFactorPanel";
@@ -23,10 +29,11 @@ import { AppearanceSettings } from "./AppearanceSettings";
 import { PushSettings } from "./PushSettings";
 import { SecuritySettings } from "./SecuritySettings";
 
-type Section = "appearance" | "notifications" | "security" | "status";
+export type AccountSettingsSection =
+  "appearance" | "notifications" | "security" | "billing" | "status";
 
 interface SectionItem {
-  id: Section;
+  id: AccountSettingsSection;
   label: string;
   description: string;
   icon: typeof Moon;
@@ -51,6 +58,12 @@ const ACCOUNT_SECTIONS: SectionItem[] = [
     description: "Acceso y verificación",
     icon: Shield,
   },
+  {
+    id: "billing",
+    label: BILLING_SECTION_TITLE,
+    description: BILLING_SECTION_DESCRIPTION,
+    icon: Star,
+  },
 ];
 
 const PLATFORM_SECTIONS: SectionItem[] = [
@@ -71,11 +84,18 @@ const SECTIONS = [...ACCOUNT_SECTIONS, ...PLATFORM_SECTIONS];
 
 interface AccountSettingsModalProps {
   onClose: () => void;
+  /** Abre directo en una sección (por ejemplo, al volver de Mercado Pago). */
+  initialSection?: AccountSettingsSection;
 }
 
-export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
-  const [section, setSection] = useState<Section>("appearance");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(true);
+export function AccountSettingsModal({
+  onClose,
+  initialSection,
+}: AccountSettingsModalProps) {
+  const [section, setSection] = useState<AccountSettingsSection>(
+    initialSection ?? "appearance",
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(!initialSection);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [twoFactorStatus, setTwoFactorStatus] =
     useState<TwoFactorStatus | null>(null);
@@ -83,7 +103,7 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
   const activeSection = SECTIONS.find((item) => item.id === section);
   const isTwoFactorOpen = section === "security" && twoFactorStatus !== null;
 
-  function selectSection(next: Section) {
+  function selectSection(next: AccountSettingsSection) {
     setSection(next);
     setTwoFactorStatus(null);
   }
@@ -263,6 +283,8 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
               <PushSettings />
             ) : section === "status" ? (
               <PlatformStatusSettings />
+            ) : section === "billing" ? (
+              <BillingSettings />
             ) : twoFactorStatus ? (
               <TwoFactorPanel
                 initialStatus={twoFactorStatus}

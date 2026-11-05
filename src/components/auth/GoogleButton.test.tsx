@@ -65,6 +65,7 @@ describe("<GoogleButton />", () => {
         avatar_url: "",
         status_text: "",
         status_emoji: "",
+        premium: false,
         created_at: "",
       },
     });
