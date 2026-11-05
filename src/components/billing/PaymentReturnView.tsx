@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type PaymentKind,
   type PaymentOutcome,
   paymentOutcomeCopy,
   type PaymentReturnParams,
@@ -46,8 +47,13 @@ const TONE_ICON = {
   danger: XCircle,
 } as const;
 
-function backToBilling() {
-  requestSettingsSection("billing");
+const RETURN_SECTION = {
+  premium: "subscriptions",
+  points: "transactions",
+} as const satisfies Record<PaymentKind, string>;
+
+function backToBilling(kind: PaymentKind | undefined) {
+  requestSettingsSection(RETURN_SECTION[kind ?? "points"]);
   window.location.href = ROUTES.home;
 }
 
@@ -110,7 +116,7 @@ export function PaymentReturnView({
           <Button
             type="button"
             variant={done ? "primary" : "secondary"}
-            onClick={backToBilling}
+            onClick={() => backToBilling(params?.kind)}
           >
             {BILLING_COPY.backToBilling}
           </Button>
