@@ -23,6 +23,7 @@ import {
   type ChangeEvent,
 } from "react";
 
+import { PremiumPill } from "@/components/billing/PremiumPill";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -368,10 +369,11 @@ export function OwnProfileModal({
                   </button>
                 </div>
               ) : (
-                <div className="group/name flex items-center gap-1.5">
+                <div className="group/name flex flex-wrap items-center gap-1.5">
                   <h2 className="font-display text-content text-lg font-bold">
                     {profile.name}
                   </h2>
+                  {profile.premium ? <PremiumPill /> : null}
                   <button
                     type="button"
                     onClick={startEditingName}

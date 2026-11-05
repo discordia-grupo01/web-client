@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 
+import { PremiumPill } from "@/components/billing/PremiumPill";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { MemberRoleBadges } from "@/components/roles/MemberRoleBadges";
@@ -233,9 +234,12 @@ export function PublicProfileModal({
         <div className="flex-1 overflow-y-auto">
           <div className="space-y-4 px-6 pt-3 pb-6">
             <div>
-              <h2 className="font-display text-content text-lg font-bold">
-                {profile.name}
-              </h2>
+              <div className="flex flex-wrap items-center gap-1.5">
+                <h2 className="font-display text-content text-lg font-bold">
+                  {profile.name}
+                </h2>
+                {profile.premium ? <PremiumPill /> : null}
+              </div>
               {mutedUntil ? (
                 <p className="text-danger mt-0.5 flex items-center gap-1.5 text-xs font-semibold">
                   <MicOff size={12} aria-hidden="true" />
