@@ -11,6 +11,7 @@ import {
   NOTIFICATION_LEVEL_INHERITED_BADGE,
   NOTIFICATION_LEVEL_LABELS,
   NOTIFICATION_LEVELS,
+  NOTIFICATION_SETTINGS_LEVEL_MUTED_NOTE,
   NOTIFICATION_SETTINGS_LEVEL_TITLE,
   NOTIFICATION_SETTINGS_MUTED_HINT,
   NOTIFICATION_SETTINGS_SERVER_MUTED_NOTE,
@@ -38,6 +39,7 @@ interface NotificationSettingsModalProps {
 }
 
 const TITLE_ID = "notification-settings-title";
+const LEVEL_NOTE_ID = "notification-settings-level-note";
 
 export function NotificationSettingsModal({
   scope,
@@ -58,6 +60,8 @@ export function NotificationSettingsModal({
     ? isChannelMuted(settings, targetId)
     : isServerMuted(settings, targetId);
   const isServerSilenced = isChannel && isServerMuted(settings, serverId);
+  const isLevelOverridden = isMuted || isServerSilenced;
+  const isLevelDisabled = isSaving || isLevelOverridden;
   const explicitLevel = isChannel
     ? channelNotificationLevel(settings, targetId)
     : serverNotificationLevel(settings, targetId);
@@ -106,7 +110,7 @@ export function NotificationSettingsModal({
         ) : null}
 
         <div className="border-line bg-surface-input flex items-center gap-3 rounded-xl border px-4 py-3">
-          {isMuted || isServerSilenced ? (
+          {isLevelOverridden ? (
             <BellOff size={18} className="text-content-subtle shrink-0" />
           ) : (
             <Bell size={18} className="text-content-subtle shrink-0" />
@@ -142,11 +146,30 @@ export function NotificationSettingsModal({
           </button>
         </div>
 
-        <div role="radiogroup" aria-label={NOTIFICATION_SETTINGS_LEVEL_TITLE}>
+        <div
+          role="radiogroup"
+          aria-label={NOTIFICATION_SETTINGS_LEVEL_TITLE}
+          aria-disabled={isLevelOverridden}
+          aria-describedby={isLevelOverridden ? LEVEL_NOTE_ID : undefined}
+        >
           <p className="text-content-subtle mb-2 text-xs font-semibold tracking-wider uppercase">
             {NOTIFICATION_SETTINGS_LEVEL_TITLE}
           </p>
-          <div className="border-line overflow-hidden rounded-xl border">
+          {isLevelOverridden ? (
+            <p
+              id={LEVEL_NOTE_ID}
+              className="text-content-subtle mb-2 flex items-center gap-2 text-xs"
+            >
+              <BellOff size={13} className="shrink-0" />
+              {NOTIFICATION_SETTINGS_LEVEL_MUTED_NOTE}
+            </p>
+          ) : null}
+          <div
+            className={cn(
+              "border-line overflow-hidden rounded-xl border transition-opacity",
+              isLevelOverridden && "opacity-50",
+            )}
+          >
             {NOTIFICATION_LEVELS.map((level) => {
               const selected = level === configuredLevel;
               return (
@@ -155,11 +178,14 @@ export function NotificationSettingsModal({
                   type="button"
                   role="radio"
                   aria-checked={selected}
-                  disabled={isSaving}
+                  disabled={isLevelDisabled}
                   onClick={() => {
                     if (level !== explicitLevel) void save({ level });
                   }}
-                  className="text-content hover:bg-surface-hover border-line flex w-full cursor-pointer items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 disabled:cursor-not-allowed disabled:opacity-60"
+                  className={cn(
+                    "text-content enabled:hover:bg-surface-hover border-line flex w-full cursor-pointer items-center gap-3 border-b px-4 py-3 text-left transition-colors last:border-b-0 disabled:cursor-not-allowed",
+                    !isLevelOverridden && "disabled:opacity-60",
+                  )}
                 >
                   <span className="min-w-0 flex-1">
                     <span className="flex flex-wrap items-center gap-2 text-sm font-medium">
@@ -184,9 +210,12 @@ export function NotificationSettingsModal({
           {followsParent ? null : (
             <button
               type="button"
-              disabled={isSaving}
+              disabled={isLevelDisabled}
               onClick={() => void save({ level: null })}
-              className="text-accent mt-2 cursor-pointer text-xs font-semibold hover:underline disabled:cursor-not-allowed disabled:opacity-60"
+              className={cn(
+                "text-accent mt-2 cursor-pointer text-xs font-semibold enabled:hover:underline disabled:cursor-not-allowed",
+                isLevelOverridden ? "opacity-50" : "disabled:opacity-60",
+              )}
             >
               {notificationLevelResetLabel(scope)}
             </button>

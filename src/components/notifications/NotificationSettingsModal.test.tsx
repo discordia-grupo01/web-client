@@ -114,6 +114,55 @@ describe("NotificationSettingsModal", () => {
     expect(toggle).toHaveAttribute("aria-checked", "true");
   });
 
+  it("sombrea y bloquea los niveles mientras el canal está silenciado", () => {
+    const save = setup({ mutedChannels: { c1: true } });
+    renderChannel();
+
+    expect(
+      screen.getByText(
+        "Mientras esté silenciado no te avisa nada, ni las menciones.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByRole("radiogroup")).toHaveAttribute(
+      "aria-disabled",
+      "true",
+    );
+    const everyMessage = screen.getByRole("radio", {
+      name: /Todos los mensajes/,
+    });
+    expect(everyMessage).toBeDisabled();
+    fireEvent.click(everyMessage);
+    expect(save).not.toHaveBeenCalled();
+  });
+
+  it("bloquea los niveles del canal si el servidor está silenciado", () => {
+    setup({ mutedServers: { s1: true } });
+    renderChannel();
+
+    expect(
+      screen.getByText(
+        "Mientras esté silenciado no te avisa nada, ni las menciones.",
+      ),
+    ).toBeInTheDocument();
+    for (const option of screen.getAllByRole("radio")) {
+      expect(option).toBeDisabled();
+    }
+  });
+
+  it("no muestra el aviso de silenciado si el canal está activo", () => {
+    setup();
+    renderChannel();
+
+    expect(
+      screen.queryByText(
+        "Mientras esté silenciado no te avisa nada, ni las menciones.",
+      ),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("radio", { name: /Todos los mensajes/ }),
+    ).toBeEnabled();
+  });
+
   it("avisa que el servidor silenciado silencia todos sus canales", () => {
     setup({ mutedServers: { s1: true } });
     renderChannel();
