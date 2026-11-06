@@ -20,6 +20,9 @@ export const env = {
   voiceWsUrl:
     process.env.NEXT_PUBLIC_VOICE_WS_URL ??
     `${toWebSocketUrl(apiUrl)}/voice/socket`,
+  notificationsWsUrl:
+    process.env.NEXT_PUBLIC_NOTIFICATIONS_WS_URL ??
+    `${toWebSocketUrl(apiUrl)}/notifications/socket`,
 };
 
 export const isProduction = process.env.NODE_ENV === "production";

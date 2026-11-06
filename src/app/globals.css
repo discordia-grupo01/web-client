@@ -17,6 +17,8 @@
   --color-override-inherit: var(--override-inherit-bg);
   --color-override-inherit-line: var(--override-inherit-line);
   --color-on-override-inherit: var(--override-inherit-icon);
+  --color-servers-divider: var(--servers-divider);
+  --color-status-bar-edge: var(--status-bar-edge);
   /* Barra de aviso: opaca, porque el color transparente sobre el fondo azulado
      se ve oliva. Es el color de estado aclarado, con texto oscuro encima. */
   --color-status-bar-operational: color-mix(in srgb, var(--success) 40%, #fff);
@@ -28,12 +30,16 @@
   --override-inherit-bg: var(--border-strong);
   --override-inherit-line: var(--text-3);
   --override-inherit-icon: var(--text);
+  --servers-divider: var(--border-strong);
+  --status-bar-edge: var(--border);
 }
 
 [data-theme="light"] {
   --override-inherit-bg: var(--text-3);
   --override-inherit-line: var(--text-3);
   --override-inherit-icon: var(--bg-chat);
+  --servers-divider: var(--border-on-accent);
+  --status-bar-edge: var(--border-on-accent);
 }
 
 html,

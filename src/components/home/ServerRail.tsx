@@ -1,6 +1,13 @@
 "use client";
 
-import { isServerMuted, type ServerSummary } from "@discordia/client-shared";
+import {
+  isServerMuted,
+  NO_UNREAD_FLAGS,
+  type ServerSummary,
+  UNREAD_MESSAGES_LABEL,
+  type UnreadFlags,
+  serverSuspendedLabel,
+} from "@discordia/client-shared";
 
 import { Home as HomeIcon, Plus } from "lucide-react";
 
@@ -16,13 +23,10 @@ import { cn } from "@/lib/cn";
 interface ServerRailProps {
   servers: ServerSummary[];
   selectedServerId: string | null;
-  /** El botón "Inicio" abre Mensajes Directos: se resalta cuando esa vista está activa. */
   isDirectMessagesActive: boolean;
-  /** En mobile se muestra fijo en vez de como drawer. */
   isDockedOnMobile: boolean;
   unreadDmCount: number;
-  /** Menciones sin leer por servidor. */
-  unreadMentionsByServer: Record<string, number>;
+  unreadByServer: Record<string, UnreadFlags>;
   onSelect: (serverId: string | null) => void;
   onOpenDirectMessages: () => void;
   onCreateClick: () => void;
@@ -34,7 +38,7 @@ export function ServerRail({
   isDirectMessagesActive,
   isDockedOnMobile,
   unreadDmCount,
-  unreadMentionsByServer,
+  unreadByServer,
   onSelect,
   onOpenDirectMessages,
   onCreateClick,
@@ -75,14 +79,14 @@ export function ServerRail({
           ) : null}
         </div>
 
-        <div className="bg-line-strong h-px w-8 shrink-0 rounded-full" />
+        <div className="bg-servers-divider h-px w-8 shrink-0 rounded-full" />
 
         {servers.map((server) => (
           <ServerRailItem
             key={server.id}
             server={server}
             isActive={!isDirectMessagesActive && server.id === selectedServerId}
-            unreadMentions={unreadMentionsByServer[server.id] ?? 0}
+            unread={unreadByServer[server.id] ?? NO_UNREAD_FLAGS}
             onClick={() => onSelect(server.id)}
           />
         ))}
@@ -103,38 +107,58 @@ export function ServerRail({
 function ServerRailItem({
   server,
   isActive,
-  unreadMentions,
+  unread,
   onClick,
 }: {
   server: ServerSummary;
   isActive: boolean;
-  unreadMentions: number;
+  unread: UnreadFlags;
   onClick: () => void;
 }) {
   const notificationSettings = useOptionalNotificationSettings();
+  const isSuspended = server.suspended === true;
   const isMuted =
     notificationSettings !== null &&
     isServerMuted(notificationSettings.settings, server.id);
+  const visibleUnread = isSuspended ? NO_UNREAD_FLAGS : unread;
+  const label = isSuspended
+    ? serverSuspendedLabel(server.name)
+    : unread.unread && unread.mentionCount === 0
+      ? `${server.name}, ${UNREAD_MESSAGES_LABEL.toLowerCase()}`
+      : server.name;
 
   return (
     <div className={cn("relative shrink-0", isMuted && "opacity-60")}>
-      {isActive ? (
-        <div className="bg-server-pill absolute top-1/2 -left-2 h-8 w-1 -translate-y-1/2 rounded-r-full" />
+      {isActive || visibleUnread.unread ? (
+        <div
+          aria-hidden
+          className={cn(
+            "bg-server-pill absolute top-1/2 -left-2 w-1 -translate-y-1/2 rounded-r-full",
+            isActive ? "h-8" : "h-2",
+          )}
+        />
       ) : null}
-      <SideTooltip label={server.name}>
+      <SideTooltip
+        label={isSuspended ? serverSuspendedLabel(server.name) : server.name}
+      >
         <button
           type="button"
-          aria-label={server.name}
+          aria-label={label}
           onClick={onClick}
-          className="cursor-pointer overflow-hidden rounded-2xl"
+          className="relative cursor-pointer overflow-hidden rounded-2xl"
         >
-          <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
+          <span className={cn("block", isSuspended && "saturate-50")}>
+            <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
+          </span>
+          {isSuspended ? (
+            <span aria-hidden className="absolute inset-0 bg-black/50" />
+          ) : null}
         </button>
       </SideTooltip>
-      {unreadMentions > 0 ? (
+      {visibleUnread.mentionCount > 0 ? (
         <CountBadge
-          count={unreadMentions}
-          label={`${unreadMentions} menciones sin leer en ${server.name}`}
+          count={visibleUnread.mentionCount}
+          label={`${visibleUnread.mentionCount} menciones sin leer en ${server.name}`}
           className="border-rail-surface absolute -right-0.5 -bottom-0.5 border-2"
         />
       ) : null}

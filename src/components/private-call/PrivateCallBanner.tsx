@@ -9,11 +9,16 @@ import { Maximize2, PhoneOff } from "lucide-react";
 
 import { CallDuration } from "@/components/voice/CallDuration";
 import { useOptionalPrivateCall } from "@/contexts/PrivateCallContext";
+import { cn } from "@/lib/cn";
+
+import { useDraggableBanner } from "./hooks/useDraggableBanner";
 
 const BACK_TO_CALL = "Volver a la llamada";
+const MOVE_HINT = "Arrastralo para moverlo de lugar";
 
 export function PrivateCallBanner() {
   const privateCall = useOptionalPrivateCall();
+  const drag = useDraggableBanner();
   if (!privateCall?.isMinimized) return null;
   const { phase, partner } = privateCall.state;
   if (!partner || (phase !== "connecting" && phase !== "in_call")) return null;
@@ -21,8 +26,15 @@ export function PrivateCallBanner() {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-3 z-50 flex justify-center px-4">
       <div
+        ref={drag.ref}
         role="status"
-        className="bg-surface-raised border-success/30 pointer-events-auto flex items-center gap-1 rounded-full border py-1 pr-1 pl-3 shadow-lg"
+        title={MOVE_HINT}
+        style={drag.style}
+        {...drag.handlers}
+        className={cn(
+          "bg-surface-raised border-success/30 pointer-events-auto flex max-w-full touch-none items-center gap-1 rounded-full border py-1 pr-1 pl-3 shadow-lg select-none",
+          drag.isDragging ? "cursor-grabbing" : "cursor-grab",
+        )}
       >
         <button
           type="button"

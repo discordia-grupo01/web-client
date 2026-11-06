@@ -1,6 +1,7 @@
 import {
   VOICE_CALL_DURATION_LABEL,
   type Channel,
+  type UnreadFlags,
 } from "@discordia/client-shared";
 
 import { fireEvent, render, screen } from "@testing-library/react";
@@ -22,7 +23,7 @@ vi.mock("@dnd-kit/sortable", () => ({
 const channel = { id: "c1", name: "general", kind: "text" } as Channel;
 
 function renderRow(
-  unreadMentions?: number,
+  unread: UnreadFlags | 0 = 0,
   canManage = false,
   canManagePermissions = false,
 ) {
@@ -33,7 +34,7 @@ function renderRow(
       active={false}
       canManage={canManage}
       canManagePermissions={canManagePermissions}
-      unreadMentions={unreadMentions}
+      unread={unread === 0 ? undefined : unread}
       onClick={vi.fn()}
       onEdit={vi.fn()}
       onEditPermissions={onEditPermissions}
@@ -48,25 +49,35 @@ function openMenu() {
 }
 
 describe("ChannelRow", () => {
-  it("sin menciones sin leer no muestra la marca", () => {
+  it("leido no muestra la marca", () => {
     renderRow(0);
     expect(screen.getByRole("button", { name: /general/ })).not.toHaveAttribute(
       "title",
     );
     expect(document.querySelector("[aria-hidden]")).toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
-  it("con menciones sin leer marca el canal a la izquierda y resalta el nombre", () => {
-    renderRow(3);
+  it("con mensajes sin leer marca el canal a la izquierda y resalta el nombre", () => {
+    renderRow({ unread: true, mentionCount: 0 });
     const row = screen.getByRole("button", { name: /general/ });
-    expect(row).toHaveAttribute("title", "3 menciones sin leer");
+    expect(row).toHaveAttribute("title", "Mensajes sin leer");
     expect(screen.getByText("general")).toHaveClass("font-semibold");
     expect(document.querySelector("[aria-hidden]")).not.toBeNull();
+    expect(screen.queryByRole("status")).toBeNull();
   });
 
-  it("no tapa el boton de opciones: no hay nada a la derecha del nombre", () => {
-    renderRow(2, true);
-    expect(screen.queryByRole("status")).toBeNull();
+  it("con menciones sin leer suma el contador", () => {
+    renderRow({ unread: true, mentionCount: 3 });
+    expect(
+      screen.getByRole("status", { name: "3 menciones sin leer" }),
+    ).toHaveTextContent("3");
+    expect(screen.getByText("general")).toHaveClass("font-semibold");
+  });
+
+  it("el contador se oculta al pasar el mouse para no tapar el boton de opciones", () => {
+    renderRow({ unread: true, mentionCount: 2 }, true);
+    expect(screen.getByRole("status")).toHaveClass("group-hover:opacity-0");
   });
 
   it("sin permisos de gestion no ofrece el menu del canal", () => {

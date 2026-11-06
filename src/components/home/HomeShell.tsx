@@ -5,7 +5,10 @@ import {
   messageAuthorOf,
   type NotificationHistoryItem,
   type PublicUser,
+  markServerSuspended,
   type ServerSummary,
+  suspendedServerIds,
+  withoutSuspendedServers,
 } from "@discordia/client-shared";
 
 import { useRouter } from "next/navigation";
@@ -40,6 +43,7 @@ import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
 import { OwnProfileProvider } from "@/contexts/OwnProfileContext";
 import { useOwnProfile } from "@/hooks/useOwnProfile";
 import { CreateServerModal } from "@/components/servers/create/CreateServerModal";
+import { ServerSuspendedNotice } from "@/components/servers/ServerSuspendedNotice";
 import { ServerView } from "@/components/servers/ServerView";
 import { useLoadingGate } from "@/components/home/hooks/useLoadingGate";
 import { useAuth } from "@/contexts/AuthContext";
@@ -58,6 +62,7 @@ import {
   usePresenceSession,
 } from "@/components/home/hooks/usePresenceSession";
 import { useMentions } from "@/components/home/hooks/useMentions";
+import { useUnreadState } from "@/components/home/hooks/useUnreadState";
 import { authorFromProfile } from "@/utils/author";
 import { listServersRequest } from "@/services/servers/client";
 import { avatarSrcOf } from "@/utils/userProfile";
@@ -144,6 +149,29 @@ function HomeShellContent({
     setLastChannelId(voiceFocus.channelId);
   }, [voiceFocus]);
 
+  function removeServer(serverId: string) {
+    const { target } = voice.state;
+    if (target?.kind === "channel" && target.serverId === serverId) {
+      voice.leave();
+    }
+    setServers((prev) => prev.filter((server) => server.id !== serverId));
+    setSelectedServerId((prev) => (prev === serverId ? null : prev));
+  }
+
+  function suspendServer(serverId: string) {
+    const { target } = voice.state;
+    if (target?.kind === "channel" && target.serverId === serverId) {
+      voice.leave();
+    }
+    setServers((prev) => markServerSuspended(prev, serverId));
+  }
+
+  function reloadServers() {
+    void listServersRequest().then((result) => {
+      if (result.ok) setServers(result.servers);
+    });
+  }
+
   // Se pide una sola vez y sobrevive a cambiar de vista, asi el contador de
   // no leidos del riel no se resetea al entrar y salir de Mensajes Directos.
   const currentAuthor = useMemo(
@@ -151,9 +179,11 @@ function HomeShellContent({
     [ownProfile],
   );
   const notificationSettings = useOptionalNotificationSettings();
+  const suspendedIds = useMemo(() => suspendedServerIds(servers), [servers]);
   const mentions = useMentions(
     currentAuthor?.id ?? null,
     notificationSettings?.settings,
+    suspendedIds,
   );
   const presence = usePresenceSession(currentAuthor?.id ?? null);
   const directMessages = useDirectMessages(
@@ -164,7 +194,18 @@ function HomeShellContent({
         mentions.receive(payload);
         setNotificationsSignal((signal) => signal + 1);
       },
-      onRejoined: mentions.reload,
+      onRejoined: () => {
+        mentions.reload();
+        reloadServers();
+      },
+      onServerLeft: ({ server_id }) => {
+        if (view === "servers" && selectedServerId === server_id) {
+          setView("direct-messages");
+        }
+        removeServer(server_id);
+      },
+      onServerSuspended: ({ server_id }) => suspendServer(server_id),
+      onServerReactivated: () => reloadServers(),
       ...presence.userRoomCallbacks,
     },
   );
@@ -184,7 +225,19 @@ function HomeShellContent({
     (c) => c.isUnread,
   ).length;
 
-  const notificationHistory = useNotificationHistory();
+  const fullNotificationHistory = useNotificationHistory();
+  const visibleNotificationItems = useMemo(
+    () =>
+      withoutSuspendedServers(
+        fullNotificationHistory.items,
+        suspendedIds,
+      ) as NotificationHistoryItem[],
+    [fullNotificationHistory.items, suspendedIds],
+  );
+  const notificationHistory = {
+    ...fullNotificationHistory,
+    items: visibleNotificationItems,
+  };
   const unreadByConversation = useMemo(
     () =>
       new Map(
@@ -268,6 +321,25 @@ function HomeShellContent({
       document.removeEventListener("visibilitychange", refreshIfVisible);
     };
   }, []);
+
+  const openChannelId =
+    view === "servers" && selectedServerId && !selectedServer?.suspended
+      ? lastChannelId
+      : null;
+  const unread = useUnreadState(
+    currentAuthor?.id ?? null,
+    openChannelId,
+    suspendedIds,
+  );
+  const openChannelMentions = openChannelId
+    ? (mentions.byChannel[openChannelId] ?? 0)
+    : 0;
+  const { markChannelRead: markChannelMentionsRead } = mentions;
+  useEffect(() => {
+    if (openChannelId && openChannelMentions > 0) {
+      markChannelMentionsRead(openChannelId);
+    }
+  }, [openChannelId, openChannelMentions, markChannelMentionsRead]);
 
   const {
     markChannelRead: markNotificationChannelRead,
@@ -439,15 +511,6 @@ function HomeShellContent({
     setIsJoinModalOpen(false);
   }
 
-  function removeServer(serverId: string) {
-    const { target } = voice.state;
-    if (target?.kind === "channel" && target.serverId === serverId) {
-      voice.leave();
-    }
-    setServers((prev) => prev.filter((server) => server.id !== serverId));
-    setSelectedServerId((prev) => (prev === serverId ? null : prev));
-  }
-
   function updateServer(server: ServerSummary) {
     setServers((prev) =>
       prev.map((existing) => (existing.id === server.id ? server : existing)),
@@ -464,7 +527,7 @@ function HomeShellContent({
           <NotificationsProvider value={notificationsValue}>
             <MobilePanelsProvider>
               <div className="flex h-dvh w-full flex-col overflow-hidden">
-                <PlatformStatusNotice />
+                <PlatformStatusNotice refreshSignal={unread.statusRevision} />
                 <div
                   className="relative flex min-h-0 w-full flex-1 overflow-hidden"
                   style={{ background: "var(--bg-chat)" }}
@@ -478,7 +541,7 @@ function HomeShellContent({
                       !directMessages.activeSummary
                     }
                     unreadDmCount={unreadDmCount}
-                    unreadMentionsByServer={mentions.byServer}
+                    unreadByServer={unread.byServer}
                     onSelect={(serverId) => {
                       setView("servers");
                       setSelectedServerId(serverId);
@@ -496,6 +559,8 @@ function HomeShellContent({
                       servers={servers}
                       directMessages={directMessages}
                     />
+                  ) : selectedServer?.suspended ? (
+                    <ServerSuspendedNotice />
                   ) : selectedServer ? (
                     <ServerView
                       key={`${selectedServer.id}:${serverViewNonce}`}
@@ -507,8 +572,7 @@ function HomeShellContent({
                         setOwnProfileServerId(serverId ?? null)
                       }
                       onMessageUser={messageUser}
-                      unreadMentionsByChannel={mentions.byChannel}
-                      onChannelRead={mentions.markChannelRead}
+                      unreadByChannel={unread.byChannel}
                       initialChannelId={lastChannelId}
                       onChannelChange={setLastChannelId}
                     />
@@ -547,6 +611,7 @@ function HomeShellContent({
                     <NotificationCenter
                       history={notificationHistory}
                       reads={notificationReads}
+                      unread={unread}
                       servers={servers}
                       me={currentAuthor}
                       anchorRef={notificationsAnchorRef}
