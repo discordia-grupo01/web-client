@@ -128,13 +128,7 @@ function ServerRailItem({
       : server.name;
 
   return (
-    <div
-      className={cn(
-        "relative shrink-0",
-        isMuted && "opacity-60",
-        isSuspended && "opacity-50 grayscale",
-      )}
-    >
+    <div className={cn("relative shrink-0", isMuted && "opacity-60")}>
       {isActive || visibleUnread.unread ? (
         <div
           aria-hidden
@@ -151,9 +145,14 @@ function ServerRailItem({
           type="button"
           aria-label={label}
           onClick={onClick}
-          className="cursor-pointer overflow-hidden rounded-2xl"
+          className="relative cursor-pointer overflow-hidden rounded-2xl"
         >
-          <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
+          <span className={cn("block", isSuspended && "saturate-50")}>
+            <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
+          </span>
+          {isSuspended ? (
+            <span aria-hidden className="absolute inset-0 bg-black/50" />
+          ) : null}
         </button>
       </SideTooltip>
       {visibleUnread.mentionCount > 0 ? (
