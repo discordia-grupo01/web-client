@@ -226,16 +226,18 @@ function HomeShellContent({
   ).length;
 
   const fullNotificationHistory = useNotificationHistory();
-  const notificationHistory = useMemo(
-    () => ({
-      ...fullNotificationHistory,
-      items: withoutSuspendedServers(
+  const visibleNotificationItems = useMemo(
+    () =>
+      withoutSuspendedServers(
         fullNotificationHistory.items,
         suspendedIds,
       ) as NotificationHistoryItem[],
-    }),
-    [fullNotificationHistory, suspendedIds],
+    [fullNotificationHistory.items, suspendedIds],
   );
+  const notificationHistory = {
+    ...fullNotificationHistory,
+    items: visibleNotificationItems,
+  };
   const unreadByConversation = useMemo(
     () =>
       new Map(
