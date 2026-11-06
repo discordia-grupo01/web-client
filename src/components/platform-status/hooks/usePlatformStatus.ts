@@ -10,7 +10,7 @@ export type PlatformStatusState =
   | { phase: "error"; message: string }
   | { phase: "ready"; data: PlatformStatusResponse };
 
-export function usePlatformStatus() {
+export function usePlatformStatus(refreshSignal = 0) {
   const [state, setState] = useState<PlatformStatusState>({
     phase: "loading",
   });
@@ -32,7 +32,7 @@ export function usePlatformStatus() {
     return () => {
       cancelled = true;
     };
-  }, [attempt]);
+  }, [attempt, refreshSignal]);
 
   const retry = useCallback(() => {
     setState({ phase: "loading" });

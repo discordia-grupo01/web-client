@@ -8,8 +8,12 @@ import { usePlatformStatus } from "./hooks/usePlatformStatus";
 import { PlatformStatusBanner } from "./PlatformStatusBanner";
 import { PlatformStatusModal } from "./PlatformStatusModal";
 
-export function PlatformStatusNotice() {
-  const { state } = usePlatformStatus();
+export function PlatformStatusNotice({
+  refreshSignal = 0,
+}: {
+  refreshSignal?: number;
+}) {
+  const { state } = usePlatformStatus(refreshSignal);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const data = state.phase === "ready" ? state.data : null;
   const { isHidden, hide } = useHiddenNotice(
