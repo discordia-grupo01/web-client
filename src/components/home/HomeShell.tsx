@@ -5,7 +5,10 @@ import {
   messageAuthorOf,
   type NotificationHistoryItem,
   type PublicUser,
+  markServerSuspended,
   type ServerSummary,
+  suspendedServerIds,
+  withoutSuspendedServers,
 } from "@discordia/client-shared";
 
 import { useRouter } from "next/navigation";
@@ -40,6 +43,7 @@ import { OwnProfileModal } from "@/components/profile/OwnProfileModal";
 import { OwnProfileProvider } from "@/contexts/OwnProfileContext";
 import { useOwnProfile } from "@/hooks/useOwnProfile";
 import { CreateServerModal } from "@/components/servers/create/CreateServerModal";
+import { ServerSuspendedNotice } from "@/components/servers/ServerSuspendedNotice";
 import { ServerView } from "@/components/servers/ServerView";
 import { useLoadingGate } from "@/components/home/hooks/useLoadingGate";
 import { useAuth } from "@/contexts/AuthContext";
@@ -154,6 +158,14 @@ function HomeShellContent({
     setSelectedServerId((prev) => (prev === serverId ? null : prev));
   }
 
+  function suspendServer(serverId: string) {
+    const { target } = voice.state;
+    if (target?.kind === "channel" && target.serverId === serverId) {
+      voice.leave();
+    }
+    setServers((prev) => markServerSuspended(prev, serverId));
+  }
+
   function reloadServers() {
     void listServersRequest().then((result) => {
       if (result.ok) setServers(result.servers);
@@ -167,9 +179,11 @@ function HomeShellContent({
     [ownProfile],
   );
   const notificationSettings = useOptionalNotificationSettings();
+  const suspendedIds = useMemo(() => suspendedServerIds(servers), [servers]);
   const mentions = useMentions(
     currentAuthor?.id ?? null,
     notificationSettings?.settings,
+    suspendedIds,
   );
   const presence = usePresenceSession(currentAuthor?.id ?? null);
   const directMessages = useDirectMessages(
@@ -190,6 +204,8 @@ function HomeShellContent({
         }
         removeServer(server_id);
       },
+      onServerSuspended: ({ server_id }) => suspendServer(server_id),
+      onServerReactivated: () => reloadServers(),
       ...presence.userRoomCallbacks,
     },
   );
@@ -209,7 +225,17 @@ function HomeShellContent({
     (c) => c.isUnread,
   ).length;
 
-  const notificationHistory = useNotificationHistory();
+  const fullNotificationHistory = useNotificationHistory();
+  const notificationHistory = useMemo(
+    () => ({
+      ...fullNotificationHistory,
+      items: withoutSuspendedServers(
+        fullNotificationHistory.items,
+        suspendedIds,
+      ) as NotificationHistoryItem[],
+    }),
+    [fullNotificationHistory, suspendedIds],
+  );
   const unreadByConversation = useMemo(
     () =>
       new Map(
@@ -295,8 +321,14 @@ function HomeShellContent({
   }, []);
 
   const openChannelId =
-    view === "servers" && selectedServerId ? lastChannelId : null;
-  const unread = useUnreadState(currentAuthor?.id ?? null, openChannelId);
+    view === "servers" && selectedServerId && !selectedServer?.suspended
+      ? lastChannelId
+      : null;
+  const unread = useUnreadState(
+    currentAuthor?.id ?? null,
+    openChannelId,
+    suspendedIds,
+  );
   const openChannelMentions = openChannelId
     ? (mentions.byChannel[openChannelId] ?? 0)
     : 0;
@@ -525,6 +557,8 @@ function HomeShellContent({
                       servers={servers}
                       directMessages={directMessages}
                     />
+                  ) : selectedServer?.suspended ? (
+                    <ServerSuspendedNotice />
                   ) : selectedServer ? (
                     <ServerView
                       key={`${selectedServer.id}:${serverViewNonce}`}

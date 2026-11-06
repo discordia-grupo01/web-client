@@ -12,6 +12,7 @@ import {
   type UnreadMentions,
   unreadByChannel,
   unreadByServer,
+  withoutSuspendedEntries,
 } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -20,6 +21,8 @@ import {
   listUnreadMentionsRequest,
   markChannelMentionsReadRequest,
 } from "@/services/mentions/client";
+
+const NO_SUSPENDED: ReadonlySet<string> = new Set();
 
 /**
  * Menciones sin leer de la sesion, para los contadores de canales y servidores.
@@ -30,10 +33,12 @@ import {
  * - En vivo llegan por el evento `mention` de la sala personal; `receive` se
  *   le pasa a `useDirectMessages`, que es quien esta unido a esa sala.
  * - Abrir un canal las marca como leidas (`markChannelRead`).
+ * - Las de un servidor suspendido no cuentan mientras dure, pero se conservan.
  */
 export function useMentions(
   currentUserId: string | null,
   settings: NotificationSettings = NO_NOTIFICATION_SETTINGS,
+  suspendedServerIds: ReadonlySet<string> = NO_SUSPENDED,
 ) {
   const [unread, setUnread] = useState<UnreadMentions>(NO_UNREAD_MENTIONS);
   const [isLoaded, setIsLoaded] = useState(false);
@@ -71,8 +76,12 @@ export function useMentions(
   );
 
   const highlighted = useMemo(
-    () => filterHighlightedMentions(unread, settings),
-    [unread, settings],
+    () =>
+      filterHighlightedMentions(
+        withoutSuspendedEntries(unread, suspendedServerIds),
+        settings,
+      ),
+    [unread, settings, suspendedServerIds],
   );
   const byChannel = useMemo(() => unreadByChannel(highlighted), [highlighted]);
   const byServer = useMemo(() => unreadByServer(highlighted), [highlighted]);
