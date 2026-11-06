@@ -9,13 +9,14 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { UnreadHandlers } from "@/services/notifications/socket";
 
 const markRead = vi.fn();
+const markAllRead = vi.fn(() => Promise.resolve(true));
 const disconnect = vi.fn();
 let handlers: UnreadHandlers;
 
 vi.mock("@/services/notifications/socket", () => ({
   connectUnread: (_userId: string, next: UnreadHandlers) => {
     handlers = next;
-    return { markRead, disconnect };
+    return { markRead, markAllRead, disconnect };
   },
 }));
 
@@ -130,6 +131,37 @@ describe("useUnreadState", () => {
     act(() => handlers.snapshot(snapshot));
 
     expect(markRead).toHaveBeenCalledWith("c2");
+  });
+
+  it("marcar todo apaga todos los canales y avisa al back", async () => {
+    markAllRead.mockResolvedValue(true);
+    const { result } = renderHook(() => useUnreadState("me", null));
+    act(() => handlers.snapshot(snapshot));
+    expect(result.current.hasUnread).toBe(true);
+
+    let ok = false;
+    await act(async () => {
+      ok = await result.current.markAllRead();
+    });
+
+    expect(ok).toBe(true);
+    expect(markAllRead).toHaveBeenCalledTimes(1);
+    expect(result.current.byChannel).toEqual({});
+    expect(result.current.hasUnread).toBe(false);
+  });
+
+  it("si marcar todo falla, los canales vuelven a aparecer", async () => {
+    markAllRead.mockResolvedValue(false);
+    const { result } = renderHook(() => useUnreadState("me", null));
+    act(() => handlers.snapshot(snapshot));
+
+    let ok = true;
+    await act(async () => {
+      ok = await result.current.markAllRead();
+    });
+
+    expect(ok).toBe(false);
+    expect(Object.keys(result.current.byChannel)).toEqual(["c1", "c2"]);
   });
 
   it("al desmontar se desconecta", () => {

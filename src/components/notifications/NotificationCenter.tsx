@@ -25,6 +25,7 @@ import { createPortal } from "react-dom";
 import { NotificationGroupCard } from "@/components/notifications/NotificationGroupCard";
 import { NotificationTabs } from "@/components/notifications/NotificationTabs";
 import { useFloatingPanel } from "@/hooks/useFloatingPanel";
+import { useMarkAllRead } from "@/hooks/useMarkAllRead";
 import { useNotificationAuthors } from "@/hooks/useNotificationAuthors";
 import { useNotificationMessages } from "@/hooks/useNotificationMessages";
 import type { NotificationHistoryState } from "@/hooks/useNotificationHistory";
@@ -37,6 +38,7 @@ const ACTION_CLASS =
 interface NotificationCenterProps {
   history: NotificationHistoryState;
   reads: NotificationReadsState;
+  unread: { hasUnread: boolean; markAllRead: () => Promise<boolean> };
   servers: readonly ServerSummary[];
   me: MessageAuthor | null;
   anchorRef: RefObject<HTMLElement>;
@@ -48,6 +50,7 @@ interface NotificationCenterProps {
 export function NotificationCenter({
   history,
   reads,
+  unread,
   servers,
   me,
   anchorRef,
@@ -56,6 +59,7 @@ export function NotificationCenter({
   onOpenDirectMessage,
 }: NotificationCenterProps) {
   const [tab, setTab] = useState<NotificationTab>("unread");
+  const markAll = useMarkAllRead({ reads, unread });
   const authors = useNotificationAuthors(history.items);
   const messages = useNotificationMessages(history.items);
   const { panelRef, position } = useFloatingPanel({
@@ -129,13 +133,18 @@ export function NotificationCenter({
         </h2>
         <button
           type="button"
-          onClick={reads.markAllRead}
-          disabled={reads.unreadCount === 0}
+          onClick={() => void markAll.markAllRead()}
+          disabled={!markAll.canMarkAllRead}
+          aria-busy={markAll.isMarkingAll}
           title={NOTIFICATIONS_MARK_ALL_READ_LABEL}
           aria-label={NOTIFICATIONS_MARK_ALL_READ_LABEL}
           className="bg-surface-input text-content-subtle border-line flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
         >
-          <CheckCheck size={15} />
+          {markAll.isMarkingAll ? (
+            <Loader2 size={15} className="animate-spin" aria-hidden />
+          ) : (
+            <CheckCheck size={15} />
+          )}
         </button>
         <button
           type="button"
@@ -146,6 +155,12 @@ export function NotificationCenter({
           <X size={14} />
         </button>
       </div>
+
+      {markAll.error ? (
+        <p role="alert" className="text-danger px-4 pb-2 text-sm">
+          {markAll.error}
+        </p>
+      ) : null}
 
       <NotificationTabs
         value={tab}
