@@ -6,6 +6,7 @@ import {
   NOTIFICATIONS_LOAD_FAILED,
   type NotificationHistoryQuery,
   type NotificationSettingsPatch,
+  type SocketTicketResult,
   type UpdateNotificationSettingsResult,
 } from "@discordia/client-shared";
 
@@ -79,4 +80,18 @@ export function updateServerNotificationSettingsRequest(
     `/notifications/settings/servers/${encodeURIComponent(serverId)}`,
     patch,
   );
+}
+
+export async function fetchUnreadSocketTicketRequest(): Promise<SocketTicketResult> {
+  try {
+    const { data, status } = await api.post<{ ticket?: string }>(
+      "/notifications/socket-tickets",
+    );
+    if (status === 200 && typeof data?.ticket === "string") {
+      return { ok: true, ticket: data.ticket };
+    }
+    return { ok: false, sessionExpired: status === 401 };
+  } catch {
+    return { ok: false, sessionExpired: false };
+  }
 }
