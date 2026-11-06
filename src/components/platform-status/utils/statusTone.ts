@@ -12,6 +12,7 @@ interface StatusTone {
   panel: string;
   soft: string;
   accent: string;
+  ink: string;
 }
 
 export const STATUS_TONES: Record<PlatformStatus, StatusTone> = {
@@ -21,6 +22,7 @@ export const STATUS_TONES: Record<PlatformStatus, StatusTone> = {
     panel: "bg-success/10 border-success/30",
     soft: "bg-success/15 text-success",
     accent: "bg-success",
+    ink: "text-success",
   },
   degraded: {
     icon: TriangleAlert,
@@ -28,6 +30,7 @@ export const STATUS_TONES: Record<PlatformStatus, StatusTone> = {
     panel: "bg-warning/10 border-warning/30",
     soft: "bg-warning/15 text-warning",
     accent: "bg-warning",
+    ink: "text-warning",
   },
   maintenance: {
     icon: Wrench,
@@ -35,5 +38,6 @@ export const STATUS_TONES: Record<PlatformStatus, StatusTone> = {
     panel: "bg-info/10 border-info/30",
     soft: "bg-info/15 text-info",
     accent: "bg-info",
+    ink: "text-info",
   },
 };

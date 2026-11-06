@@ -8,9 +8,13 @@ import { useTheme } from "@/hooks/useTheme";
 
 interface EmojiPickerPanelProps {
   onPick: (emoji: string) => void;
+  perLine?: number;
 }
 
-export default function EmojiPickerPanel({ onPick }: EmojiPickerPanelProps) {
+export default function EmojiPickerPanel({
+  onPick,
+  perLine,
+}: EmojiPickerPanelProps) {
   const { theme } = useTheme();
 
   return (
@@ -21,6 +25,7 @@ export default function EmojiPickerPanel({ onPick }: EmojiPickerPanelProps) {
       set="native"
       theme={theme}
       previewPosition="none"
+      perLine={perLine}
       skinTonePosition="search"
       onEmojiSelect={(emoji: { native: string }) => onPick(emoji.native)}
     />

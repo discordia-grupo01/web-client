@@ -55,3 +55,12 @@ export function updateServerNotificationSettings(
     { method: "PUT", token, data: patch },
   );
 }
+
+export function createUnreadSocketTicket(
+  token: string,
+): Promise<ApiResult<{ ticket: string; expires_in: number }>> {
+  return apiRequest<{ ticket: string; expires_in: number }>(
+    "/v1/notifications/socket-tickets",
+    { method: "POST", token },
+  );
+}

@@ -8,6 +8,8 @@ import { createPortal } from "react-dom";
 import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { cn } from "@/lib/cn";
 
+import { EmojiPickerSheet } from "./EmojiPickerSheet";
+
 const EmojiPickerPanel = dynamic(() => import("./EmojiPickerPanel"), {
   ssr: false,
 });
@@ -30,10 +32,11 @@ export function EmojiPicker({
   triggerClassName,
 }: EmojiPickerProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [isSheet, setIsSheet] = useState(false);
   const anchorRef = useRef<HTMLButtonElement>(null);
   const close = () => setIsOpen(false);
   const { panelRef, position } = useFloatingPanel({
-    enabled: true,
+    enabled: !isSheet,
     isOpen,
     onClose: close,
     anchorRef,
@@ -48,13 +51,20 @@ export function EmojiPicker({
         aria-label={label}
         title={label}
         aria-expanded={isOpen}
-        onClick={() => setIsOpen((prev) => !prev)}
+        onClick={() => {
+          setIsSheet(window.matchMedia("(pointer: coarse)").matches);
+          setIsOpen((prev) => !prev);
+        }}
         className={cn("cursor-pointer transition-colors", triggerClassName)}
       >
         <Icon size={iconSize} />
       </button>
 
-      {isOpen && typeof document !== "undefined"
+      {isOpen && isSheet ? (
+        <EmojiPickerSheet label={label} onPick={onPick} onClose={close} />
+      ) : null}
+
+      {isOpen && !isSheet && typeof document !== "undefined"
         ? createPortal(
             <div
               ref={panelRef}

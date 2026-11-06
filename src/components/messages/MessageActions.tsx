@@ -26,7 +26,6 @@ const BAR_REACTIONS = QUICK_REACTIONS.slice(0, 3);
 const ACTION_BUTTON =
   "text-content-subtle hover:text-content flex size-8 cursor-pointer items-center justify-center rounded-lg transition-colors";
 
-/** Barra flotante de acciones sobre un mensaje: reaccionar, editar, eliminar. */
 export function MessageActions({
   canEdit,
   canDelete,
@@ -37,7 +36,7 @@ export function MessageActions({
   if (!onToggleReaction && !canEdit && !canDelete) return null;
 
   return (
-    <div className="bg-surface-raised border-line absolute -top-3 right-2 flex rounded-lg border opacity-0 shadow-md transition-opacity group-hover/message:opacity-100 group-focus-visible/message:opacity-100 group-has-[:focus-visible]/message:opacity-100">
+    <div className="bg-surface-raised border-line absolute -top-3 right-2 flex rounded-lg border opacity-0 shadow-md transition-opacity group-hover/message:opacity-100 group-focus-visible/message:opacity-100 group-has-[:focus-visible]/message:opacity-100 has-[[aria-expanded=true]]:opacity-100 pointer-coarse:hidden">
       {onToggleReaction
         ? BAR_REACTIONS.map((emoji) => (
             <button
