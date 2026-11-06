@@ -61,6 +61,7 @@ describe("<LoginForm />", () => {
         avatar_url: "",
         status_text: "",
         status_emoji: "",
+        premium: false,
         created_at: "",
       },
     });
@@ -207,6 +208,7 @@ describe("<LoginForm />", () => {
         avatar_url: "",
         status_text: "",
         status_emoji: "",
+        premium: false,
         created_at: "",
       },
       recoveryCodeUsed: true,

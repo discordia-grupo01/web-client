@@ -11,8 +11,18 @@ import {
   Moon,
   Shield,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, type ReactNode } from "react";
 
+import { BILLING_COPY } from "@/components/billing/billingCopy";
+import {
+  type BillingSection,
+  isBillingSection,
+} from "@/components/billing/billingSections";
+import { BillingSettings } from "@/components/billing/BillingSettings";
+import {
+  DiscordiaPointIcon,
+  DiscordiaPremiumIcon,
+} from "@/components/billing/DiscordiaIcons";
 import { PlatformStatusSettings } from "@/components/platform-status/PlatformStatusSettings";
 import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { TwoFactorPanel } from "@/components/security/TwoFactorPanel";
@@ -23,13 +33,14 @@ import { AppearanceSettings } from "./AppearanceSettings";
 import { PushSettings } from "./PushSettings";
 import { SecuritySettings } from "./SecuritySettings";
 
-type Section = "appearance" | "notifications" | "security" | "status";
+export type AccountSettingsSection =
+  "appearance" | "notifications" | "security" | "status" | BillingSection;
 
 interface SectionItem {
-  id: Section;
+  id: AccountSettingsSection;
   label: string;
   description: string;
-  icon: typeof Moon;
+  icon: (props: { size?: number; className?: string }) => ReactNode;
 }
 
 const ACCOUNT_SECTIONS: SectionItem[] = [
@@ -53,6 +64,33 @@ const ACCOUNT_SECTIONS: SectionItem[] = [
   },
 ];
 
+const BILLING_ITEMS: SectionItem[] = [
+  {
+    id: "premium",
+    label: "Premium",
+    description: "Conocé el plan",
+    icon: DiscordiaPremiumIcon,
+  },
+  {
+    id: "subscriptions",
+    label: "Suscripciones",
+    description: "Estado y renovación",
+    icon: DiscordiaPremiumIcon,
+  },
+  {
+    id: "points",
+    label: "Puntos",
+    description: "Saldo y paquetes",
+    icon: DiscordiaPointIcon,
+  },
+  {
+    id: "transactions",
+    label: "Historial",
+    description: "Pagos y movimientos",
+    icon: DiscordiaPointIcon,
+  },
+];
+
 const PLATFORM_SECTIONS: SectionItem[] = [
   {
     id: "status",
@@ -64,18 +102,26 @@ const PLATFORM_SECTIONS: SectionItem[] = [
 
 const SECTION_GROUPS = [
   { title: "Mi cuenta", items: ACCOUNT_SECTIONS },
+  { title: BILLING_COPY.groupTitle, items: BILLING_ITEMS },
   { title: "Plataforma", items: PLATFORM_SECTIONS },
 ];
 
-const SECTIONS = [...ACCOUNT_SECTIONS, ...PLATFORM_SECTIONS];
+const SECTIONS = [...ACCOUNT_SECTIONS, ...BILLING_ITEMS, ...PLATFORM_SECTIONS];
 
 interface AccountSettingsModalProps {
   onClose: () => void;
+  /** Abre directo en una sección (por ejemplo, al volver de Mercado Pago). */
+  initialSection?: AccountSettingsSection;
 }
 
-export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
-  const [section, setSection] = useState<Section>("appearance");
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(true);
+export function AccountSettingsModal({
+  onClose,
+  initialSection,
+}: AccountSettingsModalProps) {
+  const [section, setSection] = useState<AccountSettingsSection>(
+    initialSection ?? "appearance",
+  );
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(!initialSection);
   const [isLogoutOpen, setIsLogoutOpen] = useState(false);
   const [twoFactorStatus, setTwoFactorStatus] =
     useState<TwoFactorStatus | null>(null);
@@ -83,7 +129,7 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
   const activeSection = SECTIONS.find((item) => item.id === section);
   const isTwoFactorOpen = section === "security" && twoFactorStatus !== null;
 
-  function selectSection(next: Section) {
+  function selectSection(next: AccountSettingsSection) {
     setSection(next);
     setTwoFactorStatus(null);
   }
@@ -110,7 +156,7 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
               Configuración
             </h2>
           </div>
-          <nav className="space-y-5">
+          <nav className="-mx-1 min-h-0 flex-1 space-y-5 overflow-y-auto px-1">
             {SECTION_GROUPS.map((group) => (
               <div key={group.title}>
                 <p className="text-content-muted font-display px-3 pb-2 text-sm font-semibold">
@@ -127,12 +173,20 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
                         onClick={() => selectSection(item.id)}
                         className={cn(
                           "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors",
-                          active
-                            ? "bg-accent text-on-accent"
-                            : "text-content-muted hover:bg-surface-hover",
+                          active && isBillingSection(item.id)
+                            ? "bg-[#F0B232] text-[#1C293B]"
+                            : active
+                              ? "bg-accent text-on-accent"
+                              : "text-content-muted hover:bg-surface-hover",
                         )}
                       >
-                        <Icon size={17} />
+                        {active && isBillingSection(item.id) ? (
+                          <span className="-m-1 flex size-[25px] shrink-0 items-center justify-center rounded-md bg-[#1C293B]">
+                            <Icon size={17} />
+                          </span>
+                        ) : (
+                          <Icon size={17} />
+                        )}
                         <span className="min-w-0">
                           <strong className="font-display block text-sm">
                             {item.label}
@@ -151,7 +205,7 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
           <button
             type="button"
             onClick={() => setIsLogoutOpen(true)}
-            className="text-danger hover:bg-danger/10 mt-auto flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors"
+            className="text-danger hover:bg-danger/10 mt-3 flex w-full shrink-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors"
           >
             <LogOut size={17} />
             <strong className="font-display text-sm">Cerrar sesión</strong>
@@ -263,6 +317,8 @@ export function AccountSettingsModal({ onClose }: AccountSettingsModalProps) {
               <PushSettings />
             ) : section === "status" ? (
               <PlatformStatusSettings />
+            ) : isBillingSection(section) ? (
+              <BillingSettings tab={section} onNavigate={selectSection} />
             ) : twoFactorStatus ? (
               <TwoFactorPanel
                 initialStatus={twoFactorStatus}
