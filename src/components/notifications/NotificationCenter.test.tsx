@@ -110,9 +110,17 @@ function readsState(
   };
 }
 
+function unreadState(hasUnread = false, serverResult = true) {
+  return {
+    hasUnread,
+    markAllRead: vi.fn(() => Promise.resolve(serverResult)),
+  };
+}
+
 async function renderCenter(
   history: NotificationHistoryState,
   reads: NotificationReadsState = readsState(),
+  unread = unreadState(),
 ) {
   const handlers = {
     onClose: vi.fn(),
@@ -126,6 +134,7 @@ async function renderCenter(
       <NotificationCenter
         history={history}
         reads={reads}
+        unread={unread}
         servers={servers}
         me={me}
         anchorRef={anchorRef}
@@ -385,6 +394,7 @@ describe("NotificationCenter", () => {
         <NotificationCenter
           history={historyState({ items: [mention("m2"), mention("m1")] })}
           reads={readsState()}
+          unread={unreadState()}
           servers={servers}
           me={me}
           anchorRef={anchorRef}
@@ -539,15 +549,23 @@ describe("NotificationCenter", () => {
       ).toBeInTheDocument();
     });
 
-    it("marcar todo como leido avisa al estado de lecturas", async () => {
+    it("marcar todo como leido marca el historial y los canales", async () => {
       const reads = readsState();
-      await renderCenter(historyState({ items: [mention("m2")] }), reads);
-
-      fireEvent.click(
-        screen.getByRole("button", { name: "Marcar todo como leído" }),
+      const unread = unreadState(true);
+      await renderCenter(
+        historyState({ items: [mention("m2")] }),
+        reads,
+        unread,
       );
 
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole("button", { name: "Marcar todo como leído" }),
+        );
+      });
+
       expect(reads.markAllRead).toHaveBeenCalledTimes(1);
+      expect(unread.markAllRead).toHaveBeenCalledTimes(1);
     });
 
     it("con todo leido el boton de marcar todo esta deshabilitado", async () => {
@@ -559,6 +577,36 @@ describe("NotificationCenter", () => {
       expect(
         screen.getByRole("button", { name: "Marcar todo como leído" }),
       ).toBeDisabled();
+    });
+
+    it("con canales sin leer se puede marcar aunque el centro este leido", async () => {
+      await renderCenter(
+        historyState({ items: [mention("m2")] }),
+        readsState({ unreadCount: 0 }),
+        unreadState(true),
+      );
+
+      expect(
+        screen.getByRole("button", { name: "Marcar todo como leído" }),
+      ).toBeEnabled();
+    });
+
+    it("si falla marcar los canales muestra el error", async () => {
+      await renderCenter(
+        historyState({ items: [mention("m2")] }),
+        readsState(),
+        unreadState(true, false),
+      );
+
+      await act(async () => {
+        fireEvent.click(
+          screen.getByRole("button", { name: "Marcar todo como leído" }),
+        );
+      });
+
+      expect(screen.getByRole("alert")).toHaveTextContent(
+        "No pudimos marcar todo como leído. Probá de nuevo.",
+      );
     });
   });
   describe("orden cronologico", () => {

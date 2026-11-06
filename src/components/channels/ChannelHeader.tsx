@@ -2,7 +2,7 @@
 
 import type { Channel } from "@discordia/client-shared";
 import { MESSAGE_SEARCH_LABEL } from "@discordia/client-shared";
-import { Bell, Eye, EyeOff, Hash, Search, Users, Volume2 } from "lucide-react";
+import { Eye, EyeOff, Hash, Search, Users, Volume2 } from "lucide-react";
 
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { useMessageSearchContext } from "@/contexts/MessageSearchContext";
@@ -92,10 +92,6 @@ export function ChannelHeader({
               isPressed={isBannerVisible}
             />
           ) : null}
-
-          <div className="hidden sm:flex">
-            <IconButton icon={Bell} label="Notificaciones" disabled />
-          </div>
 
           <div className="hidden lg:flex">
             <IconButton

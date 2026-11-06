@@ -2,6 +2,7 @@
 
 import {
   createUnreadTracker,
+  hasAnyUnread,
   NO_UNREAD,
   unreadFlagsByChannel,
   unreadFlagsByServer,
@@ -9,7 +10,7 @@ import {
   type UnreadTracker,
 } from "@discordia/client-shared";
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import {
   connectUnread,
@@ -29,6 +30,7 @@ export function useUnreadState(
     let connection: UnreadConnection | null = null;
     const tracker = createUnreadTracker({
       markRead: (channelId) => connection?.markRead(channelId),
+      markAllRead: () => connection?.markAllRead() ?? Promise.resolve(false),
       onChange: setState,
     });
     tracker.setOpenChannel(openChannelRef.current);
@@ -51,6 +53,12 @@ export function useUnreadState(
 
   const byChannel = useMemo(() => unreadFlagsByChannel(state), [state]);
   const byServer = useMemo(() => unreadFlagsByServer(state), [state]);
+  const hasUnread = hasAnyUnread(state);
 
-  return { byChannel, byServer };
+  const markAllRead = useCallback(
+    () => trackerRef.current?.markAllRead() ?? Promise.resolve(false),
+    [],
+  );
+
+  return { byChannel, byServer, hasUnread, markAllRead };
 }

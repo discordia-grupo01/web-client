@@ -575,6 +575,7 @@ function HomeShellContent({
                     <NotificationCenter
                       history={notificationHistory}
                       reads={notificationReads}
+                      unread={unread}
                       servers={servers}
                       me={currentAuthor}
                       anchorRef={notificationsAnchorRef}
