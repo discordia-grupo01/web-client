@@ -6,6 +6,7 @@ import {
   type ServerSummary,
   UNREAD_MESSAGES_LABEL,
   type UnreadFlags,
+  serverSuspendedLabel,
 } from "@discordia/client-shared";
 
 import { Home as HomeIcon, Plus } from "lucide-react";
@@ -115,13 +116,26 @@ function ServerRailItem({
   onClick: () => void;
 }) {
   const notificationSettings = useOptionalNotificationSettings();
+  const isSuspended = server.suspended === true;
   const isMuted =
     notificationSettings !== null &&
     isServerMuted(notificationSettings.settings, server.id);
+  const visibleUnread = isSuspended ? NO_UNREAD_FLAGS : unread;
+  const label = isSuspended
+    ? serverSuspendedLabel(server.name)
+    : unread.unread && unread.mentionCount === 0
+      ? `${server.name}, ${UNREAD_MESSAGES_LABEL.toLowerCase()}`
+      : server.name;
 
   return (
-    <div className={cn("relative shrink-0", isMuted && "opacity-60")}>
-      {isActive || unread.unread ? (
+    <div
+      className={cn(
+        "relative shrink-0",
+        isMuted && "opacity-60",
+        isSuspended && "opacity-50 grayscale",
+      )}
+    >
+      {isActive || visibleUnread.unread ? (
         <div
           aria-hidden
           className={cn(
@@ -130,24 +144,22 @@ function ServerRailItem({
           )}
         />
       ) : null}
-      <SideTooltip label={server.name}>
+      <SideTooltip
+        label={isSuspended ? serverSuspendedLabel(server.name) : server.name}
+      >
         <button
           type="button"
-          aria-label={
-            unread.unread && unread.mentionCount === 0
-              ? `${server.name}, ${UNREAD_MESSAGES_LABEL.toLowerCase()}`
-              : server.name
-          }
+          aria-label={label}
           onClick={onClick}
           className="cursor-pointer overflow-hidden rounded-2xl"
         >
           <Avatar name={server.name} src={serverIconSrc(server)} size={48} />
         </button>
       </SideTooltip>
-      {unread.mentionCount > 0 ? (
+      {visibleUnread.mentionCount > 0 ? (
         <CountBadge
-          count={unread.mentionCount}
-          label={`${unread.mentionCount} menciones sin leer en ${server.name}`}
+          count={visibleUnread.mentionCount}
+          label={`${visibleUnread.mentionCount} menciones sin leer en ${server.name}`}
           className="border-rail-surface absolute -right-0.5 -bottom-0.5 border-2"
         />
       ) : null}

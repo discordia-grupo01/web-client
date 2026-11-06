@@ -54,6 +54,24 @@ describe("useMentions", () => {
     expect(result.current.byServer).toEqual({ s1: 2 });
   });
 
+  it("no cuenta las de un servidor suspendido, pero las conserva para cuando se reactive", async () => {
+    listUnreadMentionsRequest.mockResolvedValue({
+      ok: true,
+      mentions: [stored("m1", "c1", "s1"), stored("m2", "c2", "s2")],
+    });
+
+    const { result, rerender } = renderHook(
+      ({ suspended }) => useMentions("me", NO_NOTIFICATION_SETTINGS, suspended),
+      { initialProps: { suspended: new Set(["s1"]) as ReadonlySet<string> } },
+    );
+
+    await waitFor(() => expect(result.current.byServer).toEqual({ s2: 1 }));
+
+    rerender({ suspended: new Set() });
+
+    expect(result.current.byServer).toEqual({ s1: 1, s2: 1 });
+  });
+
   it("sin usuario todavia no pide nada", () => {
     renderHook(() => useMentions(null));
     expect(listUnreadMentionsRequest).not.toHaveBeenCalled();

@@ -72,6 +72,24 @@ describe("useUnreadState", () => {
     });
   });
 
+  it("oculta lo de un servidor suspendido y lo devuelve al reactivarse", () => {
+    const { result, rerender } = renderHook(
+      ({ suspended }) => useUnreadState("me", null, suspended),
+      { initialProps: { suspended: new Set(["s1"]) as ReadonlySet<string> } },
+    );
+    act(() => handlers.snapshot(snapshot));
+
+    expect(result.current.byChannel).toEqual({});
+    expect(result.current.byServer).toEqual({});
+
+    rerender({ suspended: new Set() });
+
+    expect(result.current.byServer.s1).toEqual({
+      unread: true,
+      mentionCount: 1,
+    });
+  });
+
   it("aplica los cambios que llegan en vivo", () => {
     const { result } = renderHook(() => useUnreadState("me", null));
     act(() => handlers.snapshot(snapshot));
