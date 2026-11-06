@@ -122,6 +122,7 @@ export function useDirectMessages(
           callbacksRef.current.onPresenceUpdated?.(entry),
         ownStatusUpdated: (payload) =>
           callbacksRef.current.onOwnStatusUpdated?.(payload),
+        serverLeft: (payload) => callbacksRef.current.onServerLeft?.(payload),
         connectionLost: () => {
           isJoined.current = false;
           setIsConnected(false);

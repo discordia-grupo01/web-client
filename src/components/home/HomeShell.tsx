@@ -145,6 +145,21 @@ function HomeShellContent({
     setLastChannelId(voiceFocus.channelId);
   }, [voiceFocus]);
 
+  function removeServer(serverId: string) {
+    const { target } = voice.state;
+    if (target?.kind === "channel" && target.serverId === serverId) {
+      voice.leave();
+    }
+    setServers((prev) => prev.filter((server) => server.id !== serverId));
+    setSelectedServerId((prev) => (prev === serverId ? null : prev));
+  }
+
+  function reloadServers() {
+    void listServersRequest().then((result) => {
+      if (result.ok) setServers(result.servers);
+    });
+  }
+
   // Se pide una sola vez y sobrevive a cambiar de vista, asi el contador de
   // no leidos del riel no se resetea al entrar y salir de Mensajes Directos.
   const currentAuthor = useMemo(
@@ -165,7 +180,16 @@ function HomeShellContent({
         mentions.receive(payload);
         setNotificationsSignal((signal) => signal + 1);
       },
-      onRejoined: mentions.reload,
+      onRejoined: () => {
+        mentions.reload();
+        reloadServers();
+      },
+      onServerLeft: ({ server_id }) => {
+        if (view === "servers" && selectedServerId === server_id) {
+          setView("direct-messages");
+        }
+        removeServer(server_id);
+      },
       ...presence.userRoomCallbacks,
     },
   );
@@ -451,15 +475,6 @@ function HomeShellContent({
     setSelectedServerId(server.id);
     setIsCreateModalOpen(false);
     setIsJoinModalOpen(false);
-  }
-
-  function removeServer(serverId: string) {
-    const { target } = voice.state;
-    if (target?.kind === "channel" && target.serverId === serverId) {
-      voice.leave();
-    }
-    setServers((prev) => prev.filter((server) => server.id !== serverId));
-    setSelectedServerId((prev) => (prev === serverId ? null : prev));
   }
 
   function updateServer(server: ServerSummary) {
