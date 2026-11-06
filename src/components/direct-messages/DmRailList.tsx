@@ -134,10 +134,16 @@ export function DmRailList({
                   type="button"
                   onClick={() => onSelect(partner.id)}
                   className={cn(
-                    "mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors",
+                    "relative mb-0.5 flex w-full cursor-pointer items-center gap-2.5 rounded-md px-2 py-2 text-left transition-colors",
                     isActive ? "bg-accent/20" : "hover:bg-surface-hover",
                   )}
                 >
+                  {isUnread ? (
+                    <span
+                      aria-hidden="true"
+                      className="bg-content absolute top-1/2 left-0 h-2 w-1 -translate-y-1/2 rounded-r-full"
+                    />
+                  ) : null}
                   <DmPartnerAvatar
                     partnerId={partner.id}
                     name={partner.name}
@@ -149,6 +155,7 @@ export function DmRailList({
                         className={cn(
                           "truncate text-sm font-medium",
                           isActive ? "text-content" : "text-content-muted",
+                          isUnread && "text-content font-semibold",
                         )}
                       >
                         {partner.name}
@@ -165,12 +172,6 @@ export function DmRailList({
                       </p>
                     ) : null}
                   </div>
-                  {isUnread ? (
-                    <span
-                      className="bg-danger size-2 shrink-0 rounded-full"
-                      aria-hidden="true"
-                    />
-                  ) : null}
                 </button>
               );
             },

@@ -7,6 +7,9 @@ import {
   NOTIFICATION_SETTINGS_MENU_LABEL,
   NOTIFICATION_SETTINGS_MUTED_TITLE,
   OVERRIDE_CHANNEL_PERMISSIONS_LABEL,
+  NO_UNREAD_FLAGS,
+  UNREAD_MESSAGES_LABEL,
+  type UnreadFlags,
 } from "@discordia/client-shared";
 
 import { useSortable } from "@dnd-kit/sortable";
@@ -24,18 +27,16 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
+import { CountBadge } from "@/components/ui/CountBadge";
 import { CallDuration } from "@/components/voice/CallDuration";
 import { cn } from "@/lib/cn";
 
 interface ChannelRowProps {
   channel: Channel;
   active: boolean;
-  /** MANAGE_CHANNELS: mover, editar y eliminar. */
   canManage: boolean;
-  /** MANAGE_ROLES: sobrescribir los permisos de los roles en el canal. */
   canManagePermissions?: boolean;
-  /** Menciones sin leer en este canal; con 0 no se muestra nada. */
-  unreadMentions?: number;
+  unread?: UnreadFlags;
   isMuted?: boolean;
   onNotifications?: () => void;
   onClick: () => void;
@@ -80,7 +81,7 @@ function ChannelRow({
   active,
   canManage,
   canManagePermissions = false,
-  unreadMentions = 0,
+  unread = NO_UNREAD_FLAGS,
   isMuted = false,
   onNotifications,
   onClick,
@@ -95,11 +96,13 @@ function ChannelRow({
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const hasMenu =
     canManage || canManagePermissions || onNotifications !== undefined;
+  const { mentionCount } = unread;
+  const isUnread = unread.unread && !active;
 
   return (
     <div>
       <div className="group relative flex items-center">
-        {unreadMentions > 0 ? (
+        {isUnread ? (
           <span
             aria-hidden
             className="bg-content absolute top-1/2 left-0 h-2 w-1 -translate-y-1/2 rounded-r-full"
@@ -109,9 +112,7 @@ function ChannelRow({
           type="button"
           onClick={onClick}
           title={
-            unreadMentions > 0
-              ? `${unreadMentions} menciones sin leer`
-              : undefined
+            isUnread && mentionCount === 0 ? UNREAD_MESSAGES_LABEL : undefined
           }
           className={cn(
             "flex min-w-0 flex-1 cursor-pointer items-center gap-2 rounded-md px-2 py-1.5 text-left text-sm transition-colors",
@@ -135,7 +136,7 @@ function ChannelRow({
           <span
             className={cn(
               "min-w-0 truncate",
-              unreadMentions > 0 && !active && "text-content font-semibold",
+              isUnread && "text-content font-semibold",
             )}
           >
             {channel.name}
@@ -145,6 +146,16 @@ function ChannelRow({
               size={12}
               aria-label={NOTIFICATION_SETTINGS_MUTED_TITLE}
               className="text-content-subtle shrink-0"
+            />
+          ) : null}
+          {mentionCount > 0 ? (
+            <CountBadge
+              count={mentionCount}
+              label={`${mentionCount} menciones sin leer`}
+              className={cn(
+                "ml-auto transition-opacity",
+                hasMenu && "group-hover:opacity-0",
+              )}
             />
           ) : null}
           {callStartedAt !== undefined ? (

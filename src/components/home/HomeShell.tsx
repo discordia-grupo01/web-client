@@ -58,6 +58,7 @@ import {
   usePresenceSession,
 } from "@/components/home/hooks/usePresenceSession";
 import { useMentions } from "@/components/home/hooks/useMentions";
+import { useUnreadState } from "@/components/home/hooks/useUnreadState";
 import { authorFromProfile } from "@/utils/author";
 import { listServersRequest } from "@/services/servers/client";
 import { avatarSrcOf } from "@/utils/userProfile";
@@ -269,6 +270,19 @@ function HomeShellContent({
     };
   }, []);
 
+  const openChannelId =
+    view === "servers" && selectedServerId ? lastChannelId : null;
+  const unread = useUnreadState(currentAuthor?.id ?? null, openChannelId);
+  const openChannelMentions = openChannelId
+    ? (mentions.byChannel[openChannelId] ?? 0)
+    : 0;
+  const { markChannelRead: markChannelMentionsRead } = mentions;
+  useEffect(() => {
+    if (openChannelId && openChannelMentions > 0) {
+      markChannelMentionsRead(openChannelId);
+    }
+  }, [openChannelId, openChannelMentions, markChannelMentionsRead]);
+
   const {
     markChannelRead: markNotificationChannelRead,
     markConversationRead: markNotificationConversationRead,
@@ -478,7 +492,7 @@ function HomeShellContent({
                       !directMessages.activeSummary
                     }
                     unreadDmCount={unreadDmCount}
-                    unreadMentionsByServer={mentions.byServer}
+                    unreadByServer={unread.byServer}
                     onSelect={(serverId) => {
                       setView("servers");
                       setSelectedServerId(serverId);
@@ -507,8 +521,7 @@ function HomeShellContent({
                         setOwnProfileServerId(serverId ?? null)
                       }
                       onMessageUser={messageUser}
-                      unreadMentionsByChannel={mentions.byChannel}
-                      onChannelRead={mentions.markChannelRead}
+                      unreadByChannel={unread.byChannel}
                       initialChannelId={lastChannelId}
                       onChannelChange={setLastChannelId}
                     />

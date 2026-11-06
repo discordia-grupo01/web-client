@@ -19,6 +19,7 @@ import {
   sortByPosition,
   topLevelChannels,
   toVoicePresence,
+  type UnreadFlags,
   voiceParticipantsOf,
   type User,
   VOICE_CONNECTING,
@@ -157,10 +158,7 @@ interface ServerViewProps {
   onOpenOwnProfile: (serverId?: string) => void;
   /** Abre un mensaje directo con alguien (desde su perfil). */
   onMessageUser: (profile: PublicUser) => void;
-  /** Menciones sin leer por canal (levantado a `HomeShell`, que tiene la sala personal). */
-  unreadMentionsByChannel: Record<string, number>;
-  /** Se abrio un canal con menciones sin leer: hay que marcarlas como leidas. */
-  onChannelRead: (channelId: string) => void;
+  unreadByChannel: Record<string, UnreadFlags>;
   /** Canal a abrir al montar (el ultimo visitado); si ya no existe, el primero. */
   initialChannelId?: string | null;
   /** Avisa el canal abierto, para recordarlo entre recargas. */
@@ -359,7 +357,6 @@ function unmuteConfirmBody(name: string): string {
   return `${name} va a poder volver a escribir y hablar en el servidor desde ahora.`;
 }
 
-/** Envuelve la vista con la busqueda de mensajes del servidor. */
 export function ServerView(props: ServerViewProps) {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [jumpTarget, setJumpTarget] = useState<MessageJumpTarget | null>(null);
@@ -404,8 +401,7 @@ function ServerViewContent({
   ownProfile,
   onOpenOwnProfile,
   onMessageUser,
-  unreadMentionsByChannel,
-  onChannelRead,
+  unreadByChannel,
   initialChannelId = null,
   onChannelChange,
   isSearchOpen,
@@ -683,12 +679,6 @@ function ServerViewContent({
     if (isVoiceChannelGone) leaveVoice();
   }, [isVoiceChannelGone, leaveVoice]);
 
-  // Abrir un canal (o recibir una mencion con el abierto) las marca como leidas.
-  const activeUnreadMentions = unreadMentionsByChannel[activeChannelId] ?? 0;
-  useEffect(() => {
-    if (activeUnreadMentions > 0) onChannelRead(activeChannelId);
-  }, [activeChannelId, activeUnreadMentions, onChannelRead]);
-
   const sortedCategories = sortByPosition(visibleCategories(server.categories));
   const uncategorized = topLevelChannels(server.channels, server.categories);
   const unassignedCategory =
@@ -959,7 +949,7 @@ function ServerViewContent({
         active={channel.id === activeChannelId}
         canManage={canManageChannels}
         canManagePermissions={canManageRoles}
-        unreadMentions={unreadMentionsByChannel[channel.id]}
+        unread={unreadByChannel[channel.id]}
         isMuted={
           channelHasNotifications(channel) &&
           notificationSettings !== null &&
