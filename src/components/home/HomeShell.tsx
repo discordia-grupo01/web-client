@@ -525,7 +525,7 @@ function HomeShellContent({
           <NotificationsProvider value={notificationsValue}>
             <MobilePanelsProvider>
               <div className="flex h-dvh w-full flex-col overflow-hidden">
-                <PlatformStatusNotice />
+                <PlatformStatusNotice refreshSignal={unread.statusRevision} />
                 <div
                   className="relative flex min-h-0 w-full flex-1 overflow-hidden"
                   style={{ background: "var(--bg-chat)" }}

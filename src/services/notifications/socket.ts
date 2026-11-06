@@ -1,6 +1,8 @@
 import {
   createSocketManager,
+  PLATFORM_STATUS_SOCKET_EVENTS,
   UNREAD_SOCKET_EVENTS,
+  type PlatformStatusChangedPayload,
   type UnreadSnapshotPayload,
   unreadTopic,
   type UnreadUpdatedPayload,
@@ -14,6 +16,7 @@ import { fetchUnreadSocketTicketRequest } from "./client";
 export interface UnreadHandlers {
   snapshot: (payload: UnreadSnapshotPayload) => void;
   updated: (payload: UnreadUpdatedPayload) => void;
+  statusChanged?: (payload: PlatformStatusChangedPayload) => void;
 }
 
 export interface UnreadConnection {
@@ -59,6 +62,9 @@ export function connectUnread(
     channel = acquired.socket.channel(unreadTopic(userId), {});
     channel.on(UNREAD_SOCKET_EVENTS.snapshot, handlers.snapshot);
     channel.on(UNREAD_SOCKET_EVENTS.updated, handlers.updated);
+    if (handlers.statusChanged) {
+      channel.on(PLATFORM_STATUS_SOCKET_EVENTS.changed, handlers.statusChanged);
+    }
     channel.join();
   });
 

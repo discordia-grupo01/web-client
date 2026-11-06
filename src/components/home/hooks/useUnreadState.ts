@@ -30,6 +30,7 @@ export function useUnreadState(
   suspendedServerIds: ReadonlySet<string> = NO_SUSPENDED,
 ) {
   const [state, setState] = useState<UnreadState>(NO_UNREAD);
+  const [statusRevision, setStatusRevision] = useState(0);
   const openChannelRef = useRef(openChannelId);
   const trackerRef = useRef<UnreadTracker | null>(null);
 
@@ -45,12 +46,14 @@ export function useUnreadState(
     connection = connectUnread(userId, {
       snapshot: tracker.applySnapshot,
       updated: tracker.applyUpdate,
+      statusChanged: () => setStatusRevision((revision) => revision + 1),
     });
     trackerRef.current = tracker;
     return () => {
       connection.disconnect();
       trackerRef.current = null;
       setState(NO_UNREAD);
+      setStatusRevision(0);
     };
   }, [userId]);
 
@@ -72,5 +75,5 @@ export function useUnreadState(
     [],
   );
 
-  return { byChannel, byServer, hasUnread, markAllRead };
+  return { byChannel, byServer, hasUnread, markAllRead, statusRevision };
 }
