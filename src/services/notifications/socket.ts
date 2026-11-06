@@ -18,6 +18,7 @@ export interface UnreadHandlers {
 
 export interface UnreadConnection {
   markRead: (channelId: string) => void;
+  markAllRead: () => Promise<boolean>;
   disconnect: () => void;
 }
 
@@ -65,6 +66,19 @@ export function connectUnread(
     markRead: (channelId) => {
       channel?.push(UNREAD_SOCKET_EVENTS.markRead, { channel_id: channelId });
     },
+    markAllRead: () =>
+      new Promise<boolean>((resolve) => {
+        const joined = channel;
+        if (!joined) {
+          resolve(false);
+          return;
+        }
+        joined
+          .push(UNREAD_SOCKET_EVENTS.markAllRead, {})
+          .receive("ok", () => resolve(true))
+          .receive("error", () => resolve(false))
+          .receive("timeout", () => resolve(false));
+      }),
     disconnect: () => {
       disposed = true;
       channel?.leave();
