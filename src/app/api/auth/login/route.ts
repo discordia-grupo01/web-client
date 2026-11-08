@@ -87,6 +87,24 @@ export async function POST(
       );
     }
 
+    if (result.status === 429 || result.code === "LOGIN_ATTEMPTS_EXCEEDED") {
+      const response = NextResponse.json(
+        {
+          ok: false,
+          message: result.message,
+          retryAfterSeconds: result.retryAfterSeconds,
+        },
+        { status: 429 },
+      );
+      if (result.retryAfterSeconds) {
+        response.headers.set(
+          "Retry-After",
+          String(result.retryAfterSeconds),
+        );
+      }
+      return response;
+    }
+
     // Red caida, timeout o error del backend (5xx, 404, ...): servicio no disponible.
     return NextResponse.json(
       {

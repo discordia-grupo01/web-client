@@ -2,6 +2,7 @@
 
 import {
   EMAIL_NOT_VERIFIED,
+  formatLoginRateLimit,
   hasErrors,
   type LoginErrors,
   TWO_FACTOR_RECOVERY_CODE_USED,
@@ -12,7 +13,7 @@ import {
 import { ArrowRight, Lock, Mail } from "lucide-react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { useState, type FormEvent } from "react";
+import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { PasswordField } from "@/components/ui/PasswordField";
@@ -36,11 +37,31 @@ export function LoginForm({ onTwoFactorChallengeChange }: LoginFormProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [awaitingTwoFactor, setAwaitingTwoFactor] = useState(false);
   const [challengeExpiresIn, setChallengeExpiresIn] = useState(0);
+  const [loginBlockedUntil, setLoginBlockedUntil] = useState<number | null>(
+    null,
+  );
+  const [loginBlockedSeconds, setLoginBlockedSeconds] = useState(0);
   const resetSuccess = searchParams.get("reset") === "success";
   const justRegistered = searchParams.get("registered") === "1";
 
+  useEffect(() => {
+    if (loginBlockedUntil === null) return;
+    const update = () => {
+      const seconds = Math.max(
+        0,
+        Math.ceil((loginBlockedUntil - Date.now()) / 1000),
+      );
+      setLoginBlockedSeconds(seconds);
+      if (seconds === 0) setLoginBlockedUntil(null);
+    };
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [loginBlockedUntil]);
+
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (loginBlockedSeconds > 0) return;
     setFormError(null);
 
     const nextErrors = validateLogin({ email, password });
@@ -52,6 +73,11 @@ export function LoginForm({ onTwoFactorChallengeChange }: LoginFormProps) {
     setIsSubmitting(false);
 
     if (!result.ok) {
+      if (result.retryAfterSeconds && result.retryAfterSeconds > 0) {
+        setLoginBlockedUntil(Date.now() + result.retryAfterSeconds * 1000);
+        setFormError(null);
+        return;
+      }
       if (result.message === EMAIL_NOT_VERIFIED) {
         window.location.href = `${ROUTES.confirmEmail}?email=${encodeURIComponent(email.trim())}&from=login`;
         return;
@@ -166,10 +192,20 @@ export function LoginForm({ onTwoFactorChallengeChange }: LoginFormProps) {
         </p>
       ) : null}
 
-      <Button type="submit" isLoading={isSubmitting} className="mt-2">
+      <Button
+        type="submit"
+        isLoading={isSubmitting}
+        disabled={loginBlockedSeconds > 0}
+        className="mt-2"
+      >
         <span>Iniciar Sesión</span>
         <ArrowRight size={16} />
       </Button>
+      {loginBlockedSeconds > 0 ? (
+        <p className="text-content-muted text-center text-xs">
+          {formatLoginRateLimit(loginBlockedSeconds)}
+        </p>
+      ) : null}
     </form>
   );
 }
