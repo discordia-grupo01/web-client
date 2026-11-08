@@ -88,9 +88,9 @@ export async function POST(
     }
 
     if (result.status === 429 || result.code === "LOGIN_ATTEMPTS_EXCEEDED") {
-      const response = NextResponse.json(
+      const response = NextResponse.json<LoginResult>(
         {
-          ok: false,
+          ok: false as const,
           message: result.message,
           retryAfterSeconds: result.retryAfterSeconds,
         },

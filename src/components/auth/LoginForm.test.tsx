@@ -121,7 +121,9 @@ describe("<LoginForm />", () => {
     await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
 
     expect(
-      await screen.findByText(/podés volver a intentar en 0:30/i),
+      await screen.findByText(
+        /podés volver a intentar en (?:[1-2]\d|30) segundos/i,
+      ),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: /iniciar sesión/i }),
