@@ -59,8 +59,9 @@ function toResult<T>(
   path: string,
   status: number,
   body: unknown,
+  retryAfterHeader?: unknown,
 ): ApiResult<T> {
-  const result = toApiResult<T>(status, body);
+  const result = toApiResult<T>(status, body, retryAfterHeader);
   if (
     !result.ok &&
     !SUSPENSION_EXEMPT_PATHS.has(path) &&
@@ -97,7 +98,12 @@ export async function apiRequest<T>(
       url: path,
       ...buildRequestConfig(options),
     });
-    return toResult<T>(path, response.status, response.data);
+    return toResult<T>(
+      path,
+      response.status,
+      response.data,
+      response.headers["retry-after"],
+    );
   } catch (error) {
     return toNetworkError(error);
   }
@@ -118,7 +124,12 @@ export async function apiRequestWithSetCookie<T>(
       ...buildRequestConfig(options),
     });
     return {
-      result: toResult<T>(path, response.status, response.data),
+      result: toResult<T>(
+        path,
+        response.status,
+        response.data,
+        response.headers["retry-after"],
+      ),
       setCookieHeader: response.headers["set-cookie"],
     };
   } catch (error) {
