@@ -97,10 +97,7 @@ export async function POST(
         { status: 429 },
       );
       if (result.retryAfterSeconds) {
-        response.headers.set(
-          "Retry-After",
-          String(result.retryAfterSeconds),
-        );
+        response.headers.set("Retry-After", String(result.retryAfterSeconds));
       }
       return response;
     }
