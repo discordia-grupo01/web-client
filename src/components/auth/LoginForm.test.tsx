@@ -89,6 +89,7 @@ describe("<LoginForm />", () => {
       ok: false,
       message: "El correo electrónico o la contraseña son incorrectos.",
     });
+
     const user = userEvent.setup();
     render(<LoginForm />);
 
@@ -101,6 +102,35 @@ describe("<LoginForm />", () => {
 
     expect(await screen.findByRole("alert")).toHaveTextContent(/incorrectos/i);
     expect(window.location.href).toBe("");
+  });
+
+  it("muestra la cuenta regresiva y evita reintentos durante el rate limit", async () => {
+    loginRequestMock.mockResolvedValue({
+      ok: false,
+      message: "Demasiados intentos fallidos.",
+      retryAfterSeconds: 30,
+    });
+    const user = userEvent.setup();
+    render(<LoginForm />);
+
+    await user.type(
+      screen.getByLabelText("Correo electrónico"),
+      "ada@example.com",
+    );
+    await user.type(screen.getByLabelText("Contraseña"), "wrong");
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
+
+    expect(
+      await screen.findByText(
+        /podés volver a intentar en (?:[1-2]\d|30) segundos/i,
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /iniciar sesión/i }),
+    ).toBeDisabled();
+
+    await user.click(screen.getByRole("button", { name: /iniciar sesión/i }));
+    expect(loginRequestMock).toHaveBeenCalledTimes(1);
   });
 
   it("redirige a confirmar el correo cuando la cuenta ya existe pero no está verificada", async () => {
