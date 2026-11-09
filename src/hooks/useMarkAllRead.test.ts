@@ -11,12 +11,16 @@ function setup({
   serverResult = Promise.resolve(true),
   hasUnreadDirect = false,
   directResult = Promise.resolve(true),
+  hasUnreadMentions = false,
+  mentionsResult = Promise.resolve(true),
 }: {
   unreadCount?: number;
   hasUnread?: boolean;
   serverResult?: Promise<boolean>;
   hasUnreadDirect?: boolean;
   directResult?: Promise<boolean>;
+  hasUnreadMentions?: boolean;
+  mentionsResult?: Promise<boolean>;
 } = {}) {
   const reads = { unreadCount, markAllRead: vi.fn() };
   const unread = { hasUnread, markAllRead: vi.fn(() => serverResult) };
@@ -24,10 +28,14 @@ function setup({
     hasUnread: hasUnreadDirect,
     markAllRead: vi.fn(() => directResult),
   };
+  const mentions = {
+    hasUnread: hasUnreadMentions,
+    markAllRead: vi.fn(() => mentionsResult),
+  };
   const hook = renderHook(() =>
-    useMarkAllRead({ reads, unread, directMessages }),
+    useMarkAllRead({ reads, unread, directMessages, mentions }),
   );
-  return { ...hook, reads, unread, directMessages };
+  return { ...hook, reads, unread, directMessages, mentions };
 }
 
 describe("useMarkAllRead", () => {
@@ -46,11 +54,17 @@ describe("useMarkAllRead", () => {
     expect(result.current.canMarkAllRead).toBe(true);
   });
 
-  it("marca el historial, los canales y los mensajes directos", async () => {
-    const { result, reads, unread, directMessages } = setup({
+  it("con menciones sin leer se puede marcar aunque el centro este vacio", () => {
+    const { result } = setup({ hasUnreadMentions: true });
+    expect(result.current.canMarkAllRead).toBe(true);
+  });
+
+  it("marca el historial, los canales, los mensajes directos y las menciones", async () => {
+    const { result, reads, unread, directMessages, mentions } = setup({
       unreadCount: 2,
       hasUnread: true,
       hasUnreadDirect: true,
+      hasUnreadMentions: true,
     });
 
     await act(() => result.current.markAllRead());
@@ -58,11 +72,12 @@ describe("useMarkAllRead", () => {
     expect(reads.markAllRead).toHaveBeenCalledTimes(1);
     expect(unread.markAllRead).toHaveBeenCalledTimes(1);
     expect(directMessages.markAllRead).toHaveBeenCalledTimes(1);
+    expect(mentions.markAllRead).toHaveBeenCalledTimes(1);
     expect(result.current.error).toBeNull();
   });
 
   it("si no hay nada sin leer en los servicios no les pregunta", async () => {
-    const { result, reads, unread, directMessages } = setup({
+    const { result, reads, unread, directMessages, mentions } = setup({
       unreadCount: 2,
     });
 
@@ -71,6 +86,7 @@ describe("useMarkAllRead", () => {
     expect(reads.markAllRead).toHaveBeenCalledTimes(1);
     expect(unread.markAllRead).not.toHaveBeenCalled();
     expect(directMessages.markAllRead).not.toHaveBeenCalled();
+    expect(mentions.markAllRead).not.toHaveBeenCalled();
   });
 
   it("mientras espera al servidor no deja volver a marcar", async () => {
@@ -110,6 +126,17 @@ describe("useMarkAllRead", () => {
       hasUnread: true,
       hasUnreadDirect: true,
       directResult: Promise.resolve(false),
+    });
+
+    await act(() => result.current.markAllRead());
+
+    expect(result.current.error).toBe(NOTIFICATIONS_MARK_ALL_READ_FAILED);
+  });
+
+  it("si fallan las menciones muestra el error", async () => {
+    const { result } = setup({
+      hasUnreadMentions: true,
+      mentionsResult: Promise.resolve(false),
     });
 
     await act(() => result.current.markAllRead());

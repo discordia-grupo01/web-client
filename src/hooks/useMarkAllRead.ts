@@ -13,18 +13,20 @@ interface MarkAllReadSources {
   reads: { unreadCount: number; markAllRead: () => void };
   unread: RemoteReads;
   directMessages: RemoteReads;
+  mentions: RemoteReads;
 }
 
 /**
- * Une las tres lecturas: el historial del centro (local), los canales de los
- * servidores (servicio de notificaciones) y los mensajes directos (messaging).
- * A cada servicio solo se le pregunta si tiene algo sin leer, para no mostrar
- * un error cuando no había nada que apagar.
+ * Une las cuatro lecturas: el historial del centro (local), los canales de los
+ * servidores (servicio de notificaciones), y los mensajes directos y las
+ * menciones (messaging). A cada servicio solo se le pregunta si tiene algo sin
+ * leer, para no mostrar un error cuando no había nada que apagar.
  */
 export function useMarkAllRead({
   reads,
   unread,
   directMessages,
+  mentions,
 }: MarkAllReadSources) {
   const [isMarkingAll, setIsMarkingAll] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +36,8 @@ export function useMarkAllRead({
     unread;
   const { hasUnread: hasUnreadDirect, markAllRead: markDirectRead } =
     directMessages;
+  const { hasUnread: hasUnreadMentions, markAllRead: markMentionsRead } =
+    mentions;
 
   const markAllRead = useCallback(async () => {
     markHistoryRead();
@@ -41,6 +45,7 @@ export function useMarkAllRead({
     const pending = [
       hasUnreadChannels ? markChannelsRead() : null,
       hasUnreadDirect ? markDirectRead() : null,
+      hasUnreadMentions ? markMentionsRead() : null,
     ].filter((request) => request !== null);
     if (pending.length === 0) return;
     setIsMarkingAll(true);
@@ -53,11 +58,16 @@ export function useMarkAllRead({
     markChannelsRead,
     hasUnreadDirect,
     markDirectRead,
+    hasUnreadMentions,
+    markMentionsRead,
   ]);
 
   const canMarkAllRead =
     !isMarkingAll &&
-    (reads.unreadCount > 0 || hasUnreadChannels || hasUnreadDirect);
+    (reads.unreadCount > 0 ||
+      hasUnreadChannels ||
+      hasUnreadDirect ||
+      hasUnreadMentions);
 
   return { markAllRead, canMarkAllRead, isMarkingAll, error };
 }

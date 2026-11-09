@@ -620,6 +620,7 @@ function HomeShellContent({
                       reads={notificationReads}
                       unread={unread}
                       directMessages={directMessagesReads}
+                      mentions={mentions}
                       servers={servers}
                       me={currentAuthor}
                       anchorRef={notificationsAnchorRef}

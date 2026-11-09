@@ -20,6 +20,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const lookupMessagesRequest = vi.fn();
 const getPublicProfileRequest = vi.fn();
+const listRolesRequest = vi.fn();
 
 vi.mock("@/services/messages/client", () => ({
   lookupMessagesRequest: (...args: unknown[]) => lookupMessagesRequest(...args),
@@ -28,6 +29,10 @@ vi.mock("@/services/messages/client", () => ({
 vi.mock("@/services/profile/client", () => ({
   getPublicProfileRequest: (...args: unknown[]) =>
     getPublicProfileRequest(...args),
+}));
+
+vi.mock("@/services/roles/client", () => ({
+  listRolesRequest: (...args: unknown[]) => listRolesRequest(...args),
 }));
 
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
@@ -136,6 +141,7 @@ async function renderCenter(
         reads={reads}
         unread={unread}
         directMessages={unreadState()}
+        mentions={unreadState()}
         servers={servers}
         me={me}
         anchorRef={anchorRef}
@@ -152,6 +158,7 @@ describe("NotificationCenter", () => {
     vi.setSystemTime(new Date("2026-11-04T00:00:00Z"));
     vi.clearAllMocks();
     lookupMessagesRequest.mockResolvedValue({ ok: true, messages: [] });
+    listRolesRequest.mockResolvedValue({ ok: true, roles: [] });
     getPublicProfileRequest.mockImplementation((id: string) =>
       Promise.resolve({
         ok: true,
@@ -187,6 +194,29 @@ describe("NotificationCenter", () => {
     expect(await screen.findByText("hola @Yo mirá esto")).toBeInTheDocument();
     expect(screen.getByText("otro mensaje")).toBeInTheDocument();
     expect(lookupMessagesRequest).toHaveBeenCalledWith(["m2", "m1"]);
+  });
+
+  it("muestra el nombre del rol mencionado, pidiendo los roles una vez por servidor", async () => {
+    const roleId = "0b9d4f2e-3c1a-4e8b-9f6d-2a7c5e1b3d40";
+    lookupMessagesRequest.mockResolvedValue({
+      ok: true,
+      messages: [
+        stored("m2", `<@&${roleId}> cómo están?`),
+        stored("m1", `otra vez <@&${roleId}>`),
+      ],
+    });
+    listRolesRequest.mockResolvedValue({
+      ok: true,
+      roles: [{ id: roleId, name: "Moderadores" }],
+    });
+
+    await renderCenter(historyState({ items: [mention("m2"), mention("m1")] }));
+
+    expect(
+      await screen.findByText("@Moderadores cómo están?"),
+    ).toBeInTheDocument();
+    expect(listRolesRequest).toHaveBeenCalledTimes(1);
+    expect(listRolesRequest).toHaveBeenCalledWith("s1");
   });
 
   it("mientras no llega el texto, o si el mensaje ya no esta, dice que paso", async () => {
@@ -403,6 +433,7 @@ describe("NotificationCenter", () => {
           reads={readsState()}
           unread={unreadState()}
           directMessages={unreadState()}
+          mentions={unreadState()}
           servers={servers}
           me={me}
           anchorRef={anchorRef}
