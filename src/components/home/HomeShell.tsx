@@ -63,6 +63,7 @@ import {
 } from "@/components/home/hooks/usePresenceSession";
 import { useMentions } from "@/components/home/hooks/useMentions";
 import { useUnreadState } from "@/components/home/hooks/useUnreadState";
+import { usePageVisible } from "@/hooks/usePageVisible";
 import { authorFromProfile } from "@/utils/author";
 import { listServersRequest } from "@/services/servers/client";
 import { avatarSrcOf } from "@/utils/userProfile";
@@ -186,9 +187,12 @@ function HomeShellContent({
     suspendedIds,
   );
   const presence = usePresenceSession(currentAuthor?.id ?? null);
+  // Con la pestaña oculta no hay canal ni conversación "abiertos" para marcar
+  // leídos: lo que llega mientras tanto queda sin leer hasta que vuelva.
+  const isPageVisible = usePageVisible();
   const directMessages = useDirectMessages(
     currentAuthor,
-    view === "direct-messages",
+    isPageVisible && view === "direct-messages",
     {
       onMention: (payload) => {
         mentions.receive(payload);
@@ -330,7 +334,10 @@ function HomeShellContent({
   }, []);
 
   const openChannelId =
-    view === "servers" && selectedServerId && !selectedServer?.suspended
+    isPageVisible &&
+    view === "servers" &&
+    selectedServerId &&
+    !selectedServer?.suspended
       ? lastChannelId
       : null;
   const unread = useUnreadState(
@@ -353,20 +360,12 @@ function HomeShellContent({
     markConversationRead: markNotificationConversationRead,
   } = notificationReads;
   const openedConversationId =
-    view === "direct-messages"
+    isPageVisible && view === "direct-messages"
       ? (directMessages.activeSummary?.conversationId ?? null)
       : null;
   useEffect(() => {
-    if (view === "servers" && selectedServerId && lastChannelId) {
-      markNotificationChannelRead(lastChannelId);
-    }
-  }, [
-    view,
-    selectedServerId,
-    lastChannelId,
-    notificationHistory.items,
-    markNotificationChannelRead,
-  ]);
+    if (openChannelId) markNotificationChannelRead(openChannelId);
+  }, [openChannelId, notificationHistory.items, markNotificationChannelRead]);
   useEffect(() => {
     if (openedConversationId) {
       markNotificationConversationRead(openedConversationId);
