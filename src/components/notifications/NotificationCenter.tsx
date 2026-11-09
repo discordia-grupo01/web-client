@@ -39,6 +39,7 @@ interface NotificationCenterProps {
   history: NotificationHistoryState;
   reads: NotificationReadsState;
   unread: { hasUnread: boolean; markAllRead: () => Promise<boolean> };
+  directMessages: { hasUnread: boolean; markAllRead: () => Promise<boolean> };
   servers: readonly ServerSummary[];
   me: MessageAuthor | null;
   anchorRef: RefObject<HTMLElement>;
@@ -51,6 +52,7 @@ export function NotificationCenter({
   history,
   reads,
   unread,
+  directMessages,
   servers,
   me,
   anchorRef,
@@ -59,7 +61,7 @@ export function NotificationCenter({
   onOpenDirectMessage,
 }: NotificationCenterProps) {
   const [tab, setTab] = useState<NotificationTab>("unread");
-  const markAll = useMarkAllRead({ reads, unread });
+  const markAll = useMarkAllRead({ reads, unread, directMessages });
   const authors = useNotificationAuthors(history.items);
   const messages = useNotificationMessages(history.items);
   const { panelRef, position } = useFloatingPanel({

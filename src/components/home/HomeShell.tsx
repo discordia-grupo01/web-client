@@ -224,6 +224,13 @@ function HomeShellContent({
   const unreadDmCount = directMessages.conversations.filter(
     (c) => c.isUnread,
   ).length;
+  const directMessagesReads = useMemo(
+    () => ({
+      hasUnread: unreadDmCount > 0,
+      markAllRead: directMessages.markAllConversationsRead,
+    }),
+    [unreadDmCount, directMessages.markAllConversationsRead],
+  );
 
   const fullNotificationHistory = useNotificationHistory();
   const visibleNotificationItems = useMemo(
@@ -612,6 +619,7 @@ function HomeShellContent({
                       history={notificationHistory}
                       reads={notificationReads}
                       unread={unread}
+                      directMessages={directMessagesReads}
                       servers={servers}
                       me={currentAuthor}
                       anchorRef={notificationsAnchorRef}

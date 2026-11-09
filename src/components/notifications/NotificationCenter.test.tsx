@@ -135,6 +135,7 @@ async function renderCenter(
         history={history}
         reads={reads}
         unread={unread}
+        directMessages={unreadState()}
         servers={servers}
         me={me}
         anchorRef={anchorRef}
@@ -401,6 +402,7 @@ describe("NotificationCenter", () => {
           history={historyState({ items: [mention("m2"), mention("m1")] })}
           reads={readsState()}
           unread={unreadState()}
+          directMessages={unreadState()}
           servers={servers}
           me={me}
           anchorRef={anchorRef}
