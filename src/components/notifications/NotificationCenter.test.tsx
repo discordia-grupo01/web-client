@@ -16,7 +16,7 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { createRef } from "react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const lookupMessagesRequest = vi.fn();
 const getPublicProfileRequest = vi.fn();
@@ -147,6 +147,8 @@ async function renderCenter(
 
 describe("NotificationCenter", () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ["Date"] });
+    vi.setSystemTime(new Date("2026-11-04T00:00:00Z"));
     vi.clearAllMocks();
     lookupMessagesRequest.mockResolvedValue({ ok: true, messages: [] });
     getPublicProfileRequest.mockImplementation((id: string) =>
@@ -155,6 +157,10 @@ describe("NotificationCenter", () => {
         user: { id, name: id === "ana" ? "Ana" : "Beto", avatar_url: "" },
       }),
     );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
   });
 
   it("agrupa las menciones por canal con el servidor y la cantidad", async () => {
