@@ -57,6 +57,8 @@ interface MessageItemProps {
   canAddReactions?: boolean;
   onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
+  /** Solo en canales de servidor y en mensajes de otra persona. */
+  onReport?: () => void;
   onRetry?: () => void;
   onDiscard?: () => void;
   onOpenProfile?: (userId: string) => void;
@@ -73,6 +75,7 @@ export function MessageItem({
   canAddReactions = true,
   onEdit,
   onDelete,
+  onReport,
   onRetry,
   onDiscard,
   onOpenProfile,
@@ -88,7 +91,8 @@ export function MessageItem({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
   const onReact = canAddReactions ? onToggleReaction : undefined;
-  const hasActions = Boolean(onReact) || canEdit || canDelete;
+  const hasActions =
+    Boolean(onReact) || canEdit || canDelete || Boolean(onReport);
   const longPress = useLongPress(
     () => setIsActionsSheetOpen(true),
     hasActions && !isEditing && !delivery,
@@ -250,6 +254,7 @@ export function MessageItem({
           onToggleReaction={onReact}
           onEdit={() => setIsEditing(true)}
           onDelete={() => setIsConfirmingDelete(true)}
+          onReport={onReport}
         />
       ) : null}
 
@@ -260,6 +265,7 @@ export function MessageItem({
           onReact={onReact}
           onEdit={() => setIsEditing(true)}
           onDelete={() => setIsConfirmingDelete(true)}
+          onReport={onReport}
           onClose={() => setIsActionsSheetOpen(false)}
         />
       ) : null}

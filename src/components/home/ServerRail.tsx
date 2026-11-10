@@ -3,6 +3,7 @@
 import {
   isServerMuted,
   NO_UNREAD_FLAGS,
+  pendingReportsLabel,
   type ServerSummary,
   UNREAD_MESSAGES_LABEL,
   type UnreadFlags,
@@ -13,6 +14,7 @@ import { Home as HomeIcon, Plus } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { ServerContextMenu } from "@/components/home/ServerContextMenu";
+import { ReportsBadge } from "@/components/reports/ReportsBadge";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { useMobilePanels } from "@/contexts/MobilePanelsContext";
 import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
@@ -29,6 +31,8 @@ interface ServerRailProps {
   isDockedOnMobile: boolean;
   unreadDmCount: number;
   unreadByServer: Record<string, UnreadFlags>;
+  /** Reportes pendientes por servidor; 0 o ausente si no es moderador. */
+  pendingReportsByServer: Record<string, number>;
   onMarkServerRead: (serverId: string) => void;
   onSelect: (serverId: string | null) => void;
   onOpenDirectMessages: () => void;
@@ -42,6 +46,7 @@ export function ServerRail({
   isDockedOnMobile,
   unreadDmCount,
   unreadByServer,
+  pendingReportsByServer,
   onMarkServerRead,
   onSelect,
   onOpenDirectMessages,
@@ -91,6 +96,7 @@ export function ServerRail({
             server={server}
             isActive={!isDirectMessagesActive && server.id === selectedServerId}
             unread={unreadByServer[server.id] ?? NO_UNREAD_FLAGS}
+            pendingReports={pendingReportsByServer[server.id] ?? 0}
             onClick={() => onSelect(server.id)}
             onMarkRead={() => onMarkServerRead(server.id)}
           />
@@ -113,12 +119,14 @@ function ServerRailItem({
   server,
   isActive,
   unread,
+  pendingReports,
   onClick,
   onMarkRead,
 }: {
   server: ServerSummary;
   isActive: boolean;
   unread: UnreadFlags;
+  pendingReports: number;
   onClick: () => void;
   onMarkRead: () => void;
 }) {
@@ -130,11 +138,16 @@ function ServerRailItem({
     notificationSettings !== null &&
     isServerMuted(notificationSettings.settings, server.id);
   const visibleUnread = isSuspended ? NO_UNREAD_FLAGS : unread;
-  const label = isSuspended
+  const reportsLabel =
+    !isSuspended && pendingReports > 0
+      ? pendingReportsLabel(pendingReports, server.name)
+      : null;
+  const baseLabel = isSuspended
     ? serverSuspendedLabel(server.name)
     : unread.unread && unread.mentionCount === 0
       ? `${server.name}, ${UNREAD_MESSAGES_LABEL.toLowerCase()}`
       : server.name;
+  const label = reportsLabel ? `${baseLabel}. ${reportsLabel}` : baseLabel;
 
   return (
     <div className={cn("relative shrink-0", isMuted && "opacity-60")}>
@@ -148,7 +161,13 @@ function ServerRailItem({
         />
       ) : null}
       <SideTooltip
-        label={isSuspended ? serverSuspendedLabel(server.name) : server.name}
+        label={
+          isSuspended
+            ? serverSuspendedLabel(server.name)
+            : reportsLabel
+              ? `${server.name} · ${reportsLabel}`
+              : server.name
+        }
       >
         <button
           type="button"
@@ -170,6 +189,12 @@ function ServerRailItem({
           ) : null}
         </button>
       </SideTooltip>
+      {reportsLabel ? (
+        <ReportsBadge
+          label={reportsLabel}
+          className="border-rail-surface pointer-events-none absolute -top-0.5 -right-0.5 border-2"
+        />
+      ) : null}
       {visibleUnread.mentionCount > 0 ? (
         <CountBadge
           count={visibleUnread.mentionCount}

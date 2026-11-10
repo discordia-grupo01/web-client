@@ -4,9 +4,10 @@ import {
   ADD_REACTION_LABEL,
   DELETE_MESSAGE_LABEL,
   EDIT_MESSAGE_LABEL,
+  REPORT_MESSAGE_LABEL,
 } from "@discordia/client-shared";
 
-import { Pencil, Smile, Trash2, type LucideIcon } from "lucide-react";
+import { Flag, Pencil, Smile, Trash2, type LucideIcon } from "lucide-react";
 import { useState } from "react";
 
 import { BottomSheet } from "@/components/ui/BottomSheet";
@@ -20,6 +21,7 @@ interface MessageActionsSheetProps {
   onReact?: (emoji: string) => void;
   onEdit: () => void;
   onDelete: () => void;
+  onReport?: () => void;
   onClose: () => void;
 }
 
@@ -29,6 +31,7 @@ export function MessageActionsSheet({
   onReact,
   onEdit,
   onDelete,
+  onReport,
   onClose,
 }: MessageActionsSheetProps) {
   const [isPickingEmoji, setIsPickingEmoji] = useState(false);
@@ -70,6 +73,17 @@ export function MessageActionsSheet({
           onClick={() => {
             onClose();
             onDelete();
+          }}
+        />
+      ) : null}
+      {onReport ? (
+        <SheetAction
+          icon={Flag}
+          label={REPORT_MESSAGE_LABEL}
+          isDanger
+          onClick={() => {
+            onClose();
+            onReport();
           }}
         />
       ) : null}

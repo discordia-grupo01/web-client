@@ -1,5 +1,6 @@
 "use client";
 
+import { ReportsBadge } from "@/components/reports/ReportsBadge";
 import { cn } from "@/lib/cn";
 
 import {
@@ -12,6 +13,8 @@ interface SettingsSidebarProps {
   sections: SettingsSection[];
   activeSection: SettingsSection;
   canDelete: boolean;
+  pendingReports: number;
+  pendingReportsLabel: string;
   onSelect: (section: SettingsSection) => void;
   onDelete: () => void;
 }
@@ -21,6 +24,8 @@ export function SettingsSidebar({
   sections,
   activeSection,
   canDelete,
+  pendingReports,
+  pendingReportsLabel,
   onSelect,
   onDelete,
 }: SettingsSidebarProps) {
@@ -38,13 +43,19 @@ export function SettingsSidebar({
             onClick={() => onSelect(section)}
             aria-current={isActive ? "page" : undefined}
             className={cn(
-              "mt-1 cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors",
+              "mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors",
               isActive
                 ? "bg-surface-input text-content"
                 : "text-content-muted hover:bg-surface-input/60 hover:text-content",
             )}
           >
-            {SECTION_TITLES[section]}
+            <span className="truncate">{SECTION_TITLES[section]}</span>
+            {section === "reports" && pendingReports > 0 ? (
+              <ReportsBadge
+                count={pendingReports}
+                label={pendingReportsLabel}
+              />
+            ) : null}
           </button>
         );
       })}

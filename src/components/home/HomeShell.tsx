@@ -62,6 +62,7 @@ import {
   usePresenceSession,
 } from "@/components/home/hooks/usePresenceSession";
 import { useMentions } from "@/components/home/hooks/useMentions";
+import { usePendingReports } from "@/components/home/hooks/usePendingReports";
 import { useUnreadState } from "@/components/home/hooks/useUnreadState";
 import { usePageVisible } from "@/hooks/usePageVisible";
 import { authorFromProfile } from "@/utils/author";
@@ -181,6 +182,12 @@ function HomeShellContent({
   );
   const notificationSettings = useOptionalNotificationSettings();
   const suspendedIds = useMemo(() => suspendedServerIds(servers), [servers]);
+  const activeServerIds = useMemo(
+    () =>
+      servers.filter((server) => !server.suspended).map((server) => server.id),
+    [servers],
+  );
+  const pendingReports = usePendingReports(activeServerIds);
   const mentions = useMentions(
     currentAuthor?.id ?? null,
     notificationSettings?.settings,
@@ -569,6 +576,7 @@ function HomeShellContent({
                     }
                     unreadDmCount={unreadDmCount}
                     unreadByServer={unread.byServer}
+                    pendingReportsByServer={pendingReports.byServer}
                     onMarkServerRead={markServerRead}
                     onSelect={(serverId) => {
                       setView("servers");
@@ -603,6 +611,12 @@ function HomeShellContent({
                       unreadByChannel={unread.byChannel}
                       initialChannelId={lastChannelId}
                       onChannelChange={setLastChannelId}
+                      pendingReports={
+                        pendingReports.byServer[selectedServer.id] ?? 0
+                      }
+                      onPendingReportsChanged={() =>
+                        void pendingReports.refresh(selectedServer.id)
+                      }
                     />
                   ) : (
                     <HomeView

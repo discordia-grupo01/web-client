@@ -4,10 +4,13 @@ import { type ServerSummary } from "@discordia/client-shared";
 import {
   Ban,
   ChevronRight,
+  Flag,
   type LucideIcon,
   Pencil,
   Trash2,
 } from "lucide-react";
+
+import { ReportsBadge } from "@/components/reports/ReportsBadge";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { serverIconSrc } from "@/utils/image-urls";
@@ -21,12 +24,15 @@ import {
 const SECTION_ICONS: Record<SettingsSection, LucideIcon> = {
   profile: Pencil,
   words: Ban,
+  reports: Flag,
 };
 
 interface SettingsMobileMenuProps {
   server: ServerSummary;
   sections: SettingsSection[];
   canDelete: boolean;
+  pendingReports: number;
+  pendingReportsLabel: string;
   onSelect: (section: SettingsSection) => void;
   onDelete: () => void;
 }
@@ -36,6 +42,8 @@ export function SettingsMobileMenu({
   server,
   sections,
   canDelete,
+  pendingReports,
+  pendingReportsLabel,
   onSelect,
   onDelete,
 }: SettingsMobileMenuProps) {
@@ -73,6 +81,12 @@ export function SettingsMobileMenu({
                 {SECTION_DESCRIPTIONS[section]}
               </small>
             </span>
+            {section === "reports" && pendingReports > 0 ? (
+              <ReportsBadge
+                count={pendingReports}
+                label={pendingReportsLabel}
+              />
+            ) : null}
             <ChevronRight size={18} className="text-content-subtle" />
           </button>
         );
