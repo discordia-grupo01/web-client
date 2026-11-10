@@ -15,6 +15,7 @@ interface VoiceOverflowTileProps {
   hidden: readonly VoiceParticipant[];
   width: number;
   height: number;
+  avatarSrcOf: (participant: VoiceParticipant) => string | null;
   onPress: () => void;
 }
 
@@ -23,6 +24,7 @@ export function VoiceOverflowTile({
   hidden,
   width,
   height,
+  avatarSrcOf,
   onPress,
 }: VoiceOverflowTileProps) {
   const avatarSize = Math.round(Math.min(36, Math.max(20, height * 0.3)));
@@ -44,6 +46,7 @@ export function VoiceOverflowTile({
           <Avatar
             key={participant.identity}
             name={participant.name}
+            src={avatarSrcOf(participant)}
             size={avatarSize}
             className="border-surface-raised -ml-2.5 rounded-full border-2 first:ml-0"
           />

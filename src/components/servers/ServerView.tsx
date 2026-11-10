@@ -13,6 +13,7 @@ import {
   isMemberMuted,
   isUnassignedCategory,
   type MessageJumpTarget,
+  ownerOfScreenShareIdentity,
   type PublicUser,
   type Role,
   UNMUTE_ACTION_LABEL,
@@ -27,6 +28,7 @@ import {
   VOICE_RECONNECTING,
   visibleCategories,
   voiceConnectedCount,
+  voiceProfileIds,
   withLivePresence,
 } from "@discordia/client-shared";
 
@@ -123,6 +125,7 @@ import {
 } from "@/services/roles/client";
 import { listServersRequest } from "@/services/servers/client";
 import { useVoicePresence } from "@/components/servers/hooks/useVoicePresence";
+import { useVoiceProfiles } from "@/components/voice/hooks/useVoiceProfiles";
 import { useVoiceSession } from "@/contexts/VoiceSessionContext";
 import { cn } from "@/lib/cn";
 
@@ -648,6 +651,21 @@ function ServerViewContent({
     [socketVoicePresence, voiceChannelId, liveVoiceParticipants],
   );
 
+  const ownId = ownProfile?.id ?? null;
+  const ownVoiceAvatar = ownProfile ? ownAvatarSrc(ownProfile) : null;
+  const voiceUserIds = useMemo(
+    () => voiceProfileIds(voicePresence, liveVoiceParticipants, ownId),
+    [voicePresence, liveVoiceParticipants, ownId],
+  );
+  const { avatarSrcOf: otherVoiceAvatarOf } = useVoiceProfiles(voiceUserIds);
+  const voiceAvatarOf = useCallback(
+    (identity: string) =>
+      (ownerOfScreenShareIdentity(identity) ?? identity) === ownId
+        ? ownVoiceAvatar
+        : otherVoiceAvatarOf(identity),
+    [ownId, ownVoiceAvatar, otherVoiceAvatarOf],
+  );
+
   function sidebarVoiceParticipants(
     channelId: string,
   ): SidebarVoiceParticipant[] {
@@ -655,8 +673,9 @@ function ServerViewContent({
       return liveVoiceParticipants.map((participant) => ({
         identity: participant.identity,
         name: participant.name,
-        avatarSrc:
-          participant.isLocal && ownProfile ? ownAvatarSrc(ownProfile) : null,
+        avatarSrc: participant.isLocal
+          ? ownVoiceAvatar
+          : voiceAvatarOf(participant.identity),
         muted: participant.muted,
         speaking: participant.speaking && !participant.mutedForMe,
         cameraOn: participant.cameraOn,
@@ -666,6 +685,7 @@ function ServerViewContent({
     return (voicePresence[channelId] ?? []).map((participant) => ({
       identity: participant.participant_id,
       name: participant.name,
+      avatarSrc: voiceAvatarOf(participant.participant_id),
     }));
   }
 
@@ -1209,6 +1229,7 @@ function ServerViewContent({
                     isCheckingAccess={isCheckingChannelPermissions}
                     ownProfile={ownProfile}
                     presence={voicePresence[activeChannel.id] ?? []}
+                    avatarSrcOf={voiceAvatarOf}
                   />
                 )}
               </>

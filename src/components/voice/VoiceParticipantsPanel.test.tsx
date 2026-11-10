@@ -23,12 +23,20 @@ const person = (
 function renderPanel(
   participants: VoiceParticipant[],
   pinnedIdentity: string | null = null,
+  {
+    ownAvatarSrc = null,
+    avatarSrcOf = () => null,
+  }: {
+    ownAvatarSrc?: string | null;
+    avatarSrcOf?: (identity: string) => string | null;
+  } = {},
 ) {
   const onPinChange = vi.fn();
   render(
     <VoiceParticipantsPanel
       participants={participants}
-      ownAvatarSrc={null}
+      ownAvatarSrc={ownAvatarSrc}
+      avatarSrcOf={avatarSrcOf}
       pinnedIdentity={pinnedIdentity}
       onToggleMutedForMe={vi.fn()}
       onPinChange={onPinChange}
@@ -66,5 +74,31 @@ describe("VoiceParticipantsPanel con pantallas compartidas", () => {
   it("no lista tu propia pantalla", () => {
     renderPanel([person("yo", { isLocal: true, screenSharing: true })]);
     expect(screen.queryByText("Tu pantalla")).not.toBeInTheDocument();
+  });
+});
+
+describe("VoiceParticipantsPanel con fotos de perfil", () => {
+  it("muestra la foto propia y la de los demas", () => {
+    renderPanel([person("yo", { isLocal: true }), person("Ana")], null, {
+      ownAvatarSrc: "/api/profile/avatar?v=1",
+      avatarSrcOf: (identity) =>
+        identity === "Ana" ? "/api/users/Ana/avatar?v=2" : null,
+    });
+
+    const sources = Array.from(document.querySelectorAll("img")).map((img) =>
+      img.getAttribute("src"),
+    );
+    expect(sources).toEqual(
+      expect.arrayContaining([
+        "/api/profile/avatar?v=1",
+        "/api/users/Ana/avatar?v=2",
+      ]),
+    );
+  });
+
+  it("sin foto conocida muestra la inicial", () => {
+    renderPanel([person("Beto")]);
+
+    expect(document.querySelector("img")).toBeNull();
   });
 });

@@ -30,6 +30,7 @@ interface VoiceFocusLayoutProps {
   size: ElementSize;
   isNarrow: boolean;
   renderTile: RenderTile;
+  avatarSrcOf: (participant: VoiceParticipant) => string | null;
   onShowParticipants: () => void;
   onBackToGrid?: () => void;
   /** Proporcion del video fijado; si es vertical el escenario toma esa forma. */
@@ -42,6 +43,7 @@ export function VoiceFocusLayout({
   size,
   isNarrow,
   renderTile,
+  avatarSrcOf,
   onShowParticipants,
   onBackToGrid,
   stageAspect,
@@ -118,6 +120,7 @@ export function VoiceFocusLayout({
               hidden={hidden}
               width={layout.tileWidth}
               height={layout.tileHeight}
+              avatarSrcOf={avatarSrcOf}
               onPress={onShowParticipants}
             />
           ) : null}
