@@ -1,9 +1,13 @@
 "use client";
 
-import { type ServerSummary } from "@discordia/client-shared";
+import {
+  pendingReportsLabel,
+  type ServerSummary,
+} from "@discordia/client-shared";
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
+import { ReportsSection } from "@/components/reports/ReportsSection";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { cn } from "@/lib/cn";
 
@@ -21,6 +25,8 @@ import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";
 const SETTINGS_MODAL_WIDTH = 660;
+/** La lista de reportes necesita mas ancho para que cada fila no se apriete. */
+const REPORTS_MODAL_WIDTH = 880;
 
 type MobileView = "menu" | "section";
 
@@ -29,7 +35,14 @@ interface ServerSettingsModalProps {
   isOwner: boolean;
   canManageServer: boolean;
   canManageMessages: boolean;
+  canReviewReports: boolean;
+  pendingReports: number;
+  currentUserId: string | null;
   onClose: () => void;
+  onGoToMessage: (channelId: string, messageId: string) => void;
+  onOpenProfile: (userId: string) => void;
+  onPendingReportsChanged: () => void;
+  onMembersChanged: () => void;
   onUpdated: (server: ServerSummary) => void;
   onDeleted: () => void;
 }
@@ -39,17 +52,33 @@ export function ServerSettingsModal({
   isOwner,
   canManageServer,
   canManageMessages,
+  canReviewReports,
+  pendingReports,
+  currentUserId,
   onClose,
+  onGoToMessage,
+  onOpenProfile,
+  onPendingReportsChanged,
+  onMembersChanged,
   onUpdated,
   onDeleted,
 }: ServerSettingsModalProps) {
   // El formulario vive acá y no en la sección para que lo editado sobreviva
   // a pasar a otra sección y volver.
   const form = useServerSettingsForm({ server, onUpdated });
-  const sections = visibleSections({ canManageServer, canManageMessages });
-  const [section, setSection] = useState<SettingsSection>(
-    canManageServer ? "profile" : "words",
+  const sections = visibleSections({
+    canManageServer,
+    canManageMessages,
+    canReviewReports,
+  });
+  const [section, setSection] = useState<SettingsSection>(() =>
+    canReviewReports && pendingReports > 0
+      ? "reports"
+      : canManageServer
+        ? "profile"
+        : "words",
   );
+  const reportsLabel = pendingReportsLabel(pendingReports, server.name);
   const [mobileView, setMobileView] = useState<MobileView>("menu");
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
@@ -63,7 +92,9 @@ export function ServerSettingsModal({
       <ModalShell
         onClose={onClose}
         labelledBy={TITLE_ID}
-        maxWidth={SETTINGS_MODAL_WIDTH}
+        maxWidth={
+          section === "reports" ? REPORTS_MODAL_WIDTH : SETTINGS_MODAL_WIDTH
+        }
         isFullScreenOnMobile
       >
         <div className="flex min-h-0 flex-1 flex-col sm:max-h-[95dvh] sm:flex-row">
@@ -90,6 +121,8 @@ export function ServerSettingsModal({
               server={server}
               sections={sections}
               canDelete={isOwner}
+              pendingReports={pendingReports}
+              pendingReportsLabel={reportsLabel}
               onSelect={openSectionOnMobile}
               onDelete={() => setIsDeleteModalOpen(true)}
             />
@@ -100,6 +133,8 @@ export function ServerSettingsModal({
             sections={sections}
             activeSection={section}
             canDelete={isOwner}
+            pendingReports={pendingReports}
+            pendingReportsLabel={reportsLabel}
             onSelect={setSection}
             onDelete={() => setIsDeleteModalOpen(true)}
           />
@@ -110,7 +145,19 @@ export function ServerSettingsModal({
               mobileView === "section" ? "flex" : "hidden",
             )}
           >
-            {section === "words" ? (
+            {section === "reports" ? (
+              <ReportsSection
+                serverId={server.id}
+                ownerId={server.owner_id}
+                currentUserId={currentUserId}
+                channels={server.channels}
+                titleId={TITLE_ID}
+                onGoToMessage={onGoToMessage}
+                onOpenProfile={onOpenProfile}
+                onPendingChanged={onPendingReportsChanged}
+                onMembersChanged={onMembersChanged}
+              />
+            ) : section === "words" ? (
               <WordFilterSection serverId={server.id} titleId={TITLE_ID} />
             ) : (
               <ServerProfileForm
