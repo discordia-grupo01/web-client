@@ -28,6 +28,7 @@ import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { useMarkAllRead } from "@/hooks/useMarkAllRead";
 import { useNotificationAuthors } from "@/hooks/useNotificationAuthors";
 import { useNotificationMessages } from "@/hooks/useNotificationMessages";
+import { useNotificationRoles } from "@/hooks/useNotificationRoles";
 import type { NotificationHistoryState } from "@/hooks/useNotificationHistory";
 import type { NotificationReadsState } from "@/hooks/useNotificationReads";
 import { cn } from "@/lib/cn";
@@ -39,6 +40,8 @@ interface NotificationCenterProps {
   history: NotificationHistoryState;
   reads: NotificationReadsState;
   unread: { hasUnread: boolean; markAllRead: () => Promise<boolean> };
+  directMessages: { hasUnread: boolean; markAllRead: () => Promise<boolean> };
+  mentions: { hasUnread: boolean; markAllRead: () => Promise<boolean> };
   servers: readonly ServerSummary[];
   me: MessageAuthor | null;
   anchorRef: RefObject<HTMLElement>;
@@ -51,6 +54,8 @@ export function NotificationCenter({
   history,
   reads,
   unread,
+  directMessages,
+  mentions,
   servers,
   me,
   anchorRef,
@@ -59,9 +64,15 @@ export function NotificationCenter({
   onOpenDirectMessage,
 }: NotificationCenterProps) {
   const [tab, setTab] = useState<NotificationTab>("unread");
-  const markAll = useMarkAllRead({ reads, unread });
+  const markAll = useMarkAllRead({
+    reads,
+    unread,
+    directMessages,
+    mentions,
+  });
   const authors = useNotificationAuthors(history.items);
   const messages = useNotificationMessages(history.items);
+  const roleNames = useNotificationRoles(history.items);
   const { panelRef, position } = useFloatingPanel({
     enabled: true,
     isOpen: true,
@@ -80,7 +91,7 @@ export function NotificationCenter({
 
   const previews = useMemo(() => {
     const nameOf = (kind: "user" | "role", id: string) => {
-      if (kind !== "user") return null;
+      if (kind === "role") return roleNames[id.toLowerCase()] ?? null;
       return (me?.id === id ? me.name : authors[id]?.name) ?? null;
     };
     return Object.fromEntries(
@@ -89,7 +100,7 @@ export function NotificationCenter({
         notificationPreview(message, nameOf),
       ]),
     );
-  }, [messages, authors, me]);
+  }, [messages, authors, roleNames, me]);
 
   function open(item: NotificationHistoryItem) {
     if (item.kind === "direct_message") {

@@ -258,6 +258,39 @@ export function useDirectMessages(
     });
   }, [toConfirm]);
 
+  const markAllConversationsRead = useCallback(async () => {
+    const pending = conversations.filter((conversation) => conversation.unread);
+    const results = await Promise.all(
+      pending.map((conversation) =>
+        markConversationReadRequest(conversation.id),
+      ),
+    );
+    const read = pending.filter((_, index) => results[index]?.ok);
+    if (read.length > 0) {
+      setConversations((prev) =>
+        read.reduce(
+          (list, conversation) =>
+            markConversationReadIn(
+              list,
+              conversation.id,
+              conversation.last_message?.id,
+            ),
+          prev,
+        ),
+      );
+      setReadKeys((prev) => {
+        const next = new Set(prev);
+        for (const conversation of read) {
+          next.add(
+            conversationReadKey(conversation.id, conversation.last_message?.id),
+          );
+        }
+        return next;
+      });
+    }
+    return read.length === pending.length;
+  }, [conversations]);
+
   // Un chat restaurado tras recargar sin conversacion en el back (ni borrador
   // abierto en esta sesion) no se muestra: el back manda.
   if (
@@ -342,6 +375,7 @@ export function useDirectMessages(
     activeSummary,
     openConversation,
     sendMessage,
+    markAllConversationsRead,
     pushToUserRoom,
     isConnected,
   };

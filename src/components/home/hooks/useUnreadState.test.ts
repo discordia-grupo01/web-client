@@ -164,6 +164,31 @@ describe("useUnreadState", () => {
     expect(Object.keys(result.current.byChannel)).toEqual(["c1", "c2"]);
   });
 
+  it("marcar un servidor apaga sus canales y avisa al back por cada uno", () => {
+    const { result } = renderHook(() => useUnreadState("me", null));
+    act(() => handlers.snapshot(snapshot));
+
+    let marked: string[] = [];
+    act(() => {
+      marked = result.current.markServerRead("s1");
+    });
+
+    expect(marked).toEqual(["c1", "c2"]);
+    expect(result.current.byServer.s1).toBeUndefined();
+    expect(markRead).toHaveBeenCalledWith("c1");
+    expect(markRead).toHaveBeenCalledWith("c2");
+  });
+
+  it("no marca un servidor suspendido", () => {
+    const { result } = renderHook(() =>
+      useUnreadState("me", null, new Set(["s1"])),
+    );
+    act(() => handlers.snapshot(snapshot));
+
+    expect(result.current.markServerRead("s1")).toEqual([]);
+    expect(markRead).not.toHaveBeenCalled();
+  });
+
   it("al desmontar se desconecta", () => {
     const { unmount } = renderHook(() => useUnreadState("me", null));
     unmount();
