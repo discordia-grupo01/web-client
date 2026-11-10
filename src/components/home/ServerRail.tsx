@@ -10,7 +10,9 @@ import {
 } from "@discordia/client-shared";
 
 import { Home as HomeIcon, Plus } from "lucide-react";
+import { useCallback, useState } from "react";
 
+import { ServerContextMenu } from "@/components/home/ServerContextMenu";
 import { SidePanel } from "@/components/layout/SidePanel";
 import { useMobilePanels } from "@/contexts/MobilePanelsContext";
 import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
@@ -27,6 +29,7 @@ interface ServerRailProps {
   isDockedOnMobile: boolean;
   unreadDmCount: number;
   unreadByServer: Record<string, UnreadFlags>;
+  onMarkServerRead: (serverId: string) => void;
   onSelect: (serverId: string | null) => void;
   onOpenDirectMessages: () => void;
   onCreateClick: () => void;
@@ -39,6 +42,7 @@ export function ServerRail({
   isDockedOnMobile,
   unreadDmCount,
   unreadByServer,
+  onMarkServerRead,
   onSelect,
   onOpenDirectMessages,
   onCreateClick,
@@ -88,6 +92,7 @@ export function ServerRail({
             isActive={!isDirectMessagesActive && server.id === selectedServerId}
             unread={unreadByServer[server.id] ?? NO_UNREAD_FLAGS}
             onClick={() => onSelect(server.id)}
+            onMarkRead={() => onMarkServerRead(server.id)}
           />
         ))}
 
@@ -109,12 +114,16 @@ function ServerRailItem({
   isActive,
   unread,
   onClick,
+  onMarkRead,
 }: {
   server: ServerSummary;
   isActive: boolean;
   unread: UnreadFlags;
   onClick: () => void;
+  onMarkRead: () => void;
 }) {
+  const [menuAt, setMenuAt] = useState<{ x: number; y: number } | null>(null);
+  const closeMenu = useCallback(() => setMenuAt(null), []);
   const notificationSettings = useOptionalNotificationSettings();
   const isSuspended = server.suspended === true;
   const isMuted =
@@ -144,7 +153,13 @@ function ServerRailItem({
         <button
           type="button"
           aria-label={label}
+          aria-haspopup={isSuspended ? undefined : "menu"}
           onClick={onClick}
+          onContextMenu={(event) => {
+            if (isSuspended) return;
+            event.preventDefault();
+            setMenuAt({ x: event.clientX, y: event.clientY });
+          }}
           className="relative cursor-pointer overflow-hidden rounded-2xl"
         >
           <span className={cn("block", isSuspended && "saturate-50")}>
@@ -160,6 +175,15 @@ function ServerRailItem({
           count={visibleUnread.mentionCount}
           label={`${visibleUnread.mentionCount} menciones sin leer en ${server.name}`}
           className="border-rail-surface absolute -right-0.5 -bottom-0.5 border-2"
+        />
+      ) : null}
+      {menuAt ? (
+        <ServerContextMenu
+          position={menuAt}
+          serverName={server.name}
+          canMarkRead={visibleUnread.unread}
+          onMarkRead={onMarkRead}
+          onClose={closeMenu}
         />
       ) : null}
     </div>

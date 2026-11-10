@@ -75,5 +75,20 @@ export function useUnreadState(
     [],
   );
 
-  return { byChannel, byServer, hasUnread, markAllRead, statusRevision };
+  const markServerRead = useCallback(
+    (serverId: string) => {
+      if (suspendedServerIds.has(serverId)) return [];
+      return trackerRef.current?.markServerRead(serverId) ?? [];
+    },
+    [suspendedServerIds],
+  );
+
+  return {
+    byChannel,
+    byServer,
+    hasUnread,
+    markAllRead,
+    markServerRead,
+    statusRevision,
+  };
 }

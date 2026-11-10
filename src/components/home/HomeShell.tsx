@@ -359,6 +359,27 @@ function HomeShellContent({
     markChannelRead: markNotificationChannelRead,
     markConversationRead: markNotificationConversationRead,
   } = notificationReads;
+  const { markServerRead: markServerChannelsRead } = unread;
+  const { markServerRead: markServerMentionsRead } = mentions;
+  const notificationItems = notificationHistory.items;
+  const markServerRead = useCallback(
+    (serverId: string) => {
+      const channelIds = new Set(markServerChannelsRead(serverId));
+      for (const item of notificationItems) {
+        if (item.server_id === serverId && item.channel_id) {
+          channelIds.add(item.channel_id);
+        }
+      }
+      markServerMentionsRead(serverId);
+      channelIds.forEach(markNotificationChannelRead);
+    },
+    [
+      markServerChannelsRead,
+      markServerMentionsRead,
+      notificationItems,
+      markNotificationChannelRead,
+    ],
+  );
   const openedConversationId =
     isPageVisible && view === "direct-messages"
       ? (directMessages.activeSummary?.conversationId ?? null)
@@ -548,6 +569,7 @@ function HomeShellContent({
                     }
                     unreadDmCount={unreadDmCount}
                     unreadByServer={unread.byServer}
+                    onMarkServerRead={markServerRead}
                     onSelect={(serverId) => {
                       setView("servers");
                       setSelectedServerId(serverId);
