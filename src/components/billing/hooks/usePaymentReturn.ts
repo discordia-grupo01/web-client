@@ -1,15 +1,13 @@
 "use client";
 
 import {
+  applyPaymentStep,
+  checkPaymentStep,
+  PAYMENT_RESULT_VERIFYING,
   PAYMENT_RETURN_POLL_MS,
-  PAYMENT_RETURN_TIMEOUT_MS,
-  PAYMENT_STATUS_FAILED,
-  type PaymentProgress,
+  type PaymentResultState,
   type PaymentReturnParams,
-  type PointPurchase,
-  pointsPaymentProgress,
-  premiumPaymentProgress,
-  type PremiumView,
+  type PaymentStatusApi,
 } from "@discordia/client-shared";
 
 import { useCallback, useEffect, useState } from "react";
@@ -20,68 +18,20 @@ import {
   getPurchaseRequest,
 } from "@/services/billing/client";
 
-export interface PaymentReturnState {
-  progress: PaymentProgress;
-  purchase: PointPurchase | null;
-  premium: PremiumView | null;
-  balance: number | null;
-  error: string | null;
-}
-
-const VERIFYING: PaymentReturnState = {
-  progress: { outcome: "verifying", done: false },
-  purchase: null,
-  premium: null,
-  balance: null,
-  error: null,
-};
-
-const INVALID_RETURN: PaymentReturnState = {
-  ...VERIFYING,
+const INVALID_RETURN: PaymentResultState = {
+  ...PAYMENT_RESULT_VERIFYING,
   progress: { outcome: "points_not_found", done: true },
 };
 
-type Step =
-  { kind: "progress"; state: PaymentReturnState } | { kind: "failed" };
-
-async function checkPoints(
-  purchaseId: string,
-  elapsedMs: number,
-): Promise<Step> {
-  const result = await getPurchaseRequest(purchaseId);
-  if (!result.ok && result.code !== "PURCHASE_NOT_FOUND") {
-    return { kind: "failed" };
-  }
-  const purchase = result.ok ? result.purchase : null;
-  const progress = pointsPaymentProgress(purchase, elapsedMs);
-
-  let balance: number | null = null;
-  if (progress.outcome === "points_accredited") {
-    const overview = await getPointsOverviewRequest();
-    if (overview.ok) balance = overview.points.balance;
-  }
-  return {
-    kind: "progress",
-    state: { ...VERIFYING, progress, purchase, balance },
-  };
-}
-
-async function checkPremium(elapsedMs: number): Promise<Step> {
-  const result = await getPremiumRequest({ refresh: true });
-  if (!result.ok) return { kind: "failed" };
-  return {
-    kind: "progress",
-    state: {
-      ...VERIFYING,
-      progress: premiumPaymentProgress(result.premium, elapsedMs),
-      premium: result.premium,
-    },
-  };
-}
+const STATUS_API: PaymentStatusApi = {
+  getPurchase: getPurchaseRequest,
+  getPointsOverview: getPointsOverviewRequest,
+  getPremium: getPremiumRequest,
+};
 
 export function usePaymentReturn(params: PaymentReturnParams | null) {
-  const [state, setState] = useState<PaymentReturnState>(
-    params ? VERIFYING : INVALID_RETURN,
+  const [state, setState] = useState<PaymentResultState>(
+    params ? PAYMENT_RESULT_VERIFYING : INVALID_RETURN,
   );
   const [attempt, setAttempt] = useState(0);
   const kind = params?.kind;
@@ -89,30 +39,22 @@ export function usePaymentReturn(params: PaymentReturnParams | null) {
 
   useEffect(() => {
     if (!kind) return;
+    const payment: PaymentReturnParams = { kind, purchaseId };
     let cancelled = false;
     let timer: ReturnType<typeof setTimeout> | undefined;
+    let current = PAYMENT_RESULT_VERIFYING;
     const startedAt = Date.now();
-    setState(VERIFYING);
+    setState(current);
 
     async function tick() {
       const elapsed = Date.now() - startedAt;
-      const step =
-        kind === "points" && purchaseId
-          ? await checkPoints(purchaseId, elapsed)
-          : await checkPremium(elapsed);
+      const step = await checkPaymentStep(payment, elapsed, STATUS_API);
       if (cancelled) return;
 
-      if (step.kind === "progress") {
-        setState(step.state);
-        if (step.state.progress.done) return;
-      } else if (elapsed >= PAYMENT_RETURN_TIMEOUT_MS) {
-        setState((current) => ({
-          ...current,
-          progress: { ...current.progress, done: true },
-          error: PAYMENT_STATUS_FAILED,
-        }));
-        return;
-      }
+      const applied = applyPaymentStep(current, step, elapsed);
+      current = applied.state;
+      setState(current);
+      if (applied.finished) return;
       timer = setTimeout(() => void tick(), PAYMENT_RETURN_POLL_MS);
     }
 

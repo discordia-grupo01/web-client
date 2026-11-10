@@ -1,8 +1,11 @@
 "use client";
 
 import {
+  BILLING_COPY,
   type PaymentKind,
-  type PaymentOutcome,
+  PAYMENT_OUTCOME_TONE,
+  PAYMENT_RETURN_SECTION,
+  type PaymentOutcomeTone,
   paymentOutcomeCopy,
   type PaymentReturnParams,
 } from "@discordia/client-shared";
@@ -15,25 +18,9 @@ import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 import { requestSettingsSection } from "@/utils/settingsRequest";
 
-import { BILLING_COPY } from "./billingCopy";
 import { usePaymentReturn } from "./hooks/usePaymentReturn";
 
-type Tone = "progress" | "success" | "warning" | "danger";
-
-const TONE: Record<PaymentOutcome, Tone> = {
-  verifying: "progress",
-  points_accredited: "success",
-  premium_active: "success",
-  points_pending: "warning",
-  premium_processing: "warning",
-  points_rejected: "danger",
-  points_expired: "danger",
-  points_reversed: "danger",
-  points_not_found: "danger",
-  premium_not_activated: "danger",
-};
-
-const TONE_STYLE: Record<Tone, string> = {
+const TONE_STYLE: Record<PaymentOutcomeTone, string> = {
   progress: "bg-info/15 text-info",
   success: "bg-success/15 text-success",
   warning: "bg-warning/20 text-warning",
@@ -47,13 +34,8 @@ const TONE_ICON = {
   danger: XCircle,
 } as const;
 
-const RETURN_SECTION = {
-  premium: "subscriptions",
-  points: "transactions",
-} as const satisfies Record<PaymentKind, string>;
-
 function backToBilling(kind: PaymentKind | undefined) {
-  requestSettingsSection(RETURN_SECTION[kind ?? "points"]);
+  requestSettingsSection(PAYMENT_RETURN_SECTION[kind ?? "points"]);
   window.location.href = ROUTES.home;
 }
 
@@ -64,7 +46,7 @@ export function PaymentReturnView({
 }) {
   const payment = usePaymentReturn(params);
   const { outcome, done } = payment.progress;
-  const tone = TONE[outcome];
+  const tone = PAYMENT_OUTCOME_TONE[outcome];
   const Icon = TONE_ICON[tone];
   const copy = paymentOutcomeCopy(outcome, {
     points: payment.purchase?.points,

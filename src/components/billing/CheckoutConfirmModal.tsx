@@ -1,6 +1,8 @@
 "use client";
 
 import {
+  BILLING_COPY,
+  type CheckoutItem,
   formatArsFromCents,
   formatPoints,
   PREMIUM_RENEWAL_NOTICE,
@@ -14,17 +16,7 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { TextField } from "@/components/ui/TextField";
 
-import { BILLING_COPY } from "./billingCopy";
 import { DiscordiaPointIcon, DiscordiaPremiumIcon } from "./DiscordiaIcons";
-
-const CHECKOUT_TITLE = {
-  premium: "Estás por suscribirte a",
-  points: "Estás por comprar",
-} as const;
-
-export type CheckoutItem =
-  | { kind: "premium"; priceCents: number }
-  | { kind: "points"; packageId: string; points: number; priceCents: number };
 
 interface CheckoutConfirmModalProps {
   item: CheckoutItem;
@@ -66,7 +58,9 @@ export function CheckoutConfirmModal({
     >
       <form onSubmit={submit} className="flex flex-col gap-5 px-7 py-8">
         <p className="text-content-subtle text-xs font-semibold tracking-wider uppercase">
-          {pending ? BILLING_COPY.checkoutPreparing : CHECKOUT_TITLE[item.kind]}
+          {pending
+            ? BILLING_COPY.checkoutPreparing
+            : BILLING_COPY.checkoutTitle[item.kind]}
         </p>
 
         <div className="flex items-center gap-4">

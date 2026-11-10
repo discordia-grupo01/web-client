@@ -10,7 +10,11 @@ import { getValidSession } from "@/services/auth/session";
 import { startPointsCheckout } from "@/services/billing/service";
 import type { CheckoutResult } from "@/types/billing.types";
 
-import { billingFailureResponse, readJsonBody } from "../../billingRoute";
+import {
+  billingFailureResponse,
+  idempotencyKeyOf,
+  readJsonBody,
+} from "../../billingRoute";
 
 /**
  * BFF de `POST /v1/billing/points/checkout`. Devuelve el `purchase_id`, que
@@ -30,9 +34,11 @@ export async function POST(
     );
   }
 
-  const result = await startPointsCheckout(session.token, {
-    package_id: body.package_id,
-  });
+  const result = await startPointsCheckout(
+    session.token,
+    { package_id: body.package_id },
+    idempotencyKeyOf(request),
+  );
   if (!result.ok) return billingFailureResponse(result, CHECKOUT_START_FAILED);
 
   return NextResponse.json({ ok: true, checkout: result.data });

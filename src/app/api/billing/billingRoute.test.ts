@@ -5,7 +5,11 @@ import {
 } from "@discordia/client-shared";
 import { describe, expect, it } from "vitest";
 
-import { billingFailureResponse, readJsonBody } from "./billingRoute";
+import {
+  billingFailureResponse,
+  idempotencyKeyOf,
+  readJsonBody,
+} from "./billingRoute";
 
 describe("billingFailureResponse", () => {
   it("un 401 del back es sesión vencida", async () => {
@@ -32,6 +36,19 @@ describe("billingFailureResponse", () => {
       ok: false,
       message: BILLING_ERROR_MESSAGES.ALREADY_SUBSCRIBED,
       code: "ALREADY_SUBSCRIBED",
+    });
+  });
+
+  it("traduce los errores de idempotencia del checkout", async () => {
+    const response = billingFailureResponse(
+      { ok: false, status: 409, code: "CHECKOUT_IN_PROGRESS", message: "x" },
+      "fallback.",
+    );
+
+    expect(await response.json()).toEqual({
+      ok: false,
+      message: BILLING_ERROR_MESSAGES.CHECKOUT_IN_PROGRESS,
+      code: "CHECKOUT_IN_PROGRESS",
     });
   });
 
@@ -83,5 +100,25 @@ describe("readJsonBody", () => {
         new Request("http://x", { method: "POST", body: "null" }),
       ),
     ).toEqual({});
+  });
+});
+
+describe("idempotencyKeyOf", () => {
+  function request(headers?: HeadersInit): Request {
+    return new Request("http://localhost/api/billing/points/checkout", {
+      method: "POST",
+      headers,
+    });
+  }
+
+  it("lee el header", () => {
+    expect(idempotencyKeyOf(request({ "Idempotency-Key": " k1 " }))).toBe("k1");
+  });
+
+  it("sin header o vacío no manda clave", () => {
+    expect(idempotencyKeyOf(request())).toBeUndefined();
+    expect(
+      idempotencyKeyOf(request({ "Idempotency-Key": "  " })),
+    ).toBeUndefined();
   });
 });

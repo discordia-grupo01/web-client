@@ -24,7 +24,14 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  *   GET  /v1/billing/points              -> 200 {balance, ledger, purchases}
  *   POST /v1/billing/points/checkout     -> 201 {purchase_id, checkout_url} | 400 UNKNOWN_PACKAGE
  *   GET  /v1/billing/purchases/:id       -> 200 PointPurchase | 404 PURCHASE_NOT_FOUND
+ *
+ * Los dos checkouts aceptan `Idempotency-Key`: con la misma clave billing
+ * devuelve el mismo checkout durante 24 h en vez de crear otra compra.
  */
+
+function idempotencyHeaders(key: string | undefined) {
+  return key ? { "Idempotency-Key": key } : undefined;
+}
 
 export function getPremium(
   token: string,
@@ -40,11 +47,13 @@ export function getPremium(
 export function startPremiumCheckout(
   token: string,
   body: PremiumCheckoutRequest,
+  idempotencyKey?: string,
 ): Promise<ApiResult<CheckoutResponse>> {
   return apiRequest<CheckoutResponse>("/v1/billing/premium/checkout", {
     method: "POST",
     token,
     data: body,
+    headers: idempotencyHeaders(idempotencyKey),
   });
 }
 
@@ -77,11 +86,13 @@ export function getPointsOverview(
 export function startPointsCheckout(
   token: string,
   body: PointsCheckoutRequest,
+  idempotencyKey?: string,
 ): Promise<ApiResult<CheckoutResponse>> {
   return apiRequest<CheckoutResponse>("/v1/billing/points/checkout", {
     method: "POST",
     token,
     data: body,
+    headers: idempotencyHeaders(idempotencyKey),
   });
 }
 

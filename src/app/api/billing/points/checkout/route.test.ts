@@ -11,10 +11,11 @@ vi.mock("@/services/billing/service", () => ({ startPointsCheckout }));
 
 import { POST } from "./route";
 
-function post(body: unknown): Request {
+function post(body: unknown, headers?: HeadersInit): Request {
   return new Request("http://localhost/api/billing/points/checkout", {
     method: "POST",
     body: JSON.stringify(body),
+    headers,
   });
 }
 
@@ -57,10 +58,30 @@ describe("POST /api/billing/points/checkout", () => {
 
     const response = await POST(post({ package_id: "points_550" }));
 
-    expect(startPointsCheckout).toHaveBeenCalledWith("jwt", {
-      package_id: "points_550",
-    });
+    expect(startPointsCheckout).toHaveBeenCalledWith(
+      "jwt",
+      { package_id: "points_550" },
+      undefined,
+    );
     expect(await response.json()).toEqual({ ok: true, checkout });
+  });
+
+  it("le pasa al back la Idempotency-Key del navegador", async () => {
+    startPointsCheckout.mockResolvedValue({
+      ok: true,
+      status: 201,
+      data: { purchase_id: "p1", checkout_url: "https://mp" },
+    });
+
+    await POST(
+      post({ package_id: "points_550" }, { "Idempotency-Key": "clave-1" }),
+    );
+
+    expect(startPointsCheckout).toHaveBeenCalledWith(
+      "jwt",
+      { package_id: "points_550" },
+      "clave-1",
+    );
   });
 
   it("traduce un paquete desconocido", async () => {

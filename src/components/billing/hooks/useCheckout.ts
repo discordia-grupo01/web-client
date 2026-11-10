@@ -1,12 +1,18 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import {
+  type CheckoutItem,
+  newIdempotencyKey,
+  runCheckout,
+  shouldRenewIdempotencyKey,
+} from "@discordia/client-shared";
+
+import { useCallback, useRef, useState } from "react";
 
 import {
   startPointsCheckoutRequest,
   startPremiumCheckoutRequest,
 } from "@/services/billing/client";
-import type { CheckoutResult } from "@/types/billing.types";
 
 function goToCheckout(url: string) {
   window.location.assign(url);
@@ -17,37 +23,37 @@ export function useCheckout({
 }: { navigate?: (url: string) => void } = {}) {
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const keyRef = useRef(newIdempotencyKey());
+  const inFlight = useRef(false);
 
   const start = useCallback(
-    async (call: () => Promise<CheckoutResult>) => {
+    async (item: CheckoutItem, payerEmail: string) => {
+      if (inFlight.current) return;
+      inFlight.current = true;
       setPending(true);
       setError(null);
-      const result = await call();
-      if (!result.ok) {
-        setPending(false);
-        setError(result.message);
-        return;
+      const outcome = await runCheckout(item, payerEmail, keyRef.current, {
+        startPremium: startPremiumCheckoutRequest,
+        startPoints: startPointsCheckoutRequest,
+        openCheckout: navigate,
+      });
+      if (shouldRenewIdempotencyKey(outcome)) {
+        keyRef.current = newIdempotencyKey();
       }
-      navigate(result.checkout.checkout_url);
+      if (outcome.ok) return;
+      inFlight.current = false;
+      setPending(false);
+      setError(outcome.message);
     },
     [navigate],
   );
 
-  const startPremium = useCallback(
-    (payerEmail: string) =>
-      start(() => startPremiumCheckoutRequest(payerEmail)),
-    [start],
-  );
-
-  const startPoints = useCallback(
-    (packageId: string) => start(() => startPointsCheckoutRequest(packageId)),
-    [start],
-  );
-
   const reset = useCallback(() => {
+    keyRef.current = newIdempotencyKey();
+    inFlight.current = false;
     setPending(false);
     setError(null);
   }, []);
 
-  return { pending, error, startPremium, startPoints, reset };
+  return { pending, error, start, reset };
 }
