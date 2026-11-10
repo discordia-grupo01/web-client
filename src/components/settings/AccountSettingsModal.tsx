@@ -1,6 +1,13 @@
 "use client";
 
-import type { TwoFactorStatus } from "@discordia/client-shared";
+import {
+  BILLING_COPY,
+  BILLING_SECTION_LABELS,
+  BILLING_SECTIONS,
+  type BillingSection,
+  isBillingSection,
+  type TwoFactorStatus,
+} from "@discordia/client-shared";
 
 import {
   Activity,
@@ -13,11 +20,6 @@ import {
 } from "lucide-react";
 import { useState, type ReactNode } from "react";
 
-import { BILLING_COPY } from "@/components/billing/billingCopy";
-import {
-  type BillingSection,
-  isBillingSection,
-} from "@/components/billing/billingSections";
 import { BillingSettings } from "@/components/billing/BillingSettings";
 import {
   DiscordiaPointIcon,
@@ -64,32 +66,18 @@ const ACCOUNT_SECTIONS: SectionItem[] = [
   },
 ];
 
-const BILLING_ITEMS: SectionItem[] = [
-  {
-    id: "premium",
-    label: "Premium",
-    description: "Conocé el plan",
-    icon: DiscordiaPremiumIcon,
-  },
-  {
-    id: "subscriptions",
-    label: "Suscripciones",
-    description: "Estado y renovación",
-    icon: DiscordiaPremiumIcon,
-  },
-  {
-    id: "points",
-    label: "Puntos",
-    description: "Saldo y paquetes",
-    icon: DiscordiaPointIcon,
-  },
-  {
-    id: "transactions",
-    label: "Historial",
-    description: "Pagos y movimientos",
-    icon: DiscordiaPointIcon,
-  },
-];
+const BILLING_ICONS: Record<BillingSection, SectionItem["icon"]> = {
+  premium: DiscordiaPremiumIcon,
+  subscriptions: DiscordiaPremiumIcon,
+  points: DiscordiaPointIcon,
+  transactions: DiscordiaPointIcon,
+};
+
+const BILLING_ITEMS: SectionItem[] = BILLING_SECTIONS.map((id) => ({
+  id,
+  ...BILLING_SECTION_LABELS[id],
+  icon: BILLING_ICONS[id],
+}));
 
 const PLATFORM_SECTIONS: SectionItem[] = [
   {

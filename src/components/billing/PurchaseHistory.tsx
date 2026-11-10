@@ -1,31 +1,23 @@
 import {
+  BILLING_COPY,
+  BILLING_HISTORY_PAGE_SIZE,
   formatArsFromCents,
+  formatBillingDate,
   formatPoints,
   type PointPurchase,
   PURCHASE_STATUS_DESCRIPTIONS,
   PURCHASE_STATUS_LABELS,
-  type PurchaseStatus,
+  PURCHASE_STATUS_TONE,
   unrecoveredPointsNote,
 } from "@discordia/client-shared";
 
 import { cn } from "@/lib/cn";
 
-import { BILLING_COPY } from "./billingCopy";
+import { BILLING_TONE_CLASS } from "./billingTone";
 import { DiscordiaPointIcon } from "./DiscordiaIcons";
 import { EmptyHistory } from "./EmptyHistory";
-import { formatBillingDate } from "./formatBillingDate";
 import { HistoryPagination } from "./HistoryPagination";
-import { BILLING_HISTORY_PAGE_SIZE } from "./billingSections";
 import { usePagedItems } from "./hooks/usePagedItems";
-
-const STATUS_TONE: Record<PurchaseStatus, string> = {
-  pending: "bg-warning/15 text-warning",
-  paid: "bg-success/15 text-success",
-  failed: "bg-danger/15 text-danger",
-  expired: "bg-surface-input text-content-subtle",
-  refunded: "bg-info/15 text-info",
-  charged_back: "bg-danger/15 text-danger",
-};
 
 export function PurchaseHistory({ purchases }: { purchases: PointPurchase[] }) {
   const paged = usePagedItems(purchases, BILLING_HISTORY_PAGE_SIZE);
@@ -63,7 +55,7 @@ export function PurchaseHistory({ purchases }: { purchases: PointPurchase[] }) {
                 <span
                   className={cn(
                     "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                    STATUS_TONE[purchase.status],
+                    BILLING_TONE_CLASS[PURCHASE_STATUS_TONE[purchase.status]],
                   )}
                 >
                   {PURCHASE_STATUS_LABELS[purchase.status]}

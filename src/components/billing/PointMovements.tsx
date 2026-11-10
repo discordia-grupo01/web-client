@@ -1,4 +1,7 @@
 import {
+  BILLING_COPY,
+  BILLING_HISTORY_PAGE_SIZE,
+  formatBillingDate,
   formatPointsDelta,
   LEDGER_REASON_LABELS,
   type LedgerEntry,
@@ -6,12 +9,9 @@ import {
 
 import { cn } from "@/lib/cn";
 
-import { BILLING_COPY } from "./billingCopy";
 import { DiscordiaPointIcon } from "./DiscordiaIcons";
 import { EmptyHistory } from "./EmptyHistory";
-import { formatBillingDate } from "./formatBillingDate";
 import { HistoryPagination } from "./HistoryPagination";
-import { BILLING_HISTORY_PAGE_SIZE } from "./billingSections";
 import { usePagedItems } from "./hooks/usePagedItems";
 
 export function PointMovements({ ledger }: { ledger: LedgerEntry[] }) {
