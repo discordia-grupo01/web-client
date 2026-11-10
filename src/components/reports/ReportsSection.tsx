@@ -12,7 +12,6 @@ import {
   REPORTS_DISMISSED_EMPTY,
   REPORTS_DISMISSED_FILTER,
   REPORTS_PENDING_EMPTY,
-  REPORTS_PENDING_HINT,
   REPORTS_PENDING_TAB,
   REPORTS_RESOLVED_EMPTY,
   REPORTS_RESOLVED_FILTER,
@@ -186,11 +185,6 @@ export function ReportsSection({
           onChange={list.setTab}
           label={REPORTS_TITLE}
         />
-        {list.tab === "pending" ? (
-          <p className="text-content-muted text-[13px] leading-relaxed">
-            {REPORTS_PENDING_HINT}
-          </p>
-        ) : null}
         {list.tab === "closed" ? (
           <div className="flex gap-2">
             {CLOSED_FILTERS.map((filter) => (
