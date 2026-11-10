@@ -1,4 +1,4 @@
-import type { PremiumView } from "@discordia/client-shared";
+import { BILLING_COPY, type PremiumView } from "@discordia/client-shared";
 
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -9,7 +9,6 @@ vi.mock("@/services/billing/client", () => ({
   cancelPremiumRequest: () => cancelPremiumRequest(),
 }));
 
-import { BILLING_COPY } from "./billingCopy";
 import { PremiumCard } from "./PremiumCard";
 
 function premium(overrides: Partial<PremiumView>): PremiumView {
@@ -72,7 +71,7 @@ describe("PremiumCard", () => {
       premium_until: "2026-12-04T15:00:00Z",
       mp_status: "cancelled",
     });
-    cancelPremiumRequest.mockResolvedValue({ ok: true, premium: canceled });
+    cancelPremiumRequest.mockResolvedValue({ ok: true, data: canceled });
     render(
       <PremiumCard
         premium={premium({

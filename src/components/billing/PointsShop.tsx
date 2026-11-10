@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BILLING_COPY,
   formatArsFromCents,
   formatPoints,
   type PointsPackage,
@@ -12,7 +13,6 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
-import { BILLING_COPY } from "./billingCopy";
 import { DiscordiaPointIcon } from "./DiscordiaIcons";
 
 interface PointsShopProps {

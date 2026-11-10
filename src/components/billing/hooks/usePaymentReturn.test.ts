@@ -46,7 +46,7 @@ beforeEach(() => {
   vi.clearAllMocks();
   getPointsOverviewRequest.mockResolvedValue({
     ok: true,
-    points: { balance: 1_200, ledger: [], purchases: [] },
+    data: { balance: 1_200, ledger: [], purchases: [] },
   });
 });
 
@@ -67,8 +67,8 @@ describe("usePaymentReturn", () => {
 
   it("consulta la compra hasta que se acredita y trae el saldo nuevo", async () => {
     getPurchaseRequest
-      .mockResolvedValueOnce({ ok: true, purchase: purchase("pending") })
-      .mockResolvedValueOnce({ ok: true, purchase: purchase("paid") });
+      .mockResolvedValueOnce({ ok: true, data: purchase("pending") })
+      .mockResolvedValueOnce({ ok: true, data: purchase("paid") });
 
     const { result } = renderHook(() =>
       usePaymentReturn({ kind: "points", purchaseId: "p1" }),
@@ -91,8 +91,8 @@ describe("usePaymentReturn", () => {
   it("un 404 es compra no encontrada", async () => {
     getPurchaseRequest.mockResolvedValue({
       ok: false,
-      message: "x",
       code: "PURCHASE_NOT_FOUND",
+      message: "x",
     });
 
     const { result } = renderHook(() =>
@@ -106,7 +106,7 @@ describe("usePaymentReturn", () => {
   it("si sigue pendiente al timeout queda como pendiente", async () => {
     getPurchaseRequest.mockResolvedValue({
       ok: true,
-      purchase: purchase("pending"),
+      data: purchase("pending"),
     });
 
     const { result } = renderHook(() =>
@@ -123,7 +123,11 @@ describe("usePaymentReturn", () => {
   });
 
   it("si nunca puede consultar avisa el error y permite reintentar", async () => {
-    getPremiumRequest.mockResolvedValue({ ok: false, message: "sin red" });
+    getPremiumRequest.mockResolvedValue({
+      ok: false,
+      code: "NETWORK_ERROR",
+      message: "sin red",
+    });
 
     const { result } = renderHook(() =>
       usePaymentReturn({ kind: "premium", purchaseId: null }),
@@ -135,7 +139,7 @@ describe("usePaymentReturn", () => {
 
     getPremiumRequest.mockResolvedValue({
       ok: true,
-      premium: {
+      data: {
         state: "active",
         active: true,
         premium_until: "2026-12-04T15:00:00Z",

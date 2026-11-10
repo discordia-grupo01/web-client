@@ -1,7 +1,7 @@
 import {
   type ApiFailure,
-  BILLING_ERROR_CODES,
   billingErrorMessage,
+  isBillingErrorCode,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
@@ -9,17 +9,13 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/apiRoute";
 import type { BillingFailure } from "@/types/billing.types";
 
-function isBillingCode(code: string | number): code is string {
-  return (BILLING_ERROR_CODES as readonly (string | number)[]).includes(code);
-}
-
 export function billingFailureResponse(
   result: ApiFailure,
   fallbackMessage: string,
 ): NextResponse<BillingFailure> {
   if (result.status === 401) return unauthorizedResponse();
 
-  const code = isBillingCode(result.code) ? result.code : null;
+  const code = isBillingErrorCode(result.code) ? result.code : null;
   const unknownMessage = result.status === 0 ? result.message : fallbackMessage;
   return NextResponse.json(
     {
@@ -44,4 +40,8 @@ export async function readJsonBody(
   } catch {
     return {};
   }
+}
+
+export function idempotencyKeyOf(request: Request): string | undefined {
+  return request.headers.get("Idempotency-Key")?.trim() || undefined;
 }

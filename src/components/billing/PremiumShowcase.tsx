@@ -1,8 +1,11 @@
 import {
+  BILLING_COPY,
   formatArsFromCents,
   formatMemberSince,
   PREMIUM_PRICE_CENTS,
+  PREMIUM_SHOWCASE_BENEFITS,
   premiumActions,
+  type PremiumBenefitId,
   premiumStatusCopy,
   type PremiumView,
 } from "@discordia/client-shared";
@@ -14,11 +17,6 @@ import { Button } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
-import {
-  BILLING_COPY,
-  PREMIUM_SHOWCASE_BENEFITS,
-  type PremiumBenefitId,
-} from "./billingCopy";
 import { DiscordiaPremiumBadge, DiscordiaPremiumMark } from "./DiscordiaIcons";
 import { PremiumFacts } from "./PremiumFacts";
 import { PremiumPill } from "./PremiumPill";

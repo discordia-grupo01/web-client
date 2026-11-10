@@ -1,6 +1,9 @@
 "use client";
 
 import {
+  BILLING_COPY,
+  type BillingSection,
+  type CheckoutItem,
   formatPoints,
   PREMIUM_PRICE_CENTS,
   type PremiumView,
@@ -13,12 +16,7 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
 
-import { BILLING_COPY } from "./billingCopy";
-import type { BillingSection } from "./billingSections";
-import {
-  CheckoutConfirmModal,
-  type CheckoutItem,
-} from "./CheckoutConfirmModal";
+import { CheckoutConfirmModal } from "./CheckoutConfirmModal";
 import { DiscordiaPointIcon } from "./DiscordiaIcons";
 import { useBillingOverview } from "./hooks/useBillingOverview";
 import { useCheckout } from "./hooks/useCheckout";
@@ -76,9 +74,7 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
   }
 
   function confirmCheckout(payerEmail: string) {
-    if (!item) return;
-    if (item.kind === "premium") void checkout.startPremium(payerEmail);
-    else void checkout.startPoints(item.packageId);
+    if (item) void checkout.start(item, payerEmail);
   }
 
   if (state.status === "loading") {

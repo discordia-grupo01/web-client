@@ -1,6 +1,6 @@
-import { Check } from "lucide-react";
+import { BILLING_COPY } from "@discordia/client-shared";
 
-import { BILLING_COPY } from "./billingCopy";
+import { Check } from "lucide-react";
 
 export function PremiumFacts() {
   return (
