@@ -1,8 +1,11 @@
 "use client";
 
 import {
+  BILLING_COPY,
   formatArsFromCents,
   PREMIUM_PRICE_CENTS,
+  PREMIUM_STATE_TONE,
+  premiumActionLabels,
   premiumActions,
   premiumCancelConfirmation,
   premiumStatusCopy,
@@ -18,17 +21,9 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { cn } from "@/lib/cn";
 import { cancelPremiumRequest } from "@/services/billing/client";
 
-import { BILLING_COPY } from "./billingCopy";
+import { BILLING_TONE_CLASS } from "./billingTone";
 import { DiscordiaPremiumMark } from "./DiscordiaIcons";
 import { PremiumSubscribeButton } from "./PremiumSubscribeButton";
-
-const STATE_TONE: Record<PremiumView["state"], string> = {
-  none: "bg-surface-input text-content-subtle",
-  processing_first_payment: "bg-warning/15 text-warning",
-  active: "bg-success/15 text-success",
-  active_canceled: "bg-warning/15 text-warning",
-  expired: "bg-danger/15 text-danger",
-};
 
 interface PremiumCardProps {
   premium: PremiumView;
@@ -48,10 +43,7 @@ export function PremiumCard({
   const [error, setError] = useState<string>();
   const actions = premiumActions(premium);
   const copy = premiumStatusCopy(premium);
-  const cancelLabel =
-    premium.state === "active"
-      ? BILLING_COPY.cancelRenewal
-      : BILLING_COPY.cancelSubscription;
+  const labels = premiumActionLabels(premium);
 
   async function cancel() {
     setIsConfirmOpen(false);
@@ -63,7 +55,7 @@ export function PremiumCard({
       setError(result.message);
       return;
     }
-    onChanged(result.premium);
+    onChanged(result.data);
   }
 
   return (
@@ -79,7 +71,7 @@ export function PremiumCard({
             <span
               className={cn(
                 "rounded-full px-2 py-0.5 text-[10px] font-bold uppercase",
-                STATE_TONE[premium.state],
+                BILLING_TONE_CLASS[PREMIUM_STATE_TONE[premium.state]],
               )}
             >
               {copy.label}
@@ -100,11 +92,7 @@ export function PremiumCard({
           <div className="flex shrink-0 flex-col gap-2">
             {actions.canSubscribe ? (
               <PremiumSubscribeButton
-                label={
-                  premium.state === "expired"
-                    ? BILLING_COPY.resubscribe
-                    : BILLING_COPY.subscribeCta
-                }
+                label={labels.subscribe}
                 onClick={onSubscribe}
               />
             ) : null}
@@ -116,7 +104,7 @@ export function PremiumCard({
                 onClick={() => setIsConfirmOpen(true)}
                 className="sm:w-auto"
               >
-                {cancelLabel}
+                {labels.cancel}
               </Button>
             ) : null}
           </div>
@@ -145,7 +133,7 @@ export function PremiumCard({
           body={premiumCancelConfirmation(
             actions.benefitsActive ? premium.premium_until : null,
           )}
-          confirmLabel={cancelLabel}
+          confirmLabel={labels.cancel}
           cancelLabel={BILLING_COPY.keepPremium}
           onConfirm={() => void cancel()}
           onCancel={() => setIsConfirmOpen(false)}

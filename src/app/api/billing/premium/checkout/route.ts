@@ -7,7 +7,11 @@ import { getValidSession } from "@/services/auth/session";
 import { startPremiumCheckout } from "@/services/billing/service";
 import type { CheckoutResult } from "@/types/billing.types";
 
-import { billingFailureResponse, readJsonBody } from "../../billingRoute";
+import {
+  billingFailureResponse,
+  idempotencyKeyOf,
+  readJsonBody,
+} from "../../billingRoute";
 
 /** BFF de `POST /v1/billing/premium/checkout`: devuelve la página de Mercado Pago. */
 export async function POST(
@@ -23,6 +27,7 @@ export async function POST(
   const result = await startPremiumCheckout(
     session.token,
     payerEmail ? { payer_email: payerEmail } : {},
+    idempotencyKeyOf(request),
   );
   if (!result.ok) return billingFailureResponse(result, CHECKOUT_START_FAILED);
 
