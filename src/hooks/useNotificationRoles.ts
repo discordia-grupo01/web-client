@@ -39,7 +39,9 @@ export function useNotificationRoles(
         if (!isMounted.current || !result.ok) return;
         setRoleNames((previous) => ({
           ...previous,
-          ...Object.fromEntries(result.roles.map((role) => [role.id, role.name])),
+          ...Object.fromEntries(
+            result.roles.map((role) => [role.id, role.name]),
+          ),
         }));
       });
     });
