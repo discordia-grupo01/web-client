@@ -6,6 +6,7 @@ import {
   KICK_ACTION_LABEL,
   MUTE_ACTION_LABEL,
   mutedUntilLabel,
+  REPORT_USER_LABEL,
   UNMUTE_ACTION_LABEL,
   SEND_MESSAGE_LABEL,
   UNBLOCK_USER_LABEL,
@@ -14,6 +15,7 @@ import {
 
 import {
   Ban,
+  Flag,
   Gavel,
   MessageCircle,
   Mic,
@@ -63,6 +65,8 @@ interface PublicProfileModalProps {
   onUnmute?: (profile: PublicUser) => void;
   /** Muestra la accion de bloquear/desbloquear: el perfil no es el propio. */
   canBlock?: boolean;
+  /** Solo dentro de un servidor y en perfiles ajenos: el reporte va a sus moderadores. */
+  onReport?: (profile: PublicUser) => void;
   /** Abre el mensaje directo con este usuario. Sin esto (perfil propio) no se muestra el botón. */
   onSendMessage?: (profile: PublicUser) => void;
   onClose: () => void;
@@ -81,6 +85,7 @@ export function PublicProfileModal({
   onMute,
   onUnmute,
   canBlock = false,
+  onReport,
   onSendMessage,
   onClose,
 }: PublicProfileModalProps) {
@@ -167,6 +172,18 @@ export function PublicProfileModal({
                       className="text-danger flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
                     >
                       <BlockIcon size={14} aria-hidden="true" />
+                    </button>
+                  </Tooltip>
+                ) : null}
+                {onReport ? (
+                  <Tooltip label={REPORT_USER_LABEL}>
+                    <button
+                      type="button"
+                      onClick={() => onReport(profile)}
+                      aria-label={REPORT_USER_LABEL}
+                      className="text-danger flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+                    >
+                      <Flag size={14} aria-hidden="true" />
                     </button>
                   </Tooltip>
                 ) : null}

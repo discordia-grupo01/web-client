@@ -16,6 +16,8 @@ import {
   UserPlus,
 } from "lucide-react";
 
+import { ReportsBadge } from "@/components/reports/ReportsBadge";
+
 import { ServerMenuItem } from "./ServerMenuItem";
 
 interface ServerMenuProps {
@@ -26,6 +28,8 @@ interface ServerMenuProps {
   canBanMembers: boolean;
   canInvite: boolean;
   transferLabel: string | null;
+  /** `null` si no hay reportes pendientes (o no es moderador). */
+  pendingReportsLabel: string | null;
   onClose: () => void;
   onInvite: () => void;
   onNotifications?: () => void;
@@ -46,6 +50,7 @@ export function ServerMenu({
   canBanMembers,
   canInvite,
   transferLabel,
+  pendingReportsLabel,
   onClose,
   onInvite,
   onNotifications,
@@ -95,6 +100,11 @@ export function ServerMenu({
             icon={Settings}
             label="Configuración del servidor"
             onClick={run(onOpenSettings)}
+            trailing={
+              pendingReportsLabel ? (
+                <ReportsBadge label={pendingReportsLabel} />
+              ) : null
+            }
           />
         ) : null}
 

@@ -5,6 +5,7 @@ import {
   type Channel,
   LOADING_MESSAGES_LABEL,
   type Member,
+  type Message,
   messageInputPlaceholder,
   type MessageAuthor,
   type MessageJumpTarget,
@@ -48,6 +49,7 @@ interface ChannelChatProps {
   jumpTarget?: MessageJumpTarget | null;
   /** El salto ya se hizo: quien lo pidio lo descarta para no repetirlo al volver al canal. */
   onJumpHandled?: () => void;
+  onReportMessage?: (message: Message, author: MessageAuthor) => void;
 }
 
 export function ChannelChat({
@@ -65,6 +67,7 @@ export function ChannelChat({
   onOpenProfile,
   jumpTarget = null,
   onJumpHandled,
+  onReportMessage,
 }: ChannelChatProps) {
   const {
     status,
@@ -187,6 +190,7 @@ export function ChannelChat({
           onDeleteMessage={handleDelete}
           onRetryMessage={pending.retry}
           onDiscardMessage={pending.discard}
+          onReportMessage={onReportMessage}
           onOpenProfile={
             onOpenProfile
               ? (userId) =>

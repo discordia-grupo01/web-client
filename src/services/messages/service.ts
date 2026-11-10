@@ -24,6 +24,8 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  *   GET  /v1/servers/:id/messages/search?q=&author_id=&limit=&before=
  *     -> 200 { messages, next_cursor, total, total_capped } (de mas nuevo a mas viejo)
  *      | 400 INVALID_SEARCH_QUERY | INVALID_CURSOR | 401 | 403 NOT_SERVER_MEMBER | 429 (gateway) | 503 SEARCH_UNAVAILABLE
+ *   DELETE /v1/channels/:id/messages/:messageId
+ *     -> 204 | 401 | 403 MESSAGE_DELETE_DENIED (ni autor ni MANAGE_MESSAGES) | 404 MESSAGE_NOT_FOUND
  *   POST /v1/socket-tickets
  *     -> 201 { ticket, expires_in } | 401 | 503 TICKET_UNAVAILABLE
  */
@@ -56,6 +58,22 @@ export function lookupMessages(
     {
       token,
     },
+  );
+}
+
+/**
+ * Borra por REST. El chat borra por el socket del canal abierto; esto es para
+ * cuando no hay canal abierto (un moderador desde la lista de reportes).
+ * `messaging` igual emite `message_deleted` a quien tenga el canal abierto.
+ */
+export function deleteMessage(
+  token: string,
+  channelId: string,
+  messageId: string,
+): Promise<ApiResult<void>> {
+  return apiRequest<void>(
+    `/v1/channels/${encodeURIComponent(channelId)}/messages/${encodeURIComponent(messageId)}`,
+    { method: "DELETE", token },
   );
 }
 

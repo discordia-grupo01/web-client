@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  hasModeratorPermissions,
   type OwnershipTransfer,
+  pendingReportsLabel,
   type Role,
   type ServerSummary,
 } from "@discordia/client-shared";
@@ -57,6 +59,13 @@ interface ServerSidebarHeaderProps {
   onOwnershipAccepted: () => void;
   /** Se dispara al cerrar el modal de roles: los permisos propios pudieron cambiar. */
   onPermissionsChanged: () => void;
+  /** Reportes pendientes de este servidor (0 si no es moderador). */
+  pendingReports: number;
+  onPendingReportsChanged: () => void;
+  /** "Ir al mensaje" desde un reporte: abre el canal y salta al mensaje. */
+  onGoToMessage: (channelId: string, messageId: string) => void;
+  /** Se expulso, baneo o silencio a alguien desde un reporte. */
+  onMembersChanged: () => void;
 }
 
 export function ServerSidebarHeader({
@@ -78,6 +87,10 @@ export function ServerSidebarHeader({
   bansVersion,
   onOwnershipAccepted,
   onPermissionsChanged,
+  pendingReports,
+  onPendingReportsChanged,
+  onGoToMessage,
+  onMembersChanged,
 }: ServerSidebarHeaderProps) {
   const { user } = useAuth();
   const notificationSettings = useOptionalNotificationSettings();
@@ -88,6 +101,8 @@ export function ServerSidebarHeader({
   const [isLoadingPendingTransfer, setIsLoadingPendingTransfer] =
     useState(true);
   const isOwner = user !== null && String(user.id) === server.owner_id;
+  const canReviewReports = hasModeratorPermissions({ isOwner, roles: myRoles });
+  const visiblePendingReports = canReviewReports ? pendingReports : 0;
 
   /**
    * Se consulta para cualquier miembro (no solo el owner): es la única forma
@@ -145,6 +160,11 @@ export function ServerSidebarHeader({
           canBanMembers={canBanMembers}
           canInvite={canInvite}
           transferLabel={transferLabel}
+          pendingReportsLabel={
+            visiblePendingReports > 0
+              ? pendingReportsLabel(visiblePendingReports, server.name)
+              : null
+          }
           onClose={() => setIsMenuOpen(false)}
           onInvite={() => setOpenModal("invite")}
           onNotifications={
@@ -186,7 +206,20 @@ export function ServerSidebarHeader({
           isOwner={isOwner}
           canManageServer={canManageServer}
           canManageMessages={canManageMessages}
+          canReviewReports={canReviewReports}
+          pendingReports={visiblePendingReports}
+          currentUserId={user ? String(user.id) : null}
           onClose={closeModal}
+          onGoToMessage={(channelId, messageId) => {
+            closeModal();
+            onGoToMessage(channelId, messageId);
+          }}
+          onOpenProfile={(userId) => {
+            closeModal();
+            onOpenMemberProfile(userId);
+          }}
+          onPendingReportsChanged={onPendingReportsChanged}
+          onMembersChanged={onMembersChanged}
           onUpdated={(updated) => {
             closeModal();
             onServerUpdated(updated);

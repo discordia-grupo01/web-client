@@ -2,6 +2,7 @@ import {
   type ListMessagesOptions,
   type ListMessagesResult,
   type LookupMessagesResult,
+  MESSAGE_DELETE_FAILED,
   MESSAGE_SEARCH_FAILED,
   type MessageSearchQuery,
   MESSAGES_LOAD_FAILED,
@@ -98,5 +99,22 @@ export async function lookupMessagesRequest(
     return data;
   } catch {
     return { ok: false, message: MESSAGES_LOAD_FAILED };
+  }
+}
+
+export async function deleteMessageRequest(
+  channelId: string,
+  messageId: string,
+): Promise<{ ok: true } | { ok: false; message: string }> {
+  try {
+    const { data } = await api.delete<
+      { ok: true } | { ok: false; message: string }
+    >(`/channels/${channelId}/messages/${messageId}`);
+    if (typeof data?.ok !== "boolean") {
+      return { ok: false, message: MESSAGE_DELETE_FAILED };
+    }
+    return data;
+  } catch {
+    return { ok: false, message: MESSAGE_DELETE_FAILED };
   }
 }
