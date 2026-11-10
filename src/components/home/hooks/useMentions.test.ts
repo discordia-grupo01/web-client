@@ -122,6 +122,96 @@ describe("useMentions", () => {
     expect(result.current.isUnread("m1")).toBe(false);
   });
 
+  describe("marcar todas como leidas", () => {
+    it("avisa al back una vez por canal y limpia las menciones", async () => {
+      listUnreadMentionsRequest.mockResolvedValue({
+        ok: true,
+        mentions: [
+          stored("m1", "c1", "s1"),
+          stored("m2", "c1", "s1"),
+          stored("m3", "c2", "s2"),
+        ],
+      });
+      const { result } = renderHook(() => useMentions("me"));
+      await waitFor(() => expect(result.current.hasUnread).toBe(true));
+
+      let ok = false;
+      await act(async () => {
+        ok = await result.current.markAllRead();
+      });
+
+      expect(ok).toBe(true);
+      expect(markChannelMentionsReadRequest).toHaveBeenCalledTimes(2);
+      expect(markChannelMentionsReadRequest).toHaveBeenCalledWith("c1");
+      expect(markChannelMentionsReadRequest).toHaveBeenCalledWith("c2");
+      expect(result.current.hasUnread).toBe(false);
+      expect(result.current.isUnread("m1")).toBe(false);
+    });
+
+    it("si un canal falla, ese queda sin leer y devuelve false", async () => {
+      listUnreadMentionsRequest.mockResolvedValue({
+        ok: true,
+        mentions: [stored("m1", "c1", "s1"), stored("m2", "c2", "s1")],
+      });
+      markChannelMentionsReadRequest.mockImplementation((channelId: string) =>
+        Promise.resolve(
+          channelId === "c2" ? { ok: false, message: "x" } : { ok: true },
+        ),
+      );
+      const { result } = renderHook(() => useMentions("me"));
+      await waitFor(() => expect(result.current.hasUnread).toBe(true));
+
+      let ok = true;
+      await act(async () => {
+        ok = await result.current.markAllRead();
+      });
+
+      expect(ok).toBe(false);
+      expect(result.current.isUnread("m1")).toBe(false);
+      expect(result.current.isUnread("m2")).toBe(true);
+    });
+
+    it("no toca las de un servidor suspendido", async () => {
+      listUnreadMentionsRequest.mockResolvedValue({
+        ok: true,
+        mentions: [stored("m1", "c1", "s1"), stored("m2", "c2", "s2")],
+      });
+      const { result } = renderHook(() =>
+        useMentions("me", NO_NOTIFICATION_SETTINGS, new Set(["s1"])),
+      );
+      await waitFor(() => expect(result.current.hasUnread).toBe(true));
+
+      await act(async () => {
+        await result.current.markAllRead();
+      });
+
+      expect(markChannelMentionsReadRequest).toHaveBeenCalledTimes(1);
+      expect(markChannelMentionsReadRequest).toHaveBeenCalledWith("c2");
+      expect(result.current.isUnread("m1")).toBe(true);
+    });
+
+    it("tambien marca las de un canal silenciado", async () => {
+      listUnreadMentionsRequest.mockResolvedValue({
+        ok: true,
+        mentions: [stored("m1", "c1", "s1")],
+      });
+      const { result } = renderHook(() =>
+        useMentions("me", {
+          ...NO_NOTIFICATION_SETTINGS,
+          mutedChannels: { c1: true },
+        }),
+      );
+      await waitFor(() => expect(result.current.hasUnread).toBe(true));
+
+      await act(async () => {
+        await result.current.markAllRead();
+      });
+
+      expect(markChannelMentionsReadRequest).toHaveBeenCalledWith("c1");
+      expect(result.current.isUnread("m1")).toBe(false);
+    });
+  });
+
   describe("con preferencias de notificacion", () => {
     const settings = (
       overrides: Partial<NotificationSettings>,
