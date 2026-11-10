@@ -1,13 +1,13 @@
 "use client";
 
 import {
-  ownerOfScreenShareIdentity,
   parseVoiceBridgeCommand,
   serializeVoiceBridgeMessage,
   type VoiceBridgeEvent,
   type VoiceConnectionStatus,
   type VoiceParticipant,
   type VoiceParticipantProfile,
+  voiceAvatarOf,
   voiceTileName,
   voiceTilesOf,
   withParticipantProfiles,
@@ -118,13 +118,7 @@ export function VoiceEmbed() {
     [participants, profiles],
   );
   const avatarSrcOf = useCallback(
-    (identity: string) => {
-      const owner = ownerOfScreenShareIdentity(identity) ?? identity;
-      return (
-        profiles.find((profile) => profile.identity === owner)?.avatarUrl ??
-        null
-      );
-    },
+    (identity: string) => voiceAvatarOf(profiles, identity),
     [profiles],
   );
 
