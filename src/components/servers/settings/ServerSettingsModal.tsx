@@ -25,8 +25,7 @@ import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";
 const SETTINGS_MODAL_WIDTH = 660;
-/** La lista de reportes necesita mas ancho para que cada fila no se apriete. */
-const REPORTS_MODAL_WIDTH = 880;
+const REPORTS_MODAL_WIDTH = 780;
 
 type MobileView = "menu" | "section";
 

@@ -239,6 +239,7 @@ export function ReportsSection({
               const messageState = messageStateOf(report);
               const { channel_id: channelId, message_id: messageId } = report;
               const reportedUserId = report.reported_user_id;
+              const isPending = report.status === "pending";
               return (
                 <li key={report.id}>
                   <ReportRow
@@ -250,12 +251,15 @@ export function ReportsSection({
                     sanctions={sanctionsFor(report, messageState)}
                     isClosing={action.closingId === report.id}
                     onGoToMessage={
-                      messageState?.status === "ready" && channelId && messageId
+                      isPending &&
+                      messageState?.status === "ready" &&
+                      channelId &&
+                      messageId
                         ? () => onGoToMessage(channelId, messageId)
                         : undefined
                     }
                     onViewProfile={
-                      reportedUserId
+                      isPending && reportedUserId
                         ? () => onOpenProfile(reportedUserId)
                         : undefined
                     }
