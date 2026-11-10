@@ -39,6 +39,8 @@ interface VoiceChannelViewProps {
   ownProfile: User | null;
   /** Quien esta en este canal, para la pantalla previa a entrar. */
   presence: readonly VoicePresenceParticipant[];
+  /** Foto de los demas participantes; `null` muestra la inicial. */
+  avatarSrcOf: (identity: string) => string | null;
 }
 
 export function VoiceChannelView({
@@ -49,6 +51,7 @@ export function VoiceChannelView({
   isCheckingAccess = false,
   ownProfile,
   presence,
+  avatarSrcOf,
 }: VoiceChannelViewProps) {
   const voice = useVoiceSession();
   const { state } = voice;
@@ -68,6 +71,7 @@ export function VoiceChannelView({
         isCheckingAccess={isCheckingAccess}
         isInAnotherChannel={state.target !== null}
         presence={presence}
+        avatarSrcOf={avatarSrcOf}
         notice={state.notice}
         onDismissNotice={voice.dismissNotice}
         onJoin={() =>
@@ -99,6 +103,7 @@ export function VoiceChannelView({
         participants={participants}
         isConnecting={state.status === "connecting"}
         ownAvatarSrc={avatarSrc}
+        avatarSrcOf={avatarSrcOf}
         videoOf={voice.videoOf}
         onToggleMutedForMe={voice.toggleMutedForMe}
         onShowParticipants={openPanel}
@@ -139,6 +144,7 @@ export function VoiceChannelView({
         <VoiceParticipantsPanel
           participants={participants}
           ownAvatarSrc={avatarSrc}
+          avatarSrcOf={avatarSrcOf}
           pinnedIdentity={pinnedIdentity}
           onToggleMutedForMe={voice.toggleMutedForMe}
           onPinChange={(identity) => {
@@ -158,6 +164,7 @@ function VoiceLobby({
   isCheckingAccess,
   isInAnotherChannel,
   presence,
+  avatarSrcOf,
   notice,
   onDismissNotice,
   onJoin,
@@ -167,6 +174,7 @@ function VoiceLobby({
   isCheckingAccess: boolean;
   isInAnotherChannel: boolean;
   presence: readonly VoicePresenceParticipant[];
+  avatarSrcOf: (identity: string) => string | null;
   notice: string | null;
   onDismissNotice: () => void;
   onJoin: () => void;
@@ -205,6 +213,7 @@ function VoiceLobby({
             >
               <Avatar
                 name={participant.name}
+                src={avatarSrcOf(participant.participant_id)}
                 size={36}
                 className="border-surface rounded-full border-2"
               />

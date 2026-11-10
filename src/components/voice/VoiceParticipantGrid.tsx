@@ -95,6 +95,11 @@ export function VoiceParticipantGrid({
     (participant) => !visibleIds.has(participant.identity),
   );
 
+  const avatarOf = (participant: VoiceParticipant) =>
+    participant.isLocal
+      ? ownAvatarSrc
+      : (avatarSrcOf?.(participant.identity) ?? null);
+
   const renderTile: RenderTile = (participant, width, height) => {
     const { identity, isLocal } = participant;
     return (
@@ -103,7 +108,7 @@ export function VoiceParticipantGrid({
         participant={participant}
         width={width}
         height={height}
-        avatarSrc={isLocal ? ownAvatarSrc : (avatarSrcOf?.(identity) ?? null)}
+        avatarSrc={avatarOf(participant)}
         video={videoOf(identity)}
         onToggleMutedForMe={
           isLocal || isScreenShareIdentity(identity)
@@ -144,6 +149,7 @@ export function VoiceParticipantGrid({
           size={size}
           isNarrow={isNarrow}
           renderTile={renderTile}
+          avatarSrcOf={avatarOf}
           onShowParticipants={onShowParticipants}
           onBackToGrid={backToGrid}
           stageAspect={
@@ -170,6 +176,7 @@ export function VoiceParticipantGrid({
               hidden={hidden}
               width={layout.tileWidth}
               height={layout.tileHeight}
+              avatarSrcOf={avatarOf}
               onPress={onShowParticipants}
             />
           ) : null}

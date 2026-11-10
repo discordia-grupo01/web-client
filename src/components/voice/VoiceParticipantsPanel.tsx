@@ -30,6 +30,8 @@ import { cn } from "@/lib/cn";
 interface VoiceParticipantsPanelProps {
   participants: readonly VoiceParticipant[];
   ownAvatarSrc: string | null;
+  /** Foto de los demas (de su perfil publico); `null` muestra la inicial. */
+  avatarSrcOf: (identity: string) => string | null;
   pinnedIdentity: string | null;
   onToggleMutedForMe: (identity: string) => void;
   onPinChange: (identity: string | null) => void;
@@ -40,6 +42,7 @@ interface VoiceParticipantsPanelProps {
 export function VoiceParticipantsPanel({
   participants,
   ownAvatarSrc,
+  avatarSrcOf,
   pinnedIdentity,
   onToggleMutedForMe,
   onPinChange,
@@ -91,7 +94,11 @@ export function VoiceParticipantsPanel({
             <ParticipantRow
               key={participant.identity}
               participant={participant}
-              avatarSrc={participant.isLocal ? ownAvatarSrc : null}
+              avatarSrc={
+                participant.isLocal
+                  ? ownAvatarSrc
+                  : avatarSrcOf(participant.identity)
+              }
               isPinned={participant.identity === pinnedIdentity}
               onToggleMutedForMe={() =>
                 onToggleMutedForMe(participant.identity)
