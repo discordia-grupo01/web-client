@@ -9,11 +9,11 @@ import {
   parseReportReason,
   type Report,
   REPORT_DISMISSED_BADGE,
-  REPORT_RESOLVED_BADGE,
   REPORTED_MESSAGE_GONE,
   REPORTED_MESSAGE_UNKNOWN_CHANNEL,
   reportedByLabel,
   reportedMessageIn,
+  reportResolvedLabel,
   type ReportSanction,
   RESOLVE_REPORT_ACTION,
   VIEW_PROFILE_LABEL,
@@ -89,7 +89,7 @@ export function ReportRow({
             )}
           >
             {report.status === "resolved"
-              ? REPORT_RESOLVED_BADGE
+              ? reportResolvedLabel(report.resolution_action)
               : REPORT_DISMISSED_BADGE}
           </span>
         ) : null}

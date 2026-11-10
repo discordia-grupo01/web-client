@@ -8,6 +8,7 @@ import {
   REPORT_CLOSE_FAILED,
   REPORT_CREATE_FAILED,
   type ReportStatus,
+  type ReportResolutionAction,
   REPORTS_LOAD_FAILED,
   reportsQuery,
 } from "@discordia/client-shared";
@@ -47,11 +48,12 @@ export async function closeReportRequest(
   serverId: string,
   reportId: string,
   status: ClosedReportStatus,
+  action: ReportResolutionAction | null = null,
 ): Promise<CloseReportResult> {
   try {
     const { data } = await api.patch<CloseReportResult>(
       `/servers/${serverId}/reports/${reportId}`,
-      { status },
+      action ? { status, action } : { status },
     );
     return data;
   } catch {

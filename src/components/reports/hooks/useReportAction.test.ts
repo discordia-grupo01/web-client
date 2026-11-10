@@ -1,6 +1,8 @@
 import {
+  type Message,
   type Report,
   REPORT_AUTO_RESOLVE_PENDING,
+  unknownAuthor,
 } from "@discordia/client-shared";
 import { act, renderHook } from "@testing-library/react";
 import { describe, expect, it, vi } from "vitest";
@@ -28,7 +30,7 @@ describe("useReportAction", () => {
 
     await act(async () => result.current.sanctionApplied());
 
-    expect(close).toHaveBeenCalledWith("r1", "resolved");
+    expect(close).toHaveBeenCalledWith("r1", "resolved", "mute");
     expect(result.current.notice).toEqual({
       tone: "success",
       text: "Beto quedó silenciado y el reporte, resuelto.",
@@ -58,6 +60,31 @@ describe("useReportAction", () => {
     await act(async () => result.current.sanctionApplied());
 
     expect(result.current.notice?.tone).toBe("success");
+  });
+
+  it("eliminar el mensaje lo anota como delete_message", async () => {
+    const { result, close } = setup({ ok: true, alreadyClosed: false });
+    const message = { id: "m1", channel_id: "c1" } as Message;
+    act(() =>
+      result.current.start({
+        sanction: "delete",
+        report,
+        message,
+        author: unknownAuthor("beto"),
+      }),
+    );
+
+    await act(() => result.current.confirmDelete());
+
+    expect(close).toHaveBeenCalledWith("r1", "resolved", "delete_message");
+  });
+
+  it("resolver a mano no manda accion", async () => {
+    const { result, close } = setup({ ok: true, alreadyClosed: false });
+
+    await act(() => result.current.closeManually(report, "resolved"));
+
+    expect(close).toHaveBeenCalledWith("r1", "resolved");
   });
 
   it("cerrar a mano muestra el error si falla", async () => {

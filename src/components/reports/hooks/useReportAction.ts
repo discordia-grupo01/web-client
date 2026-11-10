@@ -6,8 +6,10 @@ import {
   type MessageAuthor,
   type Report,
   REPORT_AUTO_RESOLVE_PENDING,
+  type ReportResolutionAction,
   type ReportSanction,
   reportSanctionNotice,
+  resolutionActionFor,
 } from "@discordia/client-shared";
 import { useState } from "react";
 
@@ -43,6 +45,7 @@ export function useReportAction(
   close: (
     reportId: string,
     status: ClosedReportStatus,
+    action?: ReportResolutionAction | null,
   ) => Promise<CloseOutcome>,
 ) {
   const [active, setActive] = useState<ActiveSanction | null>(null);
@@ -54,7 +57,11 @@ export function useReportAction(
     report: Report,
     name: string,
   ) {
-    const outcome = await close(report.id, "resolved");
+    const outcome = await close(
+      report.id,
+      "resolved",
+      resolutionActionFor(sanction),
+    );
     setNotice(
       outcome.ok
         ? { tone: "success", text: reportSanctionNotice(sanction, name) }

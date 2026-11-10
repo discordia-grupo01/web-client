@@ -4,6 +4,7 @@ import {
   type CloseReportResult,
   isReportGone,
   REPORT_REASONS,
+  type ReportResolutionAction,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -11,7 +12,17 @@ import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
 import { closeReport } from "@/services/reports/service";
 
-/** BFF de `PATCH /v1/servers/:id/reports/:reportId`. Body: `{ status }`. */
+const ACTIONS: readonly ReportResolutionAction[] = [
+  "delete_message",
+  "mute",
+  "kick",
+  "ban",
+];
+
+/**
+ * BFF de `PATCH /v1/servers/:id/reports/:reportId`.
+ * Body: `{ status, action? }`; `action` solo al resolver desde una sancion.
+ */
 export async function PATCH(
   request: Request,
   { params }: { params: { serverId: string; reportId: string } },
@@ -20,11 +31,13 @@ export async function PATCH(
   if (!session) return unauthorizedResponse();
 
   let status: ClosedReportStatus | null = null;
+  let action: ReportResolutionAction | null = null;
   try {
     const body = await request.json();
     if (body?.status === "resolved" || body?.status === "dismissed") {
       status = body.status;
     }
+    action = ACTIONS.find((value) => value === body?.action) ?? null;
   } catch {
     // Body invalido: se responde abajo.
   }
@@ -40,6 +53,7 @@ export async function PATCH(
     params.serverId,
     params.reportId,
     status,
+    action,
   );
   if (!result.ok) {
     if (result.status === 401) return unauthorizedResponse();

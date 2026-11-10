@@ -9,6 +9,7 @@ import {
   pendingReportsTotalFrom,
   type Report,
   type ReportListResponse,
+  type ReportResolutionAction,
   type ReportStatus,
   reportsQuery,
 } from "@discordia/client-shared";
@@ -52,11 +53,12 @@ export function closeReport(
   serverId: string,
   reportId: string,
   status: ClosedReportStatus,
+  action: ReportResolutionAction | null = null,
 ): Promise<ApiResult<Report>> {
   return apiRequest<Report>(`/v1/servers/${serverId}/reports/${reportId}`, {
     method: "PATCH",
     token,
-    data: { status },
+    data: action ? { status, action } : { status },
   });
 }
 

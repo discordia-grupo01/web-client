@@ -5,6 +5,7 @@ import {
   pageCountOf,
   type Report,
   REPORTS_PAGE_SIZE,
+  type ReportResolutionAction,
   type ReportStatus,
 } from "@discordia/client-shared";
 import { useCallback, useEffect, useState } from "react";
@@ -85,8 +86,14 @@ export function useReportsList(serverId: string, onPendingClosed: () => void) {
     async (
       reportId: string,
       closing: ClosedReportStatus,
+      action: ReportResolutionAction | null = null,
     ): Promise<CloseOutcome> => {
-      const result = await closeReportRequest(serverId, reportId, closing);
+      const result = await closeReportRequest(
+        serverId,
+        reportId,
+        closing,
+        action,
+      );
       if (result.ok) {
         removeLocally(reportId);
         return { ok: true, alreadyClosed: false };
