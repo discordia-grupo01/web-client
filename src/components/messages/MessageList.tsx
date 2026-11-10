@@ -3,6 +3,7 @@
 import {
   canDeleteMessage,
   canEditMessage,
+  canReportMessage,
   type FocusedMessage,
   LOAD_NEWER_MESSAGES_LABEL,
   LOAD_OLDER_MESSAGES_LABEL,
@@ -56,6 +57,8 @@ interface MessageListProps {
   onRetryMessage?: (clientId: string) => void;
   onDiscardMessage?: (clientId: string) => void;
   onOpenProfile?: (userId: string) => void;
+  /** Solo lo pasa el chat de un canal de servidor: en DMs no se reporta. */
+  onReportMessage?: (message: Message, author: MessageAuthor) => void;
 }
 
 /** Historial del canal. Baja solo al fondo cuando llega un mensaje nuevo. */
@@ -81,6 +84,7 @@ export function MessageList({
   onRetryMessage,
   onDiscardMessage,
   onOpenProfile,
+  onReportMessage,
 }: MessageListProps) {
   const scroll = useStickyScroll(messages, {
     isViewingPast: hasNewer,
@@ -115,6 +119,15 @@ export function MessageList({
             previous?.inserted_at,
             message.inserted_at,
           );
+          const author =
+            authors[message.user_id] ?? unknownAuthor(message.user_id);
+          const isReportable =
+            onReportMessage !== undefined &&
+            canReportMessage({
+              authorId: message.user_id,
+              currentUserId,
+              delivery: message.delivery,
+            });
           return (
             <li key={message.id} data-message-id={message.id}>
               {newDay ? (
@@ -129,9 +142,7 @@ export function MessageList({
               ) : null}
               <MessageItem
                 message={message}
-                author={
-                  authors[message.user_id] ?? unknownAuthor(message.user_id)
-                }
+                author={author}
                 isGroupStart={newDay || startsMessageGroup(previous, message)}
                 isFocused={message.id === highlightedId}
                 canEdit={
@@ -149,6 +160,11 @@ export function MessageList({
                 onOpenProfile={onOpenProfile}
                 onEdit={(content) => onEditMessage(message.id, content)}
                 onDelete={() => onDeleteMessage(message.id)}
+                onReport={
+                  isReportable
+                    ? () => onReportMessage(message, author)
+                    : undefined
+                }
                 onRetry={
                   message.client_id && onRetryMessage
                     ? () => onRetryMessage(message.client_id!)
