@@ -7,6 +7,7 @@ import {
   type ChannelOverridePermission,
   channelHasNotifications,
   channelsOfCategory,
+  canReportUser,
   hasPermission,
   isChannelSilenced,
   isMemberMuted,
@@ -85,6 +86,8 @@ import { ChannelHeader } from "@/components/channels/ChannelHeader";
 import { CreateChannelModal } from "@/components/channels/CreateChannelModal";
 import { DeleteChannelModal } from "@/components/channels/DeleteChannelModal";
 import { NotificationSettingsModal } from "@/components/notifications/NotificationSettingsModal";
+import { ReportModal } from "@/components/reports/ReportModal";
+import type { ReportTarget } from "@/components/reports/reportTarget";
 import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
 import { SortableChannelRow } from "@/components/channels/ChannelRow";
 import {
@@ -163,6 +166,9 @@ interface ServerViewProps {
   initialChannelId?: string | null;
   /** Avisa el canal abierto, para recordarlo entre recargas. */
   onChannelChange?: (channelId: string) => void;
+  /** Reportes pendientes de este servidor (0 si no es moderador). */
+  pendingReports: number;
+  onPendingReportsChanged: () => void;
 }
 
 function CategoryDropZone({
@@ -362,6 +368,11 @@ export function ServerView(props: ServerViewProps) {
   const [jumpTarget, setJumpTarget] = useState<MessageJumpTarget | null>(null);
   const jumpNonce = useRef(0);
   const clearJumpTarget = useCallback(() => setJumpTarget(null), []);
+  const jumpToMessage = useCallback(
+    (channelId: string, messageId: string) =>
+      setJumpTarget({ channelId, messageId, nonce: ++jumpNonce.current }),
+    [],
+  );
 
   return (
     <MessageSearchProvider
@@ -369,19 +380,14 @@ export function ServerView(props: ServerViewProps) {
       serverName={props.server.name}
       isOpen={isSearchOpen}
       onOpenChange={setIsSearchOpen}
-      onOpenResult={(message) =>
-        setJumpTarget({
-          channelId: message.channel_id,
-          messageId: message.id,
-          nonce: ++jumpNonce.current,
-        })
-      }
+      onOpenResult={(message) => jumpToMessage(message.channel_id, message.id)}
     >
       <ServerViewContent
         {...props}
         isSearchOpen={isSearchOpen}
         jumpTarget={jumpTarget}
         onJumpHandled={clearJumpTarget}
+        onJumpToMessage={jumpToMessage}
       />
     </MessageSearchProvider>
   );
@@ -392,6 +398,7 @@ interface ServerViewContentProps extends ServerViewProps {
   /** Resultado de busqueda a mostrar: abre su canal y salta al mensaje. */
   jumpTarget: MessageJumpTarget | null;
   onJumpHandled: () => void;
+  onJumpToMessage: (channelId: string, messageId: string) => void;
 }
 
 function ServerViewContent({
@@ -407,6 +414,9 @@ function ServerViewContent({
   isSearchOpen,
   jumpTarget,
   onJumpHandled,
+  onJumpToMessage,
+  pendingReports,
+  onPendingReportsChanged,
 }: ServerViewContentProps) {
   const { user } = useAuth();
   const { openPanel, close: closeMobilePanel } = useMobilePanels();
@@ -502,6 +512,7 @@ function ServerViewContent({
   const [kickTarget, setKickTarget] = useState<BanTarget | null>(null);
   const [muteTarget, setMuteTarget] = useState<BanTarget | null>(null);
   const [unmuteTarget, setUnmuteTarget] = useState<BanTarget | null>(null);
+  const [reportTarget, setReportTarget] = useState<ReportTarget | null>(null);
   const [unmuteError, setUnmuteError] = useState("");
   /** `muted_until` del miembro cuyo perfil esta abierto (viene de la lista de miembros). */
   const [viewingMutedUntil, setViewingMutedUntil] = useState<string | null>(
@@ -1018,6 +1029,10 @@ function ServerViewContent({
               onServerUpdate({ ...server, owner_id: String(user.id) });
             }}
             onPermissionsChanged={handleRolesChanged}
+            pendingReports={pendingReports}
+            onPendingReportsChanged={onPendingReportsChanged}
+            onGoToMessage={onJumpToMessage}
+            onMembersChanged={() => setMembersVersion((version) => version + 1)}
           />
 
           {dragError ? (
@@ -1169,6 +1184,9 @@ function ServerViewContent({
                         : null
                     }
                     onJumpHandled={onJumpHandled}
+                    onReportMessage={(message, author) =>
+                      setReportTarget({ kind: "message", message, author })
+                    }
                     onOpenProfile={(userId, member) => {
                       if (userId === String(ownProfile?.id ?? user?.id)) {
                         onOpenOwnProfile(server.id);
@@ -1371,6 +1389,19 @@ function ServerViewContent({
               avatarSrc: avatarSrcOf(profile.id, profile),
             });
           }}
+          onReport={
+            canReportUser(viewingUserId, user ? String(user.id) : null)
+              ? (profile) => {
+                  setViewingUserId(null);
+                  setReportTarget({
+                    kind: "user",
+                    userId: profile.id,
+                    name: profile.name,
+                    avatarSrc: avatarSrcOf(profile.id, profile),
+                  });
+                }
+              : undefined
+          }
           onSendMessage={
             viewingUserId !== String(user?.id)
               ? (profile) => {
@@ -1431,6 +1462,15 @@ function ServerViewContent({
           target={kickTarget}
           onClose={() => setKickTarget(null)}
           onKicked={() => setMembersVersion((version) => version + 1)}
+        />
+      ) : null}
+
+      {reportTarget ? (
+        <ReportModal
+          serverId={server.id}
+          serverName={server.name}
+          target={reportTarget}
+          onClose={() => setReportTarget(null)}
         />
       ) : null}
     </div>

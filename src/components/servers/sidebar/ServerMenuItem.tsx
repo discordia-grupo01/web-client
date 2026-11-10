@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
 
@@ -8,6 +9,8 @@ interface ServerMenuItemProps {
   onClick: () => void;
   /** Acciones destructivas (abandonar el servidor). */
   variant?: "default" | "danger";
+  /** Indicador al final de la fila (reportes pendientes). */
+  trailing?: ReactNode;
 }
 
 /** Una fila del menu desplegable del servidor: icono + texto. */
@@ -16,6 +19,7 @@ export function ServerMenuItem({
   label,
   onClick,
   variant = "default",
+  trailing,
 }: ServerMenuItemProps) {
   return (
     <button
@@ -29,7 +33,8 @@ export function ServerMenuItem({
       )}
     >
       <Icon size={14} className="shrink-0" />
-      {label}
+      <span className="min-w-0 flex-1 truncate">{label}</span>
+      {trailing}
     </button>
   );
 }
