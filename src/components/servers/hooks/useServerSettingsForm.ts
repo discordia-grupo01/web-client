@@ -1,10 +1,15 @@
 "use client";
 
 import {
+  boostPerkAvailableFrom,
+  canSetServerBanner,
   MAX_NAME,
   MIN_SERVER_NAME,
   PRESET_BANNER_FAILED,
   type PresetBanner,
+  serverBoostCount,
+  serverBoostLevel,
+  serverIconTypes,
   type ServerSummary,
   validateServerBanner,
   validateServerIcon,
@@ -54,6 +59,9 @@ export function useServerSettingsForm({
   const [globalError, setGlobalError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  const boostLevel = serverBoostLevel(server);
+  const isBannerLocked = !canSetServerBanner(boostLevel);
+
   const trimmedName = name.trim();
   const nameChanged = trimmedName !== server.name;
   // Pedir que borren un banner que no existe no es un cambio.
@@ -88,10 +96,10 @@ export function useServerSettingsForm({
   function pickIcon(file: File) {
     setIconError("");
     setGlobalError("");
-    const error = validateServerIcon({
-      mimeType: file.type,
-      sizeBytes: file.size,
-    });
+    const error = validateServerIcon(
+      { mimeType: file.type, sizeBytes: file.size },
+      { boostLevel },
+    );
     if (error) {
       setIconError(error);
       return;
@@ -104,6 +112,10 @@ export function useServerSettingsForm({
   function pickBanner(file: File) {
     setBannerError("");
     setGlobalError("");
+    if (isBannerLocked) {
+      setBannerError(boostPerkAvailableFrom("custom_banner"));
+      return;
+    }
     const error = validateServerBanner({
       mimeType: file.type,
       sizeBytes: file.size,
@@ -120,6 +132,10 @@ export function useServerSettingsForm({
   function choosePreset(preset: PresetBanner) {
     setBannerError("");
     setGlobalError("");
+    if (isBannerLocked) {
+      setBannerError(boostPerkAvailableFrom("custom_banner"));
+      return;
+    }
     setBanner({ kind: "preset", preset });
   }
 
@@ -197,6 +213,10 @@ export function useServerSettingsForm({
     bannerPreviewGradient,
     hasBanner: bannerPreviewSrc !== null || bannerPreviewGradient !== null,
     selectedPresetId: banner.kind === "preset" ? banner.preset.id : null,
+    boostLevel,
+    boostCount: serverBoostCount(server),
+    isBannerLocked,
+    iconTypes: serverIconTypes(boostLevel),
     pickIcon,
     pickBanner,
     choosePreset,
