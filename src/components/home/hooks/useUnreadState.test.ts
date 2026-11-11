@@ -21,6 +21,7 @@ vi.mock("@/services/notifications/socket", () => ({
 }));
 
 import { useUnreadState } from "@/components/home/hooks/useUnreadState";
+import { changeBus } from "@/lib/changeBus";
 
 const flags = (unread: boolean, mentionCount = 0) => ({
   unread,
@@ -193,5 +194,32 @@ describe("useUnreadState", () => {
     const { unmount } = renderHook(() => useUnreadState("me", null));
     unmount();
     expect(disconnect).toHaveBeenCalled();
+  });
+
+  it("pasa los avisos de cambio al bus", () => {
+    const listener = vi.fn();
+    const unsubscribe = changeBus.subscribe(
+      { resources: ["members"] },
+      listener,
+    );
+    renderHook(() => useUnreadState("me", null));
+    act(() => handlers.changed?.({ resource: "members", server_id: "s1" }));
+    unsubscribe();
+
+    expect(listener).toHaveBeenCalledWith({
+      resource: "members",
+      server_id: "s1",
+    });
+  });
+
+  it("recarga todo al reconectar pero no en la primera conexión", () => {
+    const refreshAll = vi.spyOn(changeBus, "refreshAll");
+    renderHook(() => useUnreadState("me", null));
+    act(() => handlers.snapshot(snapshot));
+    expect(refreshAll).not.toHaveBeenCalled();
+
+    act(() => handlers.snapshot(snapshot));
+    expect(refreshAll).toHaveBeenCalledTimes(1);
+    refreshAll.mockRestore();
   });
 });
