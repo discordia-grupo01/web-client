@@ -3,9 +3,11 @@ import {
   SEND_MESSAGE_LABEL,
 } from "@discordia/client-shared";
 
-import { render, screen, waitFor } from "@testing-library/react";
+import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeAll, describe, expect, it, vi } from "vitest";
+
+vi.mock("./MessageEditor", () => import("./MessageEditor.fake"));
 
 vi.mock("@/services/attachments/client", () => ({
   uploadAttachmentRequest: vi.fn(),
@@ -26,6 +28,12 @@ function renderComposer(onSend = vi.fn()) {
     />,
   );
   return { onSend, input: screen.getByRole("textbox") };
+}
+
+function draftMentions(): string[] {
+  return within(screen.getByTestId("draft-mentions"))
+    .queryAllByRole("listitem")
+    .map((item) => item.textContent ?? "");
 }
 
 describe("MessageComposer", () => {
@@ -171,42 +179,30 @@ describe("MessageComposer", () => {
       expect(onSend).toHaveBeenCalledWith("<@&r1> hola", []);
     });
 
-    it("la mencion elegida se resalta en el cuadro de texto", async () => {
+    it("la mencion elegida queda marcada en el borrador", async () => {
       const { input } = renderWithMentions(true);
 
       await userEvent.type(input, "@be{Enter}sigo");
 
-      const chip = screen.getByText("@Beto");
-      expect(chip.tagName).toBe("SPAN");
-      expect(chip.getAttribute("style")).toContain("background-color");
+      expect(draftMentions()).toEqual(["@Beto"]);
     });
 
     it("@everyone se resalta solo con permiso", async () => {
       const withPermission = renderWithMentions(true);
       await userEvent.type(withPermission.input, "hola @everyone ");
-      const highlighted = screen
-        .getAllByText("@everyone")
-        .some((element) =>
-          element.getAttribute("style")?.includes("background-color"),
-        );
-      expect(highlighted).toBe(true);
+      expect(draftMentions()).toEqual(["@everyone"]);
     });
 
     it("sin permiso @everyone queda sin resaltar, como texto comun", async () => {
       const { input } = renderWithMentions(false);
       await userEvent.type(input, "hola @everyone ");
-      const highlighted = screen
-        .queryAllByText("@everyone")
-        .some((element) =>
-          element.getAttribute("style")?.includes("background-color"),
-        );
-      expect(highlighted).toBe(false);
+      expect(draftMentions()).toEqual([]);
     });
 
     it("un @Nombre escrito a mano no se resalta", async () => {
       const { input } = renderWithMentions(true);
       await userEvent.type(input, "hola @Beto{Escape} ");
-      expect(screen.queryByText("@Beto")).toBeNull();
+      expect(draftMentions()).toEqual([]);
     });
 
     it("Esc cierra la lista sin elegir nada", async () => {

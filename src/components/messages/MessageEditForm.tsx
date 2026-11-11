@@ -11,21 +11,19 @@ import { useId, useRef, useState, type KeyboardEvent } from "react";
 import { useMentionDraft } from "@/components/messages/hooks/useMentionDraft";
 
 import { MentionSuggestions } from "./MentionSuggestions";
+import { MessageEditor, type MessageEditorHandle } from "./MessageEditor";
 import { useMessageMentions } from "@/contexts/MentionsContext";
 
 interface MessageEditFormProps {
   initialContent: string;
-  /** El mensaje tiene adjuntos: puede quedar sin texto. */
   hasAttachments?: boolean;
   onSave: (content: string) => void;
   onCancel: () => void;
-  /** Mientras se guarda no se puede volver a guardar. */
   isSaving?: boolean;
-  /** Por que fallo el guardado; el formulario sigue abierto con el borrador. */
   error?: string | null;
 }
 
-/** Textarea inline para editar un mensaje: Enter guarda, Esc cancela. */
+/** Editor inline para editar un mensaje: Enter guarda, Esc cancela. */
 export function MessageEditForm({
   initialContent,
   hasAttachments = false,
@@ -35,7 +33,7 @@ export function MessageEditForm({
   error = null,
 }: MessageEditFormProps) {
   const { sources, resolveMention } = useMessageMentions();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<MessageEditorHandle>(null);
   const suggestionsId = useId();
   // El mensaje trae `<@id>`; se edita como `@Nombre` y se vuelve a codificar al guardar.
   const [initial] = useState(() =>
@@ -45,7 +43,7 @@ export function MessageEditForm({
     ),
   );
   const draft = useMentionDraft({
-    textareaRef,
+    editorRef,
     sources,
     initialText: initial.text,
     initialPicked: initial.picked,
@@ -57,7 +55,7 @@ export function MessageEditForm({
     onSave(draft.encoded.trim());
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (draft.handleSuggestionKey(event)) return;
     if (event.key === "Enter" && !event.shiftKey) {
       event.preventDefault();
@@ -78,17 +76,18 @@ export function MessageEditForm({
           onPick={draft.pick}
         />
       ) : null}
-      <textarea
-        ref={textareaRef}
+      <MessageEditor
+        ref={editorRef}
         value={draft.text}
+        segments={draft.segments}
         onChange={draft.handleChange}
-        onSelect={draft.handleSelect}
+        onCursorMove={draft.handleCursorMove}
         onKeyDown={handleKeyDown}
         aria-controls={draft.isOpen ? suggestionsId : undefined}
         aria-autocomplete="list"
         autoFocus
         aria-invalid={error ? true : undefined}
-        className="bg-surface-input border-accent text-content w-full resize-none rounded-md border p-2 text-sm outline-none"
+        className="bg-surface-input border-accent text-content w-full rounded-md border p-2 text-sm outline-none"
         style={{ minHeight: 56 }}
       />
       {error ? (

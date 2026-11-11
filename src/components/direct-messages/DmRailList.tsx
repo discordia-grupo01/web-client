@@ -5,6 +5,7 @@ import {
   DIRECT_MESSAGES_TITLE,
   NEW_DIRECT_MESSAGE_LABEL,
   NO_CONVERSATIONS_YET,
+  stripMessageMarkdown,
   type User,
 } from "@discordia/client-shared";
 
@@ -24,7 +25,6 @@ interface DmRailListProps {
   conversations: ConversationSummary[];
   isLoading: boolean;
   loadError: string | null;
-  /** La lista no cargo y tampoco hay conexion. */
   isOffline: boolean;
   onRetryLoad: () => void | Promise<unknown>;
   activePartnerId: string | null;
@@ -168,7 +168,7 @@ export function DmRailList({
                     </div>
                     {lastMessage ? (
                       <p className="text-content-subtle truncate text-[11px]">
-                        {lastMessage.content}
+                        {stripMessageMarkdown(lastMessage.content)}
                       </p>
                     ) : null}
                   </div>

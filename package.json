@@ -34,6 +34,10 @@
     "react-colorful": "^5.8.1",
     "react-dom": "^18.3.0",
     "server-only": "^0.0.1",
+    "slate": "^0.147.4",
+    "slate-dom": "^0.147.3",
+    "slate-history": "^0.144.0",
+    "slate-react": "^0.147.5",
     "tailwind-merge": "^2.6.1",
     "tailwindcss": "^4.3.3"
   },
