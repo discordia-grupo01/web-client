@@ -2,6 +2,7 @@
 
 import {
   buildInviteLink,
+  CHANGE_POLL_INTERVAL_MS,
   daysUntil,
   type Invitation,
   INVITE_COPY_FAILED,
@@ -185,7 +186,9 @@ export function InviteModal({
     if (result.ok) setInvitations(result.invitations);
   }, [serverId]);
 
-  useRefreshOnChange({ resources: [] }, refreshInvitations);
+  useRefreshOnChange({ resources: [] }, refreshInvitations, {
+    pollMs: CHANGE_POLL_INTERVAL_MS,
+  });
 
   useEffect(() => {
     let cancelled = false;
