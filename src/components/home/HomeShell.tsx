@@ -271,6 +271,7 @@ function HomeShellContent({
   const isDirectMessagesLoading = directMessages.isLoading;
   const isUnreadInMessaging = useCallback(
     (item: NotificationHistoryItem) => {
+      if (item.kind === "ownership_transfer") return true;
       if (item.kind === "mention") {
         return !areMentionsLoaded || isMentionUnread(item.message_id);
       }
@@ -662,6 +663,10 @@ function HomeShellContent({
                       onClose={() => setIsNotificationsOpen(false)}
                       onOpenMention={openMention}
                       onOpenDirectMessage={openNotificationConversation}
+                      onTransferAnswered={() => {
+                        reloadServers();
+                        void notificationHistory.refresh();
+                      }}
                     />
                   ) : null}
 

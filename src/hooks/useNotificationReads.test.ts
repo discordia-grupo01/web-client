@@ -186,4 +186,27 @@ describe("useNotificationReads", () => {
       expect(result.current.unreadCount).toBe(3);
     });
   });
+
+  it("responder o tocar una transferencia la deja leida sin tocar lo demas", () => {
+    const transfer: NotificationHistoryItem = {
+      kind: "ownership_transfer",
+      message_id: "t1",
+      author_id: "owner",
+      to_user_id: "u1",
+      transfer_status: "pending",
+      occurred_at: "2026-11-02T12:00:04Z",
+      server_id: "s1",
+      channel_id: null,
+      conversation_id: null,
+    };
+    const all = [transfer, ...items];
+    const { result } = renderHook(() => useNotificationReads("u1", all));
+    expect(result.current.unreadCount).toBe(4);
+
+    act(() => result.current.markTransferRead("t1"));
+
+    expect(result.current.isUnread(transfer)).toBe(false);
+    expect(result.current.unreadCount).toBe(3);
+    expect(stored()).toHaveProperty(["transfer:t1"]);
+  });
 });
