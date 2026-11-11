@@ -3,10 +3,11 @@
 import { type Role } from "@discordia/client-shared";
 
 import { Plus, X } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import {
   assignRoleRequest,
   listMemberRolesRequest,
@@ -36,6 +37,29 @@ export function MemberRoleBadges({
   const [availableRoles, setAvailableRoles] = useState<Role[]>([]);
   const [error, setError] = useState("");
   const [pendingRoleId, setPendingRoleId] = useState<string | null>(null);
+
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const refreshRoles = useCallback(async () => {
+    const [assigned, available] = await Promise.all([
+      listMemberRolesRequest(serverId, userId),
+      canManage ? listRolesRequest(serverId) : null,
+    ]);
+    if (!isMounted.current) return;
+    if (assigned.ok) setAssignedRoles(assigned.roles);
+    if (available?.ok) setAvailableRoles(available.roles);
+  }, [serverId, userId, canManage]);
+
+  useRefreshOnChange(
+    { resources: ["roles", "members"], serverId },
+    refreshRoles,
+  );
 
   useEffect(() => {
     let cancelled = false;
