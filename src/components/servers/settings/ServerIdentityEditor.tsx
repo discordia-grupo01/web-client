@@ -2,14 +2,15 @@
 
 import {
   ADD_BANNER_LABEL,
-  ALLOWED_SERVER_ICON_TYPES,
+  BOOST_PERK_LABELS,
   CHANGE_BANNER_LABEL,
   CHANGE_SERVER_ICON_LABEL,
   REMOVE_BANNER_LABEL,
 } from "@discordia/client-shared";
-import { Camera, Image as ImageIcon, X } from "lucide-react";
-import { useRef, type RefObject } from "react";
+import { Camera, Image as ImageIcon, Lock, X } from "lucide-react";
+import { type ReactNode, useRef, type RefObject } from "react";
 
+import { BoostPerkHint } from "@/components/boosts/BoostPerkHint";
 import { Avatar } from "@/components/ui/Avatar";
 import { ServerBanner } from "@/components/ui/ServerBanner";
 
@@ -19,20 +20,23 @@ const ICON_SIZE = 84;
 const ICON_RING = 4;
 const ICON_BOX = ICON_SIZE + ICON_RING * 2;
 
-const ACCEPTED_TYPES = ALLOWED_SERVER_ICON_TYPES.join(",");
+/** Mismos formatos que el icono, salvo GIF: servers no acepta un banner animado. */
+const BANNER_ACCEPT = "image/png,image/jpeg,image/webp";
 
 function HiddenImageInput({
   inputRef,
+  accept,
   onPick,
 }: {
   inputRef: RefObject<HTMLInputElement>;
+  accept: string;
   onPick: (file: File) => void;
 }) {
   return (
     <input
       ref={inputRef}
       type="file"
-      accept={ACCEPTED_TYPES}
+      accept={accept}
       className="hidden"
       onChange={(event) => {
         const file = event.target.files?.[0];
@@ -51,6 +55,12 @@ interface ServerIdentityEditorProps {
   bannerSrc: string | null;
   bannerGradient: string | null;
   hasBanner: boolean;
+  /** Sin el nivel 2 de boosts no se puede poner banner (ni un fondo fijo). */
+  isBannerLocked: boolean;
+  boostCount: number;
+  bannerFooter?: ReactNode;
+  bannerAction?: ReactNode;
+  iconTypes: readonly string[];
   onPickIcon: (file: File) => void;
   onPickBanner: (file: File) => void;
   onRemoveBanner: () => void;
@@ -67,6 +77,11 @@ export function ServerIdentityEditor({
   bannerSrc,
   bannerGradient,
   hasBanner,
+  isBannerLocked,
+  boostCount,
+  bannerFooter,
+  bannerAction,
+  iconTypes,
   onPickIcon,
   onPickBanner,
   onRemoveBanner,
@@ -80,28 +95,36 @@ export function ServerIdentityEditor({
       style={{ height: BANNER_HEIGHT + ICON_BOX / 2 }}
       // El avatar sale del banner: sin esto el contenedor lo recorta.
     >
-      <button
-        type="button"
-        onClick={() => bannerInputRef.current?.click()}
-        aria-label={hasBanner ? CHANGE_BANNER_LABEL : ADD_BANNER_LABEL}
-        className="bg-surface-raised border-line-strong relative w-full cursor-pointer overflow-hidden rounded-2xl border"
-        style={{ height: BANNER_HEIGHT }}
-      >
-        <ServerBanner src={bannerSrc} gradient={bannerGradient} />
+      {isBannerLocked ? (
+        <LockedBanner
+          boostCount={boostCount}
+          footer={bannerFooter}
+          action={bannerAction}
+        />
+      ) : (
+        <button
+          type="button"
+          onClick={() => bannerInputRef.current?.click()}
+          aria-label={hasBanner ? CHANGE_BANNER_LABEL : ADD_BANNER_LABEL}
+          className="bg-surface-raised border-line-strong relative w-full cursor-pointer overflow-hidden rounded-2xl border"
+          style={{ height: BANNER_HEIGHT }}
+        >
+          <ServerBanner src={bannerSrc} gradient={bannerGradient} />
 
-        {hasBanner ? null : (
-          <span className="text-content-subtle absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-[11px]">
-            <ImageIcon size={20} />
-            {ADD_BANNER_LABEL}
+          {hasBanner ? null : (
+            <span className="text-content-subtle absolute inset-0 flex flex-col items-center justify-center gap-1.5 text-[11px]">
+              <ImageIcon size={20} />
+              {ADD_BANNER_LABEL}
+            </span>
+          )}
+
+          <span className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full bg-black/55">
+            <Camera size={13} className="text-white" />
           </span>
-        )}
+        </button>
+      )}
 
-        <span className="absolute top-2.5 right-2.5 flex size-7 items-center justify-center rounded-full bg-black/55">
-          <Camera size={13} className="text-white" />
-        </span>
-      </button>
-
-      {hasBanner ? (
+      {hasBanner && !isBannerLocked ? (
         <button
           type="button"
           onClick={onRemoveBanner}
@@ -145,8 +168,51 @@ export function ServerIdentityEditor({
         </span>
       </button>
 
-      <HiddenImageInput inputRef={iconInputRef} onPick={onPickIcon} />
-      <HiddenImageInput inputRef={bannerInputRef} onPick={onPickBanner} />
+      <HiddenImageInput
+        inputRef={iconInputRef}
+        accept={iconTypes.join(",")}
+        onPick={onPickIcon}
+      />
+      {isBannerLocked ? null : (
+        <HiddenImageInput
+          inputRef={bannerInputRef}
+          accept={BANNER_ACCEPT}
+          onPick={onPickBanner}
+        />
+      )}
+    </div>
+  );
+}
+
+function LockedBanner({
+  boostCount,
+  footer,
+  action,
+}: {
+  boostCount: number;
+  footer?: ReactNode;
+  action?: ReactNode;
+}) {
+  return (
+    <div
+      role="group"
+      aria-label={BOOST_PERK_LABELS.custom_banner}
+      className="border-line-strong text-content-subtle flex w-full flex-col justify-center gap-1.5 rounded-2xl border border-dashed pr-4 text-[11px]"
+      style={{ height: BANNER_HEIGHT, paddingLeft: ICON_BOX + 32 }}
+    >
+      <span className="text-content-muted flex items-center gap-1.5 font-semibold">
+        <Lock size={13} className="shrink-0" />
+        {BOOST_PERK_LABELS.custom_banner}
+      </span>
+      <BoostPerkHint
+        perk="custom_banner"
+        level={0}
+        boostCount={boostCount}
+        unlockedHint=""
+        showLabel={false}
+      />
+      {footer}
+      {action ? <div className="flex justify-end">{action}</div> : null}
     </div>
   );
 }
