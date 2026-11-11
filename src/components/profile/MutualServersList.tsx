@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Avatar } from "@/components/ui/Avatar";
 import { listServersRequest } from "@/services/servers/client";
+import { serverIconSrc } from "@/utils/image-urls";
 
 interface MutualServersListProps {
   serverIds: string[];
@@ -42,7 +43,7 @@ export function MutualServersList({ serverIds }: MutualServersListProps) {
             <div key={server.id} className="flex items-center gap-2.5 py-0.5">
               <Avatar
                 name={server.name}
-                src={`/api/servers/${server.id}/icon`}
+                src={serverIconSrc(server)}
                 size={32}
                 className="shrink-0 rounded-xl"
               />
