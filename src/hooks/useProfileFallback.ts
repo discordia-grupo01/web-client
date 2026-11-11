@@ -4,6 +4,7 @@ import { type MemberProfile } from "@discordia/client-shared";
 
 import { useEffect, useMemo, useRef, useState } from "react";
 
+import { useProfileChanges } from "@/hooks/useProfileChanges";
 import { getPublicProfileRequest } from "@/services/profile/client";
 
 /** Perfiles pedidos en paralelo: el back no tiene endpoint batch. */
@@ -39,6 +40,15 @@ export function useProfileFallback<T extends ProfiledUser>(
       isMounted.current = false;
     };
   }, []);
+
+  useProfileChanges(
+    (id) => requested.current.has(id),
+    ({ id, name, avatar_url, description, status_text, status_emoji }) =>
+      setFetched((prev) => ({
+        ...prev,
+        [id]: { name, avatar_url, description, status_text, status_emoji },
+      })),
+  );
 
   useEffect(() => {
     const queue = (users ?? [])
