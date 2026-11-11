@@ -8,6 +8,7 @@ import {
 
 import { useCallback, useEffect, useMemo, useState } from "react";
 
+import { changeBus } from "@/lib/changeBus";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { avatarSrcOf } from "@/utils/userProfile";
 
@@ -73,6 +74,26 @@ export function useVoiceProfiles(userIds: readonly string[]) {
     }
     return () => {
       cancelled = true;
+    };
+  }, [idsKey]);
+
+  useEffect(() => {
+    const ids = idsKey === "" ? [] : idsKey.split("|");
+    let cancelled = false;
+    const unsubscribe = changeBus.subscribe(
+      { resources: ["profile"] },
+      ({ user_id: userId }) => {
+        if (!userId || !ids.includes(userId)) return;
+        cache.delete(userId);
+        void loadProfile(userId).then((profile) => {
+          if (cancelled || !profile) return;
+          setById((current) => ({ ...current, [userId]: profile }));
+        });
+      },
+    );
+    return () => {
+      cancelled = true;
+      unsubscribe();
     };
   }, [idsKey]);
 

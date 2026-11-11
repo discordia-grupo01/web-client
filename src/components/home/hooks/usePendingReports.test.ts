@@ -3,6 +3,7 @@ import { act, renderHook, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 import { usePendingReports } from "@/components/home/hooks/usePendingReports";
+import { changeBus } from "@/lib/changeBus";
 
 describe("usePendingReports", () => {
   afterEach(() => {
@@ -43,6 +44,17 @@ describe("usePendingReports", () => {
       vi.advanceTimersByTime(PENDING_REPORTS_POLL_MS);
     });
     expect(fetchCount).toHaveBeenCalledTimes(2);
+  });
+
+  it("vuelve a pedir apenas el servidor avisa que cambió un reporte", async () => {
+    let total = 1;
+    const fetchCount = vi.fn(async () => ({ total }));
+    const { result } = renderHook(() => usePendingReports(["a"], fetchCount));
+    await waitFor(() => expect(result.current.byServer).toEqual({ a: 1 }));
+
+    total = 4;
+    act(() => changeBus.publish({ resource: "reports", server_id: "a" }));
+    await waitFor(() => expect(result.current.byServer).toEqual({ a: 4 }));
   });
 
   it("sin servidores no pide nada", () => {

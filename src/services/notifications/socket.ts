@@ -1,8 +1,11 @@
 import {
+  CHANGE_SOCKET_EVENTS,
   createSocketManager,
+  isResourceChangedPayload,
   PLATFORM_STATUS_SOCKET_EVENTS,
   UNREAD_SOCKET_EVENTS,
   type PlatformStatusChangedPayload,
+  type ResourceChangedPayload,
   type UnreadSnapshotPayload,
   unreadTopic,
   type UnreadUpdatedPayload,
@@ -17,6 +20,7 @@ export interface UnreadHandlers {
   snapshot: (payload: UnreadSnapshotPayload) => void;
   updated: (payload: UnreadUpdatedPayload) => void;
   statusChanged?: (payload: PlatformStatusChangedPayload) => void;
+  changed?: (payload: ResourceChangedPayload) => void;
 }
 
 export interface UnreadConnection {
@@ -64,6 +68,12 @@ export function connectUnread(
     channel.on(UNREAD_SOCKET_EVENTS.updated, handlers.updated);
     if (handlers.statusChanged) {
       channel.on(PLATFORM_STATUS_SOCKET_EVENTS.changed, handlers.statusChanged);
+    }
+    const { changed } = handlers;
+    if (changed) {
+      channel.on(CHANGE_SOCKET_EVENTS.changed, (payload: unknown) => {
+        if (isResourceChangedPayload(payload)) changed(payload);
+      });
     }
     channel.join();
   });

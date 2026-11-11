@@ -7,7 +7,7 @@ import {
   type Role,
   type ServerSummary,
 } from "@discordia/client-shared";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { type BanTarget } from "@/components/bans/BanMemberModal";
 import { BansModal } from "@/components/bans/BansModal";
@@ -19,6 +19,7 @@ import { ServerSettingsModal } from "@/components/servers/settings/ServerSetting
 import { TransferOwnershipModal } from "@/components/servers/TransferOwnershipModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { getPendingTransferRequest } from "@/services/ownership-transfers/client";
 
 import { ServerHeaderTrigger } from "./ServerHeaderTrigger";
@@ -123,6 +124,16 @@ export function ServerSidebarHeader({
       cancelled = true;
     };
   }, [server.id]);
+
+  const refreshPendingTransfer = useCallback(async () => {
+    const result = await getPendingTransferRequest(server.id);
+    setPendingTransfer(result.ok ? result.transfer : null);
+  }, [server.id]);
+
+  useRefreshOnChange(
+    { resources: ["server", "notifications"], serverId: server.id },
+    refreshPendingTransfer,
+  );
 
   const incomingTransfer =
     user !== null &&

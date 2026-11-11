@@ -32,6 +32,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { avatarSrcOf } from "@/utils/userProfile";
 import { useBlockedUsersContext } from "@/contexts/BlockedUsersContext";
 import { acquireSocket } from "@/services/messages/socket";
+import { useProfileChanges } from "@/hooks/useProfileChanges";
 import { getPublicProfileRequest } from "@/services/profile/client";
 
 import {
@@ -154,6 +155,15 @@ export function useDirectMessages(
       release?.();
     };
   }, [currentUserId, reload, applyList, applyDm, attempt]);
+
+  useProfileChanges(
+    (id) => requestedProfiles.current.has(id),
+    ({ id, name, avatar_url }) =>
+      setPartners((prev) => ({
+        ...prev,
+        [id]: messageAuthorOf(id, name, avatarSrcOf(id, { name, avatar_url })),
+      })),
+  );
 
   // El back solo devuelve ids: nombre y foto se piden una vez por usuario.
   useEffect(() => {

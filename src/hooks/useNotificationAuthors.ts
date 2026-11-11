@@ -9,6 +9,7 @@ import {
 
 import { useEffect, useRef, useState } from "react";
 
+import { useProfileChanges } from "@/hooks/useProfileChanges";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { avatarSrcOf } from "@/utils/userProfile";
 
@@ -25,6 +26,19 @@ export function useNotificationAuthors(
       isMounted.current = false;
     };
   }, []);
+
+  useProfileChanges(
+    (id) => requested.current.has(id),
+    (user) =>
+      setAuthors((previous) => ({
+        ...previous,
+        [user.id]: messageAuthorOf(
+          user.id,
+          user.name,
+          avatarSrcOf(user.id, user),
+        ),
+      })),
+  );
 
   useEffect(() => {
     const missing = [...new Set(items.flatMap(notificationUserIds))].filter(

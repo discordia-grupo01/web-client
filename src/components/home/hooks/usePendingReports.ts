@@ -6,6 +6,7 @@ import {
 } from "@discordia/client-shared";
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { pendingReportsCountRequest } from "@/services/reports/client";
 
 type FetchCount = (serverId: string) => Promise<PendingReportsCount>;
@@ -13,7 +14,8 @@ type FetchCount = (serverId: string) => Promise<PendingReportsCount>;
 /**
  * Reportes pendientes por servidor, para la bandera del riel. No hay aviso en
  * tiempo real cuando alguien reporta: se vuelve a pedir cada minuto con la
- * pestaña visible y al volver a ella. Quien no es moderador recibe 0 (lo
+ * pestaña visible y al volver a ella, y además apenas el servidor avisa que
+ * cambió un reporte. Quien no es moderador recibe 0 (lo
  * resuelve el BFF sin pegarle al endpoint que daria 403). Un fallo conserva
  * el ultimo valor.
  */
@@ -59,6 +61,11 @@ export function usePendingReports(
       document.removeEventListener("visibilitychange", refreshIfVisible);
     };
   }, [key, refresh]);
+
+  useRefreshOnChange({ resources: ["reports"] }, () => refresh(), {
+    enabled: key !== "",
+    pollMs: null,
+  });
 
   return { byServer, refresh };
 }

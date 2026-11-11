@@ -8,8 +8,9 @@ import {
   type ReportResolutionAction,
   type ReportStatus,
 } from "@discordia/client-shared";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import {
   closeReportRequest,
   listReportsRequest,
@@ -65,6 +66,26 @@ export function useReportsList(serverId: string, onPendingClosed: () => void) {
       cancelled = true;
     };
   }, [serverId, status, page, reloadKey]);
+
+  const requestKey = `${serverId}:${status}:${page}`;
+  const requestKeyRef = useRef(requestKey);
+  useEffect(() => {
+    requestKeyRef.current = requestKey;
+  }, [requestKey]);
+
+  const refreshReports = useCallback(async () => {
+    const key = requestKey;
+    const result = await listReportsRequest(serverId, {
+      status,
+      limit: REPORTS_PAGE_SIZE,
+      offset: (page - 1) * REPORTS_PAGE_SIZE,
+    });
+    if (!result.ok || key !== requestKeyRef.current) return;
+    setReports(result.reports);
+    setTotal(result.total);
+  }, [requestKey, serverId, status, page]);
+
+  useRefreshOnChange({ resources: ["reports"], serverId }, refreshReports);
 
   const removeLocally = useCallback(
     (reportId: string) => {
