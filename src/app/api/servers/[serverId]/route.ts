@@ -11,6 +11,7 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
 import {
+  boostLevelErrorResponse,
   deleteServerErrorResponse,
   serverErrorResponse,
 } from "@/services/servers/error-payload";
@@ -21,8 +22,9 @@ import { deleteServer, updateServer } from "@/services/servers/service";
  * navegador (multipart/form-data: name, icon, banner y `remove_banner`, todos
  * opcionales) y lo reenvia con el JWT de la cookie httpOnly.
  *
- * El 403 se traduce aparte: hoy el backend solo deja editar al owner, asi que
- * es el unico caso donde "no podes" no viene con un `details.reason`.
+ * El 403 se traduce aparte: sin `details.reason` es "no podes editarlo"; con
+ * `boost_level_required` es un icono GIF o un banner que el nivel de boosts
+ * del servidor todavia no desbloquea.
  */
 export async function PATCH(
   request: Request,
@@ -48,6 +50,12 @@ export async function PATCH(
   if (!result.ok) {
     if (result.status === 401) {
       return unauthorizedResponse();
+    }
+    const boostLevelError = boostLevelErrorResponse(result);
+    if (boostLevelError) {
+      return NextResponse.json(boostLevelError.payload, {
+        status: boostLevelError.status,
+      });
     }
     if (result.status === 403) {
       return NextResponse.json(
