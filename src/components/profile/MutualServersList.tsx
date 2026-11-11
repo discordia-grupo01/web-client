@@ -2,10 +2,11 @@
 
 import { type ServerSummary } from "@discordia/client-shared";
 
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Avatar } from "@/components/ui/Avatar";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { listServersRequest } from "@/services/servers/client";
 import { serverIconSrc } from "@/utils/image-urls";
 
@@ -15,6 +16,13 @@ interface MutualServersListProps {
 
 export function MutualServersList({ serverIds }: MutualServersListProps) {
   const [servers, setServers] = useState<ServerSummary[] | null>(null);
+
+  const refreshServers = useCallback(async () => {
+    const result = await listServersRequest();
+    if (result.ok) setServers(result.servers);
+  }, []);
+
+  useRefreshOnChange({ resources: ["servers", "server"] }, refreshServers);
 
   useEffect(() => {
     let cancelled = false;

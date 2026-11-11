@@ -118,6 +118,7 @@ import {
   reorderChannelsRequest,
 } from "@/services/channels/client";
 import { useMyChannelPermissions } from "@/hooks/useChannelOverrides";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { authorFromProfile } from "@/utils/author";
 import {
   listMemberRolesRequest,
@@ -595,6 +596,26 @@ function ServerViewContent({
     setLostChannel(activeChannel);
     void reloadServer();
   }
+
+  const refreshRoles = useCallback(async () => {
+    const [mine, all] = await Promise.all([
+      user ? listMemberRolesRequest(server.id, String(user.id)) : null,
+      listRolesRequest(server.id),
+    ]);
+    if (mine?.ok) setMyRoles(mine.roles);
+    if (all.ok) setServerRoles(all.roles);
+    setPermissionsVersion((version) => version + 1);
+  }, [server.id, user]);
+
+  useRefreshOnChange(
+    { resources: ["roles"], serverId: server.id },
+    refreshRoles,
+  );
+  useRefreshOnChange(
+    { resources: ["channels"], serverId: server.id },
+    () => setPermissionsVersion((version) => version + 1),
+    { pollMs: null },
+  );
 
   function handleRolesChanged() {
     fetchMyRoles();

@@ -65,6 +65,7 @@ import { useMentions } from "@/components/home/hooks/useMentions";
 import { usePendingReports } from "@/components/home/hooks/usePendingReports";
 import { useUnreadState } from "@/components/home/hooks/useUnreadState";
 import { usePageVisible } from "@/hooks/usePageVisible";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { authorFromProfile } from "@/utils/author";
 import { listServersRequest } from "@/services/servers/client";
 import { avatarSrcOf } from "@/utils/userProfile";
@@ -168,11 +169,31 @@ function HomeShellContent({
     setServers((prev) => markServerSuspended(prev, serverId));
   }
 
-  function reloadServers() {
-    void listServersRequest().then((result) => {
-      if (result.ok) setServers(result.servers);
-    });
+  async function syncServers() {
+    const result = await listServersRequest();
+    if (!result.ok) return;
+    setServers(result.servers);
+    const stillThere = (serverId: string | null) =>
+      serverId === null ||
+      result.servers.some((server) => server.id === serverId);
+    if (!stillThere(selectedServerId)) {
+      const { target } = voice.state;
+      if (target?.kind === "channel" && !stillThere(target.serverId)) {
+        voice.leave();
+      }
+      setSelectedServerId(null);
+      setView("direct-messages");
+    }
   }
+
+  function reloadServers() {
+    void syncServers();
+  }
+
+  useRefreshOnChange(
+    { resources: ["servers", "server", "channels"] },
+    syncServers,
+  );
 
   // Se pide una sola vez y sobrevive a cambiar de vista, asi el contador de
   // no leidos del riel no se resetea al entrar y salir de Mensajes Directos.
@@ -294,6 +315,17 @@ function HomeShellContent({
   useEffect(() => {
     refreshNotificationsRef.current = notificationHistory.refresh;
   }, [notificationHistory.refresh]);
+
+  useRefreshOnChange(
+    { resources: ["notifications"] },
+    notificationHistory.refresh,
+    { pollMs: null },
+  );
+  useRefreshOnChange(
+    { resources: ["profile"], userId: currentAuthor?.id ?? null },
+    refreshOwnProfile,
+    { pollMs: null, enabled: currentAuthor !== null },
+  );
 
   useNotificationRefreshOnSignal(
     notificationsSignal,

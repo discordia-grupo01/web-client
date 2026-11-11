@@ -8,6 +8,7 @@ import {
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import {
   getPointsOverviewRequest,
   getPremiumRequest,
@@ -39,6 +40,11 @@ export function useBillingOverview() {
       mounted.current = false;
     };
   }, [load]);
+
+  useRefreshOnChange(
+    { resources: ["points", "purchases", "premium", "boosts"] },
+    load,
+  );
 
   const setPremium = useCallback((premium: PremiumView) => {
     setState((current) =>

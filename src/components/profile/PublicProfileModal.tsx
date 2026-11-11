@@ -23,7 +23,7 @@ import {
   ShieldCheck,
   UserX,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 import { PremiumPill } from "@/components/billing/PremiumPill";
 import { SectionLabel } from "@/components/ui/SectionLabel";
@@ -33,6 +33,7 @@ import { useBlockedUsersContext } from "@/contexts/BlockedUsersContext";
 import { usePresenceContext } from "@/contexts/PresenceContext";
 import { usePresenceOf } from "@/hooks/usePresence";
 import { useLoadPresence } from "@/hooks/useLoadPresence";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { avatarSrcOf } from "@/utils/userProfile";
 
@@ -118,6 +119,23 @@ export function PublicProfileModal({
       cancelled = true;
     };
   }, [userId]);
+
+  const isMounted = useRef(true);
+  useEffect(() => {
+    isMounted.current = true;
+    return () => {
+      isMounted.current = false;
+    };
+  }, []);
+
+  const refreshProfile = useCallback(async () => {
+    const result = await getPublicProfileRequest(userId);
+    if (!isMounted.current) return;
+    if (result.ok) setProfile(result.user);
+    else if (result.unavailable) setIsUnavailable(true);
+  }, [userId]);
+
+  useRefreshOnChange({ resources: ["profile"], userId }, refreshProfile);
 
   if (isUnavailable || profile?.is_suspended) {
     return (
