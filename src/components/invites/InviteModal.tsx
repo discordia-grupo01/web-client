@@ -22,7 +22,7 @@ import {
   Users,
   X,
 } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { NumberField } from "@/components/ui/NumberField";
@@ -32,6 +32,7 @@ import {
   revokeInviteRequest,
 } from "@/services/invites/client";
 import { cn } from "@/lib/cn";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 
 interface InviteModalProps {
   serverId: string;
@@ -178,6 +179,13 @@ export function InviteModal({
   const [isGenerating, setIsGenerating] = useState(false);
   const [errorMessage, setErrorMessage] = useState("");
   const [activeTab, setActiveTab] = useState<InviteTab>("active");
+
+  const refreshInvitations = useCallback(async () => {
+    const result = await listInvitationsRequest(serverId);
+    if (result.ok) setInvitations(result.invitations);
+  }, [serverId]);
+
+  useRefreshOnChange({ resources: [] }, refreshInvitations);
 
   useEffect(() => {
     let cancelled = false;
