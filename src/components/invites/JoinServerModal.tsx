@@ -14,6 +14,7 @@ import { useRef, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { joinServerRequest } from "@/services/invites/client";
+import { serverIconSrc } from "@/utils/image-urls";
 
 interface JoinServerModalProps {
   onClose: () => void;
@@ -84,7 +85,7 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
             <div className="flex flex-col items-center gap-6 px-6 py-8 text-center">
               <Avatar
                 name={joined.server.name}
-                src={`/api/servers/${joined.server.id}/icon`}
+                src={serverIconSrc(joined.server)}
                 size={64}
                 className="rounded-2xl"
               />
