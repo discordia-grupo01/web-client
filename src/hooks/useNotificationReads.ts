@@ -66,6 +66,11 @@ export function useNotificationReads(
     [markGroupRead],
   );
 
+  const markTransferRead = useCallback(
+    (transferId: string) => markGroupRead(`transfer:${transferId}`),
+    [markGroupRead],
+  );
+
   const markAllRead = useCallback(
     () =>
       update((current) =>
@@ -86,6 +91,7 @@ export function useNotificationReads(
     unreadCount: countUnreadNotifications(items, isUnread),
     markChannelRead,
     markConversationRead,
+    markTransferRead,
     markAllRead,
   };
 }
