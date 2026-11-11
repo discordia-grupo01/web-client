@@ -110,6 +110,7 @@ function readsState(
     unreadCount: 1,
     markChannelRead: vi.fn(),
     markConversationRead: vi.fn(),
+    markTransferRead: vi.fn(),
     markAllRead: vi.fn(),
     ...overrides,
   };
@@ -131,6 +132,7 @@ async function renderCenter(
     onClose: vi.fn(),
     onOpenMention: vi.fn(),
     onOpenDirectMessage: vi.fn(),
+    onTransferAnswered: vi.fn(),
   };
   const anchorRef = createRef<HTMLElement>();
   let view!: ReturnType<typeof render>;
@@ -440,6 +442,7 @@ describe("NotificationCenter", () => {
           onClose={onClose}
           onOpenMention={onOpenMention}
           onOpenDirectMessage={onOpenDirectMessage}
+          onTransferAnswered={vi.fn()}
         />,
       );
     });
