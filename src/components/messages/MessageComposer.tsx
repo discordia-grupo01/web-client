@@ -33,7 +33,7 @@ import { useMentionDraft } from "@/components/messages/hooks/useMentionDraft";
 import { AttachmentChips, type PendingAttachment } from "./AttachmentChips";
 import { EmojiPicker } from "./EmojiPicker";
 import { MentionSuggestions } from "./MentionSuggestions";
-import { MentionTextarea } from "./MentionTextarea";
+import { MessageEditor, type MessageEditorHandle } from "./MessageEditor";
 import { useMessageMentions } from "@/contexts/MentionsContext";
 import { useOwnPremium } from "@/contexts/OwnProfileContext";
 
@@ -43,18 +43,11 @@ const ICON_BUTTON =
   "text-content-subtle hover:text-content-muted flex size-9 shrink-0 items-center justify-center rounded-md";
 
 interface MessageComposerProps {
-  /** Texto del campo vacio (ej. `messageInputPlaceholder(canal)` o `dmInputPlaceholder(nombre)`). */
   placeholder: string;
-  /**
-   * Si devuelve una promesa, el borrador se conserva hasta que el envio sale
-   * bien (un fallo lo deja para reintentar). Si devuelve `void`, se limpia al
-   * instante.
-   */
   onSend: (
     content: string,
     attachmentIds?: string[],
   ) => void | Promise<SendMessageResult>;
-  /** A donde van los archivos: el canal o el usuario del DM. */
   uploadTarget: AttachmentTarget;
   disabled?: boolean;
 }
@@ -66,9 +59,9 @@ export function MessageComposer({
   disabled = false,
 }: MessageComposerProps) {
   const { sources } = useMessageMentions();
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const editorRef = useRef<MessageEditorHandle>(null);
   const suggestionsId = useId();
-  const draft = useMentionDraft({ textareaRef, sources });
+  const draft = useMentionDraft({ editorRef, sources });
   const [sendError, setSendError] = useState<string | undefined>();
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -105,7 +98,7 @@ export function MessageComposer({
     if (outcome === undefined) {
       setIsSending(false);
       clearDraft();
-      textareaRef.current?.focus();
+      editorRef.current?.focus();
       return;
     }
 
@@ -113,10 +106,10 @@ export function MessageComposer({
     setIsSending(false);
     if (result.ok) clearDraft();
     else setSendError(result.message);
-    textareaRef.current?.focus();
+    editorRef.current?.focus();
   }
 
-  function handleKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+  function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     if (event.nativeEvent.isComposing) return;
 
     if (draft.handleSuggestionKey(event)) return;
@@ -147,7 +140,7 @@ export function MessageComposer({
 
   function insertEmoji(emoji: string) {
     draft.append(emoji);
-    textareaRef.current?.focus();
+    editorRef.current?.focus();
   }
 
   return (
@@ -196,16 +189,15 @@ export function MessageComposer({
           <Paperclip size={18} />
         </button>
 
-        <MentionTextarea
-          ref={textareaRef}
+        <MessageEditor
+          ref={editorRef}
           value={draft.text}
           segments={draft.segments}
-          wrapperClassName="min-w-0 flex-1 self-center"
-          onChange={(event) => {
-            draft.handleChange(event);
+          onChange={(text, cursor) => {
+            draft.handleChange(text, cursor);
             setSendError(undefined);
           }}
-          onSelect={draft.handleSelect}
+          onCursorMove={draft.handleCursorMove}
           onKeyDown={handleKeyDown}
           aria-controls={draft.isOpen ? suggestionsId : undefined}
           aria-autocomplete="list"
@@ -213,7 +205,7 @@ export function MessageComposer({
           readOnly={isSending}
           placeholder={placeholder}
           aria-label={placeholder}
-          className="text-content placeholder:text-content-subtle w-full border-none bg-transparent py-1.5 text-base outline-none placeholder:truncate md:text-sm"
+          className="text-content min-w-0 flex-1 self-center border-none bg-transparent py-1.5 text-base outline-none md:text-sm [&_[data-slate-placeholder]]:top-1.5"
         />
 
         <EmojiPicker
