@@ -12,6 +12,7 @@ import {
 
 import { Fragment, type ReactNode } from "react";
 
+import { HighlightedCode } from "./HighlightedCode";
 import { MentionChip } from "./MentionChip";
 import { Spoiler } from "./Spoiler";
 import { useMessageMentions } from "@/contexts/MentionsContext";
@@ -209,7 +210,13 @@ export function MessageContent({
             key={index}
             className="bg-surface-sunken border-line overflow-x-auto rounded-md border p-2 font-mono text-[0.85em] whitespace-pre"
           >
-            <code>{renderText(block.value)}</code>
+            <code>
+              {block.language && !highlight ? (
+                <HighlightedCode code={block.value} language={block.language} />
+              ) : (
+                renderText(block.value)
+              )}
+            </code>
           </pre>
         );
     }

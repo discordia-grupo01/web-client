@@ -96,4 +96,21 @@ describe("MessageContent", () => {
       "dos(editado)",
     );
   });
+
+  it("colorea los bloques de codigo con lenguaje", async () => {
+    const { container } = render(
+      <MessageContent content={"```js\nconst a = 1;\n```"} />,
+    );
+    expect(await screen.findByText("const")).toHaveClass("text-syntax-keyword");
+    expect(screen.getByText("1")).toHaveClass("text-syntax-number");
+    expect(container.querySelector("pre")).toHaveTextContent("const a = 1;");
+  });
+
+  it("sin lenguaje o con uno desconocido el codigo va sin color", async () => {
+    const { container } = render(
+      <MessageContent content={"```\nconst a\n```\n```cobol\nconst b\n```"} />,
+    );
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(container.querySelector("pre span")).toBeNull();
+  });
 });
