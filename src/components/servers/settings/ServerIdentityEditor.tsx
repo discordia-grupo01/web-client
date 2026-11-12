@@ -7,7 +7,7 @@ import {
   CHANGE_SERVER_ICON_LABEL,
   REMOVE_BANNER_LABEL,
 } from "@discordia/client-shared";
-import { Camera, Image as ImageIcon, Lock, X } from "lucide-react";
+import { Camera, Image as ImageIcon, X } from "lucide-react";
 import { type ReactNode, useRef, type RefObject } from "react";
 
 import { BoostPerkHint } from "@/components/boosts/BoostPerkHint";
@@ -197,19 +197,14 @@ function LockedBanner({
     <div
       role="group"
       aria-label={BOOST_PERK_LABELS.custom_banner}
-      className="border-line-strong text-content-subtle flex w-full flex-col justify-center gap-1.5 rounded-2xl border border-dashed pr-4 text-[11px]"
-      style={{ height: BANNER_HEIGHT, paddingLeft: ICON_BOX + 32 }}
+      className="border-line-strong flex w-full flex-col justify-center gap-2 rounded-2xl border border-dashed pr-4"
+      style={{ height: BANNER_HEIGHT, paddingLeft: ICON_BOX + 24 }}
     >
-      <span className="text-content-muted flex items-center gap-1.5 font-semibold">
-        <Lock size={13} className="shrink-0" />
-        {BOOST_PERK_LABELS.custom_banner}
-      </span>
       <BoostPerkHint
         perk="custom_banner"
         level={0}
         boostCount={boostCount}
         unlockedHint=""
-        showLabel={false}
       />
       {footer}
       {action ? <div className="flex justify-end">{action}</div> : null}

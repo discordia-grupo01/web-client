@@ -41,12 +41,12 @@ export function BannerPresetPicker({
             title={boostPerkAvailableFrom("custom_banner")}
             className="border-line bg-surface-input text-content-muted flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold"
           >
-            <BoostLevelIcon level={BOOST_PERK_LEVEL.custom_banner} size={13} />
+            <BoostLevelIcon level={BOOST_PERK_LEVEL.custom_banner} size={14} />
             {boostLevelLabel(BOOST_PERK_LEVEL.custom_banner)}
           </span>
         ) : (
           <span title={boostPerkLevelLabel("custom_banner")} className="flex">
-            <BoostLevelIcon level={BOOST_PERK_LEVEL.custom_banner} size={16} />
+            <BoostLevelIcon level={BOOST_PERK_LEVEL.custom_banner} size={18} />
             <span className="sr-only">
               {boostPerkLevelLabel("custom_banner")}
             </span>
