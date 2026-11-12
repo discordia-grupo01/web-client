@@ -2,11 +2,17 @@
 
 import {
   ALLOWED_SERVER_ICON_TYPES,
+  ANIMATED_SERVER_ICON_UNLOCKED,
+  BOOST_PERK_LEVEL,
   formatImageTypes,
   MAX_ICON_FILE_MB,
+  nextBoostLevel,
 } from "@discordia/client-shared";
 import { type FormEvent } from "react";
 
+import { BoostPerkHint } from "@/components/boosts/BoostPerkHint";
+import { BoostProgressStrip } from "@/components/boosts/BoostProgressStrip";
+import { BoostServerButton } from "@/components/boosts/BoostServerButton";
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
 import { FormAlert } from "@/components/ui/FormAlert";
@@ -24,6 +30,7 @@ interface ServerProfileFormProps {
   serverName: string;
   titleId: string;
   onCancel: () => void;
+  onBoost?: () => void;
 }
 
 export function ServerProfileForm({
@@ -31,11 +38,23 @@ export function ServerProfileForm({
   serverName,
   titleId,
   onCancel,
+  onBoost,
 }: ServerProfileFormProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     void form.submit();
   }
+
+  const boostStripInBanner =
+    nextBoostLevel(form.boostLevel) === BOOST_PERK_LEVEL.custom_banner;
+  const boostStrip = (compact: boolean) => (
+    <BoostProgressStrip
+      level={form.boostLevel}
+      boostCount={form.boostCount}
+      onBoost={onBoost}
+      compact={compact}
+    />
+  );
 
   return (
     <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
@@ -63,6 +82,15 @@ export function ServerProfileForm({
               bannerSrc={form.bannerPreviewSrc}
               bannerGradient={form.bannerPreviewGradient}
               hasBanner={form.hasBanner}
+              isBannerLocked={form.isBannerLocked}
+              boostCount={form.boostCount}
+              bannerFooter={boostStripInBanner ? boostStrip(true) : undefined}
+              bannerAction={
+                boostStripInBanner && onBoost ? (
+                  <BoostServerButton onClick={onBoost} />
+                ) : undefined
+              }
+              iconTypes={form.iconTypes}
               onPickIcon={form.pickIcon}
               onPickBanner={form.pickBanner}
               onRemoveBanner={form.removeBanner}
@@ -74,10 +102,22 @@ export function ServerProfileForm({
             {formatImageTypes(ALLOWED_SERVER_ICON_TYPES)} · Máx.{" "}
             {MAX_ICON_FILE_MB} MB
           </p>
+          <div className="mt-3">
+            <BoostPerkHint
+              perk="animated_icon"
+              level={form.boostLevel}
+              boostCount={form.boostCount}
+              unlockedHint={ANIMATED_SERVER_ICON_UNLOCKED}
+            />
+          </div>
+          {form.isBannerLocked && !boostStripInBanner ? (
+            <div className="mt-3">{boostStrip(false)}</div>
+          ) : null}
         </div>
 
         <BannerPresetPicker
           selectedId={form.selectedPresetId}
+          isLocked={form.isBannerLocked}
           onSelect={form.choosePreset}
         />
 

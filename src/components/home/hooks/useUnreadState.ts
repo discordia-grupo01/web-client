@@ -13,6 +13,7 @@ import {
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
+import { changeBus } from "@/lib/changeBus";
 import {
   connectUnread,
   type UnreadConnection,
@@ -43,8 +44,14 @@ export function useUnreadState(
       onChange: setState,
     });
     tracker.setOpenChannel(openChannelRef.current);
+    let snapshots = 0;
     connection = connectUnread(userId, {
-      snapshot: tracker.applySnapshot,
+      snapshot: (payload) => {
+        tracker.applySnapshot(payload);
+        snapshots += 1;
+        if (snapshots > 1) changeBus.refreshAll();
+      },
+      changed: changeBus.publish,
       updated: tracker.applyUpdate,
       statusChanged: () => setStatusRevision((revision) => revision + 1),
     });

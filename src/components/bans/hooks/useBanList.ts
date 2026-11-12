@@ -5,6 +5,7 @@ import { type Ban, type UnbanMemberResult } from "@discordia/client-shared";
 import { useCallback, useEffect, useState } from "react";
 
 import { useProfileFallback } from "@/hooks/useProfileFallback";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { listBansRequest, unbanMemberRequest } from "@/services/bans/client";
 
 /**
@@ -37,6 +38,13 @@ export function useBanList(serverId: string) {
       cancelled = true;
     };
   }, [serverId]);
+
+  const refreshBans = useCallback(async () => {
+    const result = await listBansRequest(serverId);
+    if (result.ok) setLoadedBans(result.bans);
+  }, [serverId]);
+
+  useRefreshOnChange({ resources: ["moderation"], serverId }, refreshBans);
 
   const unban = useCallback(
     async (userId: string): Promise<UnbanMemberResult> => {

@@ -121,4 +121,30 @@ describe("useNotificationMessages", () => {
 
     expect(lookupMessagesRequest).not.toHaveBeenCalled();
   });
+
+  it("no busca como si fuera un mensaje el id de una transferencia", async () => {
+    lookupMessagesRequest.mockResolvedValue({
+      ok: true,
+      messages: [stored("m1")],
+    });
+    const transfer: NotificationHistoryItem = {
+      kind: "ownership_transfer",
+      message_id: "t1",
+      author_id: "owner",
+      to_user_id: "me",
+      transfer_status: "pending",
+      occurred_at: "2026-11-02T12:00:00Z",
+      server_id: "s1",
+      channel_id: null,
+      conversation_id: null,
+    };
+
+    const { result } = renderHook(() =>
+      useNotificationMessages([transfer, item("m1")]),
+    );
+
+    await waitFor(() => expect(Object.keys(result.current)).toHaveLength(1));
+    expect(lookupMessagesRequest).toHaveBeenCalledTimes(1);
+    expect(lookupMessagesRequest).toHaveBeenCalledWith(["m1"]);
+  });
 });

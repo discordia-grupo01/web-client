@@ -2,6 +2,7 @@
 
 import {
   chunkNotificationIds,
+  isTransferNotification,
   type Message,
   type NotificationHistoryItem,
 } from "@discordia/client-shared";
@@ -26,6 +27,7 @@ export function useNotificationMessages(
 
   useEffect(() => {
     const missing = items
+      .filter((item) => !isTransferNotification(item))
       .map((item) => item.message_id)
       .filter((id) => !requested.current.has(id));
     missing.forEach((id) => requested.current.add(id));

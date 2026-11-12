@@ -10,6 +10,7 @@ import {
   MEMBERS_SEARCH_LABEL,
   MEMBERS_SEARCH_PLACEHOLDER,
   mutedUntilLabel,
+  PROFILE_REPLICATION_DELAY_MS,
   type Role,
   type User,
 } from "@discordia/client-shared";
@@ -23,6 +24,7 @@ import { useMemberScroll } from "@/components/members/hooks/useMemberScroll";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 import { listMembersRequest } from "@/services/members/client";
 import { usePresenceOf } from "@/hooks/usePresence";
+import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 
 /** A cuantos px del fondo se pide la pagina siguiente. */
 const LOAD_MORE_THRESHOLD_PX = 160;
@@ -290,8 +292,20 @@ export function MembersSidebar({
     [serverId],
   );
   const [search, setSearch] = useState("");
-  const { members, total, isSearching, isLoadingMore, errorMessage, loadMore } =
-    useMemberScroll({ fetchPage, search });
+  const {
+    members,
+    total,
+    isSearching,
+    isLoadingMore,
+    errorMessage,
+    loadMore,
+    refresh,
+  } = useMemberScroll({ fetchPage, search });
+  useRefreshOnChange({ resources: ["members", "roles"], serverId }, refresh);
+  useRefreshOnChange({ resources: ["profile"], serverId }, refresh, {
+    pollMs: null,
+    delayMs: PROFILE_REPLICATION_DELAY_MS,
+  });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   function loadMoreIfNearBottom() {

@@ -22,6 +22,7 @@ import { type RefObject, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
 import { NotificationGroupCard } from "@/components/notifications/NotificationGroupCard";
+import { TransferNotificationCard } from "@/components/notifications/TransferNotificationCard";
 import { NotificationTabs } from "@/components/notifications/NotificationTabs";
 import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { useMarkAllRead } from "@/hooks/useMarkAllRead";
@@ -51,6 +52,7 @@ interface NotificationCenterProps {
   onClose: () => void;
   onOpenMention: (serverId: string, channelId: string) => void;
   onOpenDirectMessage: (partner: MessageAuthor | string) => void;
+  onTransferAnswered: () => void;
 }
 
 export function NotificationCenter({
@@ -65,6 +67,7 @@ export function NotificationCenter({
   onClose,
   onOpenMention,
   onOpenDirectMessage,
+  onTransferAnswered,
 }: NotificationCenterProps) {
   const [tab, setTab] = useState<NotificationTab>("unread");
   const markAll = useMarkAllRead({
@@ -245,17 +248,30 @@ export function NotificationCenter({
 
         {history.status === "ready" ? (
           <MessageMentionsProvider value={mentionNames}>
-            {groups.map((group) => (
-              <NotificationGroupCard
-                key={group.key}
-                group={group}
-                servers={servers}
-                authors={authors}
-                messages={messages}
-                isUnread={reads.isUnread}
-                onOpen={open}
-              />
-            ))}
+            {groups.map((group) =>
+              group.kind === "ownership_transfer" ? (
+                <TransferNotificationCard
+                  key={group.key}
+                  item={group.items[0]}
+                  servers={servers}
+                  authors={authors}
+                  me={me}
+                  isUnread={reads.isUnread(group.items[0])}
+                  onRead={(item) => reads.markTransferRead(item.message_id)}
+                  onAnswered={onTransferAnswered}
+                />
+              ) : (
+                <NotificationGroupCard
+                  key={group.key}
+                  group={group}
+                  servers={servers}
+                  authors={authors}
+                  messages={messages}
+                  isUnread={reads.isUnread}
+                  onOpen={open}
+                />
+              ),
+            )}
           </MessageMentionsProvider>
         ) : null}
       </div>
