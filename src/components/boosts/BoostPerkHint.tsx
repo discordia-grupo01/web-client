@@ -8,16 +8,15 @@ import {
   hasBoostPerk,
 } from "@discordia/client-shared";
 
-import { cn } from "@/lib/cn";
-
 import { BoostLevelIcon } from "./BoostLevelIcon";
+
+const ICON_SIZE = 24;
 
 interface BoostPerkHintProps {
   perk: BoostPerk;
   level: BoostLevel;
   boostCount: number;
   unlockedHint: string;
-  showLabel?: boolean;
 }
 
 export function BoostPerkHint({
@@ -25,28 +24,27 @@ export function BoostPerkHint({
   level,
   boostCount,
   unlockedHint,
-  showLabel = true,
 }: BoostPerkHintProps) {
   const unlocked = hasBoostPerk(level, perk);
   const levelLabel = boostPerkLevelLabel(perk);
   return (
-    <p className="text-content-subtle flex items-center gap-1.5 text-[11px]">
+    <div className="flex items-center gap-2.5">
       <span title={levelLabel} className="flex shrink-0">
         <BoostLevelIcon
           level={BOOST_PERK_LEVEL[perk]}
-          size={14}
-          className={cn(!unlocked && "opacity-60")}
+          size={ICON_SIZE}
+          dimmed={!unlocked}
         />
         <span className="sr-only">{levelLabel}</span>
       </span>
-      <span>
-        {showLabel ? (
-          <span className="text-content-muted font-semibold">
-            {BOOST_PERK_LABELS[perk]} ·{" "}
-          </span>
-        ) : null}
-        {unlocked ? unlockedHint : boostPerkUnlockProgress(perk, boostCount)}
-      </span>
-    </p>
+      <div className="min-w-0 flex-1 space-y-0.5">
+        <p className="text-content-muted text-xs font-semibold">
+          {BOOST_PERK_LABELS[perk]}
+        </p>
+        <p className="text-content-subtle text-[11px]">
+          {unlocked ? unlockedHint : boostPerkUnlockProgress(perk, boostCount)}
+        </p>
+      </div>
+    </div>
   );
 }

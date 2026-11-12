@@ -49,23 +49,29 @@ export function BoostProgressStrip({
   }
 
   return (
-    <div className="border-line bg-surface-raised flex items-center gap-3 rounded-xl border px-3 py-2.5">
-      <BoostLevelIcon level={level} size={22} className="shrink-0" />
-      <div className="min-w-0 flex-1">
-        <div className="mb-1.5 flex justify-between gap-3 text-[11px]">
-          <span className="text-content-muted">
-            <span className="font-semibold">{boostLevelLabel(level)}</span> ·{" "}
-            {boostCountLabel(boostCount)}
-          </span>
-          <span className="text-content-subtle tabular-nums">{count}</span>
+    <div className="border-line bg-surface-raised space-y-2.5 rounded-xl border px-3 py-2.5">
+      <div className="flex items-center gap-3">
+        <BoostLevelIcon level={level} size={24} />
+        <div className="min-w-0 flex-1">
+          <div className="mb-1.5 flex justify-between gap-3 text-[11px]">
+            <span className="text-content-muted">
+              <span className="font-semibold">{boostLevelLabel(level)}</span> ·{" "}
+              {boostCountLabel(boostCount)}
+            </span>
+            <span className="text-content-subtle tabular-nums">{count}</span>
+          </div>
+          <BoostProgressBar
+            boostCount={boostCount}
+            target={target}
+            label={progress}
+          />
         </div>
-        <BoostProgressBar
-          boostCount={boostCount}
-          target={target}
-          label={progress}
-        />
       </div>
-      {onBoost ? <BoostServerButton onClick={onBoost} /> : null}
+      {onBoost ? (
+        <div className="flex justify-end">
+          <BoostServerButton onClick={onBoost} />
+        </div>
+      ) : null}
     </div>
   );
 }

@@ -5,7 +5,6 @@ import {
   groupNotificationHistory,
   type MessageAuthor,
   isNotificationVisible,
-  notificationPreview,
   NOTIFICATIONS_CLOSE_LABEL,
   NOTIFICATIONS_EMPTY_BY_TAB,
   NOTIFICATIONS_LOAD_OLDER_LABEL,
@@ -33,6 +32,10 @@ import { useNotificationRoles } from "@/hooks/useNotificationRoles";
 import type { NotificationHistoryState } from "@/hooks/useNotificationHistory";
 import type { NotificationReadsState } from "@/hooks/useNotificationReads";
 import { cn } from "@/lib/cn";
+import {
+  MessageMentionsProvider,
+  type MessageMentionsValue,
+} from "@/contexts/MentionsContext";
 
 const ACTION_CLASS =
   "text-content hover:text-content-muted inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium underline underline-offset-2 disabled:cursor-wait disabled:opacity-70";
@@ -92,18 +95,22 @@ export function NotificationCenter({
     [history.items, tab, reads.isUnread],
   );
 
-  const previews = useMemo(() => {
-    const nameOf = (kind: "user" | "role", id: string) => {
-      if (kind === "role") return roleNames[id.toLowerCase()] ?? null;
-      return (me?.id === id ? me.name : authors[id]?.name) ?? null;
-    };
-    return Object.fromEntries(
-      Object.entries(messages).map(([id, message]) => [
-        id,
-        notificationPreview(message, nameOf),
-      ]),
-    );
-  }, [messages, authors, roleNames, me]);
+  const mentionNames = useMemo<MessageMentionsValue>(
+    () => ({
+      sources: null,
+      me: { userId: me?.id ?? null, roleIds: [] },
+      resolveMention: (kind, id) => {
+        const name =
+          kind === "role"
+            ? roleNames[id.toLowerCase()]
+            : me?.id === id
+              ? me.name
+              : authors[id]?.name;
+        return name ? { name, color: null } : null;
+      },
+    }),
+    [authors, roleNames, me],
+  );
 
   function open(item: NotificationHistoryItem) {
     if (item.kind === "direct_message") {
@@ -239,8 +246,9 @@ export function NotificationCenter({
           </div>
         ) : null}
 
-        {history.status === "ready"
-          ? groups.map((group) =>
+        {history.status === "ready" ? (
+          <MessageMentionsProvider value={mentionNames}>
+            {groups.map((group) =>
               group.kind === "ownership_transfer" ? (
                 <TransferNotificationCard
                   key={group.key}
@@ -258,13 +266,14 @@ export function NotificationCenter({
                   group={group}
                   servers={servers}
                   authors={authors}
-                  previews={previews}
+                  messages={messages}
                   isUnread={reads.isUnread}
                   onOpen={open}
                 />
               ),
-            )
-          : null}
+            )}
+          </MessageMentionsProvider>
+        ) : null}
       </div>
     </div>,
     document.body,

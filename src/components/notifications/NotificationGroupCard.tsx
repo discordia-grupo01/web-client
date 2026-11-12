@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type Message,
   type MessageAuthor,
   NOTIFICATIONS_DIRECT_MESSAGE_LABEL,
   NOTIFICATIONS_SHOW_LESS_LABEL,
@@ -27,7 +28,7 @@ interface NotificationGroupCardProps {
   group: NotificationGroup;
   servers: readonly ServerSummary[];
   authors: Record<string, MessageAuthor>;
-  previews: Record<string, string | null>;
+  messages: Record<string, Message | null>;
   isUnread: (item: NotificationHistoryItem) => boolean;
   onOpen: (item: NotificationHistoryItem) => void;
 }
@@ -36,7 +37,7 @@ export function NotificationGroupCard({
   group,
   servers,
   authors,
-  previews,
+  messages,
   isUnread,
   onOpen,
 }: NotificationGroupCardProps) {
@@ -101,7 +102,7 @@ export function NotificationGroupCard({
             key={item.message_id}
             item={item}
             author={authors[item.author_id]}
-            preview={previews[item.message_id]}
+            message={messages[item.message_id]}
             isUnread={isUnread(item)}
             onOpen={onOpen}
           />

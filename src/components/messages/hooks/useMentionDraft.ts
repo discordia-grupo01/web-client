@@ -13,10 +13,8 @@ import {
 } from "@discordia/client-shared";
 
 import {
-  type ChangeEvent,
   type KeyboardEvent,
   type RefObject,
-  type SyntheticEvent,
   useCallback,
   useLayoutEffect,
   useMemo,
@@ -24,21 +22,17 @@ import {
   useState,
 } from "react";
 
+import type { MessageEditorHandle } from "@/components/messages/MessageEditor";
+
 interface UseMentionDraftOptions {
-  textareaRef: RefObject<HTMLTextAreaElement | null>;
+  editorRef: RefObject<MessageEditorHandle | null>;
   sources: MentionSources | null;
   initialText?: string;
   initialPicked?: PickedMention[];
 }
 
-/**
- * Borrador de un mensaje con menciones para un `<textarea>`. El estado y las
- * reglas son los de `client-shared` (`mentionDraftReducer`); aca solo se
- * conectan los eventos del textarea y se devuelve el cursor a su lugar despues
- * de elegi una mencion.
- */
 export function useMentionDraft({
-  textareaRef,
+  editorRef,
   sources,
   initialText = "",
   initialPicked = [],
@@ -55,29 +49,19 @@ export function useMentionDraft({
   // Despues de elegir, el cursor tiene que quedar al final de lo insertado.
   useLayoutEffect(() => {
     if (forcedCursor === null) return;
-    const textarea = textareaRef.current;
-    textarea?.focus();
-    textarea?.setSelectionRange(forcedCursor, forcedCursor);
+    editorRef.current?.setCursor(forcedCursor);
     setForcedCursor(null);
-  }, [forcedCursor, textareaRef]);
+  }, [forcedCursor, editorRef]);
 
   const handleChange = useCallback(
-    (event: ChangeEvent<HTMLTextAreaElement>) =>
-      dispatch({
-        type: "change",
-        text: event.target.value,
-        cursor: event.target.selectionStart,
-      }),
+    (text: string, cursor: number) =>
+      dispatch({ type: "change", text, cursor }),
     [],
   );
 
   /** El cursor se movio sin cambiar el texto (clic o flechas). */
-  const handleSelect = useCallback(
-    (event: SyntheticEvent<HTMLTextAreaElement>) =>
-      dispatch({
-        type: "moveCursor",
-        cursor: event.currentTarget.selectionStart,
-      }),
+  const handleCursorMove = useCallback(
+    (cursor: number) => dispatch({ type: "moveCursor", cursor }),
     [],
   );
 
@@ -96,7 +80,7 @@ export function useMentionDraft({
    * Esc para cerrarlo. Devuelve `true` si la tecla era suya (hay que cortar ahi).
    */
   const handleSuggestionKey = useCallback(
-    (event: KeyboardEvent<HTMLTextAreaElement>): boolean => {
+    (event: KeyboardEvent): boolean => {
       if (!view.isOpen) return false;
       if (event.key === "ArrowDown" || event.key === "ArrowUp") {
         event.preventDefault();
@@ -123,7 +107,6 @@ export function useMentionDraft({
     [view.isOpen, view.candidates, state.selectedIndex, pick],
   );
 
-  // Sin selector (DMs) no hay menciones que resaltar.
   const segments = useMemo<DraftSegment[] | null>(
     () =>
       sources
@@ -141,7 +124,7 @@ export function useMentionDraft({
     candidates: view.candidates,
     selectedIndex: state.selectedIndex,
     handleChange,
-    handleSelect,
+    handleCursorMove,
     handleSuggestionKey,
     pick,
     append: (text: string) => dispatch({ type: "append", text }),

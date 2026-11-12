@@ -13,7 +13,7 @@
     "test": "vitest run --passWithNoTests"
   },
   "dependencies": {
-    "@discordia/client-shared": "github:discordia-grupo01/client-shared#v0.13.93",
+    "@discordia/client-shared": "github:discordia-grupo01/client-shared#v0.13.94",
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
@@ -34,6 +34,10 @@
     "react-colorful": "^5.8.1",
     "react-dom": "^18.3.0",
     "server-only": "^0.0.1",
+    "slate": "^0.147.4",
+    "slate-dom": "^0.147.3",
+    "slate-history": "^0.144.0",
+    "slate-react": "^0.147.5",
     "tailwind-merge": "^2.6.1",
     "tailwindcss": "^4.3.3"
   },
