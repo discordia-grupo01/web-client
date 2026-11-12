@@ -15,12 +15,16 @@ export interface PlainText {
 export interface DraftLeaf extends PlainText {
   bold?: true;
   italic?: true;
+  underline?: true;
   strike?: true;
+  spoiler?: true;
+  link?: true;
   code?: true;
   codeBlock?: true;
   marker?: true;
   quote?: true;
   heading?: 1 | 2 | 3;
+  subtext?: true;
   mentionStyle?: CSSProperties;
 }
 

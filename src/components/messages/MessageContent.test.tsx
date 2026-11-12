@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
 
 import { MessageContent } from "./MessageContent";
@@ -48,5 +48,52 @@ describe("MessageContent", () => {
       <MessageContent content="**hola mundo**" highlight="mundo" />,
     );
     expect(container.querySelector("strong mark")).toHaveTextContent("mundo");
+  });
+
+  it("los links se abren en otra pestaña", () => {
+    render(
+      <MessageContent content="mira https://a.com y [la guia](https://b.com/g)" />,
+    );
+    const plain = screen.getByRole("link", { name: "https://a.com" });
+    expect(plain).toHaveAttribute("href", "https://a.com");
+    expect(plain).toHaveAttribute("target", "_blank");
+    expect(screen.getByRole("link", { name: "la guia" })).toHaveAttribute(
+      "href",
+      "https://b.com/g",
+    );
+  });
+
+  it("el spoiler queda tapado hasta que se lo toca", () => {
+    const { container } = render(<MessageContent content="||sorpresa||" />);
+    const spoiler = screen.getByRole("button", { name: /spoiler/i });
+    expect(container.querySelector(".invisible")).toHaveTextContent("sorpresa");
+    fireEvent.click(spoiler);
+    expect(container.querySelector(".invisible")).toBeNull();
+    expect(screen.getByText("sorpresa")).toBeVisible();
+  });
+
+  it("dibuja subrayado, texto chico y listas numeradas y anidadas", () => {
+    const { container } = render(
+      <MessageContent
+        content={"__abajo__\n-# chiquito\n3. tres\n4. cuatro\n   - sub"}
+      />,
+    );
+    expect(container.querySelector("u")).toHaveTextContent("abajo");
+    expect(screen.getByText("chiquito")).toHaveClass("text-xs");
+    const ordered = container.querySelector("ol");
+    expect(ordered).toHaveAttribute("start", "3");
+    expect(ordered?.querySelector("li ul li")).toHaveTextContent("sub");
+  });
+
+  it("el sufijo va en el ultimo item de una lista anidada", () => {
+    render(
+      <MessageContent
+        content={"- uno\n  - dos"}
+        suffix={<span>(editado)</span>}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")[1]).toHaveTextContent(
+      "dos(editado)",
+    );
   });
 });

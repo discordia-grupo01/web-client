@@ -84,7 +84,10 @@ const SHORTCUTS: Record<string, MarkdownFormat> = { b: "bold", i: "italic" };
 const STYLE_PROPS: Record<MarkdownRange["style"], Partial<DraftLeaf>> = {
   bold: { bold: true },
   italic: { italic: true },
+  underline: { underline: true },
   strike: { strike: true },
+  spoiler: { spoiler: true },
+  link: { link: true },
   code: { code: true },
   "code-block": { codeBlock: true },
   marker: { marker: true },
@@ -92,6 +95,7 @@ const STYLE_PROPS: Record<MarkdownRange["style"], Partial<DraftLeaf>> = {
   "heading-1": { heading: 1 },
   "heading-2": { heading: 2 },
   "heading-3": { heading: 3 },
+  subtext: { subtext: true },
 };
 
 export const MessageEditor = forwardRef<
@@ -204,12 +208,18 @@ export const MessageEditor = forwardRef<
       sources?.roles.find((role) => role.id.toLowerCase() === id.toLowerCase())
         ?.color;
 
+    const markdown = messageMarkdownRanges(value);
     const all: { start: number; end: number; props: Partial<DraftLeaf> }[] =
-      messageMarkdownRanges(value).map((range) => ({
+      markdown.map((range) => ({
         start: range.start,
         end: range.end,
         props: STYLE_PROPS[range.style],
       }));
+    const quoteStarts = new Set(
+      markdown
+        .filter((range) => range.style === "quote")
+        .map((range) => range.start),
+    );
 
     let offset = 0;
     for (const segment of segments ?? []) {
@@ -227,7 +237,7 @@ export const MessageEditor = forwardRef<
       }
       offset += segment.value.length;
     }
-    return all;
+    return { all, quoteStarts };
   }, [value, segments, theme, sources]);
 
   const decorate = useCallback(
@@ -236,7 +246,7 @@ export const MessageEditor = forwardRef<
       const lineStart = lineStarts(editor)[path[0]] ?? 0;
       const lineEnd = lineStart + node.text.length;
       const decorations: Range[] = [];
-      for (const range of ranges) {
+      for (const range of ranges.all) {
         const start = Math.max(range.start, lineStart);
         const end = Math.min(range.end, lineEnd);
         if (end <= start) continue;
@@ -247,6 +257,22 @@ export const MessageEditor = forwardRef<
         });
       }
       return decorations;
+    },
+    [editor, ranges],
+  );
+
+  const renderElement = useCallback(
+    ({ attributes, children, element }: RenderElementProps) => {
+      const line = ReactEditor.findPath(editor, element)[0];
+      const quoted = ranges.quoteStarts.has(lineStarts(editor)[line] ?? -1);
+      return (
+        <div
+          {...attributes}
+          className={cn(quoted && "border-line-strong border-l-4 pl-2")}
+        >
+          {children}
+        </div>
+      );
     },
     [editor, ranges],
   );
@@ -274,18 +300,6 @@ export const MessageEditor = forwardRef<
   );
 });
 
-function renderElement({ attributes, children, element }: RenderElementProps) {
-  const quoted = /^>( |$)/.test(element.children.map((c) => c.text).join(""));
-  return (
-    <div
-      {...attributes}
-      className={cn(quoted && "border-line-strong border-l-4 pl-2")}
-    >
-      {children}
-    </div>
-  );
-}
-
 function renderLeaf({ attributes, children, leaf }: RenderLeafProps) {
   return (
     <span
@@ -294,12 +308,19 @@ function renderLeaf({ attributes, children, leaf }: RenderLeafProps) {
       className={cn(
         leaf.bold && "font-bold",
         leaf.italic && "italic",
+        leaf.underline && "underline",
         leaf.strike && "line-through",
+        leaf.underline &&
+          leaf.strike &&
+          "[text-decoration-line:underline_line-through]",
+        leaf.spoiler && "bg-content-subtle/40 rounded",
+        leaf.link && "text-sky",
         (leaf.code || leaf.codeBlock) &&
           "bg-surface-sunken font-mono text-[0.9em]",
         leaf.heading === 1 && "font-display text-xl font-bold",
         leaf.heading === 2 && "font-display text-lg font-bold",
         leaf.heading === 3 && "font-display text-base font-bold",
+        leaf.subtext && "text-content-subtle text-xs",
         leaf.marker && "text-content-subtle",
       )}
     >
