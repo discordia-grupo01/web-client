@@ -80,8 +80,16 @@ const direct = (messageId: string): NotificationHistoryItem => ({
   conversation_id: "conv-1",
 });
 
-const stored = (id: string, content: string): Message =>
-  ({ id, content, channel_id: "c1", user_id: "ana" }) as Message;
+const stored = (
+  id: string,
+  content: string,
+  mentioned: Partial<Pick<Message, "mentions" | "mention_roles">> = {},
+): Message =>
+  ({ id, content, channel_id: "c1", user_id: "ana", ...mentioned }) as Message;
+
+/** Un parrafo con ese texto completo, aunque las menciones lo partan en varios elementos. */
+const paragraph = (text: string) => (_: string, element: Element | null) =>
+  element?.tagName === "P" && element.textContent === text;
 
 function historyState(
   overrides: Partial<NotificationHistoryState> = {},
@@ -184,16 +192,32 @@ describe("NotificationCenter", () => {
     lookupMessagesRequest.mockResolvedValue({
       ok: true,
       messages: [
-        stored("m2", "hola <@yo> mirá esto"),
+        stored("m2", "hola <@yo> mirá esto", { mentions: ["yo"] }),
         stored("m1", "otro mensaje"),
       ],
     });
 
     await renderCenter(historyState({ items: [mention("m2"), mention("m1")] }));
 
-    expect(await screen.findByText("hola @Yo mirá esto")).toBeInTheDocument();
+    expect(
+      await screen.findByText(paragraph("hola @Yo mirá esto")),
+    ).toBeInTheDocument();
     expect(screen.getByText("otro mensaje")).toBeInTheDocument();
     expect(lookupMessagesRequest).toHaveBeenCalledWith(["m2", "m1"]);
+  });
+
+  it("muestra el mensaje con su formato", async () => {
+    lookupMessagesRequest.mockResolvedValue({
+      ok: true,
+      messages: [stored("m1", "# Aviso\n**importante**")],
+    });
+
+    await renderCenter(historyState({ items: [mention("m1")] }));
+
+    expect(
+      await screen.findByRole("heading", { name: "Aviso" }),
+    ).toBeInTheDocument();
+    expect(screen.getByText("importante").tagName).toBe("STRONG");
   });
 
   it("muestra el nombre del rol mencionado, pidiendo los roles una vez por servidor", async () => {
@@ -201,8 +225,8 @@ describe("NotificationCenter", () => {
     lookupMessagesRequest.mockResolvedValue({
       ok: true,
       messages: [
-        stored("m2", `<@&${roleId}> cómo están?`),
-        stored("m1", `otra vez <@&${roleId}>`),
+        stored("m2", `<@&${roleId}> cómo están?`, { mention_roles: [roleId] }),
+        stored("m1", `otra vez <@&${roleId}>`, { mention_roles: [roleId] }),
       ],
     });
     listRolesRequest.mockResolvedValue({
@@ -213,7 +237,7 @@ describe("NotificationCenter", () => {
     await renderCenter(historyState({ items: [mention("m2"), mention("m1")] }));
 
     expect(
-      await screen.findByText("@Moderadores cómo están?"),
+      await screen.findByText(paragraph("@Moderadores cómo están?")),
     ).toBeInTheDocument();
     expect(listRolesRequest).toHaveBeenCalledTimes(1);
     expect(listRolesRequest).toHaveBeenCalledWith("s1");

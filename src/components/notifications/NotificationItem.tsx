@@ -3,19 +3,22 @@
 import {
   describeNotification,
   formatMessageTimestamp,
+  type Message,
   type MessageAuthor,
+  NOTIFICATIONS_ATTACHMENT_PREVIEW,
   NOTIFICATIONS_UNREAD_LABEL,
   type NotificationHistoryItem,
   UNKNOWN_USER_NAME,
 } from "@discordia/client-shared";
 
+import { MessageContent } from "@/components/messages/MessageContent";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
 
 interface NotificationItemProps {
   item: NotificationHistoryItem;
   author: MessageAuthor | undefined;
-  preview: string | null | undefined;
+  message: Message | null | undefined;
   isUnread: boolean;
   onOpen: (item: NotificationHistoryItem) => void;
 }
@@ -23,7 +26,7 @@ interface NotificationItemProps {
 export function NotificationItem({
   item,
   author,
-  preview,
+  message,
   isUnread,
   onOpen,
 }: NotificationItemProps) {
@@ -54,15 +57,17 @@ export function NotificationItem({
               {formatMessageTimestamp(item.occurred_at)}
             </span>
           </p>
-          <p
-            className={
-              preview
-                ? "text-content-muted line-clamp-2 text-sm break-words"
-                : "text-content-subtle truncate text-sm"
-            }
-          >
-            {preview ?? describeNotification(item)}
-          </p>
+          {message?.content ? (
+            <div className="max-h-[2lh] overflow-hidden text-sm leading-relaxed">
+              <MessageContent content={message.content} mentions={message} />
+            </div>
+          ) : (
+            <p className="text-content-subtle truncate text-sm">
+              {message?.attachments?.length
+                ? NOTIFICATIONS_ATTACHMENT_PREVIEW
+                : describeNotification(item)}
+            </p>
+          )}
         </div>
         {isUnread ? (
           <span
