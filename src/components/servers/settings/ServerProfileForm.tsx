@@ -102,7 +102,7 @@ export function ServerProfileForm({
             {formatImageTypes(ALLOWED_SERVER_ICON_TYPES)} · Máx.{" "}
             {MAX_ICON_FILE_MB} MB
           </p>
-          <div className="mt-0.5">
+          <div className="mt-3">
             <BoostPerkHint
               perk="animated_icon"
               level={form.boostLevel}
