@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CHECK_SPAM_HINT,
   hasErrors,
   type ForgotPasswordErrors,
   validateForgotPassword,
@@ -8,6 +9,7 @@ import {
 
 import { ArrowLeft, ArrowRight, CheckCircle2, Mail } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -16,6 +18,7 @@ import { forgotPasswordRequest } from "@/services/auth/client";
 import { ROUTES } from "@/lib/constants";
 
 export function ForgotPasswordForm() {
+  const router = useRouter();
   const [email, setEmail] = useState("");
   const [errors, setErrors] = useState<ForgotPasswordErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
@@ -57,16 +60,12 @@ export function ForgotPasswordForm() {
           registrado en Discordia, recibirás un enlace para restablecer tu
           contraseña en los próximos minutos.
         </p>
-        <p className="text-content-subtle mb-8 text-xs">
-          Recuerda revisar tu carpeta de spam por si acaso.
-        </p>
+        <p className="text-content-subtle mb-8 text-xs">{CHECK_SPAM_HINT}</p>
 
-        <Link
-          href={ROUTES.login}
-          className="text-content-subtle text-sm hover:underline"
-        >
-          Volver al inicio de sesión
-        </Link>
+        <Button type="button" onClick={() => router.push(ROUTES.login)}>
+          <span>Volver al inicio de sesión</span>
+          <ArrowRight size={16} />
+        </Button>
       </div>
     );
   }
