@@ -1,7 +1,7 @@
 import {
+  DEFAULT_PAGE_SIZE,
   type ListModerationAuditResult,
   listModerationAuditFailureMessage,
-  MODERATION_AUDIT_PAGE_SIZE,
 } from "@discordia/client-shared";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -21,7 +21,7 @@ export async function GET(
   if (!session) return unauthorizedResponse();
 
   const search = request.nextUrl.searchParams;
-  const limit = Number(search.get("limit")) || MODERATION_AUDIT_PAGE_SIZE;
+  const limit = Number(search.get("limit")) || DEFAULT_PAGE_SIZE;
   const offset = Math.max(Number(search.get("offset")) || 0, 0);
 
   const result = await listModerationAudit(session.token, params.serverId, {

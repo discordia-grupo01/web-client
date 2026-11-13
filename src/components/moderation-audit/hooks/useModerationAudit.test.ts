@@ -23,12 +23,12 @@ describe("useModerationAudit", () => {
     const { result } = renderHook(() => useModerationAudit("s1"));
 
     await waitFor(() => expect(result.current.entries).toEqual([entry]));
-    expect(request).toHaveBeenLastCalledWith("s1", { limit: 20, offset: 0 });
+    expect(request).toHaveBeenLastCalledWith("s1", { limit: 15, offset: 0 });
     expect(result.current.pageCount).toBe(3);
 
     act(() => result.current.setPage(3));
     await waitFor(() =>
-      expect(request).toHaveBeenLastCalledWith("s1", { limit: 20, offset: 40 }),
+      expect(request).toHaveBeenLastCalledWith("s1", { limit: 15, offset: 30 }),
     );
   });
 

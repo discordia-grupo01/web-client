@@ -1,9 +1,10 @@
 "use client";
 
 import {
-  MODERATION_AUDIT_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
   type ModerationAuditEntry,
   pageCountOf,
+  pageRange,
 } from "@discordia/client-shared";
 import { useEffect, useState } from "react";
 
@@ -20,8 +21,8 @@ export function useModerationAudit(serverId: string) {
     setEntries(null);
     setLoadError("");
     listModerationAuditRequest(serverId, {
-      limit: MODERATION_AUDIT_PAGE_SIZE,
-      offset: (page - 1) * MODERATION_AUDIT_PAGE_SIZE,
+      limit: DEFAULT_PAGE_SIZE,
+      offset: (page - 1) * DEFAULT_PAGE_SIZE,
     }).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
@@ -39,7 +40,9 @@ export function useModerationAudit(serverId: string) {
 
   return {
     page,
-    pageCount: pageCountOf(total, MODERATION_AUDIT_PAGE_SIZE),
+    pageCount: pageCountOf(total, DEFAULT_PAGE_SIZE),
+    range: pageRange(page, DEFAULT_PAGE_SIZE, total),
+    total,
     setPage,
     entries,
     loadError,

@@ -3,6 +3,7 @@
 import {
   type ClosedReportStatus,
   pageCountOf,
+  pageRange,
   type Report,
   REPORTS_PAGE_SIZE,
   type ReportResolutionAction,
@@ -146,6 +147,7 @@ export function useReportsList(serverId: string, onPendingClosed: () => void) {
     status,
     page,
     pageCount: pageCountOf(total, REPORTS_PAGE_SIZE),
+    range: pageRange(page, REPORTS_PAGE_SIZE, total),
     setPage,
     reports,
     total,

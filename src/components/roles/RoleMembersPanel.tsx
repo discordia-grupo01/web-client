@@ -6,7 +6,6 @@ import {
   MEMBERS_EMPTY_SEARCH,
   MEMBERS_SEARCH_LABEL,
   MEMBERS_SEARCH_PLACEHOLDER,
-  paginationSummary,
   ROLE_MEMBERS_EMPTY,
   ROLE_MEMBERS_EVERYONE_HINT,
   ROLE_MEMBERS_WITHOUT_EMPTY,
@@ -19,7 +18,7 @@ import { useCallback, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { useMemberPages } from "@/hooks/useMemberPages";
@@ -213,21 +212,15 @@ export function RoleMembersPanel({
       </div>
 
       {list.pageCount > 1 ? (
-        <div className="border-line flex shrink-0 flex-col items-center gap-2 border-t px-4 py-3 sm:px-7">
-          <p aria-live="polite" className="text-content-muted text-xs">
-            {paginationSummary(
-              list.range.from,
-              list.range.to,
-              list.total,
-              list.isSearching ? "resultados" : "miembros",
-            )}
-          </p>
-          <Pagination
-            page={list.page}
-            pageCount={list.pageCount}
-            onPageChange={list.setPage}
-          />
-        </div>
+        <PaginationFooter
+          page={list.page}
+          pageCount={list.pageCount}
+          range={list.range}
+          total={list.total}
+          noun={list.isSearching ? "resultados" : "miembros"}
+          onPageChange={list.setPage}
+          className="border-line shrink-0 border-t px-4 py-3 sm:px-7"
+        />
       ) : null}
     </div>
   );

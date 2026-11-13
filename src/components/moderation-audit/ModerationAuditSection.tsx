@@ -7,7 +7,7 @@ import {
 } from "@discordia/client-shared";
 
 import { FormAlert } from "@/components/ui/FormAlert";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 
 import { AuditEntryRow } from "./AuditEntryRow";
 import { useModerationAudit } from "./hooks/useModerationAudit";
@@ -59,16 +59,19 @@ export function ModerationAuditSection({
             ))}
           </ul>
         )}
-
-        {audit.pageCount > 1 ? (
-          <Pagination
-            page={audit.page}
-            pageCount={audit.pageCount}
-            onPageChange={audit.setPage}
-            isCompact
-          />
-        ) : null}
       </div>
+
+      {audit.pageCount > 1 ? (
+        <PaginationFooter
+          page={audit.page}
+          pageCount={audit.pageCount}
+          range={audit.range}
+          total={audit.total}
+          noun="acciones"
+          onPageChange={audit.setPage}
+          className="border-line shrink-0 border-t px-4 py-3 sm:px-7"
+        />
+      ) : null}
     </div>
   );
 }
