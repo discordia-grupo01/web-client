@@ -1,17 +1,15 @@
 "use client";
 
 import {
-  formatTwoFactorChallengeCountdown,
   hasErrors,
   RECOVERY_CODE_LENGTH,
-  TWO_FACTOR_CHALLENGE_EXPIRED,
   TWO_FACTOR_VERIFY_INSTRUCTIONS,
   type TwoFactorCodeErrors,
   validateTwoFactorCode,
 } from "@discordia/client-shared";
 
 import { ArrowRight, KeyRound, ShieldCheck } from "lucide-react";
-import { useEffect, useRef, useState, type FormEvent } from "react";
+import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
@@ -19,8 +17,6 @@ import { TextField } from "@/components/ui/TextField";
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
 interface TwoFactorVerifyFormProps {
-  /** Segundos de validez del desafío, del backend (no un timer inventado). */
-  expiresIn: number;
   /** Vuelve al paso de email y contraseña: el desafío ya no sirve. */
   onChallengeLost: (message: string) => void;
   onVerified: (result: {
@@ -29,13 +25,7 @@ interface TwoFactorVerifyFormProps {
   }) => void;
 }
 
-/**
- * Segundo paso del login (CA2). Un solo campo acepta el código de la app y
- * uno de recuperación (CA4): el usuario escribe lo que tenga a mano y es el
- * backend el que los distingue por el formato.
- */
 export function TwoFactorVerifyForm({
-  expiresIn,
   onChallengeLost,
   onVerified,
 }: TwoFactorVerifyFormProps) {
@@ -43,32 +33,6 @@ export function TwoFactorVerifyForm({
   const [errors, setErrors] = useState<TwoFactorCodeErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [secondsLeft, setSecondsLeft] = useState(expiresIn);
-  const onChallengeLostRef = useRef(onChallengeLost);
-  useEffect(() => {
-    onChallengeLostRef.current = onChallengeLost;
-  }, [onChallengeLost]);
-
-  // El aviso al padre va afuera del updater de `setSecondsLeft` (no se puede
-  // notificar a un padre que desmonta este componente desde ahi adentro).
-  useEffect(() => {
-    if (expiresIn <= 0) {
-      onChallengeLostRef.current(TWO_FACTOR_CHALLENGE_EXPIRED);
-      return;
-    }
-
-    let remaining = expiresIn;
-    const interval = window.setInterval(() => {
-      remaining -= 1;
-      setSecondsLeft(Math.max(0, remaining));
-      if (remaining <= 0) {
-        window.clearInterval(interval);
-        onChallengeLostRef.current(TWO_FACTOR_CHALLENGE_EXPIRED);
-      }
-    }, 1000);
-    return () => window.clearInterval(interval);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -83,8 +47,6 @@ export function TwoFactorVerifyForm({
     setIsSubmitting(false);
 
     if (!result.ok) {
-      // CA3: con el desafío todavía vivo se reintenta acá mismo. Si se quemó
-      // (vencido o demasiados intentos), no tiene sentido dejarlo tipeando.
       if (result.expired) {
         onChallengeLost(result.message);
         return;
@@ -129,13 +91,6 @@ export function TwoFactorVerifyForm({
         <span>Verificar</span>
         <ArrowRight size={16} />
       </Button>
-
-      <p className="text-content-subtle flex items-center justify-between text-xs">
-        <span>Sesión aún no iniciada</span>
-        <span className="font-mono tabular-nums">
-          {formatTwoFactorChallengeCountdown(secondsLeft)}
-        </span>
-      </p>
     </form>
   );
 }

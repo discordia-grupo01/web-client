@@ -59,7 +59,7 @@ export function GoogleButton({
     });
     observer.observe(container);
     return () => observer.disconnect();
-  }, []);
+  }, [awaitingTwoFactor]);
 
   async function handleSuccess(credentialResponse: CredentialResponse) {
     setError(null);

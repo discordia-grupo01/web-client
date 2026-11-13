@@ -12,7 +12,10 @@ import { ConfirmEmailForm } from "./ConfirmEmailForm";
 
 let searchParams = new URLSearchParams();
 
+const { push } = vi.hoisted(() => ({ push: vi.fn() }));
+
 vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push }),
   useSearchParams: () => searchParams,
 }));
 
@@ -62,15 +65,16 @@ describe("<ConfirmEmailForm />", () => {
     expect(requestEmailConfirmationRequestMock).not.toHaveBeenCalled();
   });
 
-  it("muestra el aviso de envío después del registro", () => {
+  it("muestra el aviso de envío después del registro", async () => {
     searchParams = new URLSearchParams("sent=1");
 
     render(<ConfirmEmailForm />);
 
     expect(screen.getByText(/revisa tu correo/i)).toBeInTheDocument();
-    expect(
-      screen.getByRole("link", { name: /volver al inicio de sesión/i }),
-    ).toHaveAttribute("href", "/login");
+    await userEvent.click(
+      screen.getByRole("button", { name: /volver al inicio de sesión/i }),
+    );
+    expect(push).toHaveBeenCalledWith("/login");
     expect(
       screen.queryByRole("button", { name: /reenviar confirmación/i }),
     ).not.toBeInTheDocument();

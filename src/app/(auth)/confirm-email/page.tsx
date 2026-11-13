@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
-import Image from "next/image";
 import { Suspense } from "react";
 
+import { AuthLogo } from "@/components/auth/AuthLogo";
 import { ConfirmEmailForm } from "@/components/auth/ConfirmEmailForm";
 
 export const metadata: Metadata = {
@@ -11,14 +11,7 @@ export const metadata: Metadata = {
 export default function ConfirmEmailPage() {
   return (
     <>
-      <Image
-        src="/logo-light.png"
-        alt="discordia"
-        width={1010}
-        height={269}
-        priority
-        className="mb-8 h-auto w-48 lg:hidden"
-      />
+      <AuthLogo />
       <Suspense fallback={<ConfirmEmailSkeleton />}>
         <ConfirmEmailForm />
       </Suspense>

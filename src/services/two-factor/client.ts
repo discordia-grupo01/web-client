@@ -1,4 +1,6 @@
 import {
+  ACCOUNT_RECOVERY_UNAVAILABLE,
+  type AccountRecoveryResult,
   REQUEST_FAILED_MESSAGE,
   type TwoFactorDisableResult,
   type TwoFactorRecoveryCodesResult,
@@ -79,5 +81,19 @@ export async function twoFactorVerifyRequest(
     return data;
   } catch {
     return { ok: false, message: REQUEST_FAILED_MESSAGE };
+  }
+}
+
+export async function twoFactorRecoveryRequest(
+  message: string,
+): Promise<AccountRecoveryResult> {
+  try {
+    const { data } = await api.post<AccountRecoveryResult>(
+      "/auth/2fa/recovery-request",
+      { message },
+    );
+    return data;
+  } catch {
+    return { ok: false, message: ACCOUNT_RECOVERY_UNAVAILABLE };
   }
 }

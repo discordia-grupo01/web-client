@@ -50,6 +50,7 @@ function buildRequestConfig({
 const SUSPENSION_EXEMPT_PATHS = new Set([
   "/v1/login",
   "/v1/login/2fa",
+  "/v1/login/2fa/recovery-request",
   "/v1/pin/login",
   "/v1/oauth/google",
   "/v1/logout",
