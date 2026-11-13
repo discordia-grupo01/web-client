@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  CHECK_SPAM_HINT,
   hasErrors,
   type ForgotPasswordErrors,
   validateForgotPassword,
@@ -59,9 +60,7 @@ export function ForgotPasswordForm() {
           registrado en Discordia, recibirás un enlace para restablecer tu
           contraseña en los próximos minutos.
         </p>
-        <p className="text-content-subtle mb-8 text-xs">
-          Recuerda revisar tu carpeta de spam por si acaso.
-        </p>
+        <p className="text-content-subtle mb-8 text-xs">{CHECK_SPAM_HINT}</p>
 
         <Button type="button" onClick={() => router.push(ROUTES.login)}>
           <span>Volver al inicio de sesión</span>

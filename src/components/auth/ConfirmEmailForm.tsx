@@ -1,15 +1,13 @@
 "use client";
 
-import { EMAIL_NOT_VERIFIED } from "@discordia/client-shared";
+import { CHECK_SPAM_HINT, EMAIL_NOT_VERIFIED } from "@discordia/client-shared";
 import {
-  ArrowLeft,
   ArrowRight,
   CheckCircle2,
   Mail,
   RefreshCw,
   TriangleAlert,
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
@@ -105,15 +103,7 @@ export function ConfirmEmailForm() {
         : "Te enviamos un enlace para confirmar tu correo y activar tu cuenta.";
 
   return (
-    <section>
-      <Link
-        href={ROUTES.login}
-        className="text-content-subtle mb-6 flex items-center gap-1.5 text-sm transition-colors hover:opacity-80"
-      >
-        <ArrowLeft size={14} />
-        Volver al inicio de sesión
-      </Link>
-
+    <section className="flex flex-col items-center text-center">
       <div className="bg-accent/15 text-accent mb-5 flex size-16 items-center justify-center rounded-2xl">
         {status === "expired" ? (
           <TriangleAlert size={32} />
@@ -124,16 +114,17 @@ export function ConfirmEmailForm() {
       <h1 className="font-display text-content mb-2 text-2xl font-bold">
         {title}
       </h1>
-      <p className="text-content-muted mb-2 text-sm leading-relaxed">
-        {description}
-      </p>
-      {fromLogin && email ? (
-        <p className="text-content mb-6 text-sm font-semibold">{email}</p>
-      ) : (
-        <p className="text-content-subtle mb-6 text-xs">
-          Revisa también tu carpeta de spam.
+      <div className="mb-8 space-y-2">
+        <p className="text-content-muted text-sm leading-relaxed">
+          {description}
         </p>
-      )}
+        {fromLogin && email ? (
+          <p className="text-content text-sm font-semibold">{email}</p>
+        ) : null}
+        {status === "expired" ? null : (
+          <p className="text-content-subtle text-xs">{CHECK_SPAM_HINT}</p>
+        )}
+      </div>
 
       {isConfirming ? (
         <div className="text-content-muted flex items-center justify-center gap-2 py-3 text-sm">
@@ -141,7 +132,7 @@ export function ConfirmEmailForm() {
           Confirmando tu correo...
         </div>
       ) : (
-        <div className="space-y-4">
+        <div className="w-full space-y-3">
           {formError ? (
             <p
               role="alert"
@@ -152,19 +143,28 @@ export function ConfirmEmailForm() {
           ) : null}
 
           {fromLogin && email ? (
-            <Button
-              type="button"
-              isLoading={isResending}
-              onClick={() => void resend()}
-            >
-              <RefreshCw size={16} />
-              <span>Reenviar confirmación</span>
-            </Button>
+            <>
+              <Button
+                type="button"
+                isLoading={isResending}
+                onClick={() => void resend()}
+              >
+                <RefreshCw size={16} />
+                <span>Reenviar confirmación</span>
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => router.push(ROUTES.login)}
+              >
+                Volver al inicio de sesión
+              </Button>
+            </>
           ) : (
-            <p className="text-content-subtle text-center text-xs">
-              Intenta iniciar sesión nuevamente si perdiste tu enlace de
-              confirmación.
-            </p>
+            <Button type="button" onClick={() => router.push(ROUTES.login)}>
+              <span>Volver al inicio de sesión</span>
+              <ArrowRight size={16} />
+            </Button>
           )}
         </div>
       )}
