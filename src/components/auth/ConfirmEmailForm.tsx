@@ -3,13 +3,14 @@
 import { EMAIL_NOT_VERIFIED } from "@discordia/client-shared";
 import {
   ArrowLeft,
+  ArrowRight,
   CheckCircle2,
   Mail,
   RefreshCw,
   TriangleAlert,
 } from "lucide-react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -20,6 +21,7 @@ import {
 } from "@/services/auth/client";
 
 export function ConfirmEmailForm() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const token = searchParams.get("token") ?? "";
   const fromLogin = searchParams.get("from") === "login";
@@ -86,12 +88,10 @@ export function ConfirmEmailForm() {
         <p className="text-content-muted mb-8 text-sm leading-relaxed">
           Tu cuenta está lista. Ya puedes iniciar sesión en Discordia.
         </p>
-        <a
-          href={ROUTES.login}
-          className="from-accent rounded-xl bg-gradient-to-br to-[#1a4050] px-4 py-3 text-sm font-semibold text-white shadow-[0_6px_20px_rgba(36,92,107,0.4)] transition-all hover:brightness-110"
-        >
-          Ir a iniciar sesión
-        </a>
+        <Button type="button" onClick={() => router.push(ROUTES.login)}>
+          <span>Ir a iniciar sesión</span>
+          <ArrowRight size={16} />
+        </Button>
       </section>
     );
   }

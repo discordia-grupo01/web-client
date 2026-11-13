@@ -13,6 +13,7 @@ import { ConfirmEmailForm } from "./ConfirmEmailForm";
 let searchParams = new URLSearchParams();
 
 vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
   useSearchParams: () => searchParams,
 }));
 

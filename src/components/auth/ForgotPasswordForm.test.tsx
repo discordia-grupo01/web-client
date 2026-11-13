@@ -6,6 +6,10 @@ import { forgotPasswordRequest } from "@/services/auth/client";
 
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
 
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ push: vi.fn() }),
+}));
+
 vi.mock("@/services/auth/client", () => ({
   forgotPasswordRequest: vi.fn(),
 }));
