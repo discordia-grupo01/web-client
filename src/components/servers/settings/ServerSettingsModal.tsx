@@ -7,6 +7,7 @@ import {
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
+import { ModerationAuditSection } from "@/components/moderation-audit/ModerationAuditSection";
 import { ReportsSection } from "@/components/reports/ReportsSection";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { cn } from "@/lib/cn";
@@ -25,7 +26,7 @@ import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";
 const SETTINGS_MODAL_WIDTH = 660;
-const REPORTS_MODAL_WIDTH = 780;
+const MODERATION_MODAL_WIDTH = 780;
 
 type MobileView = "menu" | "section";
 
@@ -92,7 +93,9 @@ export function ServerSettingsModal({
         onClose={onClose}
         labelledBy={TITLE_ID}
         maxWidth={
-          section === "reports" ? REPORTS_MODAL_WIDTH : SETTINGS_MODAL_WIDTH
+          section === "reports" || section === "audit"
+            ? MODERATION_MODAL_WIDTH
+            : SETTINGS_MODAL_WIDTH
         }
         isFullScreenOnMobile
       >
@@ -156,6 +159,8 @@ export function ServerSettingsModal({
                 onPendingChanged={onPendingReportsChanged}
                 onMembersChanged={onMembersChanged}
               />
+            ) : section === "audit" ? (
+              <ModerationAuditSection serverId={server.id} titleId={TITLE_ID} />
             ) : section === "words" ? (
               <WordFilterSection serverId={server.id} titleId={TITLE_ID} />
             ) : (
