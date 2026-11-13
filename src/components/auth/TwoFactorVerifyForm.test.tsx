@@ -3,9 +3,9 @@ import {
   TWO_FACTOR_CODE_INVALID,
 } from "@discordia/client-shared";
 
-import { act, render, screen } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { twoFactorVerifyRequest } from "@/services/two-factor/client";
 
@@ -37,11 +37,7 @@ describe("<TwoFactorVerifyForm />", () => {
   it("no llama al backend con un codigo que no es ni TOTP ni de recuperacion", async () => {
     const typer = userEvent.setup();
     render(
-      <TwoFactorVerifyForm
-        expiresIn={300}
-        onChallengeLost={vi.fn()}
-        onVerified={vi.fn()}
-      />,
+      <TwoFactorVerifyForm onChallengeLost={vi.fn()} onVerified={vi.fn()} />,
     );
 
     await typer.type(screen.getByLabelText("Código de seguridad"), "123");
@@ -62,11 +58,7 @@ describe("<TwoFactorVerifyForm />", () => {
     const onVerified = vi.fn();
     const typer = userEvent.setup();
     render(
-      <TwoFactorVerifyForm
-        expiresIn={300}
-        onChallengeLost={vi.fn()}
-        onVerified={onVerified}
-      />,
+      <TwoFactorVerifyForm onChallengeLost={vi.fn()} onVerified={onVerified} />,
     );
 
     await typer.type(screen.getByLabelText("Código de seguridad"), "123456");
@@ -90,11 +82,7 @@ describe("<TwoFactorVerifyForm />", () => {
     const onVerified = vi.fn();
     const typer = userEvent.setup();
     render(
-      <TwoFactorVerifyForm
-        expiresIn={300}
-        onChallengeLost={vi.fn()}
-        onVerified={onVerified}
-      />,
+      <TwoFactorVerifyForm onChallengeLost={vi.fn()} onVerified={onVerified} />,
     );
 
     await typer.type(
@@ -119,7 +107,6 @@ describe("<TwoFactorVerifyForm />", () => {
     const typer = userEvent.setup();
     render(
       <TwoFactorVerifyForm
-        expiresIn={300}
         onChallengeLost={onChallengeLost}
         onVerified={vi.fn()}
       />,
@@ -147,7 +134,6 @@ describe("<TwoFactorVerifyForm />", () => {
     const typer = userEvent.setup();
     render(
       <TwoFactorVerifyForm
-        expiresIn={300}
         onChallengeLost={onChallengeLost}
         onVerified={vi.fn()}
       />,
@@ -157,46 +143,5 @@ describe("<TwoFactorVerifyForm />", () => {
     await typer.click(screen.getByRole("button", { name: /verificar/i }));
 
     expect(onChallengeLost).toHaveBeenCalledWith(TWO_FACTOR_CHALLENGE_EXPIRED);
-  });
-
-  describe("cuenta regresiva", () => {
-    beforeEach(() => {
-      vi.useFakeTimers();
-    });
-
-    afterEach(() => {
-      vi.useRealTimers();
-    });
-
-    it("muestra el tiempo restante real recibido del backend", () => {
-      render(
-        <TwoFactorVerifyForm
-          expiresIn={125}
-          onChallengeLost={vi.fn()}
-          onVerified={vi.fn()}
-        />,
-      );
-
-      expect(screen.getByText("2:05")).toBeInTheDocument();
-    });
-
-    it("al llegar a cero avisa que el desafio vencio, sin esperar al backend", async () => {
-      const onChallengeLost = vi.fn();
-      render(
-        <TwoFactorVerifyForm
-          expiresIn={2}
-          onChallengeLost={onChallengeLost}
-          onVerified={vi.fn()}
-        />,
-      );
-
-      await act(async () => {
-        await vi.advanceTimersByTimeAsync(2000);
-      });
-
-      expect(onChallengeLost).toHaveBeenCalledWith(
-        TWO_FACTOR_CHALLENGE_EXPIRED,
-      );
-    });
   });
 });
