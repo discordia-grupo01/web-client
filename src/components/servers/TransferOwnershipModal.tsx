@@ -7,7 +7,6 @@ import {
   MEMBERS_SEARCH_LABEL,
   MEMBERS_SEARCH_PLACEHOLDER,
   type OwnershipTransfer,
-  paginationSummary,
   TRANSFER_CANDIDATES_PAGE_SIZE,
   type PublicUser,
   TRANSFER_CHOOSE_NEW_OWNER,
@@ -22,7 +21,7 @@ import { useCallback, useEffect, useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { useMemberPages } from "@/hooks/useMemberPages";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
@@ -416,21 +415,15 @@ export function TransferOwnershipModal({
             </div>
           )}
           {memberPages.pageCount > 1 ? (
-            <div className="mt-4 flex flex-col items-center gap-2">
-              <p aria-live="polite" className="text-content-muted text-xs">
-                {paginationSummary(
-                  memberPages.range.from,
-                  memberPages.range.to,
-                  memberPages.total,
-                  memberPages.isSearching ? "resultados" : "miembros",
-                )}
-              </p>
-              <Pagination
-                page={memberPages.page}
-                pageCount={memberPages.pageCount}
-                onPageChange={memberPages.setPage}
-              />
-            </div>
+            <PaginationFooter
+              page={memberPages.page}
+              pageCount={memberPages.pageCount}
+              range={memberPages.range}
+              total={memberPages.total}
+              noun={memberPages.isSearching ? "resultados" : "miembros"}
+              onPageChange={memberPages.setPage}
+              className="mt-4"
+            />
           ) : null}
         </>
       )}

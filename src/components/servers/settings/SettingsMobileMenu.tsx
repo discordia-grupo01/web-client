@@ -7,6 +7,7 @@ import {
   Flag,
   type LucideIcon,
   Pencil,
+  ScrollText,
   Trash2,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ const SECTION_ICONS: Record<SettingsSection, LucideIcon> = {
   profile: Pencil,
   words: Ban,
   reports: Flag,
+  audit: ScrollText,
 };
 
 interface SettingsMobileMenuProps {

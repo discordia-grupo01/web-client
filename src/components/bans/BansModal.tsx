@@ -18,7 +18,6 @@ import {
   BANS_TITLE,
   bansTabLabel,
   matchesSearch,
-  paginationSummary,
   searchResultsSummary,
   unbanSuccessNotice,
   VIEW_PROFILE_LABEL,
@@ -28,7 +27,7 @@ import { useMemo, useState } from "react";
 
 import { FormAlert } from "@/components/ui/FormAlert";
 import { ModalShell } from "@/components/ui/ModalShell";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { usePagination } from "@/components/bans/hooks/usePagination";
@@ -261,21 +260,15 @@ export function BansModal({
       </div>
 
       {pagination.total > 0 ? (
-        <div className="border-line flex shrink-0 flex-col items-center gap-3 border-t px-5 py-4 sm:px-7">
-          <p aria-live="polite" className="text-content-muted text-xs">
-            {paginationSummary(
-              pagination.range.from,
-              pagination.range.to,
-              pagination.total,
-              isSearching ? "resultados" : noun,
-            )}
-          </p>
-          <Pagination
-            page={pagination.page}
-            pageCount={pagination.pageCount}
-            onPageChange={pagination.setPage}
-          />
-        </div>
+        <PaginationFooter
+          page={pagination.page}
+          pageCount={pagination.pageCount}
+          range={pagination.range}
+          total={pagination.total}
+          noun={isSearching ? "resultados" : noun}
+          onPageChange={pagination.setPage}
+          className="border-line shrink-0 gap-3 border-t px-5 py-4 sm:px-7"
+        />
       ) : null}
     </ModalShell>
   );

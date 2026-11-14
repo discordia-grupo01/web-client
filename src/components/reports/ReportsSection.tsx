@@ -26,7 +26,7 @@ import { DeleteMessageModal } from "@/components/messages/DeleteMessageModal";
 import { KickMemberModal } from "@/components/moderation/KickMemberModal";
 import { MuteMemberModal } from "@/components/moderation/MuteMemberModal";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { useMessageAuthors } from "@/hooks/useMessageAuthors";
 import { useServerMembers } from "@/hooks/useServerMembers";
@@ -272,16 +272,19 @@ export function ReportsSection({
             })}
           </ul>
         )}
-
-        {list.pageCount > 1 ? (
-          <Pagination
-            page={list.page}
-            pageCount={list.pageCount}
-            onPageChange={list.setPage}
-            isCompact
-          />
-        ) : null}
       </div>
+
+      {list.pageCount > 1 ? (
+        <PaginationFooter
+          page={list.page}
+          pageCount={list.pageCount}
+          range={list.range}
+          total={list.total}
+          noun="reportes"
+          onPageChange={list.setPage}
+          className="border-line shrink-0 border-t px-4 py-3 sm:px-7"
+        />
+      ) : null}
 
       {active?.sanction === "delete" ? (
         <DeleteMessageModal

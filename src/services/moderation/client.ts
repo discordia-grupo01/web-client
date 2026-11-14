@@ -1,6 +1,8 @@
 import {
   KICK_FAILED,
   type KickMemberResult,
+  type ListModerationAuditResult,
+  MODERATION_AUDIT_LOAD_FAILED,
   MUTE_FAILED,
   type MuteMemberResult,
   UNMUTE_FAILED,
@@ -50,5 +52,19 @@ export async function unmuteMemberRequest(
     return data;
   } catch {
     return { ok: false, message: UNMUTE_FAILED };
+  }
+}
+
+export async function listModerationAuditRequest(
+  serverId: string,
+  query: { limit: number; offset: number },
+): Promise<ListModerationAuditResult> {
+  try {
+    const { data } = await api.get<ListModerationAuditResult>(
+      `/servers/${serverId}/moderation-audit?limit=${query.limit}&offset=${query.offset}`,
+    );
+    return data;
+  } catch {
+    return { ok: false, message: MODERATION_AUDIT_LOAD_FAILED };
   }
 }
