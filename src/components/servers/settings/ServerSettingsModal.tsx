@@ -7,6 +7,7 @@ import {
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
+import { ServerBoostsSection } from "@/components/boosts/ServerBoostsSection";
 import { ModerationAuditSection } from "@/components/moderation-audit/ModerationAuditSection";
 import { ReportsSection } from "@/components/reports/ReportsSection";
 import { ModalShell } from "@/components/ui/ModalShell";
@@ -14,6 +15,7 @@ import { cn } from "@/lib/cn";
 
 import { useServerSettingsForm } from "@/components/servers/hooks/useServerSettingsForm";
 import {
+  initialSection,
   SECTION_TITLES,
   type SettingsSection,
   visibleSections,
@@ -37,6 +39,8 @@ interface ServerSettingsModalProps {
   canReviewReports: boolean;
   pendingReports: number;
   currentUserId: string | null;
+  /** La sección con la que abre, si se entra desde un atajo (Boosts). */
+  openAt?: SettingsSection;
   onClose: () => void;
   onGoToMessage: (channelId: string, messageId: string) => void;
   onOpenProfile: (userId: string) => void;
@@ -54,6 +58,7 @@ export function ServerSettingsModal({
   canReviewReports,
   pendingReports,
   currentUserId,
+  openAt,
   onClose,
   onGoToMessage,
   onOpenProfile,
@@ -71,14 +76,17 @@ export function ServerSettingsModal({
     canReviewReports,
   });
   const [section, setSection] = useState<SettingsSection>(() =>
-    canReviewReports && pendingReports > 0
-      ? "reports"
-      : canManageServer
-        ? "profile"
-        : "words",
+    initialSection(sections, {
+      requested: openAt,
+      hasPendingReports: canReviewReports && pendingReports > 0,
+    }),
   );
   const reportsLabel = pendingReportsLabel(pendingReports, server.name);
-  const [mobileView, setMobileView] = useState<MobileView>("menu");
+  // Con una sola sección (un miembro sin permisos) no hay menú que mostrar.
+  const hasMenu = sections.length > 1;
+  const [mobileView, setMobileView] = useState<MobileView>(
+    hasMenu && !openAt ? "menu" : "section",
+  );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
 
   function openSectionOnMobile(target: SettingsSection) {
@@ -96,7 +104,7 @@ export function ServerSettingsModal({
       >
         <div className="flex min-h-0 flex-1 flex-col sm:h-[min(720px,85dvh)] sm:flex-none sm:flex-row">
           <div className="border-line flex h-16 shrink-0 items-center gap-2 border-b px-4 pr-14 sm:hidden">
-            {mobileView === "section" ? (
+            {mobileView === "section" && hasMenu ? (
               <button
                 type="button"
                 onClick={() => setMobileView("menu")}
@@ -125,16 +133,18 @@ export function ServerSettingsModal({
             />
           ) : null}
 
-          <SettingsSidebar
-            serverName={server.name}
-            sections={sections}
-            activeSection={section}
-            canDelete={isOwner}
-            pendingReports={pendingReports}
-            pendingReportsLabel={reportsLabel}
-            onSelect={setSection}
-            onDelete={() => setIsDeleteModalOpen(true)}
-          />
+          {hasMenu ? (
+            <SettingsSidebar
+              serverName={server.name}
+              sections={sections}
+              activeSection={section}
+              canDelete={isOwner}
+              pendingReports={pendingReports}
+              pendingReportsLabel={reportsLabel}
+              onSelect={setSection}
+              onDelete={() => setIsDeleteModalOpen(true)}
+            />
+          ) : null}
 
           <div
             className={cn(
@@ -154,6 +164,8 @@ export function ServerSettingsModal({
                 onPendingChanged={onPendingReportsChanged}
                 onMembersChanged={onMembersChanged}
               />
+            ) : section === "boosts" ? (
+              <ServerBoostsSection server={server} titleId={TITLE_ID} />
             ) : section === "audit" ? (
               <ModerationAuditSection serverId={server.id} titleId={TITLE_ID} />
             ) : section === "words" ? (

@@ -2,6 +2,9 @@
 
 import {
   BANS_TITLE,
+  BOOSTS_SECTION_TITLE,
+  type BoostLevel,
+  boostLevelLabel,
   NOTIFICATION_SETTINGS_MENU_LABEL,
 } from "@discordia/client-shared";
 import {
@@ -16,6 +19,7 @@ import {
   UserPlus,
 } from "lucide-react";
 
+import { BoostActionIcon } from "@/components/boosts/BoostActionIcon";
 import { ReportsBadge } from "@/components/reports/ReportsBadge";
 
 import { ServerMenuItem } from "./ServerMenuItem";
@@ -27,12 +31,14 @@ interface ServerMenuProps {
   canManageRoles: boolean;
   canBanMembers: boolean;
   canInvite: boolean;
+  boostLevel: BoostLevel;
   transferLabel: string | null;
   /** `null` si no hay reportes pendientes (o no es moderador). */
   pendingReportsLabel: string | null;
   onClose: () => void;
   onInvite: () => void;
   onNotifications?: () => void;
+  onOpenBoosts: () => void;
   onOpenSettings: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
@@ -49,11 +55,13 @@ export function ServerMenu({
   canManageRoles,
   canBanMembers,
   canInvite,
+  boostLevel,
   transferLabel,
   pendingReportsLabel,
   onClose,
   onInvite,
   onNotifications,
+  onOpenBoosts,
   onOpenSettings,
   onCreateChannel,
   onCreateCategory,
@@ -94,6 +102,17 @@ export function ServerMenu({
             onClick={run(onNotifications)}
           />
         ) : null}
+
+        <ServerMenuItem
+          icon={BoostActionIcon}
+          label={BOOSTS_SECTION_TITLE}
+          onClick={run(onOpenBoosts)}
+          trailing={
+            <span className="text-content-muted text-xs font-semibold">
+              {boostLevelLabel(boostLevel)}
+            </span>
+          }
+        />
 
         {canManageServer || canManageMessages ? (
           <ServerMenuItem

@@ -5,6 +5,7 @@ import {
   type OwnershipTransfer,
   pendingReportsLabel,
   type Role,
+  serverBoostLevel,
   type ServerSummary,
 } from "@discordia/client-shared";
 import { useCallback, useEffect, useState } from "react";
@@ -30,6 +31,7 @@ type OpenModal =
   | null
   | "invite"
   | "settings"
+  | "boosts"
   | "roles"
   | "bans"
   | "leave"
@@ -170,6 +172,7 @@ export function ServerSidebarHeader({
           canManageRoles={canManageRoles}
           canBanMembers={canBanMembers}
           canInvite={canInvite}
+          boostLevel={serverBoostLevel(server)}
           transferLabel={transferLabel}
           pendingReportsLabel={
             visiblePendingReports > 0
@@ -183,6 +186,7 @@ export function ServerSidebarHeader({
               ? () => setOpenModal("notifications")
               : undefined
           }
+          onOpenBoosts={() => setOpenModal("boosts")}
           onOpenSettings={() => setOpenModal("settings")}
           onCreateChannel={onCreateChannel}
           onCreateCategory={onCreateCategory}
@@ -211,9 +215,11 @@ export function ServerSidebarHeader({
         />
       ) : null}
 
-      {openModal === "settings" && (canManageServer || canManageMessages) ? (
+      {(openModal === "settings" && (canManageServer || canManageMessages)) ||
+      openModal === "boosts" ? (
         <ServerSettingsModal
           server={server}
+          openAt={openModal === "boosts" ? "boosts" : undefined}
           isOwner={isOwner}
           canManageServer={canManageServer}
           canManageMessages={canManageMessages}
