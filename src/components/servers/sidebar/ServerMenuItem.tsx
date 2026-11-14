@@ -1,10 +1,12 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
+import type { BoostActionIcon } from "@/components/boosts/BoostActionIcon";
+
 import { cn } from "@/lib/cn";
 
 interface ServerMenuItemProps {
-  icon: LucideIcon;
+  icon: LucideIcon | typeof BoostActionIcon;
   label: string;
   onClick: () => void;
   /** Acciones destructivas (abandonar el servidor). */
