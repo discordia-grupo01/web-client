@@ -133,13 +133,9 @@ export function ReportRow({
               <button
                 type="button"
                 onClick={onGoToMessage}
-                className={cn(SMALL_BUTTON, LINK_BUTTON)}
+                className="text-accent-strong flex min-h-8 cursor-pointer items-center gap-1.5 text-[13px] font-semibold transition-opacity hover:opacity-80"
               >
-                <ArrowUpRight
-                  size={14}
-                  aria-hidden="true"
-                  className="text-accent-strong"
-                />
+                <ArrowUpRight size={15} aria-hidden="true" />
                 {GO_TO_REPORTED_MESSAGE_ACTION}
               </button>
             ) : null}

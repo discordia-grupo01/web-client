@@ -1,6 +1,5 @@
 import {
   BOOST_LEVELS,
-  BOOST_TABLE_HINT,
   BOOST_TABLE_INCLUDED,
   BOOST_TABLE_NOT_INCLUDED,
   BOOST_TABLE_NOTE,
@@ -20,7 +19,7 @@ import { cn } from "@/lib/cn";
 
 import { BoostLevelIcon } from "./BoostLevelIcon";
 
-const CURRENT_COLUMN = "bg-accent/35";
+const CURRENT_COLUMN = "bg-boost-column";
 
 interface BoostPerksTableProps {
   level: BoostLevel;
@@ -29,15 +28,12 @@ interface BoostPerksTableProps {
 export function BoostPerksTable({ level }: BoostPerksTableProps) {
   return (
     <section aria-labelledby="boost-table-title" className="space-y-2.5">
-      <div>
-        <h3
-          id="boost-table-title"
-          className="font-display text-content text-base font-bold"
-        >
-          {BOOST_TABLE_TITLE}
-        </h3>
-        <p className="text-content-muted mt-0.5 text-xs">{BOOST_TABLE_HINT}</p>
-      </div>
+      <h3
+        id="boost-table-title"
+        className="font-display text-content text-base font-bold"
+      >
+        {BOOST_TABLE_TITLE}
+      </h3>
 
       <div className="border-line-strong overflow-hidden rounded-2xl border">
         <table className="w-full table-fixed border-collapse text-left text-xs">
@@ -63,8 +59,9 @@ export function BoostPerksTable({ level }: BoostPerksTableProps) {
                   >
                     <BoostLevelIcon
                       level={column}
-                      size={20}
-                      className="mx-auto"
+                      size={26}
+                      bare
+                      className="mx-auto block"
                     />
                     <span
                       className={cn(

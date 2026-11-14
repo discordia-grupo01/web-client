@@ -4,7 +4,7 @@ import {
   BOOST_SHOWCASE_COPY,
   BOOST_SHOWCASE_TITLE,
   BOOST_UNLOCKED_LABEL,
-  boostLockedChipLabel,
+  boostLevelLabel,
   hasBoostPerk,
   type ServerBoostSummary,
   type ServerSummary,
@@ -60,10 +60,7 @@ export function BoostShowcase({ server, summary }: BoostShowcaseProps) {
                 >
                   {unlocked
                     ? BOOST_UNLOCKED_LABEL
-                    : boostLockedChipLabel(
-                        BOOST_PERK_LEVEL[perk],
-                        summary.boost_count,
-                      )}
+                    : boostLevelLabel(BOOST_PERK_LEVEL[perk])}
                 </span>
               </div>
             </li>

@@ -28,9 +28,9 @@ export function BoostStatusCard({ summary }: BoostStatusCardProps) {
       aria-labelledby="boost-status-title"
       className="border-accent bg-surface-raised overflow-hidden rounded-2xl border"
     >
-      <div className="bg-accent text-boost-paper flex flex-col gap-4 px-5 py-5 sm:px-6">
+      <div className="bg-boost-band text-boost-on-band flex flex-col gap-4 px-5 py-5 sm:px-6">
         <div className="flex items-center gap-4">
-          <span className="bg-boost-ink/55 border-boost-paper/15 flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-15">
+          <span className="bg-boost-band-tile border-boost-band-line flex size-14 shrink-0 items-center justify-center rounded-2xl border sm:size-15">
             <BoostLevelIcon level={summary.level} size={36} bare />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-1.5">
@@ -41,11 +41,11 @@ export function BoostStatusCard({ summary }: BoostStatusCardProps) {
               >
                 {boostLevelLabel(summary.level)}
               </h3>
-              <span className="bg-boost-ink/45 rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums">
+              <span className="bg-boost-band-tile rounded-full px-2.5 py-0.5 text-[11px] font-semibold tabular-nums">
                 {boostCountLabel(summary.boost_count)}
               </span>
             </div>
-            <p className="text-boost-paper/80 text-sm leading-snug">
+            <p className="text-boost-on-band-muted text-sm leading-snug">
               {boostActivePerksLabel(summary.level)}
             </p>
           </div>
@@ -74,7 +74,7 @@ export function BoostStatusCard({ summary }: BoostStatusCardProps) {
         ) : (
           <p className="text-sm">
             <strong className="font-display">{BOOST_MAX_LEVEL_TITLE}</strong>{" "}
-            <span className="text-boost-paper/80">
+            <span className="text-boost-on-band-muted">
               {BOOST_MAX_LEVEL_DETAIL}
             </span>
           </p>
@@ -112,9 +112,9 @@ function NextLevelProgress({
   return (
     <div>
       <div className="mb-2 flex items-baseline justify-between gap-3 text-sm">
-        <span className="text-boost-paper/85">
+        <span className="text-boost-on-band-muted">
           {parts.lead}{" "}
-          <strong className="text-boost-yellow">{parts.amount}</strong>{" "}
+          <strong className="text-boost-band-highlight">{parts.amount}</strong>{" "}
           {parts.tail}
         </span>
         <span className="font-bold tabular-nums">
@@ -129,7 +129,7 @@ function NextLevelProgress({
         aria-valuenow={boostCount}
         className="relative h-4"
       >
-        <div className="bg-boost-ink absolute inset-x-0 top-0.75 h-2.5 overflow-hidden rounded-full">
+        <div className="bg-boost-track absolute inset-x-0 top-0.75 h-2.5 overflow-hidden rounded-full">
           <div
             className="bg-info h-full rounded-full"
             style={{ width: percent }}
