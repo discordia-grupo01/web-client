@@ -7,6 +7,7 @@ import {
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
+import { ModerationAuditSection } from "@/components/moderation-audit/ModerationAuditSection";
 import { ReportsSection } from "@/components/reports/ReportsSection";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { cn } from "@/lib/cn";
@@ -24,8 +25,7 @@ import { SettingsSidebar } from "./SettingsSidebar";
 import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";
-const SETTINGS_MODAL_WIDTH = 660;
-const REPORTS_MODAL_WIDTH = 780;
+const SETTINGS_MODAL_WIDTH = 880;
 
 type MobileView = "menu" | "section";
 
@@ -91,12 +91,10 @@ export function ServerSettingsModal({
       <ModalShell
         onClose={onClose}
         labelledBy={TITLE_ID}
-        maxWidth={
-          section === "reports" ? REPORTS_MODAL_WIDTH : SETTINGS_MODAL_WIDTH
-        }
+        maxWidth={SETTINGS_MODAL_WIDTH}
         isFullScreenOnMobile
       >
-        <div className="flex min-h-0 flex-1 flex-col sm:max-h-[95dvh] sm:flex-row">
+        <div className="flex min-h-0 flex-1 flex-col sm:h-[min(720px,85dvh)] sm:flex-none sm:flex-row">
           <div className="border-line flex h-16 shrink-0 items-center gap-2 border-b px-4 pr-14 sm:hidden">
             {mobileView === "section" ? (
               <button
@@ -156,6 +154,8 @@ export function ServerSettingsModal({
                 onPendingChanged={onPendingReportsChanged}
                 onMembersChanged={onMembersChanged}
               />
+            ) : section === "audit" ? (
+              <ModerationAuditSection serverId={server.id} titleId={TITLE_ID} />
             ) : section === "words" ? (
               <WordFilterSection serverId={server.id} titleId={TITLE_ID} />
             ) : (

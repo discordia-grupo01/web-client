@@ -33,13 +33,13 @@ describe("visibleSections", () => {
     ).toEqual(["words"]);
   });
 
-  it("suma Reportes al final para un moderador", () => {
+  it("suma Reportes y el registro de auditoría al final para un moderador", () => {
     expect(
       visibleSections({
         canManageServer: false,
         canManageMessages: true,
         canReviewReports: true,
       }),
-    ).toEqual(["words", "reports"]);
+    ).toEqual(["words", "reports", "audit"]);
   });
 });

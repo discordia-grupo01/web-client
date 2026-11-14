@@ -1,6 +1,4 @@
-import { paginationSummary } from "@discordia/client-shared";
-
-import { Pagination } from "@/components/ui/Pagination";
+import { PaginationFooter } from "@/components/ui/PaginationFooter";
 
 interface HistoryPaginationProps {
   page: number;
@@ -22,15 +20,14 @@ export function HistoryPagination({
   if (pageCount <= 1) return null;
 
   return (
-    <div className="mt-3 flex flex-col items-center gap-2">
-      <p aria-live="polite" className="text-content-muted text-xs">
-        {paginationSummary(range.from, range.to, total, noun)}
-      </p>
-      <Pagination
-        page={page}
-        pageCount={pageCount}
-        onPageChange={onPageChange}
-      />
-    </div>
+    <PaginationFooter
+      page={page}
+      pageCount={pageCount}
+      range={range}
+      total={total}
+      noun={noun}
+      onPageChange={onPageChange}
+      className="mt-3"
+    />
   );
 }
