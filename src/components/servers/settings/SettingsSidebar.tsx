@@ -1,12 +1,17 @@
 "use client";
 
+import { Trash2 } from "lucide-react";
+
 import { ReportsBadge } from "@/components/reports/ReportsBadge";
 import { cn } from "@/lib/cn";
 
 import {
+  SECTION_DESCRIPTIONS,
   SECTION_TITLES,
   type SettingsSection,
 } from "@/components/servers/utils/settingsSections";
+
+import { SECTION_ICONS } from "./sectionIcons";
 
 interface SettingsSidebarProps {
   serverName: string;
@@ -19,6 +24,7 @@ interface SettingsSidebarProps {
   onDelete: () => void;
 }
 
+/** Mismo estilo que la barra lateral de la configuración de la cuenta. */
 export function SettingsSidebar({
   serverName,
   sections,
@@ -30,48 +36,70 @@ export function SettingsSidebar({
   onDelete,
 }: SettingsSidebarProps) {
   return (
-    <nav className="border-line bg-surface-raised hidden w-56 shrink-0 flex-col border-r px-3 py-8 sm:flex">
-      <p className="text-content-subtle mb-1 truncate px-3 text-xs font-bold tracking-wider uppercase">
-        {serverName}
-      </p>
-      {sections.map((section) => {
-        const isActive = section === activeSection;
-        return (
-          <button
-            key={section}
-            type="button"
-            onClick={() => onSelect(section)}
-            aria-current={isActive ? "page" : undefined}
-            className={cn(
-              "mt-1 flex cursor-pointer items-center justify-between gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors",
-              isActive
-                ? "bg-surface-input text-content"
-                : "text-content-muted hover:bg-surface-input/60 hover:text-content",
-            )}
-          >
-            <span className="truncate">{SECTION_TITLES[section]}</span>
-            {section === "reports" && pendingReports > 0 ? (
-              <ReportsBadge
-                count={pendingReports}
-                label={pendingReportsLabel}
-              />
-            ) : null}
-          </button>
-        );
-      })}
+    <aside className="bg-surface-sunken hidden w-56 shrink-0 flex-col p-4 sm:flex">
+      <div className="px-3 pt-2 pb-5">
+        <p className="text-content font-display text-lg font-bold">
+          Configuración
+        </p>
+        <p className="text-content-muted font-display truncate text-sm font-semibold">
+          {serverName}
+        </p>
+      </div>
+
+      <nav className="-mx-1 min-h-0 flex-1 space-y-1 overflow-y-auto px-1">
+        {sections.map((section) => {
+          const isActive = section === activeSection;
+          const Icon = SECTION_ICONS[section];
+          return (
+            <button
+              key={section}
+              type="button"
+              onClick={() => onSelect(section)}
+              aria-current={isActive ? "page" : undefined}
+              className={cn(
+                "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors",
+                isActive
+                  ? "bg-accent text-on-accent"
+                  : "text-content-muted hover:bg-surface-hover",
+              )}
+            >
+              {section === "boosts" && isActive ? (
+                // El ícono de boost tiene un bloque petrol que se pierde sobre el fondo activo.
+                <span className="bg-boost-ink -m-1 flex size-6.25 shrink-0 items-center justify-center rounded-md">
+                  <Icon size={17} />
+                </span>
+              ) : (
+                <Icon size={17} className="shrink-0" />
+              )}
+              <span className="min-w-0 flex-1">
+                <strong className="font-display block text-sm">
+                  {SECTION_TITLES[section]}
+                </strong>
+                <small className="mt-0.5 block leading-snug opacity-60">
+                  {SECTION_DESCRIPTIONS[section]}
+                </small>
+              </span>
+              {section === "reports" && pendingReports > 0 ? (
+                <ReportsBadge
+                  count={pendingReports}
+                  label={pendingReportsLabel}
+                />
+              ) : null}
+            </button>
+          );
+        })}
+      </nav>
 
       {canDelete ? (
-        <>
-          <div className="border-line mx-3 mt-6 mb-2 border-t" />
-          <button
-            type="button"
-            onClick={onDelete}
-            className="text-danger hover:bg-danger/10 cursor-pointer rounded-lg px-3 py-2 text-left text-sm font-semibold transition-colors"
-          >
-            Eliminar servidor
-          </button>
-        </>
+        <button
+          type="button"
+          onClick={onDelete}
+          className="text-danger hover:bg-danger/10 mt-3 flex w-full shrink-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors"
+        >
+          <Trash2 size={17} className="shrink-0" />
+          <strong className="font-display text-sm">Eliminar servidor</strong>
+        </button>
       ) : null}
-    </nav>
+    </aside>
   );
 }
