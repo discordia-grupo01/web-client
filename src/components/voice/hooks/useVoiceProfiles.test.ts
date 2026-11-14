@@ -51,11 +51,11 @@ describe("useVoiceProfiles", () => {
     const { result } = renderHook(() => useVoiceProfiles(["u-beto"]));
 
     await waitFor(() =>
-      expect(result.current.avatarSrcOf("u-beto:screen")).toBe(
-        result.current.avatarSrcOf("u-beto"),
-      ),
+      expect(result.current.avatarSrcOf("u-beto")).not.toBeNull(),
     );
-    expect(result.current.avatarSrcOf("u-beto")).not.toBeNull();
+    expect(result.current.avatarSrcOf("u-beto:screen")).toBe(
+      result.current.avatarSrcOf("u-beto"),
+    );
   });
 
   it("pide una sola vez por id aunque lo usen varias pantallas", async () => {

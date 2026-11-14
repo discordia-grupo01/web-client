@@ -26,6 +26,7 @@ import { env } from "@/lib/env";
  *   DELETE /v1/servers/:id/members/:userId       -> 204 | 401 | 403 | 404 | 409 (owner)
  *   GET    /v1/servers/:id/icon                  -> binario | 401 | 404
  *   GET    /v1/servers/:id/banner                -> binario | 401 | 404
+ *   GET    /v1/servers/:id/boosts                -> 200 resumen de boosts | 401 | 403 (no miembro) | 404
  */
 
 export function listMyServers(
@@ -42,6 +43,17 @@ export function getServer(
   serverId: string,
 ): Promise<ApiResult<ServerSummary>> {
   return apiRequest<ServerSummary>(`/v1/servers/${serverId}`, {
+    method: "GET",
+    token,
+  });
+}
+
+/** Nivel, boosts y beneficios. Cualquier miembro lo puede pedir. */
+export function getServerBoostSummary(
+  token: string,
+  serverId: string,
+): Promise<ApiResult<unknown>> {
+  return apiRequest<unknown>(`/v1/servers/${serverId}/boosts`, {
     method: "GET",
     token,
   });

@@ -1,15 +1,7 @@
 "use client";
 
 import { type ServerSummary } from "@discordia/client-shared";
-import {
-  Ban,
-  ChevronRight,
-  Flag,
-  type LucideIcon,
-  Pencil,
-  ScrollText,
-  Trash2,
-} from "lucide-react";
+import { ChevronRight, Trash2 } from "lucide-react";
 
 import { ReportsBadge } from "@/components/reports/ReportsBadge";
 
@@ -22,12 +14,7 @@ import {
   type SettingsSection,
 } from "@/components/servers/utils/settingsSections";
 
-const SECTION_ICONS: Record<SettingsSection, LucideIcon> = {
-  profile: Pencil,
-  words: Ban,
-  reports: Flag,
-  audit: ScrollText,
-};
+import { SECTION_ICONS } from "./sectionIcons";
 
 interface SettingsMobileMenuProps {
   server: ServerSummary;

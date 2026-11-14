@@ -1,10 +1,12 @@
 import {
+  BOOSTS_LOAD_ERROR,
   type CreateServerResult,
   type DeleteServerResult,
   type LeaveServerResult,
   REQUEST_FAILED_MESSAGE,
   SERVER_UPDATE_FAILED,
   SERVERS_LOAD_FAILED,
+  type ServerBoostSummary,
   type ServerSummary,
   type UpdateServerResult,
 } from "@discordia/client-shared";
@@ -23,6 +25,22 @@ export async function listServersRequest(): Promise<ListServersResult> {
       ok: false,
       message: SERVERS_LOAD_FAILED,
     };
+  }
+}
+
+export type ServerBoostSummaryResult =
+  { ok: true; summary: ServerBoostSummary } | { ok: false; message: string };
+
+export async function getServerBoostSummaryRequest(
+  serverId: string,
+): Promise<ServerBoostSummaryResult> {
+  try {
+    const { data } = await api.get<ServerBoostSummaryResult>(
+      `/servers/${serverId}/boosts`,
+    );
+    return data;
+  } catch {
+    return { ok: false, message: BOOSTS_LOAD_ERROR };
   }
 }
 
