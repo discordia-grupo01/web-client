@@ -24,15 +24,8 @@ export function BoostLevelIcon({
   bare = false,
   className,
 }: BoostLevelIconProps) {
-  const {
-    viewBox,
-    bars,
-    strokeWidth,
-    filledStroke,
-    filledStrokeOpacity,
-    emptyStroke,
-    emptyDash,
-  } = BOOST_LEVEL_ICON;
+  const { viewBox, bars, strokeWidth, filledStrokeWidth, emptyDash } =
+    BOOST_LEVEL_ICON;
   const svg = (
     <svg
       width={size}
@@ -48,9 +41,10 @@ export function BoostLevelIcon({
             key={bar.y}
             {...bar}
             fill={filled ? PREMIUM_BRAND_COLORS[fill] : "none"}
-            stroke={PREMIUM_BRAND_COLORS[filled ? filledStroke : emptyStroke]}
-            strokeOpacity={filled ? filledStrokeOpacity : 1}
-            strokeWidth={strokeWidth}
+            className={
+              filled ? "stroke-boost-level-outline" : "stroke-boost-level-empty"
+            }
+            strokeWidth={filled ? filledStrokeWidth : strokeWidth}
             strokeDasharray={filled ? undefined : emptyDash}
           />
         );
