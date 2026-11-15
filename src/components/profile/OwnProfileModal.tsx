@@ -23,7 +23,7 @@ import {
   type ChangeEvent,
 } from "react";
 
-import { PremiumPill } from "@/components/billing/PremiumPill";
+import { PremiumPill } from "@/components/billing/premium/PremiumPill";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { SectionLabel } from "@/components/ui/SectionLabel";

@@ -8,6 +8,7 @@ const SECTIONS: readonly AccountSettingsSection[] = [
   "premium",
   "subscriptions",
   "points",
+  "boosts",
   "transactions",
   "status",
 ];
@@ -30,4 +31,25 @@ export function takeRequestedSettingsSection(): AccountSettingsSection | null {
   } catch {
     return null;
   }
+}
+
+const OPEN_SETTINGS_EVENT = "discordia:open-settings";
+
+export function openSettingsSection(section: AccountSettingsSection): void {
+  window.dispatchEvent(
+    new CustomEvent<AccountSettingsSection>(OPEN_SETTINGS_EVENT, {
+      detail: section,
+    }),
+  );
+}
+
+export function onSettingsSectionOpened(
+  listener: (section: AccountSettingsSection) => void,
+): () => void {
+  function handle(event: Event) {
+    const section = (event as CustomEvent<unknown>).detail;
+    if (typeof section === "string" && isSection(section)) listener(section);
+  }
+  window.addEventListener(OPEN_SETTINGS_EVENT, handle);
+  return () => window.removeEventListener(OPEN_SETTINGS_EVENT, handle);
 }

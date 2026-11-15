@@ -9,10 +9,10 @@ import {
 
 import { cn } from "@/lib/cn";
 
-import { DiscordiaPointIcon } from "./DiscordiaIcons";
+import { DiscordiaPointIcon } from "../icons/DiscordiaIcons";
 import { EmptyHistory } from "./EmptyHistory";
 import { HistoryPagination } from "./HistoryPagination";
-import { usePagedItems } from "./hooks/usePagedItems";
+import { usePagedItems } from "../hooks/usePagedItems";
 
 export function PointMovements({ ledger }: { ledger: LedgerEntry[] }) {
   const paged = usePagedItems(ledger, BILLING_HISTORY_PAGE_SIZE);

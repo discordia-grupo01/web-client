@@ -1,4 +1,6 @@
 import type {
+  Boost,
+  BoostsResponse,
   CheckoutResponse,
   PointPurchase,
   PointsCheckoutRequest,
@@ -7,7 +9,10 @@ import type {
   PremiumCheckoutRequest,
   PremiumView,
 } from "@discordia/client-shared";
-import { BILLING_HISTORY_MAX_LIMIT } from "@discordia/client-shared";
+import {
+  BILLING_HISTORY_MAX_LIMIT,
+  BOOSTS_LIST_MAX_LIMIT,
+} from "@discordia/client-shared";
 
 import "server-only";
 
@@ -24,8 +29,12 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  *   GET  /v1/billing/points              -> 200 {balance, ledger, purchases}
  *   POST /v1/billing/points/checkout     -> 201 {purchase_id, checkout_url} | 400 UNKNOWN_PACKAGE
  *   GET  /v1/billing/purchases/:id       -> 200 PointPurchase | 404 PURCHASE_NOT_FOUND
+ *   POST /v1/billing/boosts              -> 202 Boost pending | 409 INSUFFICIENT_POINTS
+ *   GET  /v1/billing/boosts?limit=       -> 200 {boosts}
+ *   GET  /v1/billing/boosts/:id          -> 200 Boost | 404 BOOST_NOT_FOUND
+ *   DELETE /v1/billing/boosts/:id        -> 200 Boost removed | 409 BOOST_NOT_ACTIVE
  *
- * Los dos checkouts aceptan `Idempotency-Key`: con la misma clave billing
+ * Los dos checkouts y el boost aceptan `Idempotency-Key`: con la misma clave billing
  * devuelve el mismo checkout durante 24 h en vez de crear otra compra.
  */
 
@@ -103,5 +112,51 @@ export function getPurchase(
   return apiRequest<PointPurchase>(
     `/v1/billing/purchases/${encodeURIComponent(purchaseId)}`,
     { method: "GET", token },
+  );
+}
+
+export function requestBoost(
+  token: string,
+  serverId: string,
+  idempotencyKey?: string,
+): Promise<ApiResult<Boost>> {
+  return apiRequest<Boost>("/v1/billing/boosts", {
+    method: "POST",
+    token,
+    data: { server_id: serverId },
+    headers: idempotencyHeaders(idempotencyKey),
+  });
+}
+
+export function listBoosts(token: string): Promise<ApiResult<BoostsResponse>> {
+  return apiRequest<BoostsResponse>(
+    `/v1/billing/boosts?limit=${BOOSTS_LIST_MAX_LIMIT}`,
+    { method: "GET", token },
+  );
+}
+
+export function getBoost(
+  token: string,
+  boostId: string,
+): Promise<ApiResult<Boost>> {
+  return apiRequest<Boost>(
+    `/v1/billing/boosts/${encodeURIComponent(boostId)}`,
+    {
+      method: "GET",
+      token,
+    },
+  );
+}
+
+export function removeBoost(
+  token: string,
+  boostId: string,
+): Promise<ApiResult<Boost>> {
+  return apiRequest<Boost>(
+    `/v1/billing/boosts/${encodeURIComponent(boostId)}`,
+    {
+      method: "DELETE",
+      token,
+    },
   );
 }

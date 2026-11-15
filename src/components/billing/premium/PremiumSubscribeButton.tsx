@@ -1,4 +1,4 @@
-import { DiscordiaPremiumIcon } from "./DiscordiaIcons";
+import { DiscordiaPremiumIcon } from "../icons/DiscordiaIcons";
 
 interface PremiumSubscribeButtonProps {
   label: string;

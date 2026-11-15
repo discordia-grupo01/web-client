@@ -1,14 +1,15 @@
 import {
-  BOOSTED_MAX_ATTACHMENT_MB,
+  BOOST_SHOWCASE_ART_COPY as ART_COPY,
   type BoostPerk,
   type ServerSummary,
+  vanitySlug,
 } from "@discordia/client-shared";
 import { Link2, Smile } from "lucide-react";
 
 import { Avatar } from "@/components/ui/Avatar";
 import { serverIconSrc } from "@/utils/image-urls";
 
-import { BoostLevelIcon } from "./BoostLevelIcon";
+import { BoostLevelIcon } from "../icons/BoostLevelIcon";
 
 const EMOJI_TILES = [
   "bg-accent text-boost-paper",
@@ -16,18 +17,6 @@ const EMOJI_TILES = [
   "bg-sky text-boost-ink",
   "bg-boost-paper text-accent",
 ];
-
-function vanitySlug(name: string): string {
-  return (
-    name
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .toLowerCase()
-      .replace(/[^a-z0-9]+/g, "-")
-      .replace(/^-+|-+$/g, "")
-      .slice(0, 32) || "mi-servidor"
-  );
-}
 
 interface BoostShowcaseArtProps {
   perk: BoostPerk;
@@ -59,7 +48,7 @@ function Art({ perk, server }: BoostShowcaseArtProps) {
             </span>
           ))}
           <span className="bg-boost-yellow text-boost-ink flex h-8.5 items-center rounded-[10px] px-2.5 text-xs font-bold">
-            +20
+            {ART_COPY.extraEmojiSlots}
           </span>
         </>
       );
@@ -78,10 +67,10 @@ function Art({ perk, server }: BoostShowcaseArtProps) {
           </span>
           <span className="flex flex-col gap-1">
             <span className="text-content text-[11px] font-bold">
-              Lista de servidores
+              {ART_COPY.serverList}
             </span>
             <span className="text-content-muted text-[10px]">
-              El ícono puede ser un GIF
+              {ART_COPY.animatedIconHint}
             </span>
           </span>
         </>
@@ -109,19 +98,19 @@ function Art({ perk, server }: BoostShowcaseArtProps) {
       return (
         <>
           <span className="bg-info text-boost-ink flex h-12.5 w-10.5 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold">
-            PDF
+            {ART_COPY.attachmentKind}
           </span>
           <span className="flex flex-1 flex-col gap-1.5">
             <span className="text-content text-[11px] font-semibold">
-              apuntes.pdf
+              {ART_COPY.attachmentName}
             </span>
             <span className="bg-surface-input h-1.25 overflow-hidden rounded-sm">
               <span className="bg-info block h-full w-4/5" />
             </span>
             <span className="text-content-muted text-[10px]">
-              20 MB de{" "}
+              {ART_COPY.attachmentUsed}{" "}
               <strong className="text-content">
-                {BOOSTED_MAX_ATTACHMENT_MB} MB
+                {ART_COPY.attachmentLimit}
               </strong>
             </span>
           </span>
@@ -131,12 +120,12 @@ function Art({ perk, server }: BoostShowcaseArtProps) {
       return (
         <span className="flex w-full flex-col gap-1.5">
           <span className="text-content-subtle text-[10px] font-bold tracking-wider uppercase">
-            Invitación
+            {ART_COPY.invite}
           </span>
           <span className="bg-surface-raised border-line-strong flex min-w-0 items-center gap-2 rounded-[10px] border px-2.5 py-2">
             <Link2 size={14} className="text-content-muted shrink-0" />
             <span className="text-content-muted truncate text-xs">
-              /invite/
+              {ART_COPY.invitePath}
               <strong className="text-boost-yellow">
                 {vanitySlug(server.name)}
               </strong>
@@ -159,7 +148,7 @@ function Art({ perk, server }: BoostShowcaseArtProps) {
             </span>
             <span className="bg-boost-paper text-boost-ink inline-flex items-center gap-1.5 self-start rounded-full px-2 py-0.75 text-[10px] font-bold">
               <BoostLevelIcon level={3} size={13} bare />
-              Servidor Boosteado
+              {ART_COPY.badge}
             </span>
           </span>
         </>

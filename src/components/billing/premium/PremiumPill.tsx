@@ -1,6 +1,6 @@
 import { BILLING_COPY } from "@discordia/client-shared";
 
-import { DiscordiaPremiumBadge } from "./DiscordiaIcons";
+import { DiscordiaPremiumBadge } from "../icons/DiscordiaIcons";
 
 export function PremiumPill() {
   return (

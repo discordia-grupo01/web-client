@@ -1,7 +1,7 @@
 import type { LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 
-import type { BoostActionIcon } from "@/components/boosts/BoostActionIcon";
+import type { BoostActionIcon } from "@/components/boosts/icons/BoostActionIcon";
 
 import { cn } from "@/lib/cn";
 

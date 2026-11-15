@@ -13,11 +13,11 @@ import {
 
 import { cn } from "@/lib/cn";
 
-import { BILLING_TONE_CLASS } from "./billingTone";
-import { DiscordiaPointIcon } from "./DiscordiaIcons";
+import { BILLING_TONE_CLASS } from "../billingTone";
+import { DiscordiaPointIcon } from "../icons/DiscordiaIcons";
 import { EmptyHistory } from "./EmptyHistory";
 import { HistoryPagination } from "./HistoryPagination";
-import { usePagedItems } from "./hooks/usePagedItems";
+import { usePagedItems } from "../hooks/usePagedItems";
 
 export function PurchaseHistory({ purchases }: { purchases: PointPurchase[] }) {
   const paged = usePagedItems(purchases, BILLING_HISTORY_PAGE_SIZE);

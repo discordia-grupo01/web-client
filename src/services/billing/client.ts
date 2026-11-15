@@ -1,6 +1,11 @@
 import {
   BILLING_LOAD_FAILED,
   type BillingResult,
+  type Boost,
+  BOOST_REMOVE_FAILED,
+  BOOST_REQUEST_FAILED,
+  BOOST_STATUS_FAILED,
+  BOOSTS_LIST_LOAD_ERROR,
   CHECKOUT_START_FAILED,
   type CheckoutResponse,
   PAYMENT_STATUS_FAILED,
@@ -14,6 +19,8 @@ import {
 import { api } from "@/lib/browserApiClient";
 import type {
   BillingFailure,
+  BoostResult,
+  BoostsResult,
   CheckoutResult,
   PointsOverviewResult,
   PointsPackagesResult,
@@ -129,5 +136,51 @@ export function getPurchaseRequest(
       ),
     (body) => body.purchase,
     PAYMENT_STATUS_FAILED,
+  );
+}
+
+export function requestBoostRequest(
+  serverId: string,
+  idempotencyKey: string,
+): Promise<BillingResult<Boost>> {
+  return request(
+    () =>
+      api.post<BoostResult>(
+        "/billing/boosts",
+        { server_id: serverId },
+        idempotencyHeaders(idempotencyKey),
+      ),
+    (body) => body.boost,
+    BOOST_REQUEST_FAILED,
+  );
+}
+
+export function listBoostsRequest(): Promise<BillingResult<Boost[]>> {
+  return request(
+    () => api.get<BoostsResult>("/billing/boosts"),
+    (body) => body.boosts,
+    BOOSTS_LIST_LOAD_ERROR,
+  );
+}
+
+export function getBoostRequest(
+  boostId: string,
+): Promise<BillingResult<Boost>> {
+  return request(
+    () =>
+      api.get<BoostResult>(`/billing/boosts/${encodeURIComponent(boostId)}`),
+    (body) => body.boost,
+    BOOST_STATUS_FAILED,
+  );
+}
+
+export function removeBoostRequest(
+  boostId: string,
+): Promise<BillingResult<Boost>> {
+  return request(
+    () =>
+      api.delete<BoostResult>(`/billing/boosts/${encodeURIComponent(boostId)}`),
+    (body) => body.boost,
+    BOOST_REMOVE_FAILED,
   );
 }

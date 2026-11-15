@@ -10,7 +10,7 @@ import {
 import { Camera, Image as ImageIcon, X } from "lucide-react";
 import { type ReactNode, useRef, type RefObject } from "react";
 
-import { BoostPerkHint } from "@/components/boosts/BoostPerkHint";
+import { BoostPerkHint } from "@/components/boosts/status/BoostPerkHint";
 import { Avatar } from "@/components/ui/Avatar";
 import { ServerBanner } from "@/components/ui/ServerBanner";
 

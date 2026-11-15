@@ -16,7 +16,10 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { TextField } from "@/components/ui/TextField";
 
-import { DiscordiaPointIcon, DiscordiaPremiumIcon } from "./DiscordiaIcons";
+import {
+  DiscordiaPointIcon,
+  DiscordiaPremiumIcon,
+} from "../icons/DiscordiaIcons";
 
 interface CheckoutConfirmModalProps {
   item: CheckoutItem;

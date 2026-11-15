@@ -18,7 +18,7 @@ import { ROUTES } from "@/lib/constants";
 import { cn } from "@/lib/cn";
 import { requestSettingsSection } from "@/utils/settingsRequest";
 
-import { usePaymentReturn } from "./hooks/usePaymentReturn";
+import { usePaymentReturn } from "../hooks/usePaymentReturn";
 
 const TONE_STYLE: Record<PaymentOutcomeTone, string> = {
   progress: "bg-info/15 text-info",

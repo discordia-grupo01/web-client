@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  BILLING_BOOSTS_COPY,
   BILLING_COPY,
   type BillingSection,
   type CheckoutItem,
@@ -16,16 +17,17 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
 
-import { CheckoutConfirmModal } from "./CheckoutConfirmModal";
-import { DiscordiaPointIcon } from "./DiscordiaIcons";
+import { BoostsTab } from "./boosts/BoostsTab";
+import { CheckoutConfirmModal } from "./checkout/CheckoutConfirmModal";
+import { DiscordiaPointIcon } from "./icons/DiscordiaIcons";
 import { useBillingOverview } from "./hooks/useBillingOverview";
 import { useCheckout } from "./hooks/useCheckout";
-import { PointMovements } from "./PointMovements";
-import { PointsShop } from "./PointsShop";
-import { PremiumCard } from "./PremiumCard";
-import { PremiumFacts } from "./PremiumFacts";
-import { PremiumShowcase } from "./PremiumShowcase";
-import { PurchaseHistory } from "./PurchaseHistory";
+import { PointMovements } from "./history/PointMovements";
+import { PointsShop } from "./points/PointsShop";
+import { PremiumCard } from "./premium/PremiumCard";
+import { PremiumFacts } from "./premium/PremiumFacts";
+import { PremiumShowcase } from "./premium/PremiumShowcase";
+import { PurchaseHistory } from "./history/PurchaseHistory";
 
 const TAB_HEADER: Record<
   Exclude<BillingSection, "premium">,
@@ -38,6 +40,10 @@ const TAB_HEADER: Record<
   points: {
     title: BILLING_COPY.pointsTitle,
     subtitle: BILLING_COPY.pointsSubtitle,
+  },
+  boosts: {
+    title: BILLING_BOOSTS_COPY.title,
+    subtitle: BILLING_BOOSTS_COPY.subtitle,
   },
   transactions: {
     title: BILLING_COPY.transactionsTitle,
@@ -142,6 +148,7 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
       {tab === "points" ? (
         <PointsShop
           packages={state.packages}
+          onShowBoosts={() => onNavigate("boosts")}
           onBuy={(pack) =>
             setItem({
               kind: "points",
@@ -151,6 +158,10 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
             })
           }
         />
+      ) : null}
+
+      {tab === "boosts" ? (
+        <BoostsTab onBuyPoints={() => onNavigate("points")} />
       ) : null}
 
       {tab === "transactions" ? (

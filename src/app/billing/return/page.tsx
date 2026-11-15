@@ -1,7 +1,7 @@
 import { parsePaymentReturn } from "@discordia/client-shared";
 import type { Metadata } from "next";
 
-import { PaymentReturnView } from "@/components/billing/PaymentReturnView";
+import { PaymentReturnView } from "@/components/billing/checkout/PaymentReturnView";
 
 import { flattenReturnQuery } from "./returnQuery";
 

@@ -30,7 +30,11 @@ export function useBillingOverview() {
       getPointsOverviewRequest(),
       listPointsPackagesRequest(),
     ]);
-    if (mounted.current) setState(toBillingOverview(premium, points, packages));
+    const next = toBillingOverview(premium, points, packages);
+    if (!mounted.current) return;
+    setState((current) =>
+      next.status === "error" && current.status === "ready" ? current : next,
+    );
   }, []);
 
   useEffect(() => {

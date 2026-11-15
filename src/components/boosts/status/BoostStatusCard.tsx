@@ -13,7 +13,7 @@ import {
   type ServerBoostSummary,
 } from "@discordia/client-shared";
 
-import { BoostLevelIcon } from "./BoostLevelIcon";
+import { BoostLevelIcon } from "../icons/BoostLevelIcon";
 
 interface BoostStatusCardProps {
   summary: ServerBoostSummary;

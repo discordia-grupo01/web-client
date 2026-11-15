@@ -25,7 +25,7 @@ import {
 } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 
-import { PremiumPill } from "@/components/billing/PremiumPill";
+import { PremiumPill } from "@/components/billing/premium/PremiumPill";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { MemberRoleBadges } from "@/components/roles/MemberRoleBadges";

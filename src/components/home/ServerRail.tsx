@@ -1,9 +1,11 @@
 "use client";
 
 import {
+  boostLevelLabel,
   isServerMuted,
   NO_UNREAD_FLAGS,
   pendingReportsLabel,
+  serverBoostLevel,
   type ServerSummary,
   UNREAD_MESSAGES_LABEL,
   type UnreadFlags,
@@ -13,6 +15,7 @@ import {
 import { Home as HomeIcon, Plus } from "lucide-react";
 import { useCallback, useState } from "react";
 
+import { BoostLevelIcon } from "@/components/boosts/icons/BoostLevelIcon";
 import { ServerContextMenu } from "@/components/home/ServerContextMenu";
 import { ReportsBadge } from "@/components/reports/ReportsBadge";
 import { SidePanel } from "@/components/layout/SidePanel";
@@ -147,7 +150,11 @@ function ServerRailItem({
     : unread.unread && unread.mentionCount === 0
       ? `${server.name}, ${UNREAD_MESSAGES_LABEL.toLowerCase()}`
       : server.name;
-  const label = reportsLabel ? `${baseLabel}. ${reportsLabel}` : baseLabel;
+  const boostLevel = isSuspended ? 0 : serverBoostLevel(server);
+  const boostLabel = boostLevel > 0 ? boostLevelLabel(boostLevel) : null;
+  const label = [baseLabel, boostLabel, reportsLabel]
+    .filter(Boolean)
+    .join(". ");
 
   return (
     <div className={cn("relative shrink-0", isMuted && "opacity-60")}>
@@ -164,9 +171,9 @@ function ServerRailItem({
         label={
           isSuspended
             ? serverSuspendedLabel(server.name)
-            : reportsLabel
-              ? `${server.name} · ${reportsLabel}`
-              : server.name
+            : [server.name, boostLabel, reportsLabel]
+                .filter(Boolean)
+                .join(" · ")
         }
       >
         <button
@@ -194,6 +201,14 @@ function ServerRailItem({
           label={reportsLabel}
           className="border-rail-surface pointer-events-none absolute -top-0.5 -right-0.5 border-2"
         />
+      ) : null}
+      {boostLevel > 0 && visibleUnread.mentionCount === 0 ? (
+        <span
+          aria-hidden
+          className="bg-surface-servers pointer-events-none absolute -right-1 -bottom-1 flex rounded-[5px] px-[3px] py-[2px]"
+        >
+          <BoostLevelIcon level={boostLevel} size={17} bare tight />
+        </span>
       ) : null}
       {visibleUnread.mentionCount > 0 ? (
         <CountBadge
