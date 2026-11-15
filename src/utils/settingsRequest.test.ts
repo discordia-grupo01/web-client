@@ -1,6 +1,8 @@
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import {
+  onSettingsSectionOpened,
+  openSettingsSection,
   requestSettingsSection,
   takeRequestedSettingsSection,
 } from "./settingsRequest";
@@ -21,5 +23,17 @@ describe("settingsRequest", () => {
     sessionStorage.setItem("discordia:open-settings", "otra");
 
     expect(takeRequestedSettingsSection()).toBeNull();
+  });
+
+  it("avisa al instante qué sección abrir", () => {
+    const listener = vi.fn();
+    const stop = onSettingsSectionOpened(listener);
+
+    openSettingsSection("points");
+    stop();
+    openSettingsSection("boosts");
+
+    expect(listener).toHaveBeenCalledTimes(1);
+    expect(listener).toHaveBeenCalledWith("points");
   });
 });
