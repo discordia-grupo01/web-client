@@ -1,5 +1,6 @@
 import {
   BOOST_MAX_LEVEL_DETAIL,
+  BOOST_MAX_LEVEL_NOTE,
   BOOST_MAX_LEVEL_TITLE,
   BOOST_NEXT_LEVEL_LABEL,
   boostActivePerksLabel,
@@ -9,10 +10,13 @@ import {
   boostProgress,
   boostProgressAriaLabel,
   boostProgressCountLabel,
+  BOOSTED_BADGE_COPY,
   boostsToNextLevelParts,
+  hasBoostedBadge,
   type ServerBoostSummary,
 } from "@discordia/client-shared";
 
+import { BoostedBadge } from "../icons/BoostedBadge";
 import { BoostLevelIcon } from "../icons/BoostLevelIcon";
 
 interface BoostStatusCardProps {
@@ -61,6 +65,18 @@ export function BoostStatusCard({ summary }: BoostStatusCardProps) {
                 </span>
               </span>
             </div>
+          ) : hasBoostedBadge(summary.level) ? (
+            <div className="bg-boost-paper hidden shrink-0 items-center gap-2.5 rounded-xl py-2 pr-3 pl-2.5 sm:flex">
+              <BoostedBadge size={26} surface="light" decorative />
+              <span className="flex flex-col gap-0.5">
+                <span className="text-accent text-[10px] font-bold tracking-wider uppercase">
+                  {BOOSTED_BADGE_COPY.caption}
+                </span>
+                <span className="font-display text-boost-ink text-sm font-bold">
+                  {BOOSTED_BADGE_COPY.label}
+                </span>
+              </span>
+            </div>
           ) : null}
         </div>
 
@@ -88,7 +104,11 @@ export function BoostStatusCard({ summary }: BoostStatusCardProps) {
             {boostLevelUnlocks(nextLevel).perks}
           </span>
         </p>
-      ) : null}
+      ) : (
+        <p className="text-content-muted px-5 py-3.5 text-xs sm:px-6">
+          {BOOST_MAX_LEVEL_NOTE}
+        </p>
+      )}
     </section>
   );
 }
