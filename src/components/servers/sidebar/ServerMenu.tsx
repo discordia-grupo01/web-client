@@ -19,7 +19,8 @@ import {
   UserPlus,
 } from "lucide-react";
 
-import { BoostActionIcon } from "@/components/boosts/BoostActionIcon";
+import { BoostActionIcon } from "@/components/boosts/icons/BoostActionIcon";
+import { BoostLevelIcon } from "@/components/boosts/icons/BoostLevelIcon";
 import { ReportsBadge } from "@/components/reports/ReportsBadge";
 
 import { ServerMenuItem } from "./ServerMenuItem";
@@ -108,8 +109,12 @@ export function ServerMenu({
           label={BOOSTS_SECTION_TITLE}
           onClick={run(onOpenBoosts)}
           trailing={
-            <span className="text-content-muted text-xs font-semibold">
-              {boostLevelLabel(boostLevel)}
+            <span
+              title={boostLevelLabel(boostLevel)}
+              aria-label={boostLevelLabel(boostLevel)}
+              className="flex shrink-0"
+            >
+              <BoostLevelIcon level={boostLevel} size={18} bare />
             </span>
           }
         />

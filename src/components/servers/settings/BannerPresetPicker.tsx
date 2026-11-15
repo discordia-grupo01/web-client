@@ -11,7 +11,7 @@ import {
 } from "@discordia/client-shared";
 import { Check } from "lucide-react";
 
-import { BoostLevelIcon } from "@/components/boosts/BoostLevelIcon";
+import { BoostLevelIcon } from "@/components/boosts/icons/BoostLevelIcon";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { presetBannerGradientCss } from "@/components/servers/utils/presetBanner";
 import { cn } from "@/lib/cn";

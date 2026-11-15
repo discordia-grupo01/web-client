@@ -20,7 +20,9 @@ export function billingFailureResponse(
   return NextResponse.json(
     {
       ok: false,
-      message: code ? billingErrorMessage(code) : unknownMessage,
+      message: code
+        ? billingErrorMessage(code, result.details)
+        : unknownMessage,
       ...(code ? { code } : {}),
     },
     {

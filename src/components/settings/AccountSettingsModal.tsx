@@ -21,10 +21,11 @@ import {
 import { useState, type ReactNode } from "react";
 
 import { BillingSettings } from "@/components/billing/BillingSettings";
+import { BoostsSectionIcon } from "@/components/boosts/icons/BoostsSectionIcon";
 import {
   DiscordiaPointIcon,
   DiscordiaPremiumIcon,
-} from "@/components/billing/DiscordiaIcons";
+} from "@/components/billing/icons/DiscordiaIcons";
 import { PlatformStatusSettings } from "@/components/platform-status/PlatformStatusSettings";
 import { LogoutConfirmModal } from "@/components/profile/LogoutConfirmModal";
 import { TwoFactorPanel } from "@/components/security/TwoFactorPanel";
@@ -70,8 +71,13 @@ const BILLING_ICONS: Record<BillingSection, SectionItem["icon"]> = {
   premium: DiscordiaPremiumIcon,
   subscriptions: DiscordiaPremiumIcon,
   points: DiscordiaPointIcon,
+  boosts: BoostsSectionIcon,
   transactions: DiscordiaPointIcon,
 };
+
+function isPremiumSection(id: AccountSettingsSection): boolean {
+  return isBillingSection(id) && id !== "boosts";
+}
 
 const BILLING_ITEMS: SectionItem[] = BILLING_SECTIONS.map((id) => ({
   id,
@@ -161,17 +167,19 @@ export function AccountSettingsModal({
                         onClick={() => selectSection(item.id)}
                         className={cn(
                           "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-3 text-left transition-colors",
-                          active && isBillingSection(item.id)
+                          active && isPremiumSection(item.id)
                             ? "bg-[#F0B232] text-[#1C293B]"
                             : active
                               ? "bg-accent text-on-accent"
                               : "text-content-muted hover:bg-surface-hover",
                         )}
                       >
-                        {active && isBillingSection(item.id) ? (
+                        {active && isPremiumSection(item.id) ? (
                           <span className="-m-1 flex size-[25px] shrink-0 items-center justify-center rounded-md bg-[#1C293B]">
                             <Icon size={17} />
                           </span>
+                        ) : item.id === "boosts" ? (
+                          <BoostsSectionIcon size={17} onAccent={active} />
                         ) : (
                           <Icon size={17} />
                         )}
@@ -179,7 +187,14 @@ export function AccountSettingsModal({
                           <strong className="font-display block text-sm">
                             {item.label}
                           </strong>
-                          <small className="block truncate opacity-60">
+                          <small
+                            className={cn(
+                              "block truncate",
+                              active && item.id === "boosts"
+                                ? "text-sky"
+                                : "opacity-60",
+                            )}
+                          >
                             {item.description}
                           </small>
                         </span>

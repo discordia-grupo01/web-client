@@ -1,4 +1,4 @@
-import { DiscordiaPointIcon } from "./DiscordiaIcons";
+import { DiscordiaPointIcon } from "../icons/DiscordiaIcons";
 
 export function EmptyHistory({ text }: { text: string }) {
   return (

@@ -66,6 +66,7 @@ import { usePendingReports } from "@/components/home/hooks/usePendingReports";
 import { useUnreadState } from "@/components/home/hooks/useUnreadState";
 import { usePageVisible } from "@/hooks/usePageVisible";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
+import { onServerBoostsRequested } from "@/utils/serverBoostsRequest";
 import { authorFromProfile } from "@/utils/author";
 import { listServersRequest } from "@/services/servers/client";
 import { avatarSrcOf } from "@/utils/userProfile";
@@ -191,8 +192,17 @@ function HomeShellContent({
   }
 
   useRefreshOnChange(
-    { resources: ["servers", "server", "channels"] },
+    { resources: ["servers", "server", "channels", "boosts"] },
     syncServers,
+  );
+
+  useEffect(
+    () =>
+      onServerBoostsRequested((serverId) => {
+        setView("servers");
+        setSelectedServerId(serverId);
+      }),
+    [],
   );
 
   // Se pide una sola vez y sobrevive a cambiar de vista, asi el contador de

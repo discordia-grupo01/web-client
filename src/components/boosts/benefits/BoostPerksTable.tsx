@@ -17,7 +17,7 @@ import { Check } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 
-import { BoostLevelIcon } from "./BoostLevelIcon";
+import { BoostLevelIcon } from "../icons/BoostLevelIcon";
 
 const CURRENT_COLUMN = "bg-boost-column";
 

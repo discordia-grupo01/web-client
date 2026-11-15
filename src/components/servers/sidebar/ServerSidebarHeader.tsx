@@ -17,6 +17,11 @@ import { NotificationSettingsModal } from "@/components/notifications/Notificati
 import { RolesModal } from "@/components/roles/RolesModal";
 import { LeaveServerModal } from "@/components/servers/LeaveServerModal";
 import { ServerSettingsModal } from "@/components/servers/settings/ServerSettingsModal";
+import {
+  onServerBoostsRequested,
+  takeRequestedServerBoosts,
+} from "@/utils/serverBoostsRequest";
+import { openSettingsSection } from "@/utils/settingsRequest";
 import { TransferOwnershipModal } from "@/components/servers/TransferOwnershipModal";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalNotificationSettings } from "@/contexts/NotificationSettingsContext";
@@ -98,7 +103,19 @@ export function ServerSidebarHeader({
   const { user } = useAuth();
   const notificationSettings = useOptionalNotificationSettings();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openModal, setOpenModal] = useState<OpenModal>(null);
+  const [openModal, setOpenModal] = useState<OpenModal>(() =>
+    takeRequestedServerBoosts(server.id) ? "boosts" : null,
+  );
+
+  useEffect(
+    () =>
+      onServerBoostsRequested((serverId) => {
+        if (serverId !== server.id) return;
+        takeRequestedServerBoosts(serverId);
+        setOpenModal("boosts");
+      }),
+    [server.id],
+  );
   const [pendingTransfer, setPendingTransfer] =
     useState<OwnershipTransfer | null>(null);
   const [isLoadingPendingTransfer, setIsLoadingPendingTransfer] =
@@ -227,6 +244,10 @@ export function ServerSidebarHeader({
           pendingReports={visiblePendingReports}
           currentUserId={user ? String(user.id) : null}
           onClose={closeModal}
+          onBuyPoints={() => {
+            closeModal();
+            openSettingsSection("points");
+          }}
           onGoToMessage={(channelId, messageId) => {
             closeModal();
             onGoToMessage(channelId, messageId);

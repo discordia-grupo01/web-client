@@ -42,6 +42,8 @@ interface ServerSettingsModalProps {
   /** La sección con la que abre, si se entra desde un atajo (Boosts). */
   openAt?: SettingsSection;
   onClose: () => void;
+  /** "Ir a comprar puntos" de Boosts: cierra esto y abre Facturación. */
+  onBuyPoints: () => void;
   onGoToMessage: (channelId: string, messageId: string) => void;
   onOpenProfile: (userId: string) => void;
   onPendingReportsChanged: () => void;
@@ -60,6 +62,7 @@ export function ServerSettingsModal({
   currentUserId,
   openAt,
   onClose,
+  onBuyPoints,
   onGoToMessage,
   onOpenProfile,
   onPendingReportsChanged,
@@ -165,7 +168,11 @@ export function ServerSettingsModal({
                 onMembersChanged={onMembersChanged}
               />
             ) : section === "boosts" ? (
-              <ServerBoostsSection server={server} titleId={TITLE_ID} />
+              <ServerBoostsSection
+                server={server}
+                titleId={TITLE_ID}
+                onBuyPoints={onBuyPoints}
+              />
             ) : section === "audit" ? (
               <ModerationAuditSection serverId={server.id} titleId={TITLE_ID} />
             ) : section === "words" ? (
@@ -176,6 +183,7 @@ export function ServerSettingsModal({
                 serverName={server.name}
                 titleId={TITLE_ID}
                 onCancel={onClose}
+                onBoost={() => openSectionOnMobile("boosts")}
               />
             )}
           </div>

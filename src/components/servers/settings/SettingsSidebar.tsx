@@ -2,6 +2,7 @@
 
 import { Trash2 } from "lucide-react";
 
+import { BoostsSectionIcon } from "@/components/boosts/icons/BoostsSectionIcon";
 import { ReportsBadge } from "@/components/reports/ReportsBadge";
 import { cn } from "@/lib/cn";
 
@@ -63,11 +64,12 @@ export function SettingsSidebar({
                   : "text-content-muted hover:bg-surface-hover",
               )}
             >
-              {section === "boosts" && isActive ? (
-                // El ícono de boost tiene un bloque petrol que se pierde sobre el fondo activo.
-                <span className="bg-boost-ink -m-1 flex size-6.25 shrink-0 items-center justify-center rounded-md">
-                  <Icon size={17} />
-                </span>
+              {section === "boosts" ? (
+                <BoostsSectionIcon
+                  size={17}
+                  onAccent={isActive}
+                  className="shrink-0"
+                />
               ) : (
                 <Icon size={17} className="shrink-0" />
               )}
@@ -75,7 +77,14 @@ export function SettingsSidebar({
                 <strong className="font-display block text-sm">
                   {SECTION_TITLES[section]}
                 </strong>
-                <small className="mt-0.5 block leading-snug opacity-60">
+                <small
+                  className={cn(
+                    "mt-0.5 block leading-snug",
+                    section === "boosts" && isActive
+                      ? "text-sky"
+                      : "opacity-60",
+                  )}
+                >
                   {SECTION_DESCRIPTIONS[section]}
                 </small>
               </span>
