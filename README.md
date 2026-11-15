@@ -1,16 +1,50 @@
-# discordia-web
+# web-client
 
-Cliente web de Discordia (React + Next.js, App Router).
+Cliente web de Discordia.
 
-## Stack
+## Tabla de contenidos
 
-- Next.js 14 (App Router) + React 18 + TypeScript estricto
-- Tailwind CSS v4 (`@tailwindcss/postcss`, sin archivo de config)
-- Formularios con `useState` + validacion en funciones propias (sin libreria)
-- axios para HTTP, lucide-react para iconos
-- Vitest + Testing Library para tests
+- [Introducción](#introducción)
+- [Pre-requisitos](#pre-requisitos)
+- [Cómo correr](#cómo-correr)
+- [Variables de entorno](#variables-de-entorno)
+- [Comandos Docker](#comandos-docker)
+- [Tests](#tests)
+- [Más documentación](#más-documentación)
 
-## Setup local
+## Introducción
+
+`web-client` es la aplicación web de Discordia: registro e inicio de sesión (con email, con Google y con segundo factor), servidores, canales de texto y de voz, mensajes directos, notificaciones, perfil y Premium. Cubre las historias de usuario final del catálogo para la web.
+
+Está hecha con Next.js 14 (App Router), React 18 y TypeScript, con Tailwind CSS para los estilos y Vitest para los tests. La lógica que comparte con la app móvil (tipos, textos y funciones puras) vive en el paquete [`client-shared`](https://github.com/discordia-grupo01/client-shared); acá queda lo que es propio de la web: las pantallas, los hooks y el acceso a la API.
+
+El navegador casi nunca le habla directo al backend. Las pantallas llaman a rutas del propio servidor de Next (un BFF), que reenvía el pedido al gateway con el JWT guardado en una cookie. Las únicas conexiones directas desde el navegador son los WebSockets (mensajes, notificaciones y presencia de voz) y la subida de adjuntos, y todas pasan por el gateway (Kong), nunca por un servicio suelto. La web en producción corre en Vercel.
+
+## Pre-requisitos
+
+- **Node.js 20** y **npm**, si querés correrla en tu máquina.
+- **Docker** y **Docker Compose** v2.24 o más nuevo, si preferís correrla en un contenedor.
+- **El backend**, para que la web tenga a quién hablarle. Lo más simple es levantarlo todo con el repositorio [`infrastructure`](https://github.com/discordia-grupo01/infrastructure). Sin backend, la web abre igual y muestra la pantalla de login.
+
+## Cómo correr
+
+### Con Docker Compose
+
+Levanta la web en modo desarrollo dentro de un contenedor:
+
+```bash
+docker compose up
+```
+
+La primera vez tarda un poco, porque instala las dependencias. Cuando termine, abrí http://localhost:3000.
+
+El contenedor busca el gateway en `host.docker.internal:8000`, que desde un contenedor es tu máquina. Si el gateway corre en otro lado, completá `API_URL_DOCKER` en el `.env`.
+
+Este compose levanta solo la web. Para el sistema completo, usá el compose del repositorio `infrastructure`, que también la incluye.
+
+### Para desarrollar
+
+Si vas a tocar el código, te conviene correrla en tu máquina, con recarga en caliente:
 
 ```bash
 cp .env.example .env
@@ -18,146 +52,69 @@ npm install
 npm run dev
 ```
 
-## Conectar con el backend real
-
-Pasos para levantar todo el backend y probar web-client conectado de verdad.
-
-**Requisito previo:** tener los repos `infrastructure`, `identify-service`, `servers` y `gateway` clonados. `infrastructure` levanta todo lo demás.
-
-1. **Levantar el backend:**
-
-   ```bash
-   cd infrastructure
-   cp .env.example .env
-   docker compose up --build
-   ```
-
-   Esperar a que las migraciones corran y los servicios queden arriba (logs de `identity`, `servers` y `gateway` sin errores).
-
-2. **Abrir web-client:** `docker compose` también levanta el front en `http://localhost:3000`. Si preferís correrlo por fuera de Docker, hacé el setup local de arriba y apuntalo al Gateway (`http://localhost:8000`) con `NEXT_PUBLIC_API_URL`.
-
-Las requests siempre van al Gateway (Kong), nunca directo a un microservicio: el Gateway valida el JWT y rutea cada path al servicio que corresponda.
+Con el `.env` de ejemplo, la web le habla al gateway en `http://localhost:8000`.
 
 ## Variables de entorno
 
-| Variable                         | Default                         | Descripcion                                                                                                                                                                                                                                                        |
-| -------------------------------- | ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| NEXT_PUBLIC_API_URL              | http://localhost:8000           | URL base del Gateway (Kong) al que le pega el servidor de Next.                                                                                                                                                                                                    |
-| NEXT_PUBLIC_WS_URL               | (sale de `NEXT_PUBLIC_API_URL`) | Opcional. URL del WebSocket de mensajes (`ws://host/socket`), el único acceso al Gateway que hace el navegador directo. Definirla si el navegador ve el Gateway en otra dirección que el servidor de Next (por ejemplo, con Docker: `ws://localhost:8000/socket`). |
-| NEXT_PUBLIC_UPLOAD_URL           | (sale de `NEXT_PUBLIC_API_URL`) | Opcional. URL del Gateway a la que el navegador sube los adjuntos directo, porque Vercel corta los pedidos a sus funciones en 4,5 MB. Queda fija en el build y el origen de la web tiene que estar en `WEB_ORIGIN` del Gateway.                                    |
-| NEXT_PUBLIC_VOICE_WS_URL         | (sale de `NEXT_PUBLIC_API_URL`) | Opcional. URL del WebSocket de presencia de voz (`wss://host/voice/socket`). El navegador obtiene un ticket efímero mediante el BFF; usar `wss://` cuando la aplicación está bajo HTTPS.                                                                           |
-| NEXT_PUBLIC_NOTIFICATIONS_WS_URL | (sale de `NEXT_PUBLIC_API_URL`) | Opcional. URL del WebSocket de no leídos (`wss://host/notifications/socket`). Igual que el de voz, el ticket sale del BFF.                                                                                                                                         |
-| NEXT_PUBLIC_GOOGLE_CLIENT_ID     | (vacio)                         | Client ID de Google (tipo "Web application"). Tiene que coincidir con el `GOOGLE_CLIENT_ID` que usa el backend (login con Google).                                                                                                                                 |
+Se leen del entorno o de un archivo `.env`. El archivo [`.env.example`](.env.example) trae los valores para correr en local. Las variables que empiezan con `NEXT_PUBLIC_` quedan incluidas en el código al compilar: no pongas secretos ahí.
 
-`.env.example` solo trae la estructura (sin valores sensibles). Los valores reales van en tu propio `.env`, que nunca se sube (ya esta en `.gitignore`).
+| Variable                           | Default                       | Descripción                                                                                                                                                                     |
+| ---------------------------------- | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NEXT_PUBLIC_API_URL`              | `http://localhost:8000`       | URL del gateway (Kong), al que le habla el servidor de Next. Nunca apunta directo a un servicio.                                                                                |
+| `NEXT_PUBLIC_WS_URL`               | sale de `NEXT_PUBLIC_API_URL` | URL del WebSocket de mensajes (`ws://host/socket`). Es una de las pocas cosas a las que se conecta el navegador directo.                                                        |
+| `NEXT_PUBLIC_UPLOAD_URL`           | sale de `NEXT_PUBLIC_API_URL` | URL del gateway a la que el navegador sube los adjuntos, sin pasar por Next (Vercel corta los pedidos de más de 4,5 MB). Su origen tiene que estar en `WEB_ORIGIN` del gateway. |
+| `NEXT_PUBLIC_VOICE_WS_URL`         | sale de `NEXT_PUBLIC_API_URL` | URL del WebSocket de presencia de voz. En producción usa `wss://`.                                                                                                              |
+| `NEXT_PUBLIC_NOTIFICATIONS_WS_URL` | sale de `NEXT_PUBLIC_API_URL` | URL del WebSocket de notificaciones.                                                                                                                                            |
+| `NEXT_PUBLIC_GOOGLE_CLIENT_ID`     | vacío                         | Client ID de Google (tipo "Web application"). Tiene que coincidir con el `GOOGLE_CLIENT_ID` de `identify-service`. Vacío = sin login con Google.                                |
 
-## Estructura de carpetas
+Variables que usa solo `docker-compose.yml`:
 
-```
-discordia-web/
-├── src/
-│   ├── app/                     App Router: cada carpeta con page.tsx es una ruta
-│   │   ├── layout.tsx           layout raiz (fuentes, providers, metadata)
-│   │   ├── globals.css          Tailwind + design tokens del tema
-│   │   ├── (grupo)/             route group: agrupa rutas que comparten layout
-│   │   └── api/                 route handlers (endpoints HTTP; ver "Autenticacion")
-│   ├── middleware.ts            guardia de rutas (corre antes de cada request)
-│   ├── components/
-│   │   ├── ui/                  piezas genericas reutilizables (Button, TextField, ...)
-│   │   └── <feature>/           componentes propios de una feature de UI
-│   │       ├── hooks/           hooks que usa solo esta feature (ej. messages/hooks/useStickyScroll)
-│   │       ├── utils/           funciones auxiliares de esta feature (ej. voice/utils/voiceGrid)
-│   │       └── <Algo>Context.tsx  contexto que usa solo esta feature
-│   ├── services/                codigo agrupado por dominio del backend (auth, servers, channels, ...)
-│   │   └── <dominio>/           client (browser), service (server) y sus helpers de servidor
-│   ├── types/                   tipos por dominio: <dominio>.types.ts (Channel, Role, User, ...)
-│   ├── hooks/                   hooks de React que usan varias features (useTheme, useDirectMessages)
-│   ├── contexts/                contextos que usan varias features (AuthContext, PresenceContext)
-│   ├── utils/                   funciones auxiliares sin UI que usan varias features (userProfile, author)
-│   └── lib/
-│       ├── apiClient.ts          cliente HTTP hacia el Gateway (server-only)
-│       ├── browserApiClient.ts   cliente HTTP compartido para navegador (BFF, `/api/*`)
-│       ├── apiRoute.ts           respuestas estandar de los route handlers
-│       ├── setCookie.ts          lee cookies del header `Set-Cookie` del backend
-│       ├── constants.ts          constantes de la app (APP_NAME, rutas, ...)
-│       ├── env.ts                lectura centralizada de variables de entorno
-│       └── cn.ts                 helper para componer clases de Tailwind
-├── public/                      assets estaticos
-├── .github/
-│   └── workflows/
-│       └── ci.yml               format:check, lint, test y build en cada PR/push a main
-├── .githooks/
-│   └── pre-commit               hook de prettier local
-├── next.config.mjs
-├── postcss.config.mjs           Tailwind v4 (plugin de PostCSS)
-├── tsconfig.json
-├── vitest.config.ts             config de tests (Vitest + Testing Library)
-├── Dockerfile                   build multi-stage para la imagen de produccion
-└── .env.example                 estructura de variables de entorno (sin valores sensibles)
+| Variable         | Default                            | Descripción                                                               |
+| ---------------- | ---------------------------------- | ------------------------------------------------------------------------- |
+| `WEB_PORT`       | `3000`                             | Puerto de la web en tu máquina.                                           |
+| `API_URL_DOCKER` | `http://host.docker.internal:8000` | URL del gateway para el servidor de Next que corre dentro del contenedor. |
+
+## Comandos Docker
+
+Todos desde la raíz del repositorio.
+
+| Qué querés hacer                                | Comando                      |
+| ----------------------------------------------- | ---------------------------- |
+| Levantar la web                                 | `docker compose up`          |
+| Levantar en segundo plano                       | `docker compose up -d`       |
+| Ver los logs                                    | `docker compose logs -f web` |
+| Ver qué está corriendo                          | `docker compose ps`          |
+| Bajar todo                                      | `docker compose down`        |
+| Bajar todo y borrar las dependencias instaladas | `docker compose down -v`     |
+
+El repositorio también trae un `Dockerfile` que compila la web y la sirve con `npm start`. Como las variables `NEXT_PUBLIC_` se fijan al compilar, esa imagen apunta al gateway que haya en `.env` en el momento de construirla. La producción no la usa: se despliega en Vercel.
+
+```bash
+docker build -t web-client .
+docker run --rm -p 3000:3000 web-client
 ```
 
-Los tipos de cada dominio (`Channel`, `Role`, `User`, los `*ActionResult` de cada
-endpoint, etc.) viven en `types/<dominio>.types.ts`, no dentro de
-`services/<dominio>/`: así se pueden importar sin arrastrar `service.ts`/`client.ts`
-(uno es server-only, el otro pega contra el BFF) y quedan todos los tipos del
-proyecto en un solo lugar. Un tipo que un dominio necesita de otro (ej.
-`ServerSummary` referenciando `Channel`) se importa entre archivos de `types/`
-con ruta relativa (`./channel.types`), no cruzando a `services/`.
+## Tests
 
-## Convenciones de Next (App Router)
-
-- **Rutas por carpeta.** Un `page.tsx` dentro de `src/app/x/` crea la ruta `/x`. No hay router que configurar.
-- **Route groups.** Una carpeta entre parentesis —`(auth)`— agrupa rutas para compartir un `layout.tsx` sin aparecer en la URL: `(auth)/login/page.tsx` responde a `/login`, no a `/auth/login`.
-- **Route handlers.** Un `route.ts` es un endpoint HTTP. Se exporta una funcion por verbo (`GET`, `POST`, ...) y Next llama la que coincide con el metodo del request. La logica vive en `services/`; el `route.ts` es solo la cascara HTTP.
-- **Server vs client.** Los componentes corren en el servidor por defecto: ahi se lee la cookie, se habla con el backend y se manejan secretos. Los que necesitan estado o eventos del navegador llevan `"use client"` en la primera linea.
-- **`middleware.ts`.** Corre antes de cada request. Lo usamos para redirigir segun haya o no sesion.
-- **Alias `@/`.** `@/x` apunta a `src/x` (configurado en `tsconfig.json`).
-
-## Autenticacion
-
-El navegador nunca habla directo con el backend. Pega contra los route handlers de
-`/api/*` (mismo origen) y Next hace de intermediario (patron BFF): reenvia la llamada
-y guarda la sesion en una cookie `httpOnly` que el JavaScript del navegador no puede leer.
-Next tampoco le pega a un microservicio directo: todo pasa por el Gateway (ADR-006), que
-valida el JWT y decide a que servicio va cada path.
-
-```
-navegador ──► /api/... (Next) ──► Gateway (Kong) ──► identify-service / servers
-                  │
-                  └─ sesion en cookie httpOnly
+```bash
+npm test
 ```
 
-- `middleware.ts` es el guardia: sin sesion, las rutas protegidas redirigen a `/login`;
-  con sesion, `/login` redirige a la app.
-- Las paginas server revalidan la sesion antes de renderizar (segunda barrera).
-- Cada feature con llamadas autenticadas sigue el mismo camino: `route.ts` en
-  `app/api/` + logica en `services/<dominio>/`.
+Corre los tests con Vitest y Testing Library. Para revisar el resto del código:
 
-El detalle fino del login (endpoints, forma del token, que falta del backend) esta en
-los comentarios de `src/services/auth/`.
+| Qué                | Comando                                                     |
+| ------------------ | ----------------------------------------------------------- |
+| Linter (ESLint)    | `npm run lint`                                              |
+| Tipos (TypeScript) | `npm run typecheck`                                         |
+| Formato            | `npm run format:check` (y `npm run format` para arreglarlo) |
 
-## Comandos
-
-- `npm run dev` - corre el servicio localmente.
-- `npm run lint` - corre ESLint (`next/core-web-vitals`).
-- `npm run typecheck` - chequea tipos con `tsc` (sin emitir).
-- `npm run format` / `npm run format:check` - formatea o chequea el formato con Prettier.
-- `npm run test` - corre los tests con Vitest.
-- `npm run build` - compila para produccion.
-
-## Formateo automatico
-
-Este repo se autoformatea con Prettier en cada commit. Activalo una vez por clone:
+El CI corre todo eso en cada pull request. El repositorio se formatea con Prettier; activá el hook una vez por clon:
 
 ```bash
 git config core.hooksPath .githooks
 ```
 
-Si usan VS Code con la extension oficial de Prettier, tambien formatea al guardar (ya configurado en .vscode/settings.json).
+## Más documentación
 
-El CI corre `npm run format:check` como red de seguridad (falla si encuentra archivos sin formatear), por si alguien clono sin activar el hook.
-
-## Notas
-
-Para el backoffice, duplicar esta estructura en discordia-backoffice — mismo stack,
-cambia el contenido de `src/app` y a que endpoints del backend le pega.
+- [`client-shared`](https://github.com/discordia-grupo01/client-shared): los tipos, textos y funciones que comparten la web, la app móvil y el backoffice.
+- [`infrastructure`](https://github.com/discordia-grupo01/infrastructure): cómo levantar todo el sistema para probar la web conectada de verdad.
