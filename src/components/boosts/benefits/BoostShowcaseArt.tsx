@@ -9,7 +9,7 @@ import { Link2, Smile } from "lucide-react";
 import { Avatar } from "@/components/ui/Avatar";
 import { serverIconSrc } from "@/utils/image-urls";
 
-import { BoostLevelIcon } from "../icons/BoostLevelIcon";
+import { BoostedBadge } from "../icons/BoostedBadge";
 
 const EMOJI_TILES = [
   "bg-accent text-boost-paper",
@@ -142,12 +142,14 @@ function Art({ perk, server }: BoostShowcaseArtProps) {
             size={44}
             className="shrink-0 rounded-full"
           />
-          <span className="flex min-w-0 flex-col gap-1.5">
-            <span className="text-content truncate text-xs font-bold">
-              {server.name}
+          <span className="flex min-w-0 flex-col gap-1">
+            <span className="flex min-w-0 items-center gap-1.5">
+              <span className="text-content truncate text-xs font-bold">
+                {server.name}
+              </span>
+              <BoostedBadge size={18} decorative />
             </span>
-            <span className="bg-boost-paper text-boost-ink inline-flex items-center gap-1.5 self-start rounded-full px-2 py-0.75 text-[10px] font-bold">
-              <BoostLevelIcon level={3} size={13} bare />
+            <span className="text-content-muted text-[10px] font-semibold">
               {ART_COPY.badge}
             </span>
           </span>

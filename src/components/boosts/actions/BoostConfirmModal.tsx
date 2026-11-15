@@ -6,6 +6,7 @@ import {
   BOOST_COST_POINTS,
   BOOST_OUTCOME_ACTIONS,
   boostLevelLabel,
+  boostCapNote,
   boostLevelUpNotice,
   boostOutcomeCopy,
   boostRefundDelta,
@@ -32,6 +33,8 @@ interface BoostConfirmModalProps {
   balance: number;
   flow: BoostFlow;
   error: string | null;
+  /** Otro miembro completó los 30 mientras este diálogo estaba abierto. */
+  capReached: boolean;
   onConfirm: () => void;
   onClose: () => void;
 }
@@ -66,6 +69,7 @@ export function BoostConfirmModal({
   balance,
   flow,
   error,
+  capReached,
   onConfirm,
   onClose,
 }: BoostConfirmModalProps) {
@@ -198,7 +202,11 @@ export function BoostConfirmModal({
           />
         </div>
 
-        {levelUpNotice ? (
+        {capReached ? (
+          <p className="bg-boost-warn-soft text-boost-warn rounded-xl px-4 py-3 text-sm leading-snug font-semibold">
+            {boostCapNote(serverName)}
+          </p>
+        ) : levelUpNotice ? (
           <p className="bg-boost-column text-content rounded-xl px-4 py-3 text-sm leading-snug">
             {levelUpNotice}
           </p>
@@ -215,7 +223,12 @@ export function BoostConfirmModal({
           >
             {BOOST_CONFIRM_COPY.cancel}
           </Button>
-          <Button type="button" isLoading={submitting} onClick={onConfirm}>
+          <Button
+            type="button"
+            isLoading={submitting}
+            disabled={capReached}
+            onClick={onConfirm}
+          >
             {BOOST_CONFIRM_COPY.confirm}
           </Button>
         </div>

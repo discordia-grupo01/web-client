@@ -52,5 +52,11 @@ describe("BoostStatusCard", () => {
     expect(screen.getByText("Alcanzó el nivel máximo")).toBeTruthy();
     expect(screen.queryByRole("progressbar")).toBeNull();
     expect(screen.queryByText("Próximo")).toBeNull();
+    expect(screen.getByText("Servidor Boosteado")).toBeTruthy();
+    expect(
+      screen.getByText(
+        "Si alguien retira un boost, el servidor baja al nivel 2 y se puede volver a boostear.",
+      ),
+    ).toBeTruthy();
   });
 });

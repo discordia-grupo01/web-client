@@ -9,6 +9,7 @@ import {
   type ServerBoostSummary,
   type ServerSummary,
   type UpdateServerResult,
+  VANITY_SAVE_FAILED,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browserApiClient";
@@ -25,6 +26,24 @@ export async function listServersRequest(): Promise<ListServersResult> {
       ok: false,
       message: SERVERS_LOAD_FAILED,
     };
+  }
+}
+
+export type SetVanityResult =
+  { ok: true; vanity_code: string | null } | { ok: false; message: string };
+
+export async function setVanityCodeRequest(
+  serverId: string,
+  code: string | null,
+): Promise<SetVanityResult> {
+  try {
+    const { data } = await api.patch<SetVanityResult>(
+      `/servers/${serverId}/vanity`,
+      { code },
+    );
+    return data;
+  } catch {
+    return { ok: false, message: VANITY_SAVE_FAILED };
   }
 }
 

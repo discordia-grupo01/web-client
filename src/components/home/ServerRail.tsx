@@ -1,7 +1,9 @@
 "use client";
 
 import {
+  BOOSTED_BADGE_COPY,
   boostLevelLabel,
+  hasBoostedBadge,
   isServerMuted,
   NO_UNREAD_FLAGS,
   pendingReportsLabel,
@@ -152,7 +154,9 @@ function ServerRailItem({
       : server.name;
   const boostLevel = isSuspended ? 0 : serverBoostLevel(server);
   const boostLabel = boostLevel > 0 ? boostLevelLabel(boostLevel) : null;
-  const label = [baseLabel, boostLabel, reportsLabel]
+  const isBoosted = hasBoostedBadge(boostLevel);
+  const badgeLabel = isBoosted ? BOOSTED_BADGE_COPY.label : null;
+  const label = [baseLabel, boostLabel, badgeLabel, reportsLabel]
     .filter(Boolean)
     .join(". ");
 
@@ -171,7 +175,7 @@ function ServerRailItem({
         label={
           isSuspended
             ? serverSuspendedLabel(server.name)
-            : [server.name, boostLabel, reportsLabel]
+            : [server.name, boostLabel, badgeLabel, reportsLabel]
                 .filter(Boolean)
                 .join(" · ")
         }
@@ -186,7 +190,11 @@ function ServerRailItem({
             event.preventDefault();
             setMenuAt({ x: event.clientX, y: event.clientY });
           }}
-          className="relative cursor-pointer overflow-hidden rounded-2xl"
+          className={cn(
+            "relative cursor-pointer overflow-hidden rounded-2xl",
+            isBoosted &&
+              "ring-boost-yellow ring-offset-surface-servers ring-2 ring-offset-2",
+          )}
         >
           <span className={cn("block", isSuspended && "saturate-50")}>
             <Avatar name={server.name} src={serverIconSrc(server)} size={48} />

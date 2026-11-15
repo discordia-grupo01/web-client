@@ -19,7 +19,6 @@ import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 
 import { BoostPerksTable } from "./benefits/BoostPerksTable";
 import { BoostShowcase } from "./benefits/BoostShowcase";
-import { useOwnBoosts } from "./hooks/useOwnBoosts";
 import { useServerBoostSummary } from "./hooks/useServerBoostSummary";
 import { ServerBoostTab } from "./ServerBoostTab";
 
@@ -40,7 +39,6 @@ export function ServerBoostsSection({
   onBuyPoints,
 }: ServerBoostsSectionProps) {
   const { summary, loadError, retry } = useServerBoostSummary(server.id);
-  const own = useOwnBoosts();
   const [tab, setTab] = useState<BoostSectionTab>("boost");
 
   return (
@@ -71,7 +69,6 @@ export function ServerBoostsSection({
           <ServerBoostTab
             server={server}
             summary={summary}
-            own={own}
             onSummaryStale={retry}
             onBuyPoints={onBuyPoints}
           />

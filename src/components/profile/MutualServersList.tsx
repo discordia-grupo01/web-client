@@ -1,9 +1,14 @@
 "use client";
 
-import { type ServerSummary } from "@discordia/client-shared";
+import {
+  hasBoostedBadge,
+  serverBoostLevel,
+  type ServerSummary,
+} from "@discordia/client-shared";
 
 import { useCallback, useEffect, useState } from "react";
 
+import { BoostedBadge } from "@/components/boosts/icons/BoostedBadge";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { Avatar } from "@/components/ui/Avatar";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
@@ -58,6 +63,9 @@ export function MutualServersList({ serverIds }: MutualServersListProps) {
               <span className="text-content-muted truncate text-sm font-medium">
                 {server.name}
               </span>
+              {hasBoostedBadge(serverBoostLevel(server)) ? (
+                <BoostedBadge size={16} />
+              ) : null}
             </div>
           ))}
         </div>

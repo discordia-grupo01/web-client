@@ -10,6 +10,7 @@ import {
   type InviteStatus,
   MAX_USES_LABEL,
   validateMaxUses,
+  VANITY_INVITE_COPY,
 } from "@discordia/client-shared";
 
 import {
@@ -35,9 +36,13 @@ import {
 import { cn } from "@/lib/cn";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 
+import { ServerVanityLink } from "./ServerVanityLink";
+
 interface InviteModalProps {
   serverId: string;
   serverName: string;
+  /** URL personalizada: servers solo la manda en el nivel 3. */
+  vanityCode: string | null;
   onClose: () => void;
 }
 
@@ -173,6 +178,7 @@ type InviteTab = "active" | "inactive";
 export function InviteModal({
   serverId,
   serverName,
+  vanityCode,
   onClose,
 }: InviteModalProps) {
   const [invitations, setInvitations] = useState<Invitation[] | null>(null);
@@ -283,6 +289,17 @@ export function InviteModal({
             </div>
           </div>
         </div>
+
+        {vanityCode ? (
+          <div className="space-y-4 px-7 pb-5">
+            <ServerVanityLink code={vanityCode} />
+            <div className="text-content-subtle flex items-center gap-2.5 text-xs">
+              <span className="bg-line h-px flex-1" />
+              {VANITY_INVITE_COPY.divider}
+              <span className="bg-line h-px flex-1" />
+            </div>
+          </div>
+        ) : null}
 
         <div className="border-line border-t px-7 py-5">
           <label

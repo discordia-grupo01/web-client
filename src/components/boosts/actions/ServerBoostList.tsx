@@ -2,12 +2,15 @@ import {
   activeBoostsLabel,
   BOOST_LIST_COPY,
   type Boost,
-  boostRefundNote,
-  formatBillingDate,
+  boostRowMeta,
 } from "@discordia/client-shared";
 
 import { EmptyHistory } from "@/components/billing/history/EmptyHistory";
+import { HistoryPagination } from "@/components/billing/history/HistoryPagination";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { cn } from "@/lib/cn";
 
+import type { ServerBoostsPage } from "../hooks/useServerBoostsPage";
 import { BoostActionIcon } from "../icons/BoostActionIcon";
 import { BoostStatusChip } from "./BoostStatusChip";
 
@@ -24,14 +27,18 @@ export function BoostRows({ boosts, onRemove }: BoostRowsProps) {
           key={boost.id}
           className="bg-surface-raised flex items-center gap-3 px-4 py-3"
         >
-          <span className="bg-surface-input flex size-9 shrink-0 items-center justify-center rounded-xl">
+          <span
+            className={cn(
+              "bg-surface-input flex size-9 shrink-0 items-center justify-center rounded-xl",
+              boost.status !== "active" && "opacity-45",
+            )}
+          >
             <BoostActionIcon size={20} />
           </span>
           <div className="min-w-0 flex-1">
             <BoostStatusChip status={boost.status} />
             <p className="text-content-subtle mt-1 text-xs">
-              {formatBillingDate(boost.created_at)}
-              {boost.status === "failed" ? ` · ${boostRefundNote(boost)}` : ""}
+              {boostRowMeta(boost)}
             </p>
           </div>
           {boost.status === "active" ? (
@@ -49,15 +56,15 @@ export function BoostRows({ boosts, onRemove }: BoostRowsProps) {
   );
 }
 
-interface ServerBoostListProps extends BoostRowsProps {
-  activeCount: number;
+interface ServerBoostListProps {
+  list: ServerBoostsPage;
+  onRemove: (boost: Boost) => void;
 }
 
-export function ServerBoostList({
-  boosts,
-  activeCount,
-  onRemove,
-}: ServerBoostListProps) {
+export function ServerBoostList({ list, onRemove }: ServerBoostListProps) {
+  const active = list.data?.active ?? 0;
+  const boosts = list.data?.boosts ?? [];
+
   return (
     <section aria-labelledby="server-boost-list-title">
       <div className="mb-3 flex items-baseline justify-between gap-3">
@@ -67,16 +74,35 @@ export function ServerBoostList({
         >
           {BOOST_LIST_COPY.title}
         </h3>
-        {activeCount > 0 ? (
+        {active > 0 ? (
           <span className="text-content-subtle text-xs font-semibold">
-            {activeBoostsLabel(activeCount)}
+            {activeBoostsLabel(active)}
           </span>
         ) : null}
       </div>
-      {boosts.length === 0 ? (
+      {list.loadError ? (
+        <div className="mb-3">
+          <FormAlert message={list.loadError} />
+        </div>
+      ) : null}
+      {list.data === null ? (
+        list.loadError ? null : (
+          <p className="text-content-subtle text-sm">Cargando…</p>
+        )
+      ) : boosts.length === 0 ? (
         <EmptyHistory text={BOOST_LIST_COPY.empty} />
       ) : (
-        <BoostRows boosts={boosts} onRemove={onRemove} />
+        <>
+          <BoostRows boosts={boosts} onRemove={onRemove} />
+          <HistoryPagination
+            page={list.page}
+            pageCount={list.pageCount}
+            range={list.range}
+            total={list.total}
+            noun={BOOST_LIST_COPY.paginationNoun}
+            onPageChange={list.setPage}
+          />
+        </>
       )}
       <p className="text-content-subtle mt-2 text-xs">
         {BOOST_LIST_COPY.footnote}

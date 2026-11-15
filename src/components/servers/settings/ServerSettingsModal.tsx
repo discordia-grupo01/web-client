@@ -2,6 +2,8 @@
 
 import {
   pendingReportsLabel,
+  serverBoostCount,
+  serverBoostLevel,
   type ServerSummary,
 } from "@discordia/client-shared";
 import { ChevronLeft } from "lucide-react";
@@ -24,6 +26,7 @@ import { DeleteServerModal } from "../DeleteServerModal";
 import { ServerProfileForm } from "./ServerProfileForm";
 import { SettingsMobileMenu } from "./SettingsMobileMenu";
 import { SettingsSidebar } from "./SettingsSidebar";
+import { VanityUrlField } from "./vanity/VanityUrlField";
 import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";
@@ -184,6 +187,15 @@ export function ServerSettingsModal({
                 titleId={TITLE_ID}
                 onCancel={onClose}
                 onBoost={() => openSectionOnMobile("boosts")}
+                vanityField={
+                  <VanityUrlField
+                    serverId={server.id}
+                    serverName={server.name}
+                    level={serverBoostLevel(server)}
+                    boostCount={serverBoostCount(server)}
+                    vanityCode={server.vanity_code ?? null}
+                  />
+                }
               />
             )}
           </div>

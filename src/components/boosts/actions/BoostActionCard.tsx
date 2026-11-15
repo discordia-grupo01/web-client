@@ -1,18 +1,24 @@
 import {
   BOOST_ACTION_COPY,
   BOOST_COST_POINTS,
+  type BoostBlockReason,
+  boostCapNote,
   boostPointsMissingLabel,
-  canAffordBoost,
+  MAX_BOOST_LEVEL,
 } from "@discordia/client-shared";
+import { Info } from "lucide-react";
 
 import { DiscordiaPointIcon } from "@/components/billing/icons/DiscordiaIcons";
 import { cn } from "@/lib/cn";
 
 import { BoostActionIcon } from "../icons/BoostActionIcon";
+import { BoostLevelIcon } from "../icons/BoostLevelIcon";
 
 interface BoostActionCardProps {
+  serverName: string;
   balance: number;
-  disabled?: boolean;
+  /** `cap`: el servidor tiene los 30 boosts; `balance`: no alcanzan los puntos. */
+  blockReason: BoostBlockReason | null;
   onBoost: () => void;
   onBuyPoints: () => void;
 }
@@ -32,12 +38,13 @@ function PointsFact({ label, value }: { label: string; value: number }) {
 }
 
 export function BoostActionCard({
+  serverName,
   balance,
-  disabled = false,
+  blockReason,
   onBoost,
   onBuyPoints,
 }: BoostActionCardProps) {
-  const canAfford = canAffordBoost(balance);
+  const capReached = blockReason === "cap";
 
   return (
     <section
@@ -73,37 +80,50 @@ export function BoostActionCard({
         <button
           type="button"
           onClick={onBoost}
-          disabled={!canAfford || disabled}
+          disabled={blockReason !== null}
           className="font-display bg-accent text-on-accent focus-visible:ring-accent flex w-full cursor-pointer items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-sm font-bold transition-all hover:brightness-110 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
         >
-          <span className="bg-surface-modal flex size-5.5 items-center justify-center rounded-md">
-            <BoostActionIcon size={16} />
-          </span>
-          {BOOST_ACTION_COPY.cta}
+          {capReached ? (
+            <BoostLevelIcon level={MAX_BOOST_LEVEL} size={18} bare onAccent />
+          ) : (
+            <span className="bg-surface-modal flex size-5.5 items-center justify-center rounded-md">
+              <BoostActionIcon size={16} />
+            </span>
+          )}
+          {capReached ? BOOST_ACTION_COPY.capCta : BOOST_ACTION_COPY.cta}
         </button>
       </div>
 
-      <div
-        className={cn(
-          "flex items-center justify-between gap-3 border-t px-4 py-2.5 text-xs",
-          canAfford
-            ? "border-line bg-surface-input text-content-muted"
-            : "bg-danger-soft text-danger border-danger/30",
-        )}
-      >
-        <span className={cn(!canAfford && "font-semibold")}>
-          {canAfford
-            ? BOOST_ACTION_COPY.moreBoosts
-            : boostPointsMissingLabel(balance)}
-        </span>
-        <button
-          type="button"
-          onClick={onBuyPoints}
-          className="text-accent-strong shrink-0 cursor-pointer font-semibold hover:underline"
+      {capReached ? (
+        <div className="border-line bg-surface-input text-content-muted flex items-center gap-2.5 border-t px-4 py-2.5 text-xs">
+          <Info size={16} className="shrink-0" aria-hidden />
+          <span>{boostCapNote(serverName)}</span>
+        </div>
+      ) : (
+        <div
+          className={cn(
+            "flex items-center justify-between gap-3 border-t px-4 py-2.5 text-xs",
+            blockReason === "balance"
+              ? "bg-boost-warn-soft border-boost-warn-line"
+              : "border-line bg-surface-input text-content-muted",
+          )}
         >
-          {BOOST_ACTION_COPY.buyPoints}
-        </button>
-      </div>
+          {blockReason === "balance" ? (
+            <span className="text-boost-warn font-semibold">
+              {boostPointsMissingLabel(balance)}
+            </span>
+          ) : (
+            <span>{BOOST_ACTION_COPY.moreBoosts}</span>
+          )}
+          <button
+            type="button"
+            onClick={onBuyPoints}
+            className="text-accent-strong shrink-0 cursor-pointer font-semibold hover:underline"
+          >
+            {BOOST_ACTION_COPY.buyPoints}
+          </button>
+        </div>
+      )}
     </section>
   );
 }

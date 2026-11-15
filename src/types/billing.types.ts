@@ -1,5 +1,7 @@
 import type {
   Boost,
+  BoostedServersPage,
+  BoostPage,
   CheckoutResponse,
   PointPurchase,
   PointsOverview,
@@ -29,4 +31,7 @@ export type PurchaseResult =
 
 export type BoostResult = { ok: true; boost: Boost } | BillingFailure;
 
-export type BoostsResult = { ok: true; boosts: Boost[] } | BillingFailure;
+export type BoostPageResult = { ok: true; page: BoostPage } | BillingFailure;
+
+export type BoostedServersPageResult =
+  { ok: true; page: BoostedServersPage } | BillingFailure;
