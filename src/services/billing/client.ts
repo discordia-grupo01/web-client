@@ -2,6 +2,10 @@ import {
   BILLING_LOAD_FAILED,
   type BillingResult,
   type Boost,
+  type BoostedServersPage,
+  boostedServersPageParams,
+  type BoostPage,
+  boostsPageParams,
   BOOST_REMOVE_FAILED,
   BOOST_REQUEST_FAILED,
   BOOST_STATUS_FAILED,
@@ -19,8 +23,9 @@ import {
 import { api } from "@/lib/browserApiClient";
 import type {
   BillingFailure,
+  BoostedServersPageResult,
+  BoostPageResult,
   BoostResult,
-  BoostsResult,
   CheckoutResult,
   PointsOverviewResult,
   PointsPackagesResult,
@@ -155,10 +160,29 @@ export function requestBoostRequest(
   );
 }
 
-export function listBoostsRequest(): Promise<BillingResult<Boost[]>> {
+export function listServerBoostsRequest(
+  serverId: string,
+  page: number,
+): Promise<BillingResult<BoostPage>> {
   return request(
-    () => api.get<BoostsResult>("/billing/boosts"),
-    (body) => body.boosts,
+    () =>
+      api.get<BoostPageResult>("/billing/boosts", {
+        params: boostsPageParams(serverId, page),
+      }),
+    (body) => body.page,
+    BOOSTS_LIST_LOAD_ERROR,
+  );
+}
+
+export function listBoostedServersRequest(
+  page: number,
+): Promise<BillingResult<BoostedServersPage>> {
+  return request(
+    () =>
+      api.get<BoostedServersPageResult>("/billing/boosts/servers", {
+        params: boostedServersPageParams(page),
+      }),
+    (body) => body.page,
     BOOSTS_LIST_LOAD_ERROR,
   );
 }

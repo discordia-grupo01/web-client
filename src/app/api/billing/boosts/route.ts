@@ -9,23 +9,32 @@ import { NextResponse } from "next/server";
 import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
 import { listBoosts, requestBoost } from "@/services/billing/service";
-import type { BoostResult, BoostsResult } from "@/types/billing.types";
+import type { BoostPageResult, BoostResult } from "@/types/billing.types";
 
 import {
   billingFailureResponse,
   idempotencyKeyOf,
+  pageParamsOf,
   readJsonBody,
 } from "../billingRoute";
 
-/** BFF de `GET /v1/billing/boosts`: mis boosts de todos los servidores. */
-export async function GET(): Promise<NextResponse<BoostsResult>> {
+/**
+ * BFF de `GET /v1/billing/boosts`: una página de mis boosts. Pasa
+ * `server_id`, `limit` y `offset`; billing los valida.
+ */
+export async function GET(
+  request: Request,
+): Promise<NextResponse<BoostPageResult>> {
   const session = await getValidSession();
   if (!session) return unauthorizedResponse();
 
-  const result = await listBoosts(session.token);
+  const result = await listBoosts(
+    session.token,
+    pageParamsOf(request, ["server_id", "limit", "offset"]),
+  );
   if (!result.ok) return billingFailureResponse(result, BOOSTS_LIST_LOAD_ERROR);
 
-  return NextResponse.json({ ok: true, boosts: result.data.boosts });
+  return NextResponse.json({ ok: true, page: result.data });
 }
 
 /**

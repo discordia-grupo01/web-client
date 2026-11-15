@@ -47,3 +47,16 @@ export async function readJsonBody(
 export function idempotencyKeyOf(request: Request): string | undefined {
   return request.headers.get("Idempotency-Key")?.trim() || undefined;
 }
+
+export function pageParamsOf(
+  request: Request,
+  names: readonly string[],
+): Record<string, string> {
+  const query = new URL(request.url).searchParams;
+  const params: Record<string, string> = {};
+  for (const name of names) {
+    const value = query.get(name);
+    if (value !== null && value !== "") params[name] = value;
+  }
+  return params;
+}

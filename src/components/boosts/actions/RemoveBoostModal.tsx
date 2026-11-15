@@ -6,6 +6,7 @@ import {
   boostRemoveImpact,
   boostRemoveNoRefund,
   boostRemoveTitle,
+  boostRemoveVanityNote,
   lostPerksIfRemoved,
 } from "@discordia/client-shared";
 
@@ -71,7 +72,12 @@ export function RemoveBoostModal({
             )}
           >
             <BoostLevelIcon level={change.to} size={20} bare />
-            <span>{boostRemoveImpact(boostCount)}</span>
+            <span>
+              {boostRemoveImpact(boostCount)}
+              {boostRemoveVanityNote(boostCount)
+                ? ` ${boostRemoveVanityNote(boostCount)}`
+                : null}
+            </span>
           </div>
         ) : null}
 
