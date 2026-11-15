@@ -8,7 +8,7 @@ import {
   MAX_ICON_FILE_MB,
   nextBoostLevel,
 } from "@discordia/client-shared";
-import { type FormEvent } from "react";
+import { type FormEvent, type ReactNode } from "react";
 
 import { BoostPerkHint } from "@/components/boosts/status/BoostPerkHint";
 import { BoostProgressStrip } from "@/components/boosts/status/BoostProgressStrip";
@@ -31,6 +31,8 @@ interface ServerProfileFormProps {
   titleId: string;
   onCancel: () => void;
   onBoost?: () => void;
+  /** URL de invitación personalizada: se guarda aparte, con su propio botón. */
+  vanityField?: ReactNode;
 }
 
 export function ServerProfileForm({
@@ -39,6 +41,7 @@ export function ServerProfileForm({
   titleId,
   onCancel,
   onBoost,
+  vanityField,
 }: ServerProfileFormProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -120,6 +123,8 @@ export function ServerProfileForm({
           isLocked={form.isBannerLocked}
           onSelect={form.choosePreset}
         />
+
+        {vanityField ? <div>{vanityField}</div> : null}
 
         <ServerNameField
           inputId={NAME_INPUT_ID}

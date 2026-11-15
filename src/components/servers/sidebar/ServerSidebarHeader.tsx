@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  hasBoostedBadge,
   hasModeratorPermissions,
   type OwnershipTransfer,
   pendingReportsLabel,
@@ -218,6 +219,11 @@ export function ServerSidebarHeader({
         <InviteModal
           serverId={server.id}
           serverName={server.name}
+          vanityCode={
+            hasBoostedBadge(serverBoostLevel(server))
+              ? (server.vanity_code ?? null)
+              : null
+          }
           onClose={closeModal}
         />
       ) : null}

@@ -1,14 +1,18 @@
 "use client";
 
-import type { ServerSummary } from "@discordia/client-shared";
+import {
+  hasBoostedBadge,
+  serverBoostLevel,
+  type ServerSummary,
+} from "@discordia/client-shared";
 import { ChevronDown } from "lucide-react";
 
+import { BoostedBadge } from "@/components/boosts/icons/BoostedBadge";
 import { Avatar } from "@/components/ui/Avatar";
 import { ServerBanner } from "@/components/ui/ServerBanner";
 import { serverBannerSrc, serverIconSrc } from "@/utils/image-urls";
 import { cn } from "@/lib/cn";
 
-/** Igual que `BANNER_HEIGHT` en app-mobile, para que las dos se vean igual. */
 const BANNER_HEIGHT = 88;
 
 interface ServerHeaderTriggerProps {
@@ -18,9 +22,6 @@ interface ServerHeaderTriggerProps {
   onToggle: () => void;
 }
 
-/**
- * El boton que abre el menu del servidor.
- */
 export function ServerHeaderTrigger({
   server,
   isBannerVisible,
@@ -28,6 +29,7 @@ export function ServerHeaderTrigger({
   onToggle,
 }: ServerHeaderTriggerProps) {
   const bannerSrc = isBannerVisible ? serverBannerSrc(server) : null;
+  const isBoosted = hasBoostedBadge(serverBoostLevel(server));
 
   if (!bannerSrc) {
     return (
@@ -43,9 +45,11 @@ export function ServerHeaderTrigger({
           size={24}
           className="rounded-full"
         />
-        <span className="font-display text-content min-w-0 flex-1 truncate text-left text-sm font-semibold">
+        <span className="font-display text-content min-w-0 truncate text-left text-sm font-semibold">
           {server.name}
         </span>
+        {isBoosted ? <BoostedBadge size={18} /> : null}
+        <span className="flex-1" />
         <ChevronDown
           size={16}
           className={cn(
@@ -76,9 +80,11 @@ export function ServerHeaderTrigger({
       />
 
       <span className="absolute right-3.5 bottom-2.5 left-3.5 flex items-center gap-1.5">
-        <span className="font-display min-w-0 flex-1 truncate text-left text-[15px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
+        <span className="font-display min-w-0 truncate text-left text-[15px] font-bold text-white drop-shadow-[0_1px_2px_rgba(0,0,0,0.6)]">
           {server.name}
         </span>
+        {isBoosted ? <BoostedBadge size={18} surface="dark" /> : null}
+        <span className="flex-1" />
         <ChevronDown
           size={16}
           className={cn(

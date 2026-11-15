@@ -27,6 +27,7 @@ import { env } from "@/lib/env";
  *   GET    /v1/servers/:id/icon                  -> binario | 401 | 404
  *   GET    /v1/servers/:id/banner                -> binario | 401 | 404
  *   GET    /v1/servers/:id/boosts                -> 200 resumen de boosts | 401 | 403 (no miembro) | 404
+ *   PATCH  /v1/servers/:id/vanity                -> 200 {vanity_code} | 400 vanity_code_invalid | 403 (permiso o boost_level_required) | 409 vanity_code_taken
  */
 
 export function listMyServers(
@@ -49,6 +50,18 @@ export function getServer(
 }
 
 /** Nivel, boosts y beneficios. Cualquier miembro lo puede pedir. */
+/** `code: null` la quita; ponerla pide nivel 3 y `MANAGE_SERVER`. */
+export function setVanityCode(
+  token: string,
+  serverId: string,
+  code: string | null,
+): Promise<ApiResult<{ vanity_code: string | null }>> {
+  return apiRequest<{ vanity_code: string | null }>(
+    `/v1/servers/${serverId}/vanity`,
+    { method: "PATCH", token, data: { code } },
+  );
+}
+
 export function getServerBoostSummary(
   token: string,
   serverId: string,

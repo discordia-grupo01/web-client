@@ -73,16 +73,27 @@ describe("POST /api/billing/boosts", () => {
 });
 
 describe("GET /api/billing/boosts", () => {
-  it("devuelve mis boosts", async () => {
-    listBoosts.mockResolvedValue({
-      ok: true,
-      status: 200,
-      data: { boosts: [BOOST] },
+  it("reenvía servidor y página y devuelve la página", async () => {
+    const page = {
+      boosts: [BOOST],
+      total: 13,
+      active: 7,
+      limit: 10,
+      offset: 0,
+    };
+    listBoosts.mockResolvedValue({ ok: true, status: 200, data: page });
+
+    const response = await GET(
+      new Request(
+        "http://localhost/api/billing/boosts?server_id=club&limit=10&offset=0",
+      ),
+    );
+
+    expect(listBoosts).toHaveBeenCalledWith("jwt", {
+      server_id: "club",
+      limit: "10",
+      offset: "0",
     });
-
-    const response = await GET();
-
-    expect(listBoosts).toHaveBeenCalledWith("jwt");
-    expect(await response.json()).toEqual({ ok: true, boosts: [BOOST] });
+    expect(await response.json()).toEqual({ ok: true, page });
   });
 });

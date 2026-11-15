@@ -1,6 +1,7 @@
 import type {
   Boost,
-  BoostsResponse,
+  BoostedServersPage,
+  BoostPage,
   CheckoutResponse,
   PointPurchase,
   PointsCheckoutRequest,
@@ -9,10 +10,7 @@ import type {
   PremiumCheckoutRequest,
   PremiumView,
 } from "@discordia/client-shared";
-import {
-  BILLING_HISTORY_MAX_LIMIT,
-  BOOSTS_LIST_MAX_LIMIT,
-} from "@discordia/client-shared";
+import { BILLING_HISTORY_MAX_LIMIT } from "@discordia/client-shared";
 
 import "server-only";
 
@@ -30,7 +28,8 @@ import { apiRequest, type ApiResult } from "@/lib/apiClient";
  *   POST /v1/billing/points/checkout     -> 201 {purchase_id, checkout_url} | 400 UNKNOWN_PACKAGE
  *   GET  /v1/billing/purchases/:id       -> 200 PointPurchase | 404 PURCHASE_NOT_FOUND
  *   POST /v1/billing/boosts              -> 202 Boost pending | 409 INSUFFICIENT_POINTS
- *   GET  /v1/billing/boosts?limit=       -> 200 {boosts}
+ *   GET  /v1/billing/boosts?server_id=&limit=&offset= -> 200 BoostPage (todos los estados)
+ *   GET  /v1/billing/boosts/servers?limit=&offset=    -> 200 BoostedServersPage
  *   GET  /v1/billing/boosts/:id          -> 200 Boost | 404 BOOST_NOT_FOUND
  *   DELETE /v1/billing/boosts/:id        -> 200 Boost removed | 409 BOOST_NOT_ACTIVE
  *
@@ -128,9 +127,27 @@ export function requestBoost(
   });
 }
 
-export function listBoosts(token: string): Promise<ApiResult<BoostsResponse>> {
-  return apiRequest<BoostsResponse>(
-    `/v1/billing/boosts?limit=${BOOSTS_LIST_MAX_LIMIT}`,
+function withQuery(path: string, params: Record<string, string>): string {
+  const query = new URLSearchParams(params).toString();
+  return query ? `${path}?${query}` : path;
+}
+
+export function listBoosts(
+  token: string,
+  params: Record<string, string>,
+): Promise<ApiResult<BoostPage>> {
+  return apiRequest<BoostPage>(withQuery("/v1/billing/boosts", params), {
+    method: "GET",
+    token,
+  });
+}
+
+export function listBoostedServers(
+  token: string,
+  params: Record<string, string>,
+): Promise<ApiResult<BoostedServersPage>> {
+  return apiRequest<BoostedServersPage>(
+    withQuery("/v1/billing/boosts/servers", params),
     { method: "GET", token },
   );
 }
