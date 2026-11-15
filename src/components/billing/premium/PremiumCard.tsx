@@ -21,8 +21,8 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { cn } from "@/lib/cn";
 import { cancelPremiumRequest } from "@/services/billing/client";
 
-import { BILLING_TONE_CLASS } from "./billingTone";
-import { DiscordiaPremiumMark } from "./DiscordiaIcons";
+import { BILLING_TONE_CLASS } from "../billingTone";
+import { DiscordiaPremiumMark } from "../icons/DiscordiaIcons";
 import { PremiumSubscribeButton } from "./PremiumSubscribeButton";
 
 interface PremiumCardProps {

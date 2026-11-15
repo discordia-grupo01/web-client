@@ -1,14 +1,14 @@
 import { Ban, FileText, Flag, type LucideIcon, Pen } from "lucide-react";
 
-import { BoostActionIcon } from "@/components/boosts/BoostActionIcon";
+import { BoostsSectionIcon } from "@/components/boosts/icons/BoostsSectionIcon";
 import type { SettingsSection } from "@/components/servers/utils/settingsSections";
 
 export const SECTION_ICONS: Record<
   SettingsSection,
-  LucideIcon | typeof BoostActionIcon
+  LucideIcon | typeof BoostsSectionIcon
 > = {
   profile: Pen,
-  boosts: BoostActionIcon,
+  boosts: BoostsSectionIcon,
   words: Ban,
   reports: Flag,
   audit: FileText,

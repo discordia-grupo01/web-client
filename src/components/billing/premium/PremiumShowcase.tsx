@@ -17,7 +17,10 @@ import { Button } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
-import { DiscordiaPremiumBadge, DiscordiaPremiumMark } from "./DiscordiaIcons";
+import {
+  DiscordiaPremiumBadge,
+  DiscordiaPremiumMark,
+} from "../icons/DiscordiaIcons";
 import { PremiumFacts } from "./PremiumFacts";
 import { PremiumPill } from "./PremiumPill";
 import { PremiumSubscribeButton } from "./PremiumSubscribeButton";

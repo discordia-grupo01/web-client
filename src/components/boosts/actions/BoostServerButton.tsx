@@ -1,6 +1,6 @@
 import { BOOST_SERVER_LABEL } from "@discordia/client-shared";
 
-import { BoostActionIcon } from "./BoostActionIcon";
+import { BoostActionIcon } from "../icons/BoostActionIcon";
 
 interface BoostServerButtonProps {
   onClick: () => void;

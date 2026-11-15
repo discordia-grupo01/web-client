@@ -7,9 +7,9 @@ import {
   nextBoostLevel,
 } from "@discordia/client-shared";
 
-import { BoostLevelIcon } from "./BoostLevelIcon";
+import { BoostLevelIcon } from "../icons/BoostLevelIcon";
 import { BoostProgressBar } from "./BoostProgressBar";
-import { BoostServerButton } from "./BoostServerButton";
+import { BoostServerButton } from "../actions/BoostServerButton";
 
 interface BoostProgressStripProps {
   level: BoostLevel;

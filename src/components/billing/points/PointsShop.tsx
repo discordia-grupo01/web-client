@@ -13,14 +13,16 @@ import { useState } from "react";
 import { Button } from "@/components/ui/Button";
 import { cn } from "@/lib/cn";
 
-import { DiscordiaPointIcon } from "./DiscordiaIcons";
+import { BoostPointsPromo } from "./BoostPointsPromo";
+import { DiscordiaPointIcon } from "../icons/DiscordiaIcons";
 
 interface PointsShopProps {
   packages: PointsPackage[];
   onBuy: (pack: PointsPackage) => void;
+  onShowBoosts: () => void;
 }
 
-export function PointsShop({ packages, onBuy }: PointsShopProps) {
+export function PointsShop({ packages, onBuy, onShowBoosts }: PointsShopProps) {
   const [selectedId, setSelectedId] = useState(
     packages[Math.floor(packages.length / 2)]?.id ?? null,
   );
@@ -34,6 +36,10 @@ export function PointsShop({ packages, onBuy }: PointsShopProps) {
       <p className="text-content-subtle mt-1 text-xs">
         {BILLING_COPY.buyPointsHint}
       </p>
+
+      <div className="mt-4">
+        <BoostPointsPromo onShowBoosts={onShowBoosts} />
+      </div>
 
       <div
         role="radiogroup"

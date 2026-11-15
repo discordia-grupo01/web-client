@@ -21,7 +21,11 @@ import { VoiceConnectedStrip } from "@/components/voice/VoiceConnectedStrip";
 import { cn } from "@/lib/cn";
 import { usePresenceOf } from "@/hooks/usePresence";
 import { ownAvatarSrc } from "@/utils/ownAvatar";
-import { takeRequestedSettingsSection } from "@/utils/settingsRequest";
+import { onServerBoostsRequested } from "@/utils/serverBoostsRequest";
+import {
+  onSettingsSectionOpened,
+  takeRequestedSettingsSection,
+} from "@/utils/settingsRequest";
 import { useOptionalNotifications } from "@/contexts/NotificationsContext";
 import { useOptionalVoiceSession } from "@/contexts/VoiceSessionContext";
 
@@ -51,6 +55,17 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
     setInitialSection(requested);
     setIsSettingsOpen(true);
   }, []);
+
+  useEffect(
+    () =>
+      onSettingsSectionOpened((section) => {
+        setInitialSection(section);
+        setIsSettingsOpen(true);
+      }),
+    [],
+  );
+
+  useEffect(() => onServerBoostsRequested(() => closeSettings()), []);
 
   function closeSettings() {
     setIsSettingsOpen(false);
@@ -159,6 +174,7 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
 
       {isSettingsOpen ? (
         <AccountSettingsModal
+          key={initialSection ?? "default"}
           onClose={closeSettings}
           initialSection={initialSection}
         />

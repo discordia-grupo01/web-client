@@ -8,7 +8,7 @@ import {
   hasBoostPerk,
 } from "@discordia/client-shared";
 
-import { BoostLevelIcon } from "./BoostLevelIcon";
+import { BoostLevelIcon } from "../icons/BoostLevelIcon";
 
 const ICON_SIZE = 24;
 

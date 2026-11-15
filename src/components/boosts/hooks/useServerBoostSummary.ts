@@ -29,7 +29,9 @@ export function useServerBoostSummary(serverId: string) {
     void load();
   }, [load]);
 
-  useRefreshOnChange({ resources: ["server"], serverId }, load);
+  // `boosts` llega a quien boosteó cuando su boost cambia de estado: alcanza
+  // para refrescar aunque el aviso `server` del servidor se pierda.
+  useRefreshOnChange({ resources: ["server", "boosts"], serverId }, load);
 
   return { summary, loadError, retry: load };
 }

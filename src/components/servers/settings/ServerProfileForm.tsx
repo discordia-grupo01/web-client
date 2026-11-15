@@ -10,9 +10,9 @@ import {
 } from "@discordia/client-shared";
 import { type FormEvent } from "react";
 
-import { BoostPerkHint } from "@/components/boosts/BoostPerkHint";
-import { BoostProgressStrip } from "@/components/boosts/BoostProgressStrip";
-import { BoostServerButton } from "@/components/boosts/BoostServerButton";
+import { BoostPerkHint } from "@/components/boosts/status/BoostPerkHint";
+import { BoostProgressStrip } from "@/components/boosts/status/BoostProgressStrip";
+import { BoostServerButton } from "@/components/boosts/actions/BoostServerButton";
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
 import { FormAlert } from "@/components/ui/FormAlert";
