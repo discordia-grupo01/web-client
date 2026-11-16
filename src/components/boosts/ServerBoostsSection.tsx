@@ -30,16 +30,18 @@ const TABS = BOOST_SECTION_TABS.map((value) => ({
 interface ServerBoostsSectionProps {
   server: ServerSummary;
   titleId: string;
+  initialTab?: BoostSectionTab;
   onBuyPoints: () => void;
 }
 
 export function ServerBoostsSection({
   server,
   titleId,
+  initialTab = "boost",
   onBuyPoints,
 }: ServerBoostsSectionProps) {
   const { summary, loadError, retry } = useServerBoostSummary(server.id);
-  const [tab, setTab] = useState<BoostSectionTab>("boost");
+  const [tab, setTab] = useState<BoostSectionTab>(initialTab);
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">

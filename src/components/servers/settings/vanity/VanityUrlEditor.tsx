@@ -48,10 +48,7 @@ export function VanityUrlEditor({
 
   return (
     <div className="space-y-2">
-      <label
-        htmlFor={inputId}
-        className="text-content-muted block text-xs font-bold tracking-wider uppercase"
-      >
+      <label htmlFor={inputId} className="sr-only">
         {VANITY_URL_COPY.title}
       </label>
       <div className="flex flex-wrap gap-2">

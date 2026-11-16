@@ -70,7 +70,7 @@ describe("VanityUrlField", () => {
     expect(setVanityCodeRequest).toHaveBeenCalledWith("s1", "club-de-lectura");
     expect(await screen.findByRole("button", { name: "Copiar" })).toBeTruthy();
     expect(screen.getByRole("button", { name: "Cambiar" })).toBeTruthy();
-    expect(screen.getByRole("button", { name: "Quitar" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "Quitar" })).toBeNull();
   });
 
   it("muestra el error del 409", async () => {

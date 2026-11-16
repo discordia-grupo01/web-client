@@ -1,25 +1,21 @@
 "use client";
 
 import {
-  ALLOWED_SERVER_ICON_TYPES,
-  ANIMATED_SERVER_ICON_UNLOCKED,
-  BOOST_PERK_LEVEL,
-  formatImageTypes,
-  MAX_ICON_FILE_MB,
-  nextBoostLevel,
+  canUseAnimatedServerIcon,
+  SERVER_BANNER_BENEFIT_COPY,
+  serverIconFormatsHint,
 } from "@discordia/client-shared";
 import { type FormEvent, type ReactNode } from "react";
 
-import { BoostPerkHint } from "@/components/boosts/status/BoostPerkHint";
+import { BoostBenefitField } from "@/components/boosts/benefits/BoostBenefitField";
 import { BoostProgressStrip } from "@/components/boosts/status/BoostProgressStrip";
-import { BoostServerButton } from "@/components/boosts/actions/BoostServerButton";
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { SectionLabel } from "@/components/ui/SectionLabel";
 
 import { type ServerSettingsForm } from "@/components/servers/hooks/useServerSettingsForm";
 import { ServerNameField } from "../ServerNameField";
+import { AnimatedIconField } from "./AnimatedIconField";
 import { BannerPresetPicker } from "./BannerPresetPicker";
 import { ServerIdentityEditor } from "./ServerIdentityEditor";
 
@@ -31,6 +27,8 @@ interface ServerProfileFormProps {
   titleId: string;
   onCancel: () => void;
   onBoost?: () => void;
+  /** "Ver qué suma cada nivel": Boosts del servidor en la pestaña Beneficios. */
+  onShowBenefits?: () => void;
   /** URL de invitación personalizada: se guarda aparte, con su propio botón. */
   vanityField?: ReactNode;
 }
@@ -41,6 +39,7 @@ export function ServerProfileForm({
   titleId,
   onCancel,
   onBoost,
+  onShowBenefits,
   vanityField,
 }: ServerProfileFormProps) {
   function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -48,16 +47,7 @@ export function ServerProfileForm({
     void form.submit();
   }
 
-  const boostStripInBanner =
-    nextBoostLevel(form.boostLevel) === BOOST_PERK_LEVEL.custom_banner;
-  const boostStrip = (compact: boolean) => (
-    <BoostProgressStrip
-      level={form.boostLevel}
-      boostCount={form.boostCount}
-      onBoost={onBoost}
-      compact={compact}
-    />
-  );
+  const displayName = form.name || serverName;
 
   return (
     <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
@@ -73,58 +63,15 @@ export function ServerProfileForm({
         </p>
       </div>
 
-      <div className="space-y-6 px-4 py-6 sm:px-7">
+      <div className="space-y-6 px-4 py-5 sm:px-7">
         <FormAlert message={form.globalError} />
 
-        <div>
-          <SectionLabel>Identidad del servidor</SectionLabel>
-          <div className="mt-2">
-            <ServerIdentityEditor
-              serverName={form.name || serverName}
-              iconSrc={form.iconPreviewSrc}
-              bannerSrc={form.bannerPreviewSrc}
-              bannerGradient={form.bannerPreviewGradient}
-              hasBanner={form.hasBanner}
-              isBannerLocked={form.isBannerLocked}
-              boostCount={form.boostCount}
-              bannerFooter={boostStripInBanner ? boostStrip(true) : undefined}
-              bannerAction={
-                boostStripInBanner && onBoost ? (
-                  <BoostServerButton onClick={onBoost} />
-                ) : undefined
-              }
-              iconTypes={form.iconTypes}
-              onPickIcon={form.pickIcon}
-              onPickBanner={form.pickBanner}
-              onRemoveBanner={form.removeBanner}
-            />
-          </div>
-          <FieldError message={form.iconError} />
-          <FieldError message={form.bannerError} />
-          <p className="text-content-subtle mt-2 text-[11px]">
-            {formatImageTypes(ALLOWED_SERVER_ICON_TYPES)} · Máx.{" "}
-            {MAX_ICON_FILE_MB} MB
-          </p>
-          <div className="mt-3">
-            <BoostPerkHint
-              perk="animated_icon"
-              level={form.boostLevel}
-              boostCount={form.boostCount}
-              unlockedHint={ANIMATED_SERVER_ICON_UNLOCKED}
-            />
-          </div>
-          {form.isBannerLocked && !boostStripInBanner ? (
-            <div className="mt-3">{boostStrip(false)}</div>
-          ) : null}
-        </div>
-
-        <BannerPresetPicker
-          selectedId={form.selectedPresetId}
-          isLocked={form.isBannerLocked}
-          onSelect={form.choosePreset}
+        <BoostProgressStrip
+          level={form.boostLevel}
+          boostCount={form.boostCount}
+          onBoost={onBoost}
+          onShowBenefits={onShowBenefits}
         />
-
-        {vanityField ? <div>{vanityField}</div> : null}
 
         <ServerNameField
           inputId={NAME_INPUT_ID}
@@ -132,6 +79,47 @@ export function ServerProfileForm({
           error={form.nameError}
           onChange={form.changeName}
         />
+
+        <BoostBenefitField
+          perk="custom_banner"
+          level={form.boostLevel}
+          boostCount={form.boostCount}
+          title={SERVER_BANNER_BENEFIT_COPY.title}
+        >
+          <ServerIdentityEditor
+            serverName={displayName}
+            iconSrc={form.iconPreviewSrc}
+            bannerSrc={form.bannerPreviewSrc}
+            bannerGradient={form.bannerPreviewGradient}
+            hasBanner={form.hasBanner}
+            isBannerLocked={form.isBannerLocked}
+            canUseGif={canUseAnimatedServerIcon(form.boostLevel)}
+            iconTypes={form.iconTypes}
+            onPickIcon={form.pickIcon}
+            onPickBanner={form.pickBanner}
+            onRemoveBanner={form.removeBanner}
+          />
+          <FieldError message={form.iconError} />
+          <FieldError message={form.bannerError} />
+          <p className="text-content-subtle text-[11px]">
+            {serverIconFormatsHint(form.boostLevel)}
+          </p>
+        </BoostBenefitField>
+
+        <AnimatedIconField
+          level={form.boostLevel}
+          boostCount={form.boostCount}
+          onPickIcon={form.pickIcon}
+        />
+
+        <BannerPresetPicker
+          selectedId={form.selectedPresetId}
+          level={form.boostLevel}
+          boostCount={form.boostCount}
+          onSelect={form.choosePreset}
+        />
+
+        {vanityField}
       </div>
 
       <div className="border-line flex items-center justify-end gap-3 border-t px-4 py-5 sm:px-7">

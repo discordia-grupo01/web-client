@@ -9,14 +9,9 @@ import { useCopyLink } from "@/hooks/useCopyLink";
 interface VanityUrlSavedProps {
   code: string;
   onChange: () => void;
-  onRemove: () => void;
 }
 
-export function VanityUrlSaved({
-  code,
-  onChange,
-  onRemove,
-}: VanityUrlSavedProps) {
+export function VanityUrlSaved({ code, onChange }: VanityUrlSavedProps) {
   const { copied, error, copy } = useCopyLink();
 
   return (
@@ -41,13 +36,6 @@ export function VanityUrlSaved({
             className="text-content-muted hover:text-content cursor-pointer rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors"
           >
             {VANITY_URL_COPY.change}
-          </button>
-          <button
-            type="button"
-            onClick={onRemove}
-            className="bg-danger-soft text-danger cursor-pointer rounded-lg px-3.5 py-2 text-xs font-semibold transition-colors hover:brightness-110"
-          >
-            {VANITY_URL_COPY.remove}
           </button>
         </div>
       </div>
