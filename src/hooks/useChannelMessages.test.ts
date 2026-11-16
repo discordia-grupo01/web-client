@@ -1,4 +1,8 @@
-import type { ListMessagesResult, Message } from "@discordia/client-shared";
+import {
+  type ListMessagesResult,
+  type Message,
+  NOT_FOUND_ATTEMPTS,
+} from "@discordia/client-shared";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -324,8 +328,9 @@ describe("useChannelMessages: join rechazado", () => {
     await waitFor(() => expect(room.join).toHaveBeenCalled());
     const notFound = { error: { code: "CHANNEL_NOT_FOUND" } };
 
-    act(() => room.joinPush.fire("error", notFound));
-    act(() => room.joinPush.fire("error", notFound));
+    for (let i = 1; i < NOT_FOUND_ATTEMPTS; i++) {
+      act(() => room.joinPush.fire("error", notFound));
+    }
     expect(view.result.current.status).toBe("loading");
     expect(room.leave).not.toHaveBeenCalled();
 
