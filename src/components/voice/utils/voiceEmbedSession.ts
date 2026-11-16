@@ -58,6 +58,7 @@ export function createVoiceEmbedSession(
   let microphoneEnabled = false;
   let cameraEnabled = false;
   const mutedForMe = new Set<string>();
+  let deafened = false;
   let participantsTimer: ReturnType<typeof setTimeout> | null = null;
   let participantsPending = false;
 
@@ -118,7 +119,7 @@ export function createVoiceEmbedSession(
   const applyVolumes = (current: Room) => {
     current.remoteParticipants.forEach((participant) => {
       const owner = audioOwnerOf(participant.identity);
-      participant.setVolume(mutedForMe.has(owner) ? 0 : 1);
+      participant.setVolume(deafened || mutedForMe.has(owner) ? 0 : 1);
     });
   };
 
@@ -292,6 +293,10 @@ export function createVoiceEmbedSession(
             applyVolumes(room);
             postParticipants(room);
           }
+          return;
+        case "setDeafened":
+          deafened = command.deafened;
+          if (room) applyVolumes(room);
           return;
         case "disconnect":
           disconnect();

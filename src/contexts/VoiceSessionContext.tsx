@@ -61,6 +61,7 @@ interface VoiceSessionValue {
   ) => void;
   leave: () => void;
   toggleMute: () => void;
+  toggleDeafen: () => void;
   toggleCamera: () => void;
   toggleScreenShare: () => void;
   toggleMutedForMe: (identity: string) => void;
@@ -109,10 +110,10 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const applyVolumes = useCallback((room: Room) => {
-    const { mutedForMe } = stateRef.current;
+    const { mutedForMe, deafened } = stateRef.current;
     room.remoteParticipants.forEach((participant) => {
       const owner = audioOwnerOf(participant.identity);
-      participant.setVolume(mutedForMe.includes(owner) ? 0 : 1);
+      participant.setVolume(deafened || mutedForMe.includes(owner) ? 0 : 1);
     });
   }, []);
 
@@ -314,7 +315,8 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
 
   // El mic, la camara y la pantalla siguen al estado: el boton cambia el
   // estado y aca se aplica en LiveKit. Si falla, se vuelve atras.
-  const { muted, canSpeak, cameraOn, screenSharing, mutedForMe } = state;
+  const { muted, canSpeak, cameraOn, screenSharing, mutedForMe, deafened } =
+    state;
   useEffect(() => {
     const room = roomRef.current;
     if (room?.state !== ConnectionState.Connected) return;
@@ -345,7 +347,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const room = roomRef.current;
     if (room) applyVolumes(room);
-  }, [mutedForMe, applyVolumes]);
+  }, [mutedForMe, deafened, applyVolumes]);
 
   // Cerrar sesion (o salir de la home) corta la llamada.
   useEffect(
@@ -372,6 +374,10 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   );
   const startLeave = useCallback(() => void leave(), [leave]);
   const toggleMute = useCallback(() => dispatch({ type: "toggle_mute" }), []);
+  const toggleDeafen = useCallback(
+    () => dispatch({ type: "toggle_deafen" }),
+    [],
+  );
   const toggleCamera = useCallback(
     () => dispatch({ type: "toggle_camera" }),
     [],
@@ -411,6 +417,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       connectWith: startConnectWith,
       leave: startLeave,
       toggleMute,
+      toggleDeafen,
       toggleCamera,
       toggleScreenShare,
       toggleMutedForMe,
@@ -428,6 +435,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       startConnectWith,
       startLeave,
       toggleMute,
+      toggleDeafen,
       toggleCamera,
       toggleScreenShare,
       toggleMutedForMe,
