@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  type BoostSectionTab,
   hasBoostedBadge,
   hasModeratorPermissions,
   type OwnershipTransfer,
   pendingReportsLabel,
   type Role,
+  serverBoostCount,
   serverBoostLevel,
   type ServerSummary,
 } from "@discordia/client-shared";
@@ -117,6 +119,7 @@ export function ServerSidebarHeader({
       }),
     [server.id],
   );
+  const [boostsTab, setBoostsTab] = useState<BoostSectionTab>("boost");
   const [pendingTransfer, setPendingTransfer] =
     useState<OwnershipTransfer | null>(null);
   const [isLoadingPendingTransfer, setIsLoadingPendingTransfer] =
@@ -171,6 +174,12 @@ export function ServerSidebarHeader({
 
   function closeModal() {
     setOpenModal(null);
+    setBoostsTab("boost");
+  }
+
+  function openBoosts(tab: BoostSectionTab) {
+    setBoostsTab(tab);
+    setOpenModal("boosts");
   }
 
   return (
@@ -224,7 +233,10 @@ export function ServerSidebarHeader({
               ? (server.vanity_code ?? null)
               : null
           }
+          boostLevel={serverBoostLevel(server)}
+          boostCount={serverBoostCount(server)}
           onClose={closeModal}
+          onOpenBoosts={openBoosts}
         />
       ) : null}
 
@@ -243,6 +255,7 @@ export function ServerSidebarHeader({
         <ServerSettingsModal
           server={server}
           openAt={openModal === "boosts" ? "boosts" : undefined}
+          openBoostsTab={boostsTab}
           isOwner={isOwner}
           canManageServer={canManageServer}
           canManageMessages={canManageMessages}
