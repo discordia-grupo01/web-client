@@ -2,12 +2,21 @@
 
 import {
   type User,
+  VOICE_DEAFEN_LABEL,
   VOICE_MODERATOR_MUTED,
+  VOICE_UNDEAFEN_LABEL,
   VOICE_MUTE_LABEL,
   VOICE_UNMUTE_LABEL,
 } from "@discordia/client-shared";
 
-import { Bell, Headphones, Mic, MicOff, Settings } from "lucide-react";
+import {
+  Bell,
+  HeadphoneOff,
+  Headphones,
+  Mic,
+  MicOff,
+  Settings,
+} from "lucide-react";
 import { useEffect, useState } from "react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
@@ -43,6 +52,8 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
   const status = usePresenceOf(user.id);
   const isMuted = voice?.state.muted ?? false;
   const canSpeak = voice?.state.canSpeak ?? true;
+  const isDeafened = voice?.state.deafened ?? false;
+  const deafenLabel = isDeafened ? VOICE_UNDEAFEN_LABEL : VOICE_DEAFEN_LABEL;
   const micLabel = !canSpeak
     ? VOICE_MODERATOR_MUTED
     : isMuted
@@ -156,10 +167,18 @@ export function UserPanel({ user, onClick }: UserPanelProps) {
           </button>
           <button
             type="button"
-            title="Silenciar audio"
-            className="text-content-muted hover:bg-surface-hover flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors"
+            title={deafenLabel}
+            aria-label={deafenLabel}
+            aria-pressed={isDeafened}
+            onClick={voice?.toggleDeafen}
+            className={cn(
+              "flex size-7 cursor-pointer items-center justify-center rounded-md transition-colors",
+              isDeafened
+                ? "text-danger hover:bg-danger/10"
+                : "text-content-muted hover:bg-surface-hover",
+            )}
           >
-            <Headphones size={15} />
+            {isDeafened ? <HeadphoneOff size={15} /> : <Headphones size={15} />}
           </button>
           <button
             type="button"
