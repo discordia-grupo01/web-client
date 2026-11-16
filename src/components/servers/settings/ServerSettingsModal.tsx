@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type BoostSectionTab,
   pendingReportsLabel,
   serverBoostCount,
   serverBoostLevel,
@@ -94,10 +95,21 @@ export function ServerSettingsModal({
     hasMenu && !openAt ? "menu" : "section",
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [boostsTab, setBoostsTab] = useState<BoostSectionTab>("boost");
+
+  function selectSection(target: SettingsSection) {
+    setBoostsTab("boost");
+    setSection(target);
+  }
 
   function openSectionOnMobile(target: SettingsSection) {
-    setSection(target);
+    selectSection(target);
     setMobileView("section");
+  }
+
+  function openBoostsAt(tab: BoostSectionTab) {
+    openSectionOnMobile("boosts");
+    setBoostsTab(tab);
   }
 
   return (
@@ -147,7 +159,7 @@ export function ServerSettingsModal({
               canDelete={isOwner}
               pendingReports={pendingReports}
               pendingReportsLabel={reportsLabel}
-              onSelect={setSection}
+              onSelect={selectSection}
               onDelete={() => setIsDeleteModalOpen(true)}
             />
           ) : null}
@@ -174,6 +186,7 @@ export function ServerSettingsModal({
               <ServerBoostsSection
                 server={server}
                 titleId={TITLE_ID}
+                initialTab={boostsTab}
                 onBuyPoints={onBuyPoints}
               />
             ) : section === "audit" ? (
@@ -186,7 +199,8 @@ export function ServerSettingsModal({
                 serverName={server.name}
                 titleId={TITLE_ID}
                 onCancel={onClose}
-                onBoost={() => openSectionOnMobile("boosts")}
+                onBoost={() => openBoostsAt("boost")}
+                onShowBenefits={() => openBoostsAt("benefits")}
                 vanityField={
                   <VanityUrlField
                     serverId={server.id}
