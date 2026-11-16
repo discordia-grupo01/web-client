@@ -1089,7 +1089,9 @@ function ServerViewContent({
             onDragEnd={handleDragEnd}
           >
             <div className="flex-1 space-y-3 overflow-y-auto px-2 py-1">
-              {uncategorized.length > 0 || canManageChannels ? (
+              {/* Vacia solo aparece al arrastrar un canal: si dependiera de los
+                  permisos, empujaria la lista cuando llegan los roles. */}
+              {uncategorized.length > 0 || draggingChannel !== null ? (
                 <CategoryDropZone
                   bucket={UNCATEGORIZED_BUCKET}
                   items={uncategorized.map((channel) => channel.id)}
