@@ -311,7 +311,9 @@ describe("MessageComposer con adjuntos", () => {
 
     await chooseFiles([big]);
 
-    expect(await screen.findByText(/tamaño máximo/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Pesa 11 MB. El límite es 10 MB."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("grande.pdf")).not.toBeInTheDocument();
   });
 
@@ -436,7 +438,9 @@ describe("MessageComposer con adjuntos Premium", () => {
       { applyAccept: false },
     );
 
-    expect(await screen.findByText(/tamaño máximo/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Pesa 51 MB. El límite es 50 MB."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("enorme.pdf")).toBeNull();
   });
 });
