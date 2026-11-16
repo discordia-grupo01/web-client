@@ -3,6 +3,7 @@ import {
   type VoiceBridgeCommand,
   type VoiceBridgeEvent,
   VOICE_BRIDGE_PARTICIPANTS_THROTTLE_MS,
+  voiceMediaErrorOf,
 } from "@discordia/client-shared";
 
 import {
@@ -95,8 +96,9 @@ export function createVoiceEmbedSession(
     const enabled = microphoneEnabled && canPublish(current);
     try {
       await current.localParticipant.setMicrophoneEnabled(enabled);
-    } catch {
-      if (enabled) post({ type: "error", error: "mic_denied" });
+    } catch (error) {
+      if (enabled)
+        post({ type: "error", error: voiceMediaErrorOf("mic", error) });
     }
   };
 
@@ -109,9 +111,9 @@ export function createVoiceEmbedSession(
     const enabled = cameraEnabled;
     try {
       await current.localParticipant.setCameraEnabled(enabled);
-    } catch {
+    } catch (error) {
       if (!enabled || !cameraEnabled) return;
-      post({ type: "error", error: "camera_denied" });
+      post({ type: "error", error: voiceMediaErrorOf("camera", error) });
       stopCamera();
     }
   };
