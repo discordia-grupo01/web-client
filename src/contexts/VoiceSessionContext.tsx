@@ -5,9 +5,11 @@ import {
   type PrivateCallCredentials,
   type PrivateCallTarget,
   VOICE_CONNECT_FAILED,
-  VOICE_MIC_DENIED,
   type VoiceChannelTarget,
   voiceDisconnectMessage,
+  type VoiceMediaError,
+  voiceMediaErrorMessage,
+  voiceMediaErrorOf,
   voiceSessionReducer,
   type VoiceSessionState,
   type VoiceSessionTarget,
@@ -36,6 +38,7 @@ import {
   type ReactNode,
 } from "react";
 
+import { VoiceMediaErrorDialog } from "@/components/voice/VoiceMediaErrorDialog";
 import {
   leaveVoiceSessionRequest,
   requestVoiceTokenRequest,
@@ -52,6 +55,7 @@ import {
 interface VoiceSessionValue {
   state: VoiceSessionState;
   mediaError: string | null;
+  dismissMediaError: () => void;
   isAudioBlocked: boolean;
   leaveSettledCount: number;
   join: (target: VoiceChannelTarget) => void;
@@ -61,6 +65,7 @@ interface VoiceSessionValue {
   ) => void;
   leave: () => void;
   toggleMute: () => void;
+  toggleDeafen: () => void;
   toggleCamera: () => void;
   toggleScreenShare: () => void;
   toggleMutedForMe: (identity: string) => void;
@@ -91,7 +96,19 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     voiceSessionReducer,
     initialVoiceSessionState,
   );
-  const [mediaError, setMediaError] = useState<string | null>(null);
+  // El codigo y no el texto: el modal necesita saber si fue el mic o la camara.
+  const [mediaErrorCode, setMediaErrorCode] = useState<VoiceMediaError | null>(
+    null,
+  );
+  // Un error nuevo vuelve a abrir el modal aunque el anterior se haya cerrado.
+  const [isMediaErrorDialogOpen, setIsMediaErrorDialogOpen] = useState(false);
+  const setMediaError = useCallback((code: VoiceMediaError | null) => {
+    setMediaErrorCode(code);
+    if (code) setIsMediaErrorDialogOpen(true);
+  }, []);
+  const mediaError = mediaErrorCode
+    ? voiceMediaErrorMessage(mediaErrorCode)
+    : null;
   const [isAudioBlocked, setIsAudioBlocked] = useState(false);
   const [leaveSettledCount, setLeaveSettledCount] = useState(0);
 
@@ -109,38 +126,45 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const applyVolumes = useCallback((room: Room) => {
-    const { mutedForMe } = stateRef.current;
+    const { mutedForMe, deafened } = stateRef.current;
     room.remoteParticipants.forEach((participant) => {
       const owner = audioOwnerOf(participant.identity);
-      participant.setVolume(mutedForMe.includes(owner) ? 0 : 1);
+      participant.setVolume(deafened || mutedForMe.includes(owner) ? 0 : 1);
     });
   }, []);
 
-  const teardown = useCallback((room: Room) => {
-    room.removeAllListeners();
-    room.remoteParticipants.forEach((participant) => {
-      participant.trackPublications.forEach((publication) => {
-        publication.track?.detach().forEach((element) => element.remove());
+  const teardown = useCallback(
+    (room: Room) => {
+      room.removeAllListeners();
+      room.remoteParticipants.forEach((participant) => {
+        participant.trackPublications.forEach((publication) => {
+          publication.track?.detach().forEach((element) => element.remove());
+        });
       });
-    });
-    if (roomRef.current === room) roomRef.current = null;
-    setIsAudioBlocked(false);
-    setMediaError(null);
-  }, []);
-
-  const applyMicrophone = useCallback(async (room: Room) => {
-    // El permiso se lee de LiveKit: el estado puede no haberse actualizado.
-    const canPublish = room.localParticipant.permissions?.canPublish !== false;
-    const enabled = !stateRef.current.muted && canPublish;
-    try {
-      await room.localParticipant.setMicrophoneEnabled(enabled);
+      if (roomRef.current === room) roomRef.current = null;
+      setIsAudioBlocked(false);
       setMediaError(null);
-    } catch {
-      if (!enabled) return;
-      setMediaError(VOICE_MIC_DENIED);
-      if (!stateRef.current.muted) dispatch({ type: "toggle_mute" });
-    }
-  }, []);
+    },
+    [setMediaError],
+  );
+
+  const applyMicrophone = useCallback(
+    async (room: Room) => {
+      // El permiso se lee de LiveKit: el estado puede no haberse actualizado.
+      const canPublish =
+        room.localParticipant.permissions?.canPublish !== false;
+      const enabled = !stateRef.current.muted && canPublish;
+      try {
+        await room.localParticipant.setMicrophoneEnabled(enabled);
+        setMediaError(null);
+      } catch (error) {
+        if (!enabled) return;
+        setMediaError(voiceMediaErrorOf("mic", error));
+        if (!stateRef.current.muted) dispatch({ type: "toggle_mute" });
+      }
+    },
+    [setMediaError],
+  );
 
   const listen = useCallback(
     (room: Room) => {
@@ -314,7 +338,8 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
 
   // El mic, la camara y la pantalla siguen al estado: el boton cambia el
   // estado y aca se aplica en LiveKit. Si falla, se vuelve atras.
-  const { muted, canSpeak, cameraOn, screenSharing, mutedForMe } = state;
+  const { muted, canSpeak, cameraOn, screenSharing, mutedForMe, deafened } =
+    state;
   useEffect(() => {
     const room = roomRef.current;
     if (room?.state !== ConnectionState.Connected) return;
@@ -324,12 +349,17 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const room = roomRef.current;
     if (room?.state !== ConnectionState.Connected) return;
-    room.localParticipant.setCameraEnabled(cameraOn).catch(() => {
-      if (stateRef.current.cameraOn === cameraOn) {
+    room.localParticipant
+      .setCameraEnabled(cameraOn)
+      .then(() => {
+        if (cameraOn) setMediaError(null);
+      })
+      .catch((error: unknown) => {
+        if (stateRef.current.cameraOn !== cameraOn) return;
+        if (cameraOn) setMediaError(voiceMediaErrorOf("camera", error));
         dispatch({ type: "toggle_camera" });
-      }
-    });
-  }, [cameraOn]);
+      });
+  }, [cameraOn, setMediaError]);
 
   useEffect(() => {
     const room = roomRef.current;
@@ -345,7 +375,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     const room = roomRef.current;
     if (room) applyVolumes(room);
-  }, [mutedForMe, applyVolumes]);
+  }, [mutedForMe, deafened, applyVolumes]);
 
   // Cerrar sesion (o salir de la home) corta la llamada.
   useEffect(
@@ -372,6 +402,10 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
   );
   const startLeave = useCallback(() => void leave(), [leave]);
   const toggleMute = useCallback(() => dispatch({ type: "toggle_mute" }), []);
+  const toggleDeafen = useCallback(
+    () => dispatch({ type: "toggle_deafen" }),
+    [],
+  );
   const toggleCamera = useCallback(
     () => dispatch({ type: "toggle_camera" }),
     [],
@@ -392,6 +426,10 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     () => dispatch({ type: "dismiss_notice" }),
     [],
   );
+  const dismissMediaError = useCallback(
+    () => setIsMediaErrorDialogOpen(false),
+    [],
+  );
   const startAudio = useCallback(() => {
     void roomRef.current?.startAudio();
   }, []);
@@ -405,12 +443,14 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     () => ({
       state,
       mediaError,
+      dismissMediaError,
       isAudioBlocked,
       leaveSettledCount,
       join: startJoin,
       connectWith: startConnectWith,
       leave: startLeave,
       toggleMute,
+      toggleDeafen,
       toggleCamera,
       toggleScreenShare,
       toggleMutedForMe,
@@ -422,12 +462,14 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     [
       state,
       mediaError,
+      dismissMediaError,
       isAudioBlocked,
       leaveSettledCount,
       startJoin,
       startConnectWith,
       startLeave,
       toggleMute,
+      toggleDeafen,
       toggleCamera,
       toggleScreenShare,
       toggleMutedForMe,
@@ -443,6 +485,13 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
       {children}
       {/* El audio de los demas: vive aca para seguir sonando en cualquier vista. */}
       <div ref={audioHostRef} hidden aria-hidden />
+      {/* El boton del mic o la camara puede estar fuera de la vista de la llamada. */}
+      {mediaErrorCode && isMediaErrorDialogOpen ? (
+        <VoiceMediaErrorDialog
+          error={mediaErrorCode}
+          onClose={dismissMediaError}
+        />
+      ) : null}
     </VoiceSessionContext.Provider>
   );
 }

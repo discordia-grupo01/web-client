@@ -3,6 +3,7 @@ import {
   type VoiceBridgeCommand,
   type VoiceBridgeEvent,
   VOICE_BRIDGE_PARTICIPANTS_THROTTLE_MS,
+  voiceMediaErrorOf,
 } from "@discordia/client-shared";
 
 import {
@@ -58,6 +59,7 @@ export function createVoiceEmbedSession(
   let microphoneEnabled = false;
   let cameraEnabled = false;
   const mutedForMe = new Set<string>();
+  let deafened = false;
   let participantsTimer: ReturnType<typeof setTimeout> | null = null;
   let participantsPending = false;
 
@@ -94,8 +96,9 @@ export function createVoiceEmbedSession(
     const enabled = microphoneEnabled && canPublish(current);
     try {
       await current.localParticipant.setMicrophoneEnabled(enabled);
-    } catch {
-      if (enabled) post({ type: "error", error: "mic_denied" });
+    } catch (error) {
+      if (enabled)
+        post({ type: "error", error: voiceMediaErrorOf("mic", error) });
     }
   };
 
@@ -108,9 +111,9 @@ export function createVoiceEmbedSession(
     const enabled = cameraEnabled;
     try {
       await current.localParticipant.setCameraEnabled(enabled);
-    } catch {
+    } catch (error) {
       if (!enabled || !cameraEnabled) return;
-      post({ type: "error", error: "camera_denied" });
+      post({ type: "error", error: voiceMediaErrorOf("camera", error) });
       stopCamera();
     }
   };
@@ -118,7 +121,7 @@ export function createVoiceEmbedSession(
   const applyVolumes = (current: Room) => {
     current.remoteParticipants.forEach((participant) => {
       const owner = audioOwnerOf(participant.identity);
-      participant.setVolume(mutedForMe.has(owner) ? 0 : 1);
+      participant.setVolume(deafened || mutedForMe.has(owner) ? 0 : 1);
     });
   };
 
@@ -292,6 +295,10 @@ export function createVoiceEmbedSession(
             applyVolumes(room);
             postParticipants(room);
           }
+          return;
+        case "setDeafened":
+          deafened = command.deafened;
+          if (room) applyVolumes(room);
           return;
         case "disconnect":
           disconnect();
