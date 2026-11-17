@@ -9,6 +9,7 @@ import {
   type BoostLevel,
   canBoostAttachmentLimit,
   canOfferPremiumForAttachment,
+  canUseCustomEmoji,
   EMOJI_PICKER_LABEL,
   MAX_MESSAGE_LENGTH,
   PREMIUM_ATTACHMENT_ACCEPT,
@@ -21,6 +22,7 @@ import {
 import { Paperclip, SendHorizontal, Smile } from "lucide-react";
 import {
   useId,
+  useMemo,
   useRef,
   useState,
   type FormEvent,
@@ -30,7 +32,9 @@ import {
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FieldError } from "@/components/ui/FieldError";
 import { cn } from "@/lib/cn";
+import { emojiImageSrc } from "@/utils/image-urls";
 
+import { useChatPremiumOffer } from "@/contexts/ChatPremiumOfferContext";
 import { useAttachmentUploads } from "@/components/messages/hooks/useAttachmentUploads";
 import type { SendMessageResult } from "@/hooks/useChannelMessages";
 import { useMentionDraft } from "@/components/messages/hooks/useMentionDraft";
@@ -46,6 +50,10 @@ import { requestServerBoosts } from "@/utils/serverBoostsRequest";
 
 import { AttachmentBoostOffer } from "./AttachmentBoostOffer";
 import { AttachmentPremiumOffer } from "./AttachmentPremiumOffer";
+import { CustomEmojiPremiumOffer } from "./CustomEmojiPremiumOffer";
+import { useCustomEmojiPicker } from "./hooks/useCustomEmojiPicker";
+import { emojiPreviews } from "./utils/emojiPreviews";
+import { useServerEmojiCatalog } from "@/contexts/ServerEmojisContext";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 
@@ -61,10 +69,12 @@ interface MessageComposerProps {
   uploadTarget: AttachmentTarget;
   /** Solo en canales de un servidor: en un DM los boosts no cambian el límite. */
   serverBoost?: { serverId: string; level: BoostLevel; boostCount: number };
+  /** El servidor del canal: `undefined` en un mensaje directo. */
+  server?: { id: string; name: string; icon_url: string | null };
   disabled?: boolean;
 }
 
-type AttachmentOffer = "none" | "boost" | "premium";
+type AttachmentOffer = "none" | "boost" | "premium" | "custom_emoji";
 
 function attachmentOfferFor(limits: AttachmentLimitOptions): AttachmentOffer {
   if (canBoostAttachmentLimit(limits)) return "boost";
@@ -77,6 +87,7 @@ export function MessageComposer({
   onSend,
   uploadTarget,
   serverBoost,
+  server,
   disabled = false,
 }: MessageComposerProps) {
   const { sources } = useMessageMentions();
@@ -90,6 +101,21 @@ export function MessageComposer({
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const { uploadAll, forget } = useAttachmentUploads();
   const premium = useOwnPremium();
+  // Sumarse a una reacción que pide Premium se ofrece acá abajo, porque el
+  // cartel va debajo del compositor y lo dispara un mensaje de la lista.
+  const premiumOffer = useChatPremiumOffer();
+  // Los emojis se piden recién cuando se abre el selector, una vez por sesión.
+  const { load: loadServerEmojis } = useServerEmojiCatalog();
+  const customEmojis = useCustomEmojiPicker(server?.id ?? null, premium);
+  // El `:nombre:` de los emojis elegidos se dibuja con su imagen al lado.
+  const previews = useMemo(
+    () =>
+      emojiPreviews(draft.text, draft.pickedEmojis, (id) => {
+        const emoji = customEmojis.byId[id];
+        return emoji ? emojiImageSrc(emoji.image_url) : null;
+      }),
+    [draft.text, draft.pickedEmojis, customEmojis.byId],
+  );
   const limits: AttachmentLimitOptions = {
     premium,
     serverLevel: serverBoost?.level,
@@ -107,6 +133,9 @@ export function MessageComposer({
   ) {
     setSendError(message);
     setOffer(nextOffer);
+    // La oferta por una reacción la disparó un mensaje de la lista; cualquier
+    // cosa que se haga acá abajo la deja atrás.
+    premiumOffer.clear();
   }
 
   function clearDraft() {
@@ -180,6 +209,27 @@ export function MessageComposer({
     editorRef.current?.focus();
   }
 
+  /**
+   * Un emoji del servidor se manda como `<:nombre:id>`. Si pide Premium y no
+   * hay, no se escribe nada: se muestra la oferta, igual que con los adjuntos.
+   */
+  function insertCustomEmoji(id: string) {
+    const emoji = customEmojis.byId[id];
+    if (!emoji) return;
+    if (
+      !canUseCustomEmoji({
+        emoji,
+        serverId: server?.id ?? null,
+        isPremium: premium,
+      })
+    ) {
+      showError(undefined, "custom_emoji");
+      return;
+    }
+    draft.pickEmoji(emoji);
+    editorRef.current?.focus();
+  }
+
   return (
     <form
       onSubmit={submit}
@@ -230,6 +280,7 @@ export function MessageComposer({
           ref={editorRef}
           value={draft.text}
           segments={draft.segments}
+          emojiPreviews={previews}
           onChange={(text, cursor) => {
             draft.handleChange(text, cursor);
             showError(undefined);
@@ -249,6 +300,15 @@ export function MessageComposer({
           icon={Smile}
           label={EMOJI_PICKER_LABEL}
           onPick={insertEmoji}
+          onPickCustom={insertCustomEmoji}
+          custom={customEmojis.categories}
+          lockedTooltips={customEmojis.lockedTooltips}
+          lockedCategoryIds={customEmojis.lockedCategoryIds}
+          showsPremiumNote={customEmojis.hasLocked}
+          onOpenPremium={() => openSettingsSection("subscriptions")}
+          onOpenChange={(isOpen) => {
+            if (isOpen) loadServerEmojis();
+          }}
           iconSize={18}
           triggerClassName={ICON_BUTTON}
         />
@@ -280,6 +340,17 @@ export function MessageComposer({
       ) : null}
       {offer === "premium" ? (
         <AttachmentPremiumOffer
+          onOpenPremium={() => openSettingsSection("subscriptions")}
+        />
+      ) : null}
+      {offer === "custom_emoji" ? (
+        <CustomEmojiPremiumOffer
+          onOpenPremium={() => openSettingsSection("subscriptions")}
+        />
+      ) : null}
+      {offer === "none" && premiumOffer.offer === "custom_emoji_reaction" ? (
+        <CustomEmojiPremiumOffer
+          variant="reaction"
           onOpenPremium={() => openSettingsSection("subscriptions")}
         />
       ) : null}

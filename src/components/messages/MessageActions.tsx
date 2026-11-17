@@ -13,11 +13,14 @@ import { Flag, Pencil, SmilePlus, Trash2 } from "lucide-react";
 import { cn } from "@/lib/cn";
 
 import { EmojiPicker } from "./EmojiPicker";
+import type { ReactionPickerProps } from "./hooks/useReactionEmojis";
 
 interface MessageActionsProps {
   canEdit: boolean;
   canDelete: boolean;
   onToggleReaction?: (emoji: string) => void;
+  /** Emojis del servidor en el selector de la barra. */
+  emojiPicker?: ReactionPickerProps;
   onEdit: () => void;
   onDelete: () => void;
   onReport?: () => void;
@@ -32,6 +35,7 @@ export function MessageActions({
   canEdit,
   canDelete,
   onToggleReaction,
+  emojiPicker,
   onEdit,
   onDelete,
   onReport,
@@ -59,6 +63,7 @@ export function MessageActions({
           label={ADD_REACTION_LABEL}
           onPick={onToggleReaction}
           triggerClassName={ACTION_BUTTON}
+          {...emojiPicker}
         />
       ) : null}
       {canEdit ? (

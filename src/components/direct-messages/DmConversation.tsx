@@ -10,6 +10,7 @@ import {
 
 import { MessageCircle } from "lucide-react";
 
+import { ChatPremiumOfferProvider } from "@/contexts/ChatPremiumOfferContext";
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { DmCallButton } from "@/components/private-call/DmCallButton";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
@@ -90,95 +91,97 @@ export function DmConversation({
   const { partner, blockedByMe, conversationId } = activeSummary;
 
   return (
-    <div
-      className="flex min-w-0 flex-1 flex-col overflow-hidden"
-      style={{ background: "var(--bg-chat)" }}
-    >
+    <ChatPremiumOfferProvider>
       <div
-        className="flex h-12 shrink-0 items-center gap-2 px-2 md:px-4"
-        style={{ borderBottom: "1px solid var(--border)" }}
+        className="flex min-w-0 flex-1 flex-col overflow-hidden"
+        style={{ background: "var(--bg-chat)" }}
       >
-        <MobileNavButton />
-        <button
-          type="button"
-          onClick={() => onOpenPartnerProfile(partner.id)}
-          aria-label={`Ver perfil de ${partner.name}`}
-          className="hover:bg-surface-hover flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 transition-colors"
+        <div
+          className="flex h-12 shrink-0 items-center gap-2 px-2 md:px-4"
+          style={{ borderBottom: "1px solid var(--border)" }}
         >
-          <span className="relative shrink-0">
-            <Avatar
-              name={partner.name}
-              src={partner.avatarUrl}
-              size={24}
-              className="rounded-full"
+          <MobileNavButton />
+          <button
+            type="button"
+            onClick={() => onOpenPartnerProfile(partner.id)}
+            aria-label={`Ver perfil de ${partner.name}`}
+            className="hover:bg-surface-hover flex min-w-0 cursor-pointer items-center gap-2 rounded-md px-1.5 py-1 transition-colors"
+          >
+            <span className="relative shrink-0">
+              <Avatar
+                name={partner.name}
+                src={partner.avatarUrl}
+                size={24}
+                className="rounded-full"
+              />
+              <ActivityStatusDot
+                status={partnerStatus}
+                size={10}
+                ringColor="var(--bg-chat)"
+                className="absolute -right-0.5 -bottom-0.5"
+              />
+            </span>
+            <span className="font-display text-content truncate text-sm font-semibold">
+              {partner.name}
+            </span>
+          </button>
+          {blockedByMe ? (
+            <span className="bg-danger/15 text-danger rounded-full px-2 py-0.5 text-[10px]">
+              {BLOCKED_BADGE_LABEL}
+            </span>
+          ) : null}
+          <div className="ml-auto flex shrink-0 items-center">
+            <DmCallButton
+              partner={partner}
+              conversationId={conversationId}
+              blockedByMe={blockedByMe}
             />
-            <ActivityStatusDot
-              status={partnerStatus}
-              size={10}
-              ringColor="var(--bg-chat)"
-              className="absolute -right-0.5 -bottom-0.5"
-            />
-          </span>
-          <span className="font-display text-content truncate text-sm font-semibold">
-            {partner.name}
-          </span>
-        </button>
-        {blockedByMe ? (
-          <span className="bg-danger/15 text-danger rounded-full px-2 py-0.5 text-[10px]">
-            {BLOCKED_BADGE_LABEL}
-          </span>
-        ) : null}
-        <div className="ml-auto flex shrink-0 items-center">
-          <DmCallButton
-            partner={partner}
-            conversationId={conversationId}
-            blockedByMe={blockedByMe}
-          />
+          </div>
         </div>
+
+        {conversationId ? (
+          <DmHistory
+            key={conversationId}
+            conversationId={conversationId}
+            partner={partner}
+            currentAuthor={currentAuthor}
+            withPending={pending.withPending}
+            onMessagesChange={pending.reconcile}
+            onRetryMessage={pending.retry}
+            onDiscardMessage={pending.discard}
+            onOpenProfile={onOpenProfile}
+          />
+        ) : (
+          // Borrador: nadie escribio todavia, no hay nada que pedirle al back.
+          <MessageList
+            welcome={<DmWelcome partner={partner} />}
+            label={`Conversación con ${partner.name}`}
+            messages={pending.withPending([])}
+            authors={{ [currentAuthor.id]: currentAuthor }}
+            currentUserId={currentAuthor.id}
+            canManageMessages={false}
+            canSendMessages
+            onToggleReaction={() => {}}
+            onEditMessage={() => {}}
+            onDeleteMessage={() => {}}
+            onRetryMessage={pending.retry}
+            onDiscardMessage={pending.discard}
+            onOpenProfile={onOpenProfile}
+          />
+        )}
+
+        {blockedByMe ? (
+          <p className="border-danger/20 bg-danger/10 text-danger mx-2 mb-2 rounded-lg border px-3 py-2 text-sm md:mx-4">
+            {DM_BLOCKED_CANNOT_SEND}
+          </p>
+        ) : null}
+        <MessageComposer
+          placeholder={dmInputPlaceholder(partner.name)}
+          onSend={pending.onSend}
+          uploadTarget={{ to: partner.id }}
+          disabled={blockedByMe}
+        />
       </div>
-
-      {conversationId ? (
-        <DmHistory
-          key={conversationId}
-          conversationId={conversationId}
-          partner={partner}
-          currentAuthor={currentAuthor}
-          withPending={pending.withPending}
-          onMessagesChange={pending.reconcile}
-          onRetryMessage={pending.retry}
-          onDiscardMessage={pending.discard}
-          onOpenProfile={onOpenProfile}
-        />
-      ) : (
-        // Borrador: nadie escribio todavia, no hay nada que pedirle al back.
-        <MessageList
-          welcome={<DmWelcome partner={partner} />}
-          label={`Conversación con ${partner.name}`}
-          messages={pending.withPending([])}
-          authors={{ [currentAuthor.id]: currentAuthor }}
-          currentUserId={currentAuthor.id}
-          canManageMessages={false}
-          canSendMessages
-          onToggleReaction={() => {}}
-          onEditMessage={() => {}}
-          onDeleteMessage={() => {}}
-          onRetryMessage={pending.retry}
-          onDiscardMessage={pending.discard}
-          onOpenProfile={onOpenProfile}
-        />
-      )}
-
-      {blockedByMe ? (
-        <p className="border-danger/20 bg-danger/10 text-danger mx-2 mb-2 rounded-lg border px-3 py-2 text-sm md:mx-4">
-          {DM_BLOCKED_CANNOT_SEND}
-        </p>
-      ) : null}
-      <MessageComposer
-        placeholder={dmInputPlaceholder(partner.name)}
-        onSend={pending.onSend}
-        uploadTarget={{ to: partner.id }}
-        disabled={blockedByMe}
-      />
-    </div>
+    </ChatPremiumOfferProvider>
   );
 }

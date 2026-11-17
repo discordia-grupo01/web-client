@@ -1204,6 +1204,8 @@ function ServerViewContent({
                   <ChannelChat
                     key={activeChannel.id}
                     serverId={server.id}
+                    serverName={server.name}
+                    serverIconUrl={server.icon_url}
                     boostLevel={serverBoostLevel(server)}
                     boostCount={serverBoostCount(server)}
                     channel={activeChannel}

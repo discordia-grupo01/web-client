@@ -1,13 +1,12 @@
 "use client";
 
 import type { LucideIcon } from "lucide-react";
-import { useId } from "react";
+import { useId, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { ModalShell } from "@/components/ui/ModalShell";
 
-interface ConfirmDialogProps {
-  icon: LucideIcon;
+interface ConfirmDialogBaseProps {
   title: string;
   body: string;
   confirmLabel: string;
@@ -16,8 +15,12 @@ interface ConfirmDialogProps {
   onCancel: () => void;
 }
 
+type ConfirmDialogProps = ConfirmDialogBaseProps &
+  ({ icon: LucideIcon; media?: never } | { icon?: never; media: ReactNode });
+
 export function ConfirmDialog({
   icon: Icon,
+  media,
   title,
   body,
   confirmLabel,
@@ -31,7 +34,7 @@ export function ConfirmDialog({
     <ModalShell onClose={onCancel} maxWidth={420} labelledBy={titleId}>
       <div className="flex flex-col items-center gap-5 px-7 py-8 text-center">
         <div className="bg-danger/15 text-danger flex size-16 shrink-0 items-center justify-center rounded-2xl">
-          <Icon size={28} />
+          {media ?? (Icon ? <Icon size={28} /> : null)}
         </div>
         <div>
           <h2

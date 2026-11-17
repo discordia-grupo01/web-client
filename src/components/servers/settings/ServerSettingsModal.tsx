@@ -11,6 +11,7 @@ import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
 import { ServerBoostsSection } from "@/components/boosts/ServerBoostsSection";
+import { ServerEmojisSection } from "@/components/emojis/ServerEmojisSection";
 import { ModerationAuditSection } from "@/components/moderation-audit/ModerationAuditSection";
 import { ReportsSection } from "@/components/reports/ReportsSection";
 import { ModalShell } from "@/components/ui/ModalShell";
@@ -43,7 +44,7 @@ interface ServerSettingsModalProps {
   canReviewReports: boolean;
   pendingReports: number;
   currentUserId: string | null;
-  /** La sección con la que abre, si se entra desde un atajo (Boosts). */
+  /** La sección con la que abre, si se entra desde un atajo (Boosts, Emojis). */
   openAt?: SettingsSection;
   openBoostsTab?: BoostSectionTab;
   onClose: () => void;
@@ -193,6 +194,12 @@ export function ServerSettingsModal({
               />
             ) : section === "audit" ? (
               <ModerationAuditSection serverId={server.id} titleId={TITLE_ID} />
+            ) : section === "emojis" ? (
+              <ServerEmojisSection
+                server={server}
+                canManageServer={canManageServer}
+                titleId={TITLE_ID}
+              />
             ) : section === "words" ? (
               <WordFilterSection serverId={server.id} titleId={TITLE_ID} />
             ) : (

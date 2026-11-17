@@ -9,6 +9,7 @@ import {
 } from "@discordia/client-shared";
 
 import {
+  type CSSProperties,
   forwardRef,
   type HTMLAttributes,
   type KeyboardEvent,
@@ -45,6 +46,7 @@ import { cn } from "@/lib/cn";
 import type { DraftLeaf } from "@/types/slate.types";
 
 import { FormatToolbar } from "./FormatToolbar";
+import type { EmojiPreview } from "./utils/emojiPreviews";
 import {
   lineStarts,
   offsetToPoint,
@@ -70,6 +72,8 @@ type EditableAttributes = Omit<
 interface MessageEditorProps extends EditableAttributes {
   value: string;
   segments: DraftSegment[] | null;
+  /** Emojis del servidor del borrador: se dibujan con su imagen al lado. */
+  emojiPreviews?: EmojiPreview[];
   onChange: (text: string, cursor: number) => void;
   onCursorMove: (cursor: number) => void;
   onKeyDown?: (event: KeyboardEvent<HTMLDivElement>) => void;
@@ -80,6 +84,48 @@ interface MessageEditorProps extends EditableAttributes {
 }
 
 const SHORTCUTS: Record<string, MarkdownFormat> = { b: "bold", i: "italic" };
+
+/** Lado de la imagen del emoji en el cuadro de texto. */
+const EMOJI_PREVIEW_PX = 20;
+
+/**
+ * En lugar del `:nombre:` se ve la imagen, como con cualquier otro emoji.
+ *
+ * El texto no se saca: todo el editor cuenta posiciones sobre texto plano (el
+ * cursor, las menciones, los rangos de markdown y lo que se manda al enviar),
+ * así que meter un nodo aparte correría todas esas cuentas. Se lo deja donde
+ * está y se lo esconde con `font-size: 0`, que lo deja sin ancho; el
+ * `inline-block` con medidas es lo que le da caja a la imagen de fondo, porque
+ * sin eso un renglón de texto de cero no tiene alto y no se vería nada.
+ *
+ * Como el texto queda escondido, el cursor nunca puede quedar adentro: las
+ * flechas lo saltan entero y una tecla de borrar se lleva el `:nombre:`
+ * completo (`moveCaretOutOfEmoji` y `handleEmojiKey`). Si no, al borrar una sola
+ * letra lo que queda deja de ser un emoji elegido y reaparece como texto.
+ *
+ * Dos detalles de CSS que no son opcionales:
+ *
+ * - El alineado va en palabra clave, no en `em`: `em` se mide contra el
+ *   `font-size` del propio elemento, que acá es 0, así que cualquier `-0.3em`
+ *   termina valiendo 0. Sin alineado el `inline-block` apoya su *tope* en la
+ *   línea de base, o sea que la imagen cuelga entera por debajo del renglón.
+ * - `background-size: contain` en lugar de medidas fijas: los emojis no son
+ *   todos cuadrados y estirarlos a 20×20 los deforma.
+ */
+function emojiChipStyle(src: string): CSSProperties {
+  return {
+    display: "inline-block",
+    width: EMOJI_PREVIEW_PX,
+    height: EMOJI_PREVIEW_PX,
+    verticalAlign: "middle",
+    fontSize: 0,
+    lineHeight: `${EMOJI_PREVIEW_PX}px`,
+    backgroundImage: `url("${src}")`,
+    backgroundRepeat: "no-repeat",
+    backgroundPosition: "center",
+    backgroundSize: "contain",
+  };
+}
 
 const STYLE_PROPS: Record<MarkdownRange["style"], Partial<DraftLeaf>> = {
   bold: { bold: true },
@@ -105,6 +151,7 @@ export const MessageEditor = forwardRef<
   {
     value,
     segments,
+    emojiPreviews,
     onChange,
     onCursorMove,
     onKeyDown,
@@ -149,12 +196,41 @@ export const MessageEditor = forwardRef<
     editor.onChange();
   }, [value, editor]);
 
+  /** El emoji que el cursor está tocando de ese lado, si hay alguno. */
+  const emojiBeside = useCallback(
+    (offset: number, side: "before" | "after"): EmojiPreview | null =>
+      (emojiPreviews ?? []).find((preview) =>
+        side === "before"
+          ? offset > preview.start && offset <= preview.end
+          : offset >= preview.start && offset < preview.end,
+      ) ?? null,
+    [emojiPreviews],
+  );
+
+  /**
+   * El `:nombre:` escondido no tiene ancho, así que un clic adentro deja el
+   * cursor en un lugar que no se ve. Se lo manda al borde más cercano; como ahí
+   * ya no está adentro, el `onChange` que dispara esto no vuelve a entrar.
+   */
+  function moveCaretOutOfEmoji(cursor: number): boolean {
+    if (!editor.selection || !Range.isCollapsed(editor.selection)) return false;
+    const inside = (emojiPreviews ?? []).find(
+      (preview) => cursor > preview.start && cursor < preview.end,
+    );
+    if (!inside) return false;
+    const edge =
+      cursor - inside.start <= inside.end - cursor ? inside.start : inside.end;
+    Transforms.select(editor, offsetToPoint(editor, edge));
+    return true;
+  }
+
   function handleChange(nodes: Descendant[]) {
     const cursor = editor.selection
       ? pointToOffset(editor, Range.start(editor.selection))
       : 0;
     const text = valueToText(nodes);
     if (text === lastText.current) {
+      if (moveCaretOutOfEmoji(cursor)) return;
       onCursorMove(cursor);
       return;
     }
@@ -192,6 +268,41 @@ export const MessageEditor = forwardRef<
     [editor],
   );
 
+  /**
+   * El emoji se mueve y se borra como si fuera un solo carácter. Devuelve
+   * `true` si la tecla era suya (hay que cortar ahí).
+   */
+  function handleEmojiKey(event: KeyboardEvent<HTMLDivElement>): boolean {
+    const isArrow = event.key === "ArrowLeft" || event.key === "ArrowRight";
+    const isDelete = event.key === "Backspace" || event.key === "Delete";
+    if (!isArrow && !isDelete) return false;
+    // Con Shift se está seleccionando, y con los modificadores son atajos.
+    if (isArrow && event.shiftKey) return false;
+    if (event.ctrlKey || event.metaKey || event.altKey) return false;
+    if (!editor.selection || !Range.isCollapsed(editor.selection)) return false;
+
+    const backwards = event.key === "ArrowLeft" || event.key === "Backspace";
+    const cursor = pointToOffset(editor, Range.start(editor.selection));
+    const emoji = emojiBeside(cursor, backwards ? "before" : "after");
+    if (!emoji) return false;
+
+    event.preventDefault();
+    if (isDelete) {
+      Transforms.delete(editor, {
+        at: {
+          anchor: offsetToPoint(editor, emoji.start),
+          focus: offsetToPoint(editor, emoji.end),
+        },
+      });
+    } else {
+      Transforms.select(
+        editor,
+        offsetToPoint(editor, backwards ? emoji.start : emoji.end),
+      );
+    }
+    return true;
+  }
+
   function handleKeyDown(event: KeyboardEvent<HTMLDivElement>) {
     const format = SHORTCUTS[event.key.toLowerCase()];
     if (format && (event.ctrlKey || event.metaKey) && !event.altKey) {
@@ -199,6 +310,7 @@ export const MessageEditor = forwardRef<
       applyFormat(format);
       return;
     }
+    if (handleEmojiKey(event)) return;
     onKeyDown?.(event);
   }
 
@@ -237,8 +349,16 @@ export const MessageEditor = forwardRef<
       }
       offset += segment.value.length;
     }
+
+    for (const preview of emojiPreviews ?? []) {
+      all.push({
+        start: preview.start,
+        end: preview.end,
+        props: { emojiStyle: emojiChipStyle(preview.src) },
+      });
+    }
     return { all, quoteStarts };
-  }, [value, segments, theme, sources]);
+  }, [value, segments, emojiPreviews, theme, sources]);
 
   const decorate = useCallback(
     ([node, path]: NodeEntry): Range[] => {
@@ -292,7 +412,9 @@ export const MessageEditor = forwardRef<
         autoFocus={autoFocus}
         onKeyDown={handleKeyDown}
         className={cn(
-          "max-h-[200px] overflow-y-auto break-words whitespace-pre-wrap",
+          // El renglón ya reserva el alto del emoji, así que la caja no salta
+          // al insertar uno.
+          "max-h-[200px] overflow-y-auto leading-[22px] break-words whitespace-pre-wrap",
           className,
         )}
       />
@@ -304,7 +426,7 @@ function renderLeaf({ attributes, children, leaf }: RenderLeafProps) {
   return (
     <span
       {...attributes}
-      style={leaf.mentionStyle}
+      style={leaf.emojiStyle ?? leaf.mentionStyle}
       className={cn(
         leaf.bold && "font-bold",
         leaf.italic && "italic",
