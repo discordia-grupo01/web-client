@@ -26,6 +26,8 @@ export interface DraftLeaf extends PlainText {
   heading?: 1 | 2 | 3;
   subtext?: true;
   mentionStyle?: CSSProperties;
+  /** Un `:nombre:` de un emoji del servidor: lleva su imagen de fondo. */
+  emojiStyle?: CSSProperties;
 }
 
 declare module "slate" {
