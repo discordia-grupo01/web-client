@@ -127,6 +127,7 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
       {tab === "premium" ? (
         <PremiumShowcase
           premium={state.premium}
+          profile={ownProfile?.profile ?? user}
           onManage={() => onNavigate("subscriptions")}
         />
       ) : null}
