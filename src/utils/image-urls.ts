@@ -1,4 +1,6 @@
-import type { ServerSummary } from "@discordia/client-shared";
+import { resolveImageUrl, type ServerSummary } from "@discordia/client-shared";
+
+import { env } from "@/lib/env";
 
 /**
  * El icono y el banner del servidor se sirven por el BFF
@@ -34,4 +36,19 @@ export function serverIconSrc(server: ServerImages): string | null {
 export function serverBannerSrc(server: ServerImages): string | null {
   if (!server.banner_url) return null;
   return `/api/servers/${server.id}/banner${versionQuery(server.banner_url)}`;
+}
+
+/**
+ * Imagen de un emoji personalizado. A diferencia del icono y el banner no pasa
+ * por el BFF: con Supabase el back manda una URL publica y absoluta, que el
+ * `<img>` pide derecho.
+ *
+ * Con el almacenamiento local (`LocalStore`) manda una ruta relativa
+ * (`/v1/servers/:id/emojis/:key/image`) que se resuelve contra el gateway. Esa
+ * ruta todavia esta dentro de `servers-routes` en Kong, que pide JWT, asi que
+ * en el stack local la imagen no carga hasta que el back la sume a
+ * `servers-public` como ya estan el icono y el banner. En produccion no pasa.
+ */
+export function emojiImageSrc(imageUrl: string): string {
+  return resolveImageUrl(imageUrl, env.uploadUrl) ?? "";
 }

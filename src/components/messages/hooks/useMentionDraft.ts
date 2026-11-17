@@ -3,6 +3,7 @@
 import {
   applyMentionCandidate,
   createMentionDraft,
+  type CustomEmojiRef,
   type DraftSegment,
   draftSegments,
   type MentionCandidate,
@@ -118,6 +119,8 @@ export function useMentionDraft({
   return {
     text: state.text,
     segments,
+    /** Los emojis del servidor elegidos, para dibujarlos con su imagen. */
+    pickedEmojis: state.pickedEmojis,
     encoded: view.encoded,
     isOpen: view.isOpen,
     query: view.active?.query ?? "",
@@ -128,6 +131,9 @@ export function useMentionDraft({
     handleSuggestionKey,
     pick,
     append: (text: string) => dispatch({ type: "append", text }),
+    /** Un emoji del servidor: se ve `:nombre:` y al enviar viaja el token. */
+    pickEmoji: (emoji: CustomEmojiRef) =>
+      dispatch({ type: "pickEmoji", emoji }),
     reset: () => dispatch({ type: "reset" }),
   };
 }

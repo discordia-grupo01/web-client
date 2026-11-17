@@ -28,6 +28,19 @@ interface UseFloatingPanelOptions {
   align?: "left" | "right" | "stretch" | "side";
 }
 
+function samePosition(
+  a: FloatingPanelPosition | null,
+  b: FloatingPanelPosition,
+): boolean {
+  return (
+    a !== null &&
+    a.top === b.top &&
+    a.left === b.left &&
+    a.right === b.right &&
+    a.width === b.width
+  );
+}
+
 /**
  * Lógica (sin markup) para un panel que necesita escapar del `overflow`
  * recortado de un ancestro (ej. un modal con scroll): calcula la posición en
@@ -37,10 +50,11 @@ interface UseFloatingPanelOptions {
  * portar (`createPortal`) su panel a `document.body` con
  * `position: fixed` y el `top/left/right/width` que devuelve acá.
  *
- * Solo hace falta para el caso puntual que de verdad lo necesita (hoy: el
- * selector de "Añadir rol" en el perfil, dentro del modal con scroll) --
- * el resto de los menus/selects se posicionan inline porque nunca mostraron
- * el problema de recorte.
+ * La posición depende del alto del panel, así que un panel cuyo contenido
+ * llega tarde (`next/dynamic`, un web component que arma su shadow DOM en
+ * otro frame) se mediría en cero y quedaría mal ubicado: por eso se espera a
+ * tener alto real antes de publicar una posición y se vuelve a calcular con
+ * un `ResizeObserver` cada vez que el panel cambia de tamaño.
  */
 export function useFloatingPanel({
   enabled,
@@ -63,15 +77,24 @@ export function useFloatingPanel({
       if (!anchor) return;
       const rect = anchor.getBoundingClientRect();
 
-      const panelWidth = panelRef.current?.offsetWidth ?? 0;
-      const panelHeight = panelRef.current?.offsetHeight ?? 0;
+      const panel = panelRef.current;
+      const panelWidth = panel?.offsetWidth ?? 0;
+      const panelHeight = panel?.offsetHeight ?? 0;
+
+      // El panel ya está montado pero todavía sin contenido: ubicarlo con alto
+      // cero lo dejaría colgando fuera de la pantalla. El ResizeObserver avisa
+      // apenas tenga alto y se recalcula con la medida buena.
+      if (panel && panelHeight === 0) return;
+
+      const publish = (next: FloatingPanelPosition) =>
+        setPosition((prev) => (samePosition(prev, next) ? prev : next));
 
       if (align === "side") {
         const fitsRight =
           rect.right + GAP + panelWidth <= window.innerWidth - VIEWPORT_MARGIN;
         const fitsLeft = rect.left - GAP - panelWidth >= VIEWPORT_MARGIN;
         const maxTop = window.innerHeight - VIEWPORT_MARGIN - panelHeight;
-        setPosition({
+        publish({
           top: Math.max(VIEWPORT_MARGIN, Math.min(rect.top, maxTop)),
           left:
             !fitsRight && fitsLeft
@@ -115,13 +138,22 @@ export function useFloatingPanel({
         }
       }
 
-      setPosition(next);
+      publish(next);
     }
 
     computePosition();
     window.addEventListener("scroll", computePosition, true);
     window.addEventListener("resize", computePosition);
+
+    const panel = panelRef.current;
+    let observer: ResizeObserver | undefined;
+    if (panel && typeof ResizeObserver !== "undefined") {
+      observer = new ResizeObserver(() => computePosition());
+      observer.observe(panel);
+    }
+
     return () => {
+      observer?.disconnect();
       window.removeEventListener("scroll", computePosition, true);
       window.removeEventListener("resize", computePosition);
     };

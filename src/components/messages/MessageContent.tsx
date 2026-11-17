@@ -1,5 +1,6 @@
 import {
   isActiveMention,
+  isEmojiOnlyContent,
   MENTION_DELETED_ROLE_NAME,
   type MessageBlock,
   type MessageInline,
@@ -12,6 +13,7 @@ import {
 
 import { Fragment, type ReactNode } from "react";
 
+import { CustomEmojiImage } from "./CustomEmojiImage";
 import { HighlightedCode } from "./HighlightedCode";
 import { MentionChip } from "./MentionChip";
 import { Spoiler } from "./Spoiler";
@@ -44,6 +46,8 @@ export function MessageContent({
 }: MessageContentProps) {
   const { resolveMention } = useMessageMentions();
   const blocks = parseMessageMarkdown(content);
+  // Un mensaje sin texto se lee mejor con los emojis grandes.
+  const emojiSize = isEmojiOnlyContent(content) ? 48 : 22;
   const lastIndex = blocks.length - 1;
   const suffixInline =
     blocks.length > 0 && blocks[lastIndex].kind !== "code-block";
@@ -104,6 +108,15 @@ export function MessageContent({
           );
         case "channel":
           return <MentionChip key={index} text={node.value} />;
+        case "custom_emoji":
+          return (
+            <CustomEmojiImage
+              key={index}
+              id={node.id}
+              name={node.name}
+              size={emojiSize}
+            />
+          );
       }
 
       if (!isActiveMention(node, mentions)) {

@@ -21,6 +21,7 @@ import type { ReactNode } from "react";
 import { cn } from "@/lib/cn";
 
 import { useMessageHighlight } from "@/components/messages/hooks/useMessageHighlight";
+import { useReactionEmojis } from "@/components/messages/hooks/useReactionEmojis";
 import { useStickyScroll } from "@/components/messages/hooks/useStickyScroll";
 
 import { MessageItem, type MessageEditOutcome } from "./MessageItem";
@@ -37,6 +38,11 @@ interface MessageListProps {
   canSendMessages: boolean;
   /** `ADD_REACTIONS` del usuario actual en el servidor. */
   canAddReactions?: boolean;
+  /**
+   * El servidor del chat: decide qué emojis se pueden usar para reaccionar sin
+   * Premium. En un mensaje directo no va, y ahí todos lo piden.
+   */
+  serverId?: string | null;
   /** Hay mensajes anteriores sin cargar (paginacion del historial). */
   hasMore?: boolean;
   isLoadingOlder?: boolean;
@@ -71,6 +77,7 @@ export function MessageList({
   canManageMessages,
   canSendMessages,
   canAddReactions = true,
+  serverId = null,
   hasMore = false,
   isLoadingOlder = false,
   onLoadOlder,
@@ -91,6 +98,7 @@ export function MessageList({
     focusedMessage,
   });
   const highlightedId = useMessageHighlight(focusedMessage);
+  const reactionEmojis = useReactionEmojis(serverId);
 
   return (
     <div
@@ -157,6 +165,7 @@ export function MessageList({
                   onToggleReaction(message.id, emoji)
                 }
                 canAddReactions={canAddReactions}
+                reactionEmojis={reactionEmojis}
                 onOpenProfile={onOpenProfile}
                 onEdit={(content) => onEditMessage(message.id, content)}
                 onDelete={() => onDeleteMessage(message.id)}

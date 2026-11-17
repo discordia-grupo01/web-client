@@ -3,14 +3,14 @@ import { describe, expect, it } from "vitest";
 import { initialSection, visibleSections } from "./settingsSections";
 
 describe("visibleSections", () => {
-  it("muestra el perfil, los boosts y las palabras con los dos permisos", () => {
+  it("muestra perfil, boosts, emojis y palabras con los dos permisos", () => {
     expect(
       visibleSections({
         canManageServer: true,
         canManageMessages: true,
         canReviewReports: false,
       }),
-    ).toEqual(["profile", "boosts", "words"]);
+    ).toEqual(["profile", "boosts", "emojis", "words"]);
   });
 
   it("muestra el perfil y los boosts con MANAGE_SERVER", () => {
@@ -20,7 +20,7 @@ describe("visibleSections", () => {
         canManageMessages: false,
         canReviewReports: false,
       }),
-    ).toEqual(["profile", "boosts"]);
+    ).toEqual(["profile", "boosts", "emojis"]);
   });
 
   it("muestra los boosts y las palabras prohibidas con MANAGE_MESSAGES", () => {
@@ -30,7 +30,7 @@ describe("visibleSections", () => {
         canManageMessages: true,
         canReviewReports: false,
       }),
-    ).toEqual(["boosts", "words"]);
+    ).toEqual(["boosts", "emojis", "words"]);
   });
 
   it("suma Reportes y el registro de auditoría al final para un moderador", () => {
@@ -40,22 +40,29 @@ describe("visibleSections", () => {
         canManageMessages: true,
         canReviewReports: true,
       }),
-    ).toEqual(["boosts", "words", "reports", "audit"]);
+    ).toEqual(["boosts", "emojis", "words", "reports", "audit"]);
   });
 
-  it("a un miembro sin permisos le muestra solo los boosts", () => {
+  it("a un miembro sin permisos le muestra los boosts y los emojis", () => {
     expect(
       visibleSections({
         canManageServer: false,
         canManageMessages: false,
         canReviewReports: false,
       }),
-    ).toEqual(["boosts"]);
+    ).toEqual(["boosts", "emojis"]);
   });
 });
 
 describe("initialSection", () => {
-  const all = ["profile", "boosts", "words", "reports", "audit"] as const;
+  const all = [
+    "profile",
+    "boosts",
+    "emojis",
+    "words",
+    "reports",
+    "audit",
+  ] as const;
 
   it("abre en la sección pedida", () => {
     expect(
@@ -77,16 +84,18 @@ describe("initialSection", () => {
       "profile",
     );
     expect(
-      initialSection(["boosts", "words"], { hasPendingReports: false }),
+      initialSection(["boosts", "emojis", "words"], {
+        hasPendingReports: false,
+      }),
     ).toBe("words");
-    expect(initialSection(["boosts"], { hasPendingReports: false })).toBe(
-      "boosts",
-    );
+    expect(
+      initialSection(["boosts", "emojis"], { hasPendingReports: false }),
+    ).toBe("boosts");
   });
 
   it("ignora una sección pedida que no se ve", () => {
     expect(
-      initialSection(["boosts"], {
+      initialSection(["boosts", "emojis"], {
         requested: "reports",
         hasPendingReports: false,
       }),
