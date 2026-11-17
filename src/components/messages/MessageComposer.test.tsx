@@ -451,6 +451,43 @@ describe("MessageComposer con adjuntos Premium", () => {
     expect(input.accept).toContain("image/gif");
   });
 
+  it("en un DM sin Premium, un archivo de 18 MB ofrece Premium", async () => {
+    const input = renderAs(false);
+
+    await userEvent.upload(
+      input,
+      [sized("apuntes.pdf", "application/pdf", 18)],
+      { applyAccept: false },
+    );
+
+    expect(
+      await screen.findByText("Pesa 18 MB. El límite es 10 MB."),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Adjuntos de hasta 50 MB")).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Conocé Plan Premium" }),
+    );
+    expect(openSettingsSection).toHaveBeenCalledWith("subscriptions");
+  });
+
+  it("en un DM con Premium no ofrece Premium por encima de 50 MB", async () => {
+    const input = renderAs(true);
+
+    await userEvent.upload(
+      input,
+      [sized("enorme.pdf", "application/pdf", 51)],
+      { applyAccept: false },
+    );
+
+    expect(
+      await screen.findByText("Pesa 51 MB. El límite es 50 MB."),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Conocé Plan Premium" }),
+    ).toBeNull();
+  });
+
   it("con Premium rechaza un archivo de mas de 50 MB", async () => {
     const input = renderAs(true);
 
@@ -533,7 +570,7 @@ describe("MessageComposer con el límite de adjuntos del servidor", () => {
     await userEvent.click(screen.getByRole("button", { name: "Premium" }));
 
     expect(requestServerBoosts).toHaveBeenCalledWith("s1", "benefits");
-    expect(openSettingsSection).toHaveBeenCalledWith("premium");
+    expect(openSettingsSection).toHaveBeenCalledWith("subscriptions");
   });
 
   it("en nivel 2 acepta 18 MB y no ofrece boosts por encima de 25 MB", async () => {

@@ -60,7 +60,7 @@ export function PremiumCard({
 
   return (
     <div className="flex flex-col gap-3">
-      <section className="bg-surface-raised flex flex-col gap-5 rounded-2xl border border-[#F0B232]/30 p-5 sm:flex-row sm:items-center">
+      <section className="bg-surface-raised flex flex-col gap-5 rounded-2xl border border-[#F0B232] p-5 sm:flex-row sm:items-center [[data-theme=light]_&]:border-[1.5px]">
         <DiscordiaPremiumMark size={64} className="shrink-0" />
 
         <div className="min-w-0 flex-1">
