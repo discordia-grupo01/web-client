@@ -21,6 +21,7 @@ import { ModalShell } from "@/components/ui/ModalShell";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
+import { EmojiPreviewImage } from "./EmojiPreviewImage";
 import { useUploadEmoji } from "./hooks/useUploadEmoji";
 
 interface UploadEmojiModalProps {
@@ -112,10 +113,8 @@ export function UploadEmojiModal({
                 errors.image ? "border-danger" : "border-line",
               )}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element -- es un object URL del archivo que acaba de elegir */}
-              <img
-                src={previewUrl ?? ""}
-                alt=""
+              <EmojiPreviewImage
+                objectUrl={previewUrl}
                 className="size-11 shrink-0 rounded object-contain"
               />
               <div className="flex min-w-0 flex-1 flex-col">
@@ -176,10 +175,8 @@ export function UploadEmojiModal({
           <div>
             <SectionLabel>{EMOJI_UPLOAD_COPY.previewLabel}</SectionLabel>
             <p className="bg-surface-input border-line text-content-subtle mt-2 flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs">
-              {/* eslint-disable-next-line @next/next/no-img-element -- mismo object URL del preview */}
-              <img
-                src={previewUrl}
-                alt=""
+              <EmojiPreviewImage
+                objectUrl={previewUrl}
                 className="size-5.5 shrink-0 object-contain"
               />
               <span className="truncate">{emojiLabel(name)}</span>
