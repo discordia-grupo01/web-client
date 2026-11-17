@@ -2,6 +2,7 @@
 
 import {
   type AccessRevokedReason,
+  type BoostLevel,
   type Channel,
   LOADING_MESSAGES_LABEL,
   type Member,
@@ -32,6 +33,8 @@ import { ViewingPastBar } from "./ViewingPastBar";
 
 interface ChannelChatProps {
   serverId: string;
+  boostLevel: BoostLevel;
+  boostCount: number;
   channel: Channel;
   currentAuthor: MessageAuthor | null;
   serverRoles: Role[];
@@ -54,6 +57,8 @@ interface ChannelChatProps {
 
 export function ChannelChat({
   serverId,
+  boostLevel,
+  boostCount,
   channel,
   currentAuthor,
   serverRoles,
@@ -225,6 +230,7 @@ export function ChannelChat({
           return pending.onSend(...args);
         }}
         uploadTarget={{ channelId: channel.id }}
+        serverBoost={{ serverId, level: boostLevel, boostCount }}
         disabled={
           !currentAuthor ||
           !canSendMessages ||
