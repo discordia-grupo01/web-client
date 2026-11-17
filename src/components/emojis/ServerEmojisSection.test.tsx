@@ -80,7 +80,7 @@ describe("ServerEmojisSection", () => {
 
     expect(await screen.findByText(":festejo:")).toBeInTheDocument();
     expect(screen.getByText(":mate:")).toBeInTheDocument();
-    expect(screen.getByText("/ 70 lugares disponibles")).toBeInTheDocument();
+    expect(screen.getByText("/ 70 lugares usados")).toBeInTheDocument();
     expect(screen.getByRole("progressbar")).toHaveAttribute(
       "aria-valuenow",
       "2",
@@ -152,7 +152,7 @@ describe("ServerEmojisSection", () => {
     renderSection();
 
     expect(
-      await screen.findByText("/ 2 lugares disponibles"),
+      await screen.findByText("/ 2 lugares usados"),
     ).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Subir emoji" })).toBeDisabled();
     expect(screen.getByText(/No quedan lugares para emojis/)).toBeVisible();
@@ -168,6 +168,6 @@ describe("ServerEmojisSection", () => {
     expect(
       await screen.findByText(/No pudimos cargar los emojis/),
     ).toBeInTheDocument();
-    expect(screen.queryByText(/lugares disponibles/)).not.toBeInTheDocument();
+    expect(screen.queryByText(/lugares usados/)).not.toBeInTheDocument();
   });
 });

@@ -6,11 +6,12 @@ import { useCallback, useEffect, useState } from "react";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { listServerEmojisRequest } from "@/services/emojis/client";
 
-export function useServerEmojis(serverId: string) {
+export function useServerEmojis(serverId: string | null) {
   const [page, setPage] = useState<ServerEmojiPage | null>(null);
   const [error, setError] = useState<string>();
 
   const load = useCallback(async () => {
+    if (serverId === null) return;
     const result = await listServerEmojisRequest(serverId);
     if (!result.ok) {
       setError(result.message);
@@ -24,7 +25,9 @@ export function useServerEmojis(serverId: string) {
     void load();
   }, [load]);
 
-  useRefreshOnChange({ resources: ["emojis"], serverId }, load);
+  useRefreshOnChange({ resources: ["emojis"], serverId }, load, {
+    enabled: serverId !== null,
+  });
 
   const addEmoji = useCallback((emoji: ServerEmoji) => {
     setPage((current) =>
