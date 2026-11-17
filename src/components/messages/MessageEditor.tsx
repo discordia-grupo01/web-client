@@ -414,7 +414,7 @@ export const MessageEditor = forwardRef<
         className={cn(
           // El renglón ya reserva el alto del emoji, así que la caja no salta
           // al insertar uno.
-          "max-h-[200px] leading-[22px] overflow-y-auto break-words whitespace-pre-wrap",
+          "max-h-[200px] overflow-y-auto leading-[22px] break-words whitespace-pre-wrap",
           className,
         )}
       />

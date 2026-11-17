@@ -119,7 +119,10 @@ function message(reactions: Message["reactions"] = []): Message {
 
 function renderList(
   premium: boolean,
-  { reactions = [] as Message["reactions"], serverId = "s1" as string | null } = {},
+  {
+    reactions = [] as Message["reactions"],
+    serverId = "s1" as string | null,
+  } = {},
 ) {
   listServerEmojisRequest.mockResolvedValue({
     ok: true,

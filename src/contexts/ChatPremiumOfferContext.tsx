@@ -40,10 +40,7 @@ export function ChatPremiumOfferProvider({
   const [offer, setOffer] = useState<ChatPremiumOffer | null>(null);
   const show = useCallback((next: ChatPremiumOffer) => setOffer(next), []);
   const clear = useCallback(() => setOffer(null), []);
-  const value = useMemo(
-    () => ({ offer, show, clear }),
-    [offer, show, clear],
-  );
+  const value = useMemo(() => ({ offer, show, clear }), [offer, show, clear]);
 
   return (
     <ChatPremiumOfferContext.Provider value={value}>

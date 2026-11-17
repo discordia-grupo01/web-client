@@ -69,7 +69,7 @@ export function ReactionChip({
         reaction.reacted_by_me
           ? "border-accent bg-accent/15"
           : locked
-            ? "border-[#F0B232]/40 bg-surface-input hover:border-[#F0B232]"
+            ? "bg-surface-input border-[#F0B232]/40 hover:border-[#F0B232]"
             : "border-line bg-surface-input hover:border-accent",
       )}
     >

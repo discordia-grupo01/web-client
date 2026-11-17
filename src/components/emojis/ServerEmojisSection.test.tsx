@@ -151,9 +151,7 @@ describe("ServerEmojisSection", () => {
     });
     renderSection();
 
-    expect(
-      await screen.findByText("/ 2 lugares usados"),
-    ).toBeInTheDocument();
+    expect(await screen.findByText("/ 2 lugares usados")).toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Subir emoji" })).toBeDisabled();
     expect(screen.getByText(/No quedan lugares para emojis/)).toBeVisible();
   });
