@@ -17,9 +17,12 @@ import {
 import { CircleAlert } from "lucide-react";
 import { useState } from "react";
 
+import { useChatPremiumOffer } from "@/contexts/ChatPremiumOfferContext";
 import { Avatar } from "@/components/ui/Avatar";
 import { cn } from "@/lib/cn";
+import { openSettingsSection } from "@/utils/settingsRequest";
 
+import type { ReactionEmojis } from "./hooks/useReactionEmojis";
 import { MessageAttachments } from "./MessageAttachments";
 import { MessageActions } from "./MessageActions";
 import { MessageActionsSheet } from "./MessageActionsSheet";
@@ -55,6 +58,8 @@ interface MessageItemProps {
   canDelete: boolean;
   onToggleReaction?: (emoji: string) => void;
   canAddReactions?: boolean;
+  /** Emojis del servidor para reaccionar; lo arma la lista una sola vez. */
+  reactionEmojis?: ReactionEmojis;
   onEdit: (content: string) => void | Promise<MessageEditOutcome>;
   onDelete: () => void;
   /** Solo en canales de servidor y en mensajes de otra persona. */
@@ -73,6 +78,7 @@ export function MessageItem({
   canDelete,
   onToggleReaction,
   canAddReactions = true,
+  reactionEmojis,
   onEdit,
   onDelete,
   onReport,
@@ -90,6 +96,9 @@ export function MessageItem({
   const [editError, setEditError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const [isActionsSheetOpen, setIsActionsSheetOpen] = useState(false);
+  // La oferta de Premium se muestra debajo del compositor, que no está adentro
+  // del mensaje: el chat la comparte por contexto.
+  const premiumOffer = useChatPremiumOffer();
   const onReact = canAddReactions ? onToggleReaction : undefined;
   const hasActions =
     Boolean(onReact) || canEdit || canDelete || Boolean(onReport);
@@ -97,6 +106,37 @@ export function MessageItem({
     () => setIsActionsSheetOpen(true),
     hasActions && !isEditing && !delivery,
   );
+
+  function openPremium() {
+    openSettingsSection("subscriptions");
+  }
+
+  /** Cualquier reacción que sí se puede hacer deja atrás la oferta. */
+  function toggleReaction(emoji: string) {
+    premiumOffer.clear();
+    onToggleReaction?.(emoji);
+  }
+
+  /**
+   * Un emoji del servidor viaja como `<:nombre:id>`. Si pide Premium y no hay,
+   * no se manda el pedido: se muestra la oferta, igual que en el compositor.
+   */
+  function reactWithCustomEmoji(id: string) {
+    const picked = reactionEmojis?.pick(id);
+    if (!picked || picked.kind === "unknown") return;
+    if (picked.kind === "premium") {
+      return premiumOffer.show("custom_emoji_reaction");
+    }
+    toggleReaction(picked.token);
+  }
+
+  const emojiPicker = reactionEmojis
+    ? {
+        ...reactionEmojis.picker,
+        onPickCustom: reactWithCustomEmoji,
+        onOpenPremium: openPremium,
+      }
+    : undefined;
 
   async function saveEdit(content: string) {
     if (content === message.content) return stopEditing();
@@ -241,8 +281,11 @@ export function MessageItem({
         {!isEditing && !delivery && onToggleReaction ? (
           <MessageReactions
             reactions={message.reactions ?? []}
-            onToggle={onToggleReaction}
+            onToggle={toggleReaction}
             canAdd={canAddReactions}
+            emojiPicker={emojiPicker}
+            reactionEmojis={reactionEmojis}
+            onNeedsPremium={() => premiumOffer.show("custom_emoji_reaction")}
           />
         ) : null}
       </div>
@@ -251,7 +294,8 @@ export function MessageItem({
         <MessageActions
           canEdit={canEdit}
           canDelete={canDelete}
-          onToggleReaction={onReact}
+          onToggleReaction={onReact && toggleReaction}
+          emojiPicker={emojiPicker}
           onEdit={() => setIsEditing(true)}
           onDelete={() => setIsConfirmingDelete(true)}
           onReport={onReport}
@@ -262,7 +306,8 @@ export function MessageItem({
         <MessageActionsSheet
           canEdit={canEdit}
           canDelete={canDelete}
-          onReact={onReact}
+          onReact={onReact && toggleReaction}
+          emojiPicker={emojiPicker}
           onEdit={() => setIsEditing(true)}
           onDelete={() => setIsConfirmingDelete(true)}
           onReport={onReport}

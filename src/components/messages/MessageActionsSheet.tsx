@@ -14,11 +14,14 @@ import { BottomSheet } from "@/components/ui/BottomSheet";
 import { cn } from "@/lib/cn";
 
 import { EmojiPickerSheet } from "./EmojiPickerSheet";
+import type { ReactionPickerProps } from "./hooks/useReactionEmojis";
 
 interface MessageActionsSheetProps {
   canEdit: boolean;
   canDelete: boolean;
   onReact?: (emoji: string) => void;
+  /** Emojis del servidor en la hoja del selector. */
+  emojiPicker?: ReactionPickerProps;
   onEdit: () => void;
   onDelete: () => void;
   onReport?: () => void;
@@ -29,12 +32,16 @@ export function MessageActionsSheet({
   canEdit,
   canDelete,
   onReact,
+  emojiPicker,
   onEdit,
   onDelete,
   onReport,
   onClose,
 }: MessageActionsSheetProps) {
   const [isPickingEmoji, setIsPickingEmoji] = useState(false);
+  // La hoja del selector no sabe de abrirse: el aviso para pedir el catálogo lo
+  // da esta, que es la que la muestra.
+  const { onOpenChange, ...pickerProps } = emojiPicker ?? {};
 
   if (isPickingEmoji && onReact) {
     return (
@@ -42,6 +49,7 @@ export function MessageActionsSheet({
         label={ADD_REACTION_LABEL}
         onPick={onReact}
         onClose={onClose}
+        {...pickerProps}
       />
     );
   }
@@ -52,7 +60,10 @@ export function MessageActionsSheet({
         <SheetAction
           icon={Smile}
           label={ADD_REACTION_LABEL}
-          onClick={() => setIsPickingEmoji(true)}
+          onClick={() => {
+            onOpenChange?.(true);
+            setIsPickingEmoji(true);
+          }}
         />
       ) : null}
       {canEdit ? (
