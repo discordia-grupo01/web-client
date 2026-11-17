@@ -45,6 +45,7 @@ interface ServerSettingsModalProps {
   currentUserId: string | null;
   /** La sección con la que abre, si se entra desde un atajo (Boosts). */
   openAt?: SettingsSection;
+  openBoostsTab?: BoostSectionTab;
   onClose: () => void;
   /** "Ir a comprar puntos" de Boosts: cierra esto y abre Facturación. */
   onBuyPoints: () => void;
@@ -65,6 +66,7 @@ export function ServerSettingsModal({
   pendingReports,
   currentUserId,
   openAt,
+  openBoostsTab = "boost",
   onClose,
   onBuyPoints,
   onGoToMessage,
@@ -95,7 +97,7 @@ export function ServerSettingsModal({
     hasMenu && !openAt ? "menu" : "section",
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
-  const [boostsTab, setBoostsTab] = useState<BoostSectionTab>("boost");
+  const [boostsTab, setBoostsTab] = useState<BoostSectionTab>(openBoostsTab);
 
   function selectSection(target: SettingsSection) {
     setBoostsTab("boost");
