@@ -106,20 +106,26 @@ export function ServerSidebarHeader({
   const { user } = useAuth();
   const notificationSettings = useOptionalNotificationSettings();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openModal, setOpenModal] = useState<OpenModal>(() =>
-    takeRequestedServerBoosts(server.id) ? "boosts" : null,
+  const [requestedBoostsTab] = useState(() =>
+    takeRequestedServerBoosts(server.id),
+  );
+  const [openModal, setOpenModal] = useState<OpenModal>(
+    requestedBoostsTab ? "boosts" : null,
+  );
+  const [boostsTab, setBoostsTab] = useState<BoostSectionTab>(
+    requestedBoostsTab ?? "boost",
   );
 
   useEffect(
     () =>
-      onServerBoostsRequested((serverId) => {
+      onServerBoostsRequested((serverId, tab) => {
         if (serverId !== server.id) return;
         takeRequestedServerBoosts(serverId);
+        setBoostsTab(tab);
         setOpenModal("boosts");
       }),
     [server.id],
   );
-  const [boostsTab, setBoostsTab] = useState<BoostSectionTab>("boost");
   const [pendingTransfer, setPendingTransfer] =
     useState<OwnershipTransfer | null>(null);
   const [isLoadingPendingTransfer, setIsLoadingPendingTransfer] =
