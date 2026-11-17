@@ -18,6 +18,7 @@ import {
 
 import { BoostedBadge } from "../icons/BoostedBadge";
 import { BoostLevelIcon } from "../icons/BoostLevelIcon";
+import { BoostProgressBar } from "./BoostProgressBar";
 
 interface BoostStatusCardProps {
   summary: ServerBoostSummary;
@@ -84,7 +85,6 @@ export function BoostStatusCard({ summary }: BoostStatusCardProps) {
           <NextLevelProgress
             level={nextLevel}
             boostCount={summary.boost_count}
-            ratio={progress.ratio}
             target={progress.target ?? 0}
           />
         ) : (
@@ -116,18 +116,15 @@ export function BoostStatusCard({ summary }: BoostStatusCardProps) {
 interface NextLevelProgressProps {
   level: Exclude<ServerBoostSummary["level"], 0>;
   boostCount: number;
-  ratio: number;
   target: number;
 }
 
 function NextLevelProgress({
   level,
   boostCount,
-  ratio,
   target,
 }: NextLevelProgressProps) {
   const parts = boostsToNextLevelParts(level, boostCount);
-  const percent = `${Math.round(ratio * 1000) / 10}%`;
 
   return (
     <div>
@@ -141,25 +138,11 @@ function NextLevelProgress({
           {boostProgressCountLabel(boostCount, target)}
         </span>
       </div>
-      <div
-        role="progressbar"
-        aria-label={boostProgressAriaLabel(level, boostCount)}
-        aria-valuemin={0}
-        aria-valuemax={target}
-        aria-valuenow={boostCount}
-        className="relative h-4"
-      >
-        <div className="bg-boost-track absolute inset-x-0 top-0.75 h-2.5 overflow-hidden rounded-full">
-          <div
-            className="bg-info h-full rounded-full"
-            style={{ width: percent }}
-          />
-        </div>
-        <span
-          className="bg-boost-yellow border-boost-ink absolute top-0 size-4 -translate-x-1/2 rounded border-2"
-          style={{ left: percent }}
-        />
-      </div>
+      <BoostProgressBar
+        boostCount={boostCount}
+        target={target}
+        label={boostProgressAriaLabel(level, boostCount)}
+      />
     </div>
   );
 }

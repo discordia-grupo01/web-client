@@ -30,6 +30,8 @@ import {
   voiceConnectedCount,
   voiceProfileIds,
   withLivePresence,
+  serverBoostCount,
+  serverBoostLevel,
 } from "@discordia/client-shared";
 
 import {
@@ -1202,6 +1204,8 @@ function ServerViewContent({
                   <ChannelChat
                     key={activeChannel.id}
                     serverId={server.id}
+                    boostLevel={serverBoostLevel(server)}
+                    boostCount={serverBoostCount(server)}
                     channel={activeChannel}
                     currentAuthor={currentAuthor}
                     serverRoles={serverRoles}

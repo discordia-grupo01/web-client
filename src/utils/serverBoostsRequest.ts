@@ -1,26 +1,53 @@
+import type { BoostSectionTab } from "@discordia/client-shared";
+
 const SERVER_BOOSTS_EVENT = "discordia:open-server-boosts";
 
-let pendingServerId: string | null = null;
+interface ServerBoostsRequest {
+  serverId: string;
+  tab: BoostSectionTab;
+}
 
-export function requestServerBoosts(serverId: string): void {
-  pendingServerId = serverId;
+let pending: ServerBoostsRequest | null = null;
+
+export function requestServerBoosts(
+  serverId: string,
+  tab: BoostSectionTab = "boost",
+): void {
+  pending = { serverId, tab };
   window.dispatchEvent(
-    new CustomEvent<string>(SERVER_BOOSTS_EVENT, { detail: serverId }),
+    new CustomEvent<ServerBoostsRequest>(SERVER_BOOSTS_EVENT, {
+      detail: { serverId, tab },
+    }),
   );
 }
 
-export function takeRequestedServerBoosts(serverId: string): boolean {
-  if (pendingServerId !== serverId) return false;
-  pendingServerId = null;
-  return true;
+/** La pestaña pedida para ese servidor, o `null` si no había pedido. */
+export function takeRequestedServerBoosts(
+  serverId: string,
+): BoostSectionTab | null {
+  if (pending?.serverId !== serverId) return null;
+  const { tab } = pending;
+  pending = null;
+  return tab;
+}
+
+function isRequest(value: unknown): value is ServerBoostsRequest {
+  return (
+    typeof value === "object" &&
+    value !== null &&
+    "serverId" in value &&
+    typeof value.serverId === "string" &&
+    "tab" in value &&
+    (value.tab === "boost" || value.tab === "benefits")
+  );
 }
 
 export function onServerBoostsRequested(
-  listener: (serverId: string) => void,
+  listener: (serverId: string, tab: BoostSectionTab) => void,
 ): () => void {
   function handle(event: Event) {
-    const serverId = (event as CustomEvent<unknown>).detail;
-    if (typeof serverId === "string") listener(serverId);
+    const detail = (event as CustomEvent<unknown>).detail;
+    if (isRequest(detail)) listener(detail.serverId, detail.tab);
   }
   window.addEventListener(SERVER_BOOSTS_EVENT, handle);
   return () => window.removeEventListener(SERVER_BOOSTS_EVENT, handle);

@@ -3,7 +3,11 @@
 import {
   ATTACH_FILE_LABEL,
   ATTACHMENT_ACCEPT,
+  type AttachmentLimitOptions,
   type AttachmentTarget,
+  attachmentTooLargeMessage,
+  type BoostLevel,
+  canBoostAttachmentLimit,
   EMOJI_PICKER_LABEL,
   MAX_MESSAGE_LENGTH,
   PREMIUM_ATTACHMENT_ACCEPT,
@@ -36,6 +40,10 @@ import { MentionSuggestions } from "./MentionSuggestions";
 import { MessageEditor, type MessageEditorHandle } from "./MessageEditor";
 import { useMessageMentions } from "@/contexts/MentionsContext";
 import { useOwnPremium } from "@/contexts/OwnProfileContext";
+import { openSettingsSection } from "@/utils/settingsRequest";
+import { requestServerBoosts } from "@/utils/serverBoostsRequest";
+
+import { AttachmentBoostOffer } from "./AttachmentBoostOffer";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 
@@ -49,6 +57,8 @@ interface MessageComposerProps {
     attachmentIds?: string[],
   ) => void | Promise<SendMessageResult>;
   uploadTarget: AttachmentTarget;
+  /** Solo en canales de un servidor: en un DM los boosts no cambian el límite. */
+  serverBoost?: { serverId: string; level: BoostLevel; boostCount: number };
   disabled?: boolean;
 }
 
@@ -56,6 +66,7 @@ export function MessageComposer({
   placeholder,
   onSend,
   uploadTarget,
+  serverBoost,
   disabled = false,
 }: MessageComposerProps) {
   const { sources } = useMessageMentions();
@@ -63,17 +74,27 @@ export function MessageComposer({
   const suggestionsId = useId();
   const draft = useMentionDraft({ editorRef, sources });
   const [sendError, setSendError] = useState<string | undefined>();
+  const [showBoostOffer, setShowBoostOffer] = useState(false);
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
   const { uploadAll, forget } = useAttachmentUploads();
   const premium = useOwnPremium();
+  const limits: AttachmentLimitOptions = {
+    premium,
+    serverLevel: serverBoost?.level,
+  };
   // El limite del back cuenta el texto con los tokens `<@id>`, no lo visible.
   const canSend =
     !disabled &&
     !isSending &&
     validateMessageContent(draft.encoded, attachments.length > 0) === undefined;
   const length = [...draft.encoded].length;
+
+  function showError(message: string | undefined, boostOffer = false) {
+    setSendError(message);
+    setShowBoostOffer(boostOffer);
+  }
 
   function clearDraft() {
     draft.reset();
@@ -84,13 +105,13 @@ export function MessageComposer({
   async function submit(event?: FormEvent) {
     event?.preventDefault();
     if (!canSend) return;
-    setSendError(undefined);
+    showError(undefined);
     setIsSending(true);
 
     const uploads = await uploadAll(attachments, uploadTarget);
     if (!uploads.ok) {
       setIsSending(false);
-      setSendError(uploads.message);
+      showError(uploads.message);
       return;
     }
 
@@ -105,7 +126,7 @@ export function MessageComposer({
     const result = await outcome;
     setIsSending(false);
     if (result.ok) clearDraft();
-    else setSendError(result.message);
+    else showError(result.message);
     editorRef.current?.focus();
   }
 
@@ -123,15 +144,18 @@ export function MessageComposer({
     if (!files || files.length === 0) return;
     const chosen = Array.from(files);
     const rejected = chosen
-      .map((file) => validateAttachment(file, { premium }))
+      .map((file) => validateAttachment(file, limits))
       .find((error) => error !== undefined);
-    const valid = chosen.filter(
-      (file) => !validateAttachment(file, { premium }),
-    );
+    const valid = chosen.filter((file) => !validateAttachment(file, limits));
     const overLimit = validateAttachmentCount(attachments.length, valid.length);
-    if (overLimit) return setSendError(overLimit);
+    if (overLimit) return showError(overLimit);
 
-    setSendError(rejected);
+    const tooLarge = chosen.some(
+      (file) =>
+        validateAttachment(file, limits) ===
+        attachmentTooLargeMessage(file.size, limits),
+    );
+    showError(rejected, tooLarge && canBoostAttachmentLimit(limits));
     setAttachments((prev) => [
       ...prev,
       ...valid.map((file) => ({ id: crypto.randomUUID(), file })),
@@ -195,7 +219,7 @@ export function MessageComposer({
           segments={draft.segments}
           onChange={(text, cursor) => {
             draft.handleChange(text, cursor);
-            setSendError(undefined);
+            showError(undefined);
           }}
           onCursorMove={draft.handleCursorMove}
           onKeyDown={handleKeyDown}
@@ -231,6 +255,16 @@ export function MessageComposer({
       </div>
 
       <FieldError message={sendError} />
+      {showBoostOffer && serverBoost ? (
+        <AttachmentBoostOffer
+          level={serverBoost.level}
+          boostCount={serverBoost.boostCount}
+          onShowBenefits={() =>
+            requestServerBoosts(serverBoost.serverId, "benefits")
+          }
+          onOpenPremium={() => openSettingsSection("premium")}
+        />
+      ) : null}
 
       {length >= COUNTER_THRESHOLD ? (
         <div className="mt-1 flex justify-end">

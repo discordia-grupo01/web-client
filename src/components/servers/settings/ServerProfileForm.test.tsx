@@ -1,4 +1,5 @@
 import {
+  ANIMATED_SERVER_ICON_COPY,
   ANIMATED_SERVER_ICON_LOCKED,
   type ServerSummary,
 } from "@discordia/client-shared";
@@ -38,9 +39,11 @@ function server(boostLevel: number): ServerSummary {
 function Form({
   summary,
   onBoost,
+  onShowBenefits,
 }: {
   summary: ServerSummary;
   onBoost?: () => void;
+  onShowBenefits?: () => void;
 }) {
   const form = useServerSettingsForm({ server: summary, onUpdated: vi.fn() });
   return (
@@ -50,6 +53,7 @@ function Form({
       titleId="title"
       onCancel={vi.fn()}
       onBoost={onBoost}
+      onShowBenefits={onShowBenefits}
     />
   );
 }
@@ -58,6 +62,8 @@ const gif = () => new File(["GIF89a"], "party.gif", { type: "image/gif" });
 const iconInput = (container: HTMLElement) =>
   container.querySelectorAll<HTMLInputElement>('input[type="file"]')[0];
 const presets = () => screen.getAllByRole("button", { name: /^Fondo / });
+const strip = () =>
+  screen.getByRole("region", { name: "Beneficios de boosts" });
 
 describe("ServerProfileForm según el nivel de boosts", () => {
   it("nivel 0: banner y fondos fijos bloqueados hasta el nivel 2", () => {
@@ -67,52 +73,76 @@ describe("ServerProfileForm según el nivel de boosts", () => {
       screen.queryByRole("button", { name: "Agregar banner" }),
     ).not.toBeInTheDocument();
     expect(
-      screen.getByText("Faltan 12 boosts para el nivel 2"),
+      screen.getByRole("group", {
+        name: "Banner del servidor: se desbloquea en el nivel 2",
+      }),
     ).toBeInTheDocument();
+    expect(
+      screen.getAllByText("Faltan 12 boosts para el nivel 2"),
+    ).toHaveLength(2);
     expect(
       screen.getByText("Faltan 2 boosts para el nivel 1"),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("progressbar", {
-        name: "Faltan 2 boosts para el nivel 1",
-      }),
-    ).toHaveAttribute("aria-valuenow", "3");
     for (const preset of presets()) expect(preset).toBeDisabled();
   });
 
-  it("nivel 0: el banner bloqueado ofrece boostear el servidor", async () => {
-    const onBoost = vi.fn();
-    render(<Form summary={server(0)} onBoost={onBoost} />);
-
-    await userEvent.click(
-      screen.getByRole("button", { name: "Boostear servidor" }),
-    );
-
-    expect(onBoost).toHaveBeenCalledOnce();
-  });
-
-  it("nivel 1: la barra para boostear va con el banner", async () => {
-    const onBoost = vi.fn();
-    render(<Form summary={server(1)} onBoost={onBoost} />);
-
-    const banner = screen.getByRole("group", { name: "Banner del servidor" });
-    expect(within(banner).getByRole("progressbar")).toHaveAttribute(
-      "aria-valuenow",
-      "5",
-    );
-    await userEvent.click(
-      within(banner).getByRole("button", { name: "Boostear servidor" }),
-    );
-    expect(onBoost).toHaveBeenCalledOnce();
-    expect(screen.getAllByRole("progressbar")).toHaveLength(1);
-  });
-
-  it("sin a dónde llevar, no muestra el botón de boostear", () => {
-    render(<Form summary={server(0)} />);
+  it("la franja muestra el progreso hasta el próximo nivel", () => {
+    render(<Form summary={server(1)} />);
 
     expect(
-      screen.queryByRole("button", { name: "Boostear servidor" }),
+      within(strip()).getByRole("progressbar", {
+        name: "5 de 15 boosts para el nivel 2",
+      }),
+    ).toHaveAttribute("aria-valuenow", "5");
+    expect(within(strip()).getByText("5 / 15")).toBeInTheDocument();
+    expect(within(strip()).getByText("10 boosts")).toBeInTheDocument();
+  });
+
+  it("la franja lleva a boostear y a los beneficios", async () => {
+    const onBoost = vi.fn();
+    const onShowBenefits = vi.fn();
+    render(
+      <Form
+        summary={server(0)}
+        onBoost={onBoost}
+        onShowBenefits={onShowBenefits}
+      />,
+    );
+
+    await userEvent.click(
+      within(strip()).getByRole("button", { name: "Boostear" }),
+    );
+    await userEvent.click(
+      within(strip()).getByRole("button", { name: /Ver qué suma cada nivel/ }),
+    );
+
+    expect(onBoost).toHaveBeenCalledOnce();
+    expect(onShowBenefits).toHaveBeenCalledOnce();
+  });
+
+  it("sin a dónde llevar, la franja no tiene botones", () => {
+    render(<Form summary={server(0)} />);
+
+    expect(within(strip()).queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("nivel 3: no muestra la franja", () => {
+    render(<Form summary={server(3)} />);
+
+    expect(
+      screen.queryByRole("region", { name: "Beneficios de boosts" }),
     ).not.toBeInTheDocument();
+    expect(screen.queryByRole("progressbar")).not.toBeInTheDocument();
+  });
+
+  it("desde el nivel 1 el ícono del servidor lleva la insignia GIF", () => {
+    const icon = () => screen.getByRole("button", { name: "Cambiar ícono" });
+    const { unmount } = render(<Form summary={server(0)} />);
+    expect(within(icon()).queryByText("GIF")).not.toBeInTheDocument();
+    unmount();
+
+    render(<Form summary={server(2)} />);
+    expect(within(icon()).getByText("GIF")).toBeInTheDocument();
   });
 
   it("nivel 0: un ícono GIF pide el nivel 1 y no se agrega", async () => {
@@ -134,18 +164,15 @@ describe("ServerProfileForm según el nivel de boosts", () => {
     const { container } = render(<Form summary={server(1)} />);
 
     expect(iconInput(container).accept).toContain("image/gif");
-    expect(screen.queryByText("Desbloqueado")).not.toBeInTheDocument();
     expect(screen.getByText("Beneficio del nivel 1")).toBeInTheDocument();
     expect(
-      screen.getByText("Faltan 10 boosts para el nivel 2"),
+      screen.getAllByText("Faltan 10 boosts para el nivel 2"),
+    ).toHaveLength(2);
+    expect(
+      screen.getByText(ANIMATED_SERVER_ICON_COPY.unlocked),
     ).toBeInTheDocument();
     expect(
-      screen.getByRole("progressbar", {
-        name: "Faltan 10 boosts para el nivel 2",
-      }),
-    ).toHaveAttribute("aria-valuenow", "5");
-    expect(
-      screen.getByText("El ícono también puede ser un GIF."),
+      screen.getByText("PNG, JPEG, WEBP o GIF · Máx. 5 MB"),
     ).toBeInTheDocument();
     await userEvent.upload(iconInput(container), gif());
 

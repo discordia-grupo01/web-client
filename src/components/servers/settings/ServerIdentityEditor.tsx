@@ -2,15 +2,16 @@
 
 import {
   ADD_BANNER_LABEL,
-  BOOST_PERK_LABELS,
+  ANIMATED_SERVER_ICON_COPY,
+  boostBenefitLockedLabel,
   CHANGE_BANNER_LABEL,
   CHANGE_SERVER_ICON_LABEL,
   REMOVE_BANNER_LABEL,
+  SERVER_BANNER_BENEFIT_COPY,
 } from "@discordia/client-shared";
-import { Camera, Image as ImageIcon, X } from "lucide-react";
-import { type ReactNode, useRef, type RefObject } from "react";
+import { Camera, Image as ImageIcon, Lock, X } from "lucide-react";
+import { useRef, type RefObject } from "react";
 
-import { BoostPerkHint } from "@/components/boosts/status/BoostPerkHint";
 import { Avatar } from "@/components/ui/Avatar";
 import { ServerBanner } from "@/components/ui/ServerBanner";
 
@@ -57,9 +58,8 @@ interface ServerIdentityEditorProps {
   hasBanner: boolean;
   /** Sin el nivel 2 de boosts no se puede poner banner (ni un fondo fijo). */
   isBannerLocked: boolean;
-  boostCount: number;
-  bannerFooter?: ReactNode;
-  bannerAction?: ReactNode;
+  /** Desde el nivel 1 el ícono puede ser un GIF: lo marca con una insignia. */
+  canUseGif: boolean;
   iconTypes: readonly string[];
   onPickIcon: (file: File) => void;
   onPickBanner: (file: File) => void;
@@ -78,9 +78,7 @@ export function ServerIdentityEditor({
   bannerGradient,
   hasBanner,
   isBannerLocked,
-  boostCount,
-  bannerFooter,
-  bannerAction,
+  canUseGif,
   iconTypes,
   onPickIcon,
   onPickBanner,
@@ -96,11 +94,7 @@ export function ServerIdentityEditor({
       // El avatar sale del banner: sin esto el contenedor lo recorta.
     >
       {isBannerLocked ? (
-        <LockedBanner
-          boostCount={boostCount}
-          footer={bannerFooter}
-          action={bannerAction}
-        />
+        <LockedBanner />
       ) : (
         <button
           type="button"
@@ -160,6 +154,15 @@ export function ServerIdentityEditor({
         <span className="absolute inset-0 m-1 flex items-center justify-center rounded-full bg-black/55 opacity-0 transition-opacity group-hover:opacity-100">
           <Camera size={20} className="text-white" />
         </span>
+        {canUseGif ? (
+          <span
+            aria-hidden="true"
+            className="bg-boost-yellow text-boost-ink absolute bottom-0 left-0 flex h-5 items-center rounded-full border-2 px-1.5 text-[10px] font-extrabold tracking-wide"
+            style={{ borderColor: "var(--bg-modal)" }}
+          >
+            {ANIMATED_SERVER_ICON_COPY.badge}
+          </span>
+        ) : null}
         <span
           className="absolute right-0 bottom-0 flex size-6 items-center justify-center rounded-full border-2 bg-black/65"
           style={{ borderColor: "var(--bg-modal)" }}
@@ -184,30 +187,23 @@ export function ServerIdentityEditor({
   );
 }
 
-function LockedBanner({
-  boostCount,
-  footer,
-  action,
-}: {
-  boostCount: number;
-  footer?: ReactNode;
-  action?: ReactNode;
-}) {
+function LockedBanner() {
   return (
     <div
       role="group"
-      aria-label={BOOST_PERK_LABELS.custom_banner}
-      className="border-line-strong flex w-full flex-col justify-center gap-2 rounded-2xl border border-dashed pr-4"
+      aria-label={boostBenefitLockedLabel("custom_banner")}
+      className="border-line-strong bg-surface-input flex w-full items-center rounded-2xl border border-dashed pr-4"
       style={{ height: BANNER_HEIGHT, paddingLeft: ICON_BOX + 24 }}
     >
-      <BoostPerkHint
-        perk="custom_banner"
-        level={0}
-        boostCount={boostCount}
-        unlockedHint=""
-      />
-      {footer}
-      {action ? <div className="flex justify-end">{action}</div> : null}
+      <p className="text-content-muted flex items-center gap-2 text-[13px] leading-snug">
+        <Lock
+          size={14}
+          strokeWidth={2.2}
+          aria-hidden="true"
+          className="shrink-0"
+        />
+        {SERVER_BANNER_BENEFIT_COPY.locked}
+      </p>
     </div>
   );
 }

@@ -13,7 +13,17 @@ vi.mock("@/services/attachments/client", () => ({
   uploadAttachmentRequest: vi.fn(),
 }));
 
+vi.mock("@/utils/serverBoostsRequest", () => ({
+  requestServerBoosts: vi.fn(),
+}));
+
+vi.mock("@/utils/settingsRequest", () => ({
+  openSettingsSection: vi.fn(),
+}));
+
 import { uploadAttachmentRequest } from "@/services/attachments/client";
+import { requestServerBoosts } from "@/utils/serverBoostsRequest";
+import { openSettingsSection } from "@/utils/settingsRequest";
 
 import { MessageMentionsProvider } from "@/contexts/MentionsContext";
 import { OwnProfileProvider } from "@/contexts/OwnProfileContext";
@@ -311,8 +321,13 @@ describe("MessageComposer con adjuntos", () => {
 
     await chooseFiles([big]);
 
-    expect(await screen.findByText(/tamaño máximo/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Pesa 11 MB. El límite es 10 MB."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("grande.pdf")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("Adjuntos de hasta 25 MB"),
+    ).not.toBeInTheDocument();
   });
 
   it("sube el archivo y manda su id con el mensaje, aun sin texto", async () => {
@@ -364,7 +379,7 @@ describe("MessageComposer con adjuntos Premium", () => {
     URL.revokeObjectURL = vi.fn();
   });
 
-  function renderAs(premium: boolean) {
+  function renderAs(premium: boolean, serverLevel?: 0 | 1 | 2 | 3) {
     render(
       <OwnProfileProvider
         value={{
@@ -386,6 +401,15 @@ describe("MessageComposer con adjuntos Premium", () => {
           placeholder="Mensaje en #general"
           onSend={vi.fn()}
           uploadTarget={{ channelId: "c1" }}
+          serverBoost={
+            serverLevel === undefined
+              ? undefined
+              : {
+                  serverId: "s1",
+                  level: serverLevel,
+                  boostCount: [2, 7, 18, 30][serverLevel],
+                }
+          }
         />
       </OwnProfileProvider>,
     );
@@ -436,7 +460,128 @@ describe("MessageComposer con adjuntos Premium", () => {
       { applyAccept: false },
     );
 
-    expect(await screen.findByText(/tamaño máximo/)).toBeInTheDocument();
+    expect(
+      await screen.findByText("Pesa 51 MB. El límite es 50 MB."),
+    ).toBeInTheDocument();
     expect(screen.queryByText("enorme.pdf")).toBeNull();
+  });
+});
+
+describe("MessageComposer con el límite de adjuntos del servidor", () => {
+  beforeAll(() => {
+    URL.createObjectURL = vi.fn(() => "blob:miniatura");
+    URL.revokeObjectURL = vi.fn();
+  });
+
+  function renderInServer(level: 0 | 1 | 2 | 3, premium = false) {
+    render(
+      <OwnProfileProvider
+        value={{
+          profile: {
+            id: "u1",
+            name: "Ana",
+            email: "ana@example.com",
+            description: "",
+            avatar_url: "",
+            status_text: "",
+            status_emoji: "",
+            premium,
+            created_at: "2026-01-01T00:00:00Z",
+          },
+          refresh: vi.fn(),
+        }}
+      >
+        <MessageComposer
+          placeholder="Mensaje en #apuntes"
+          onSend={vi.fn()}
+          uploadTarget={{ channelId: "c1" }}
+          serverBoost={{
+            serverId: "s1",
+            level,
+            boostCount: [2, 7, 18, 30][level],
+          }}
+        />
+      </OwnProfileProvider>,
+    );
+    return document.querySelector<HTMLInputElement>('input[type="file"]')!;
+  }
+
+  function pdf(megabytes: number) {
+    const file = new File(["x"], "apuntes.pdf", { type: "application/pdf" });
+    Object.defineProperty(file, "size", { value: megabytes * 1024 * 1024 });
+    return file;
+  }
+
+  it("en nivel 1 un PDF de 18 MB ofrece el nivel 2 y Premium", async () => {
+    const input = renderInServer(1);
+
+    await userEvent.upload(input, [pdf(18)]);
+
+    expect(
+      await screen.findByText(
+        "Pesa 18 MB. En este servidor el límite es 10 MB.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Adjuntos de hasta 25 MB")).toBeInTheDocument();
+    expect(
+      screen.getByText("Faltan 8 boosts para el nivel 2"),
+    ).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Ver beneficios de boosts" }),
+    );
+    await userEvent.click(screen.getByRole("button", { name: "Premium" }));
+
+    expect(requestServerBoosts).toHaveBeenCalledWith("s1", "benefits");
+    expect(openSettingsSection).toHaveBeenCalledWith("premium");
+  });
+
+  it("en nivel 2 acepta 18 MB y no ofrece boosts por encima de 25 MB", async () => {
+    const input = renderInServer(2);
+
+    await userEvent.upload(input, [pdf(18)]);
+    expect(await screen.findByText("apuntes.pdf")).toBeInTheDocument();
+
+    await userEvent.upload(input, [pdf(30)]);
+    expect(
+      await screen.findByText(
+        "Pesa 30 MB. En este servidor el límite es 25 MB.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Adjuntos de hasta 25 MB"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("con Premium nunca ofrece boosts", async () => {
+    const input = renderInServer(1, true);
+
+    await userEvent.upload(input, [pdf(40)]);
+    expect(await screen.findByText("apuntes.pdf")).toBeInTheDocument();
+
+    await userEvent.upload(input, [pdf(51)]);
+    expect(
+      await screen.findByText(
+        "Pesa 51 MB. En este servidor el límite es 50 MB.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText("Adjuntos de hasta 25 MB"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("al seguir escribiendo se va la oferta junto con el error", async () => {
+    const input = renderInServer(0);
+
+    await userEvent.upload(input, [pdf(18)]);
+    expect(
+      await screen.findByText("Adjuntos de hasta 25 MB"),
+    ).toBeInTheDocument();
+
+    await userEvent.type(screen.getByRole("textbox"), "hola");
+
+    expect(
+      screen.queryByText("Adjuntos de hasta 25 MB"),
+    ).not.toBeInTheDocument();
   });
 });

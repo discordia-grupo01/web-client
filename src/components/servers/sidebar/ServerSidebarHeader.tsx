@@ -1,11 +1,13 @@
 "use client";
 
 import {
+  type BoostSectionTab,
   hasBoostedBadge,
   hasModeratorPermissions,
   type OwnershipTransfer,
   pendingReportsLabel,
   type Role,
+  serverBoostCount,
   serverBoostLevel,
   type ServerSummary,
 } from "@discordia/client-shared";
@@ -104,15 +106,22 @@ export function ServerSidebarHeader({
   const { user } = useAuth();
   const notificationSettings = useOptionalNotificationSettings();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const [openModal, setOpenModal] = useState<OpenModal>(() =>
-    takeRequestedServerBoosts(server.id) ? "boosts" : null,
+  const [requestedBoostsTab] = useState(() =>
+    takeRequestedServerBoosts(server.id),
+  );
+  const [openModal, setOpenModal] = useState<OpenModal>(
+    requestedBoostsTab ? "boosts" : null,
+  );
+  const [boostsTab, setBoostsTab] = useState<BoostSectionTab>(
+    requestedBoostsTab ?? "boost",
   );
 
   useEffect(
     () =>
-      onServerBoostsRequested((serverId) => {
+      onServerBoostsRequested((serverId, tab) => {
         if (serverId !== server.id) return;
         takeRequestedServerBoosts(serverId);
+        setBoostsTab(tab);
         setOpenModal("boosts");
       }),
     [server.id],
@@ -171,6 +180,12 @@ export function ServerSidebarHeader({
 
   function closeModal() {
     setOpenModal(null);
+    setBoostsTab("boost");
+  }
+
+  function openBoosts(tab: BoostSectionTab) {
+    setBoostsTab(tab);
+    setOpenModal("boosts");
   }
 
   return (
@@ -224,7 +239,10 @@ export function ServerSidebarHeader({
               ? (server.vanity_code ?? null)
               : null
           }
+          boostLevel={serverBoostLevel(server)}
+          boostCount={serverBoostCount(server)}
           onClose={closeModal}
+          onOpenBoosts={openBoosts}
         />
       ) : null}
 
@@ -243,6 +261,7 @@ export function ServerSidebarHeader({
         <ServerSettingsModal
           server={server}
           openAt={openModal === "boosts" ? "boosts" : undefined}
+          openBoostsTab={boostsTab}
           isOwner={isOwner}
           canManageServer={canManageServer}
           canManageMessages={canManageMessages}

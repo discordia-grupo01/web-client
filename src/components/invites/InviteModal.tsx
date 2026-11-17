@@ -1,7 +1,10 @@
 "use client";
 
 import {
+  type BoostLevel,
+  type BoostSectionTab,
   buildInviteLink,
+  canSetVanityUrl,
   CHANGE_POLL_INTERVAL_MS,
   daysUntil,
   type Invitation,
@@ -36,6 +39,7 @@ import {
 import { cn } from "@/lib/cn";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 
+import { LockedVanityLink } from "./LockedVanityLink";
 import { ServerVanityLink } from "./ServerVanityLink";
 
 interface InviteModalProps {
@@ -43,7 +47,10 @@ interface InviteModalProps {
   serverName: string;
   /** URL personalizada: servers solo la manda en el nivel 3. */
   vanityCode: string | null;
+  boostLevel: BoostLevel;
+  boostCount: number;
   onClose: () => void;
+  onOpenBoosts: (tab: BoostSectionTab) => void;
 }
 
 const STATUS_COPY: Record<InviteStatus, { label: string; className: string }> =
@@ -179,7 +186,10 @@ export function InviteModal({
   serverId,
   serverName,
   vanityCode,
+  boostLevel,
+  boostCount,
   onClose,
+  onOpenBoosts,
 }: InviteModalProps) {
   const [invitations, setInvitations] = useState<Invitation[] | null>(null);
   const [maxUsesInput, setMaxUsesInput] = useState("");
@@ -392,6 +402,18 @@ export function InviteModal({
             </div>
           )}
         </div>
+
+        {canSetVanityUrl(boostLevel) ? null : (
+          <div className="border-line border-t px-7 py-5">
+            <LockedVanityLink
+              serverName={serverName}
+              level={boostLevel}
+              boostCount={boostCount}
+              onBoost={() => onOpenBoosts("boost")}
+              onShowBenefits={() => onOpenBoosts("benefits")}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

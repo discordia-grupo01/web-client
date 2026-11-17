@@ -2,23 +2,22 @@
 
 import {
   BANNER_PRESETS_LABEL,
-  BOOST_PERK_LEVEL,
-  boostLevelLabel,
+  type BoostLevel,
   boostPerkAvailableFrom,
-  boostPerkLevelLabel,
+  canSetServerBanner,
   PRESET_BANNERS,
   type PresetBanner,
 } from "@discordia/client-shared";
 import { Check } from "lucide-react";
 
-import { BoostLevelIcon } from "@/components/boosts/icons/BoostLevelIcon";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { BoostBenefitField } from "@/components/boosts/benefits/BoostBenefitField";
 import { presetBannerGradientCss } from "@/components/servers/utils/presetBanner";
 import { cn } from "@/lib/cn";
 
 interface BannerPresetPickerProps {
   selectedId: string | null;
-  isLocked: boolean;
+  level: BoostLevel;
+  boostCount: number;
   onSelect: (preset: PresetBanner) => void;
 }
 
@@ -29,32 +28,20 @@ interface BannerPresetPickerProps {
  */
 export function BannerPresetPicker({
   selectedId,
-  isLocked,
+  level,
+  boostCount,
   onSelect,
 }: BannerPresetPickerProps) {
-  return (
-    <div>
-      <div className="flex items-center justify-between gap-2">
-        <SectionLabel>{BANNER_PRESETS_LABEL}</SectionLabel>
-        {isLocked ? (
-          <span
-            title={boostPerkAvailableFrom("custom_banner")}
-            className="border-line bg-surface-input text-content-muted flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold"
-          >
-            <BoostLevelIcon level={BOOST_PERK_LEVEL.custom_banner} size={14} />
-            {boostLevelLabel(BOOST_PERK_LEVEL.custom_banner)}
-          </span>
-        ) : (
-          <span title={boostPerkLevelLabel("custom_banner")} className="flex">
-            <BoostLevelIcon level={BOOST_PERK_LEVEL.custom_banner} size={18} />
-            <span className="sr-only">
-              {boostPerkLevelLabel("custom_banner")}
-            </span>
-          </span>
-        )}
-      </div>
+  const isLocked = !canSetServerBanner(level);
 
-      <div className="mt-2 grid grid-cols-3 gap-2.5">
+  return (
+    <BoostBenefitField
+      perk="custom_banner"
+      level={level}
+      boostCount={boostCount}
+      title={BANNER_PRESETS_LABEL}
+    >
+      <div className="grid grid-cols-3 gap-2.5">
         {PRESET_BANNERS.map((preset) => {
           const isSelected = preset.id === selectedId;
 
@@ -94,6 +81,6 @@ export function BannerPresetPicker({
           );
         })}
       </div>
-    </div>
+    </BoostBenefitField>
   );
 }
