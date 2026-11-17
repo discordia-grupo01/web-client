@@ -8,6 +8,7 @@ import {
   attachmentTooLargeMessage,
   type BoostLevel,
   canBoostAttachmentLimit,
+  canOfferPremiumForAttachment,
   EMOJI_PICKER_LABEL,
   MAX_MESSAGE_LENGTH,
   PREMIUM_ATTACHMENT_ACCEPT,
@@ -44,6 +45,7 @@ import { openSettingsSection } from "@/utils/settingsRequest";
 import { requestServerBoosts } from "@/utils/serverBoostsRequest";
 
 import { AttachmentBoostOffer } from "./AttachmentBoostOffer";
+import { AttachmentPremiumOffer } from "./AttachmentPremiumOffer";
 
 const COUNTER_THRESHOLD = MAX_MESSAGE_LENGTH - 200;
 
@@ -62,6 +64,14 @@ interface MessageComposerProps {
   disabled?: boolean;
 }
 
+type AttachmentOffer = "none" | "boost" | "premium";
+
+function attachmentOfferFor(limits: AttachmentLimitOptions): AttachmentOffer {
+  if (canBoostAttachmentLimit(limits)) return "boost";
+  if (canOfferPremiumForAttachment(limits)) return "premium";
+  return "none";
+}
+
 export function MessageComposer({
   placeholder,
   onSend,
@@ -74,7 +84,7 @@ export function MessageComposer({
   const suggestionsId = useId();
   const draft = useMentionDraft({ editorRef, sources });
   const [sendError, setSendError] = useState<string | undefined>();
-  const [showBoostOffer, setShowBoostOffer] = useState(false);
+  const [offer, setOffer] = useState<AttachmentOffer>("none");
   const [isSending, setIsSending] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [attachments, setAttachments] = useState<PendingAttachment[]>([]);
@@ -91,9 +101,12 @@ export function MessageComposer({
     validateMessageContent(draft.encoded, attachments.length > 0) === undefined;
   const length = [...draft.encoded].length;
 
-  function showError(message: string | undefined, boostOffer = false) {
+  function showError(
+    message: string | undefined,
+    nextOffer: AttachmentOffer = "none",
+  ) {
     setSendError(message);
-    setShowBoostOffer(boostOffer);
+    setOffer(nextOffer);
   }
 
   function clearDraft() {
@@ -155,7 +168,7 @@ export function MessageComposer({
         validateAttachment(file, limits) ===
         attachmentTooLargeMessage(file.size, limits),
     );
-    showError(rejected, tooLarge && canBoostAttachmentLimit(limits));
+    showError(rejected, tooLarge ? attachmentOfferFor(limits) : "none");
     setAttachments((prev) => [
       ...prev,
       ...valid.map((file) => ({ id: crypto.randomUUID(), file })),
@@ -255,14 +268,19 @@ export function MessageComposer({
       </div>
 
       <FieldError message={sendError} />
-      {showBoostOffer && serverBoost ? (
+      {offer === "boost" && serverBoost ? (
         <AttachmentBoostOffer
           level={serverBoost.level}
           boostCount={serverBoost.boostCount}
           onShowBenefits={() =>
             requestServerBoosts(serverBoost.serverId, "benefits")
           }
-          onOpenPremium={() => openSettingsSection("premium")}
+          onOpenPremium={() => openSettingsSection("subscriptions")}
+        />
+      ) : null}
+      {offer === "premium" ? (
+        <AttachmentPremiumOffer
+          onOpenPremium={() => openSettingsSection("subscriptions")}
         />
       ) : null}
 
