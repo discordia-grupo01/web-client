@@ -1,11 +1,7 @@
 "use client";
 
 import { NO_ROLES_YET, type Role } from "@discordia/client-shared";
-import {
-  closestCenter,
-  DndContext,
-  type Modifier,
-} from "@dnd-kit/core";
+import { closestCenter, DndContext, type Modifier } from "@dnd-kit/core";
 import {
   SortableContext,
   useSortable,
@@ -265,9 +261,7 @@ export function RolesList({ editor, onClose }: RolesListProps) {
         ) : loadError ? (
           <p className="text-danger px-2 text-xs">{loadError}</p>
         ) : (roles ?? []).length === 0 ? (
-          <p className="text-content-muted px-2 py-2 text-xs">
-            {NO_ROLES_YET}
-          </p>
+          <p className="text-content-muted px-2 py-2 text-xs">{NO_ROLES_YET}</p>
         ) : (
           <>
             <DndContext
@@ -280,9 +274,7 @@ export function RolesList({ editor, onClose }: RolesListProps) {
                 <ProtectedRoleRow
                   key={role.id}
                   role={role}
-                  isSelected={
-                    role.id === selectedId && rightView !== "create"
-                  }
+                  isSelected={role.id === selectedId && rightView !== "create"}
                   isDefault={role.id === defaultRoleId}
                   showGripColumn={showRoleGripColumn}
                   onSelect={() => selectRole(role.id)}

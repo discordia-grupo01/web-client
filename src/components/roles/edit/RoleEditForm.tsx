@@ -6,12 +6,7 @@ import {
   ROLE_PERMISSIONS,
   roleMembersCount,
 } from "@discordia/client-shared";
-import {
-  AlertCircle,
-  Check,
-  Star,
-  Trash2,
-} from "lucide-react";
+import { AlertCircle, Check, Star, Trash2 } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { type RolesEditor } from "../hooks/useRolesEditor";
@@ -200,10 +195,7 @@ export function RoleEditForm({ serverId, editor }: RoleEditFormProps) {
               </div>
             ) : (
               <>
-                <ColorPicker
-                  value={editColor}
-                  onChange={handleEditColor}
-                />
+                <ColorPicker value={editColor} onChange={handleEditColor} />
                 <FieldError message={colorError} />
               </>
             )}
@@ -355,9 +347,7 @@ export function RoleEditForm({ serverId, editor }: RoleEditFormProps) {
             disabled={!isDirty || saving}
             className="from-accent-gradient-start to-accent-gradient-end text-on-accent flex cursor-pointer items-center gap-2 rounded-xl bg-gradient-to-br px-6 py-2.5 text-sm font-semibold transition-all hover:brightness-110 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-40 disabled:shadow-none"
             style={{
-              boxShadow: isDirty
-                ? "0 6px 20px rgba(36,92,107,0.4)"
-                : "none",
+              boxShadow: isDirty ? "0 6px 20px rgba(36,92,107,0.4)" : "none",
             }}
           >
             {saving ? (
