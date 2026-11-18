@@ -70,6 +70,7 @@ import { usePageVisible } from "@/hooks/usePageVisible";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { onServerBoostsRequested } from "@/utils/serverBoostsRequest";
 import { authorFromProfile } from "@/utils/author";
+import { markTransfersReadRequest } from "@/services/notifications/client";
 import { listServersRequest } from "@/services/servers/client";
 import { avatarSrcOf } from "@/utils/userProfile";
 import { ROUTES } from "@/lib/constants";
@@ -102,6 +103,10 @@ interface HomeShellProps {
   initialSelectedServerId?: string | null;
   initialChannelId?: string | null;
   initialPartnerId?: string | null;
+}
+
+function syncTransfersRead(transferIds: string[]) {
+  void markTransfersReadRequest(transferIds);
 }
 
 function HomeShellContent({
@@ -322,6 +327,7 @@ function HomeShellContent({
     currentAuthor?.id ?? null,
     notificationHistory.items,
     isUnreadInMessaging,
+    syncTransfersRead,
   );
   const refreshNotificationsRef = useRef(notificationHistory.refresh);
   useEffect(() => {
