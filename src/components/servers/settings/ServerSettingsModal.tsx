@@ -3,6 +3,7 @@
 import {
   type BoostSectionTab,
   pendingReportsLabel,
+  type Role,
   serverBoostCount,
   serverBoostLevel,
   type ServerSummary,
@@ -10,10 +11,13 @@ import {
 import { ChevronLeft } from "lucide-react";
 import { useState } from "react";
 
+import { type BanTarget } from "@/components/bans/BanMemberModal";
+import { BansPanel } from "@/components/bans/BansPanel";
 import { ServerBoostsSection } from "@/components/boosts/ServerBoostsSection";
 import { ServerEmojisSection } from "@/components/emojis/ServerEmojisSection";
 import { ModerationAuditSection } from "@/components/moderation-audit/ModerationAuditSection";
 import { ReportsSection } from "@/components/reports/ReportsSection";
+import { RolesPanel } from "@/components/roles/RolesPanel";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { cn } from "@/lib/cn";
 
@@ -32,7 +36,7 @@ import { VanityUrlField } from "./vanity/VanityUrlField";
 import { WordFilterSection } from "./WordFilterSection";
 
 const TITLE_ID = "server-settings-title";
-const SETTINGS_MODAL_WIDTH = 880;
+const SETTINGS_MODAL_WIDTH = 1000;
 
 type MobileView = "menu" | "section";
 
@@ -41,9 +45,12 @@ interface ServerSettingsModalProps {
   isOwner: boolean;
   canManageServer: boolean;
   canManageMessages: boolean;
+  canManageRoles?: boolean;
+  canBanMembers?: boolean;
   canReviewReports: boolean;
   pendingReports: number;
   currentUserId: string | null;
+  myRoles?: Role[];
   /** La sección con la que abre, si se entra desde un atajo (Boosts, Emojis). */
   openAt?: SettingsSection;
   openBoostsTab?: BoostSectionTab;
@@ -52,6 +59,9 @@ interface ServerSettingsModalProps {
   onBuyPoints: () => void;
   onGoToMessage: (channelId: string, messageId: string) => void;
   onOpenProfile: (userId: string) => void;
+  onBanMember?: (target: BanTarget) => void;
+  onPermissionsChanged?: () => void;
+  bansVersion?: number;
   onPendingReportsChanged: () => void;
   onMembersChanged: () => void;
   onUpdated: (server: ServerSummary) => void;
@@ -63,15 +73,21 @@ export function ServerSettingsModal({
   isOwner,
   canManageServer,
   canManageMessages,
+  canManageRoles = false,
+  canBanMembers = false,
   canReviewReports,
   pendingReports,
   currentUserId,
+  myRoles = [],
   openAt,
   openBoostsTab = "boost",
   onClose,
   onBuyPoints,
   onGoToMessage,
   onOpenProfile,
+  onBanMember,
+  onPermissionsChanged,
+  bansVersion = 0,
   onPendingReportsChanged,
   onMembersChanged,
   onUpdated,
@@ -83,6 +99,8 @@ export function ServerSettingsModal({
   const sections = visibleSections({
     canManageServer,
     canManageMessages,
+    canManageRoles,
+    canBanMembers,
     canReviewReports,
   });
   const [section, setSection] = useState<SettingsSection>(() =>
@@ -99,6 +117,11 @@ export function ServerSettingsModal({
   );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [boostsTab, setBoostsTab] = useState<BoostSectionTab>(openBoostsTab);
+
+  function handleClose() {
+    onClose();
+    onPermissionsChanged?.();
+  }
 
   function selectSection(target: SettingsSection) {
     setBoostsTab("boost");
@@ -118,7 +141,7 @@ export function ServerSettingsModal({
   return (
     <>
       <ModalShell
-        onClose={onClose}
+        onClose={handleClose}
         labelledBy={TITLE_ID}
         maxWidth={SETTINGS_MODAL_WIDTH}
         isFullScreenOnMobile
@@ -200,6 +223,24 @@ export function ServerSettingsModal({
                 canManageServer={canManageServer}
                 titleId={TITLE_ID}
               />
+            ) : section === "roles" ? (
+              <RolesPanel
+                serverId={server.id}
+                serverName={server.name}
+                isOwner={isOwner}
+                myRoles={myRoles}
+                titleId={TITLE_ID}
+              />
+            ) : section === "bans" ? (
+              <BansPanel
+                key={bansVersion}
+                serverId={server.id}
+                ownerId={server.owner_id}
+                currentUserId={currentUserId}
+                titleId={TITLE_ID}
+                onOpenProfile={onOpenProfile}
+                onBanMember={onBanMember ?? (() => {})}
+              />
             ) : section === "words" ? (
               <WordFilterSection serverId={server.id} titleId={TITLE_ID} />
             ) : (
@@ -207,7 +248,7 @@ export function ServerSettingsModal({
                 form={form}
                 serverName={server.name}
                 titleId={TITLE_ID}
-                onCancel={onClose}
+                onCancel={handleClose}
                 onBoost={() => openBoostsAt("boost")}
                 onShowBenefits={() => openBoostsAt("benefits")}
                 vanityField={

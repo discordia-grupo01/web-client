@@ -33,6 +33,51 @@ describe("visibleSections", () => {
     ).toEqual(["boosts", "emojis", "words"]);
   });
 
+  it("muestra roles con canManageRoles", () => {
+    expect(
+      visibleSections({
+        canManageServer: false,
+        canManageMessages: false,
+        canManageRoles: true,
+        canBanMembers: false,
+        canReviewReports: false,
+      }),
+    ).toEqual(["boosts", "emojis", "roles"]);
+  });
+
+  it("muestra baneos con canBanMembers", () => {
+    expect(
+      visibleSections({
+        canManageServer: false,
+        canManageMessages: false,
+        canManageRoles: false,
+        canBanMembers: true,
+        canReviewReports: false,
+      }),
+    ).toEqual(["boosts", "emojis", "bans"]);
+  });
+
+  it("muestra todas las secciones en el orden correcto", () => {
+    expect(
+      visibleSections({
+        canManageServer: true,
+        canManageMessages: true,
+        canManageRoles: true,
+        canBanMembers: true,
+        canReviewReports: true,
+      }),
+    ).toEqual([
+      "profile",
+      "boosts",
+      "emojis",
+      "roles",
+      "bans",
+      "words",
+      "reports",
+      "audit",
+    ]);
+  });
+
   it("suma Reportes y el registro de auditoría al final para un moderador", () => {
     expect(
       visibleSections({
@@ -59,6 +104,8 @@ describe("initialSection", () => {
     "profile",
     "boosts",
     "emojis",
+    "roles",
+    "bans",
     "words",
     "reports",
     "audit",
@@ -83,6 +130,16 @@ describe("initialSection", () => {
     expect(initialSection([...all], { hasPendingReports: false })).toBe(
       "profile",
     );
+    expect(
+      initialSection(["boosts", "emojis", "roles"], {
+        hasPendingReports: false,
+      }),
+    ).toBe("roles");
+    expect(
+      initialSection(["boosts", "emojis", "bans"], {
+        hasPendingReports: false,
+      }),
+    ).toBe("bans");
     expect(
       initialSection(["boosts", "emojis", "words"], {
         hasPendingReports: false,

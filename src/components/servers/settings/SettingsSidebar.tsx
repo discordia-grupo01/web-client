@@ -37,7 +37,7 @@ export function SettingsSidebar({
   onDelete,
 }: SettingsSidebarProps) {
   return (
-    <aside className="bg-surface-sunken hidden w-56 shrink-0 flex-col p-4 sm:flex">
+    <aside className="bg-surface-sunken border-line hidden w-56 shrink-0 flex-col border-r p-4 sm:flex">
       <div className="px-3 pt-2 pb-5">
         <p className="text-content font-display text-lg font-bold">
           Configuración

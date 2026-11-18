@@ -1,11 +1,11 @@
 "use client";
 
 import {
-  BANS_TITLE,
   BOOSTS_SECTION_TITLE,
   type BoostLevel,
   boostLevelLabel,
   NOTIFICATION_SETTINGS_MENU_LABEL,
+  SERVER_SETTINGS_MENU_DESCRIPTION,
 } from "@discordia/client-shared";
 import {
   ArrowLeftRight,
@@ -14,8 +14,6 @@ import {
   LogOut,
   Plus,
   Settings,
-  Shield,
-  ShieldBan,
   UserPlus,
 } from "lucide-react";
 
@@ -43,8 +41,6 @@ interface ServerMenuProps {
   onOpenSettings: () => void;
   onCreateChannel: () => void;
   onCreateCategory: () => void;
-  onManageRoles: () => void;
-  onManageBans: () => void;
   onTransfer: () => void;
   onLeave: () => void;
 }
@@ -66,18 +62,19 @@ export function ServerMenu({
   onOpenSettings,
   onCreateChannel,
   onCreateCategory,
-  onManageRoles,
-  onManageBans,
   onTransfer,
   onLeave,
 }: ServerMenuProps) {
-  /** Cada opcion cierra el menu antes de hacer lo suyo. */
+  /** Cada opción cierra el menú antes de hacer lo suyo. */
   function run(action: () => void) {
     return () => {
       onClose();
       action();
     };
   }
+
+  const canOpenSettings =
+    canManageServer || canManageMessages || canManageRoles || canBanMembers;
 
   return (
     <>
@@ -119,10 +116,11 @@ export function ServerMenu({
           }
         />
 
-        {canManageServer || canManageMessages ? (
+        {canOpenSettings ? (
           <ServerMenuItem
             icon={Settings}
             label="Configuración del servidor"
+            description={SERVER_SETTINGS_MENU_DESCRIPTION}
             onClick={run(onOpenSettings)}
             trailing={
               pendingReportsLabel ? (
@@ -145,22 +143,6 @@ export function ServerMenu({
               onClick={run(onCreateCategory)}
             />
           </>
-        ) : null}
-
-        {canManageRoles ? (
-          <ServerMenuItem
-            icon={Shield}
-            label="Gestionar roles"
-            onClick={run(onManageRoles)}
-          />
-        ) : null}
-
-        {canBanMembers ? (
-          <ServerMenuItem
-            icon={ShieldBan}
-            label={BANS_TITLE}
-            onClick={run(onManageBans)}
-          />
         ) : null}
 
         {transferLabel ? (
