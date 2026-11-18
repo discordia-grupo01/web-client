@@ -30,7 +30,7 @@ interface ServerEmojisValue {
 
 const EMPTY: ServerEmojisValue = { servers: [], byServer: {}, load: () => {} };
 
-const ServerEmojisContext = createContext<ServerEmojisValue>(EMPTY);
+export const ServerEmojisContext = createContext<ServerEmojisValue>(EMPTY);
 
 /**
  * Los emojis de todos los servidores donde está la persona, para el selector

@@ -2,6 +2,7 @@ import { render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { CustomEmojisProvider } from "@/contexts/CustomEmojisContext";
+import { ServerEmojisContext } from "@/contexts/ServerEmojisContext";
 
 import { CustomEmojiImage } from "./CustomEmojiImage";
 
@@ -82,5 +83,26 @@ describe("CustomEmojiImage", () => {
 
     expect(await screen.findByAltText(":mate:")).toBeInTheDocument();
     expect(listCustomEmojisRequest).toHaveBeenCalledTimes(2);
+  });
+
+  it("dibuja de inmediato la imagen si el emoji ya estaba en el catálogo de servidores", () => {
+    render(
+      <ServerEmojisContext.Provider
+        value={{
+          servers: [],
+          byServer: {
+            s1: [{ ...mate, created_by: "u1", created_at: "2026-01-01" }],
+          },
+          load: () => {},
+        }}
+      >
+        <CustomEmojisProvider>
+          <CustomEmojiImage id={MATE} name="mate" />
+        </CustomEmojisProvider>
+      </ServerEmojisContext.Provider>,
+    );
+
+    expect(screen.getByAltText(":mate:")).toBeInTheDocument();
+    expect(screen.queryByText(":mate:")).not.toBeInTheDocument();
   });
 });

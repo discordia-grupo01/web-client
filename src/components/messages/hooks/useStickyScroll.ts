@@ -1,7 +1,7 @@
 "use client";
 
 import type { FocusedMessage } from "@discordia/client-shared";
-import { useLayoutEffect, useRef, type UIEvent } from "react";
+import { useEffect, useLayoutEffect, useRef, type UIEvent } from "react";
 
 /** Distancia al fondo (px) hasta la que se sigue considerando que se esta leyendo lo ultimo. */
 const NEAR_BOTTOM_PX = 80;
@@ -70,6 +70,20 @@ export function useStickyScroll(
       wasViewingPast: isViewingPast,
     };
   }, [messages, isViewingPast]);
+
+  // Si el contenedor cambia de tamaño (por ejemplo, porque el compositor crece
+  // al mostrar una oferta o varios adjuntos), se mantiene el scroll al fondo.
+  useEffect(() => {
+    const container = ref.current;
+    if (!container || typeof ResizeObserver === "undefined") return;
+    const observer = new ResizeObserver(() => {
+      if (!isViewingPast && isNearBottom.current) {
+        container.scrollTop = container.scrollHeight;
+      }
+    });
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [isViewingPast]);
 
   const focusNonce = focusedMessage?.nonce;
   const focusId = focusedMessage?.id;
