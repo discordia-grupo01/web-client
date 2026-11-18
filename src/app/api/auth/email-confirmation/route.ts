@@ -47,7 +47,7 @@ export async function POST(
       );
     }
 
-    if (result.code === "INVALID_INPUT") {
+    if (result.code === "INVALID_INPUT" || result.code === "INVALID_BODY") {
       return NextResponse.json(
         { ok: false, message: INVALID_EMAIL_MESSAGE },
         { status: 400 },
