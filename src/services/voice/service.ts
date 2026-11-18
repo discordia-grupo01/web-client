@@ -38,7 +38,12 @@ async function voiceRequest<T>(
 ): Promise<VoiceServiceResult<T>> {
   const { result, body } = await apiRequestWithBody<T>(path, options);
   if (result.ok) return { ok: true, data: result.data };
-  return { ok: false, status: result.status, code: voiceErrorCodeOf(body) };
+  // Formato viejo `{ error: "voice_forbidden" }` o sobre nuevo, cuyo codigo
+  // llega en `result.code` (`VOICE_FORBIDDEN`).
+  const code =
+    voiceErrorCodeOf(body) ??
+    voiceErrorCodeOf({ error: String(result.code).toLowerCase() });
+  return { ok: false, status: result.status, code };
 }
 
 export function requestVoiceToken(
