@@ -1,8 +1,10 @@
 "use client";
 
 import { emojiLabel } from "@discordia/client-shared";
+import { useMemo } from "react";
 
 import { useCustomEmoji } from "@/contexts/CustomEmojisContext";
+import { useServerEmojiCatalog } from "@/contexts/ServerEmojisContext";
 import { cn } from "@/lib/cn";
 import { emojiImageSrc } from "@/utils/image-urls";
 
@@ -19,7 +21,19 @@ export function CustomEmojiImage({
   size = 22,
   className,
 }: CustomEmojiImageProps) {
-  const emoji = useCustomEmoji(id);
+  const customEmoji = useCustomEmoji(id);
+  const { byServer } = useServerEmojiCatalog();
+
+  const serverEmoji = useMemo(() => {
+    if (customEmoji) return null;
+    for (const emojis of Object.values(byServer)) {
+      const match = emojis.find((item) => item.id === id);
+      if (match) return match;
+    }
+    return null;
+  }, [customEmoji, byServer, id]);
+
+  const emoji = customEmoji ?? serverEmoji;
   const label = emojiLabel(name);
 
   if (!emoji) return <>{label}</>;
