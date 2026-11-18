@@ -209,4 +209,107 @@ describe("useNotificationReads", () => {
     expect(result.current.unreadCount).toBe(3);
     expect(stored()).toHaveProperty(["transfer:t1"]);
   });
+  describe("transferencias leidas en el servidor", () => {
+    const transfer = (
+      id: string,
+      overrides: Partial<NotificationHistoryItem> = {},
+    ): NotificationHistoryItem => ({
+      kind: "ownership_transfer",
+      message_id: id,
+      author_id: "owner",
+      occurred_at: "2026-11-02T12:00:00Z",
+      server_id: "s1",
+      channel_id: null,
+      conversation_id: null,
+      to_user_id: "member",
+      transfer_status: "accepted",
+      ...overrides,
+    });
+
+    const listed = [transfer("t1"), transfer("t2")];
+
+    it("lo que el servidor ya marco como leido no cuenta aunque no haya marca local", () => {
+      const { result } = renderHook(() =>
+        useNotificationReads("u1", [transfer("t1", { read: true })]),
+      );
+
+      expect(result.current.unreadCount).toBe(0);
+    });
+
+    it("al leer una transferencia se lo avisa al servidor una sola vez", () => {
+      const sync = vi.fn();
+      const { result } = renderHook(() =>
+        useNotificationReads("u1", listed, () => true, sync),
+      );
+      expect(sync).not.toHaveBeenCalled();
+
+      act(() => result.current.markTransferRead("t1"));
+      act(() => result.current.markTransferRead("t1"));
+
+      expect(sync).toHaveBeenCalledTimes(1);
+      expect(sync).toHaveBeenCalledWith(["t1"]);
+    });
+
+    it("marcar todo le avisa al servidor de todas las transferencias", () => {
+      const sync = vi.fn();
+      const { result } = renderHook(() =>
+        useNotificationReads("u1", listed, () => true, sync),
+      );
+
+      act(() => result.current.markAllRead());
+
+      expect(sync).toHaveBeenCalledTimes(1);
+      expect(sync).toHaveBeenCalledWith(["t1", "t2"]);
+    });
+
+    it("lo que ya se leyo en este dispositivo se le avisa al servidor al cargar", () => {
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({ "transfer:t1": "2026-11-03T00:00:00.000Z" }),
+      );
+      const sync = vi.fn();
+
+      renderHook(() => useNotificationReads("u1", listed, () => true, sync));
+
+      expect(sync).toHaveBeenCalledWith(["t1"]);
+    });
+
+    it("no le avisa al servidor de lo que el servidor ya sabe", () => {
+      localStorage.setItem(
+        KEY,
+        JSON.stringify({ "transfer:t1": "2026-11-03T00:00:00.000Z" }),
+      );
+      const sync = vi.fn();
+
+      renderHook(() =>
+        useNotificationReads(
+          "u1",
+          [transfer("t1", { read: true })],
+          () => true,
+          sync,
+        ),
+      );
+
+      expect(sync).not.toHaveBeenCalled();
+    });
+
+    it("no avisa de menciones ni de mensajes directos", () => {
+      const sync = vi.fn();
+      const { result } = renderHook(() =>
+        useNotificationReads("u1", items, () => true, sync),
+      );
+
+      act(() => result.current.markAllRead());
+
+      expect(sync).not.toHaveBeenCalled();
+    });
+
+    it("sin usuario no le avisa al servidor", () => {
+      const sync = vi.fn();
+
+      renderHook(() => useNotificationReads(null, listed, () => true, sync));
+
+      expect(sync).not.toHaveBeenCalled();
+    });
+  });
 });
