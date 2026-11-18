@@ -55,14 +55,17 @@ describe("DmCallButton", () => {
     ).toBeDisabled();
   });
 
-  it("en un borrador todavia no se puede llamar", () => {
+  it("permite llamar desde un borrador sin mensajes previos", () => {
     render(
       <DmCallButton partner={beto} conversationId={null} blockedByMe={false} />,
     );
 
-    expect(
-      screen.getByRole("button", { name: PRIVATE_CALL_START }),
-    ).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: PRIVATE_CALL_START }));
+
+    expect(privateCall.start).toHaveBeenCalledWith(
+      { id: "beto", name: "Beto", avatarUrl: null },
+      null,
+    );
   });
 
   it("no deja iniciar otra llamada si ya hay una", () => {

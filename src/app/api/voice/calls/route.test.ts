@@ -58,6 +58,17 @@ describe("POST /api/voice/calls", () => {
     expect(await response.json()).toEqual({ ok: true, call });
   });
 
+  it("permite iniciar desde un borrador sin conversationId", async () => {
+    startPrivateCall.mockResolvedValue({ ok: true, data: call });
+
+    const response = await start({
+      recipientId: "beto",
+    });
+
+    expect(startPrivateCall).toHaveBeenCalledWith("jwt", "beto", null);
+    expect(response.status).toBe(201);
+  });
+
   it("traduce el codigo de signaling al texto para la persona", async () => {
     startPrivateCall.mockResolvedValue({
       ok: false,
