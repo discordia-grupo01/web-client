@@ -25,6 +25,17 @@ export function listNotificationHistory(
   );
 }
 
+export function markTransfersRead(
+  token: string,
+  transferIds: readonly string[],
+): Promise<ApiResult<unknown>> {
+  return apiRequest<unknown>("/v1/notifications/history/transfers/read", {
+    method: "POST",
+    token,
+    data: { transfer_ids: transferIds },
+  });
+}
+
 export function getNotificationSettings(
   token: string,
 ): Promise<ApiResult<NotificationSettingsResponse>> {
