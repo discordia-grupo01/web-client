@@ -30,6 +30,7 @@ export const metadata: Metadata = {
   },
   description:
     "Chat de texto, voz y video para comunidades de todos los tamanos.",
+  verification: { google: "HizMU0Q4GvF_t3e1h8O3IEo0mrBIWtP6RqDBerN4ZNA" },
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
