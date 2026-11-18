@@ -16,7 +16,11 @@ import { DmCallButton } from "@/components/private-call/DmCallButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
-import { MessageComposer } from "@/components/messages/MessageComposer";
+import {
+  MessageComposer,
+  type MessageComposerHandle,
+} from "@/components/messages/MessageComposer";
+import { useChatDragDrop } from "@/components/messages/hooks/useChatDragDrop";
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { Avatar } from "@/components/ui/Avatar";
 import type {
@@ -25,6 +29,7 @@ import type {
 } from "@/hooks/useDirectMessages";
 import { usePendingMessages } from "@/hooks/usePendingMessages";
 import { usePresenceOf } from "@/hooks/usePresence";
+import { useRef } from "react";
 
 import { DmHistory } from "./DmHistory";
 import { DmWelcome } from "./DmWelcome";
@@ -66,6 +71,10 @@ export function DmConversation({
     send: onSend,
   });
   const partnerStatus = usePresenceOf(activeSummary?.partner.id);
+  const composerRef = useRef<MessageComposerHandle>(null);
+  const { isDragging, dragHandlers } = useChatDragDrop((files) =>
+    composerRef.current?.addFiles(files),
+  );
 
   if (!activeSummary) {
     return (
@@ -94,9 +103,20 @@ export function DmConversation({
   return (
     <ChatPremiumOfferProvider>
       <div
-        className="flex min-w-0 flex-1 flex-col overflow-hidden"
+        className="relative flex min-w-0 flex-1 flex-col overflow-hidden"
         style={{ background: "var(--bg-chat)" }}
+        {...dragHandlers}
       >
+        {isDragging ? (
+          <div
+            aria-hidden
+            className="border-accent bg-accent/10 pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed"
+          >
+            <p className="text-accent text-sm font-medium select-none">
+              Suelta los archivos para adjuntarlos
+            </p>
+          </div>
+        ) : null}
         <div
           className="flex h-12 shrink-0 items-center gap-2 px-2 md:px-4"
           style={{ borderBottom: "1px solid var(--border)" }}
@@ -178,6 +198,7 @@ export function DmConversation({
           </p>
         ) : null}
         <MessageComposer
+          ref={composerRef}
           placeholder={dmInputPlaceholder(partner.name)}
           onSend={pending.onSend}
           uploadTarget={{ to: partner.id }}
