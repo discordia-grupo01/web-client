@@ -22,6 +22,7 @@ import { CheckoutConfirmModal } from "./checkout/CheckoutConfirmModal";
 import { DiscordiaPointIcon } from "./icons/DiscordiaIcons";
 import { useBillingOverview } from "./hooks/useBillingOverview";
 import { useCheckout } from "./hooks/useCheckout";
+import { useServerDirectory } from "./hooks/useServerDirectory";
 import { PointMovements } from "./history/PointMovements";
 import { PointsShop } from "./points/PointsShop";
 import { PremiumCard } from "./premium/PremiumCard";
@@ -59,6 +60,7 @@ interface BillingSettingsProps {
 export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
   const { user } = useAuth();
   const { state, reload, setPremium } = useBillingOverview();
+  const serverDirectory = useServerDirectory();
   const ownProfile = useOptionalOwnProfile();
   const refreshOwnProfile = ownProfile?.refresh;
   const isReady = state.status === "ready";
@@ -168,7 +170,10 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
       {tab === "transactions" ? (
         <>
           <PurchaseHistory purchases={state.points.purchases} />
-          <PointMovements ledger={state.points.ledger} />
+          <PointMovements
+            ledger={state.points.ledger}
+            serverDirectory={serverDirectory}
+          />
         </>
       ) : null}
 
