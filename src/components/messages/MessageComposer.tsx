@@ -52,6 +52,7 @@ import { AttachmentBoostOffer } from "./AttachmentBoostOffer";
 import { AttachmentPremiumOffer } from "./AttachmentPremiumOffer";
 import { CustomEmojiPremiumOffer } from "./CustomEmojiPremiumOffer";
 import { useCustomEmojiPicker } from "./hooks/useCustomEmojiPicker";
+import { useChatDragDrop } from "./hooks/useChatDragDrop";
 import { emojiPreviews } from "./utils/emojiPreviews";
 import { useServerEmojiCatalog } from "@/contexts/ServerEmojisContext";
 
@@ -107,6 +108,7 @@ export function MessageComposer({
   // Los emojis se piden recién cuando se abre el selector, una vez por sesión.
   const { load: loadServerEmojis } = useServerEmojiCatalog();
   const customEmojis = useCustomEmojiPicker(server?.id ?? null, premium);
+  const { isDragging, dragHandlers } = useChatDragDrop(addFiles);
   // El `:nombre:` de los emojis elegidos se dibuja con su imagen al lado.
   const previews = useMemo(
     () =>
@@ -234,7 +236,18 @@ export function MessageComposer({
     <form
       onSubmit={submit}
       className="relative shrink-0 px-2 pb-3 md:px-4 md:pb-4"
+      {...dragHandlers}
     >
+      {isDragging ? (
+        <div
+          aria-hidden
+          className="border-accent bg-accent/10 pointer-events-none absolute inset-0 z-10 m-2 flex items-center justify-center rounded-lg border-2 border-dashed"
+        >
+          <p className="text-accent text-sm font-medium select-none">
+            Suelta los archivos para adjuntarlos
+          </p>
+        </div>
+      ) : null}
       {draft.isOpen ? (
         <MentionSuggestions
           id={suggestionsId}

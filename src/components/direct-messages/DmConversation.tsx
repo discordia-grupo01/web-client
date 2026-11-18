@@ -13,6 +13,7 @@ import { MessageCircle } from "lucide-react";
 import { ChatPremiumOfferProvider } from "@/contexts/ChatPremiumOfferContext";
 import { MobileNavButton } from "@/components/layout/MobileNavButton";
 import { DmCallButton } from "@/components/private-call/DmCallButton";
+import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
 import { MessageComposer } from "@/components/messages/MessageComposer";
@@ -131,6 +132,7 @@ export function DmConversation({
             </span>
           ) : null}
           <div className="ml-auto flex shrink-0 items-center">
+            <ThemeToggle />
             <DmCallButton
               partner={partner}
               conversationId={conversationId}
