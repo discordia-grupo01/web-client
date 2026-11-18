@@ -171,85 +171,87 @@ export function ChannelChat({
   return (
     <ChatPremiumOfferProvider>
       <MessageMentionsProvider value={mentions}>
-        {messages !== null ? (
-          <ConnectionPill status={status} onRetry={retry} />
-        ) : null}
-        {messages === null ? (
-          status === "offline" ? (
-            <ConnectionLostNotice onRetry={retry} />
+        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+          {messages !== null ? (
+            <ConnectionPill status={status} onRetry={retry} />
+          ) : null}
+          {messages === null ? (
+            status === "offline" ? (
+              <ConnectionLostNotice onRetry={retry} />
+            ) : (
+              <ChatStatusNotice message={LOADING_MESSAGES_LABEL} isLoading />
+            )
           ) : (
-            <ChatStatusNotice message={LOADING_MESSAGES_LABEL} isLoading />
-          )
-        ) : (
-          <MessageList
-            welcome={<ChannelWelcome channelName={channel.name} />}
-            label={`Mensajes de #${channel.name}`}
-            messages={hasNewer ? messages : pending.withPending(messages)}
-            authors={authors}
-            currentUserId={currentAuthor?.id ?? null}
-            canManageMessages={canManageMessages}
-            canSendMessages={canSendMessages}
-            canAddReactions={canAddReactions}
-            serverId={serverId}
-            hasMore={hasMore}
-            isLoadingOlder={isLoadingOlder}
-            onLoadOlder={loadOlder}
-            hasNewer={hasNewer}
-            isLoadingNewer={isLoadingNewer}
-            onLoadNewer={loadNewer}
-            focusedMessage={focusedMessage}
-            onToggleReaction={handleToggleReaction}
-            onEditMessage={editMessage}
-            onDeleteMessage={handleDelete}
-            onRetryMessage={pending.retry}
-            onDiscardMessage={pending.discard}
-            onReportMessage={onReportMessage}
-            onOpenProfile={
-              onOpenProfile
-                ? (userId) =>
-                    onOpenProfile(
-                      userId,
-                      members?.find((member) => member.user_id === userId),
-                    )
-                : undefined
+            <MessageList
+              welcome={<ChannelWelcome channelName={channel.name} />}
+              label={`Mensajes de #${channel.name}`}
+              messages={hasNewer ? messages : pending.withPending(messages)}
+              authors={authors}
+              currentUserId={currentAuthor?.id ?? null}
+              canManageMessages={canManageMessages}
+              canSendMessages={canSendMessages}
+              canAddReactions={canAddReactions}
+              serverId={serverId}
+              hasMore={hasMore}
+              isLoadingOlder={isLoadingOlder}
+              onLoadOlder={loadOlder}
+              hasNewer={hasNewer}
+              isLoadingNewer={isLoadingNewer}
+              onLoadNewer={loadNewer}
+              focusedMessage={focusedMessage}
+              onToggleReaction={handleToggleReaction}
+              onEditMessage={editMessage}
+              onDeleteMessage={handleDelete}
+              onRetryMessage={pending.retry}
+              onDiscardMessage={pending.discard}
+              onReportMessage={onReportMessage}
+              onOpenProfile={
+                onOpenProfile
+                  ? (userId) =>
+                      onOpenProfile(
+                        userId,
+                        members?.find((member) => member.user_id === userId),
+                      )
+                  : undefined
+              }
+            />
+          )}
+          {hasNewer && messages !== null ? (
+            <ViewingPastBar onJumpToPresent={jumpToPresent} />
+          ) : null}
+          {actionError ? (
+            <p
+              role="alert"
+              className="bg-danger/10 text-danger shrink-0 px-4 py-1 text-center text-xs"
+            >
+              {actionError}
+            </p>
+          ) : null}
+          <MessageComposer
+            placeholder={
+              canSendMessages || isCheckingPermissions
+                ? messageInputPlaceholder(channel.name)
+                : SEND_MESSAGES_DENIED_PLACEHOLDER
+            }
+            onSend={(...args) => {
+              // Lo propio llega por el socket, que no agrega nada mientras se ve el pasado.
+              jumpToPresent();
+              return pending.onSend(...args);
+            }}
+            uploadTarget={{ channelId: channel.id }}
+            serverBoost={{ serverId, level: boostLevel, boostCount }}
+            server={{ id: serverId, name: serverName, icon_url: serverIconUrl }}
+            disabled={
+              !currentAuthor ||
+              !canSendMessages ||
+              !(
+                status === "ready" ||
+                status === "reconnecting" ||
+                status === "offline"
+              )
             }
           />
-        )}
-        {hasNewer && messages !== null ? (
-          <ViewingPastBar onJumpToPresent={jumpToPresent} />
-        ) : null}
-        {actionError ? (
-          <p
-            role="alert"
-            className="bg-danger/10 text-danger shrink-0 px-4 py-1 text-center text-xs"
-          >
-            {actionError}
-          </p>
-        ) : null}
-        <MessageComposer
-          placeholder={
-            canSendMessages || isCheckingPermissions
-              ? messageInputPlaceholder(channel.name)
-              : SEND_MESSAGES_DENIED_PLACEHOLDER
-          }
-          onSend={(...args) => {
-            // Lo propio llega por el socket, que no agrega nada mientras se ve el pasado.
-            jumpToPresent();
-            return pending.onSend(...args);
-          }}
-          uploadTarget={{ channelId: channel.id }}
-          serverBoost={{ serverId, level: boostLevel, boostCount }}
-          server={{ id: serverId, name: serverName, icon_url: serverIconUrl }}
-          disabled={
-            !currentAuthor ||
-            !canSendMessages ||
-            !(
-              status === "ready" ||
-              status === "reconnecting" ||
-              status === "offline"
-            )
-          }
-        />
+        </div>
       </MessageMentionsProvider>
     </ChatPremiumOfferProvider>
   );

@@ -291,4 +291,51 @@ describe("sumarse a una reacción que ya existe", () => {
 
     expect(onToggleReaction).toHaveBeenCalledWith("m1", FESTEJO_TOKEN);
   });
+
+  it("deja cerrar la oferta con el botón de cerrar", async () => {
+    renderList(false, {
+      reactions: animatedReaction,
+    });
+
+    const chip = await screen.findByRole("button", {
+      name: /:festejo: 2 · Sumarte es de Premium/,
+    });
+    await userEvent.click(chip);
+
+    expect(screen.getByText(OFFER_TITLE)).toBeInTheDocument();
+
+    await userEvent.click(
+      screen.getByRole("button", { name: "Cerrar oferta" }),
+    );
+
+    expect(screen.queryByText(OFFER_TITLE)).not.toBeInTheDocument();
+  });
+
+  it("deja cerrar la oferta haciendo click afuera o con Escape", async () => {
+    renderList(false, {
+      reactions: animatedReaction,
+    });
+
+    const chip = await screen.findByRole("button", {
+      name: /:festejo: 2 · Sumarte es de Premium/,
+    });
+    await userEvent.click(chip);
+
+    expect(screen.getByText(OFFER_TITLE)).toBeInTheDocument();
+
+    // Click afuera
+    await userEvent.click(document.body);
+    await waitFor(() => {
+      expect(screen.queryByText(OFFER_TITLE)).not.toBeInTheDocument();
+    });
+
+    // Abrir de nuevo y probar Escape
+    await userEvent.click(chip);
+    expect(screen.getByText(OFFER_TITLE)).toBeInTheDocument();
+
+    await userEvent.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByText(OFFER_TITLE)).not.toBeInTheDocument();
+    });
+  });
 });

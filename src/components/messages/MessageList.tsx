@@ -105,7 +105,7 @@ export function MessageList({
       {...scroll}
       // Con el globito de "Ir al presente" abajo, aire para que no tape el final.
       className={cn(
-        "flex-1 overflow-y-auto px-2 py-4 md:px-4",
+        "min-h-0 flex-1 overflow-y-auto px-2 py-4 md:px-4",
         hasNewer && "pb-14",
       )}
     >
