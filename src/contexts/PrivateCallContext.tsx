@@ -44,7 +44,7 @@ interface PrivateCallValue {
   /** Cuando quedaron conectados los dos, para mostrar cuanto lleva la llamada. */
   connectedAt: number | null;
   endReason: PrivateCallEndReason | null;
-  start: (partner: PrivateCallPartner, conversationId: string) => void;
+  start: (partner: PrivateCallPartner, conversationId: string | null) => void;
   accept: () => void;
   /** Quien recibe no atiende. */
   decline: () => void;
@@ -238,7 +238,7 @@ export function PrivateCallProvider({
   }, []);
 
   const start = useCallback(
-    (partner: PrivateCallPartner, conversationId: string) => {
+    (partner: PrivateCallPartner, conversationId: string | null) => {
       if (isPrivateCallBusy(stateRef.current)) return;
       isCancelPendingRef.current = false;
       dispatch({ type: "start_requested", partner });

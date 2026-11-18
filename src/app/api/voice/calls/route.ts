@@ -26,7 +26,9 @@ export async function POST(
   const recipientId =
     typeof body?.recipientId === "string" ? body.recipientId : "";
   const conversationId =
-    typeof body?.conversationId === "string" ? body.conversationId : "";
+    typeof body?.conversationId === "string" && body.conversationId !== ""
+      ? body.conversationId
+      : null;
 
   const result = await startPrivateCall(
     session.token,
