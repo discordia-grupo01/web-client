@@ -91,14 +91,17 @@ export interface MessageComposerHandle {
 export const MessageComposer = forwardRef<
   MessageComposerHandle,
   MessageComposerProps
->(function MessageComposer({
-  placeholder,
-  onSend,
-  uploadTarget,
-  serverBoost,
-  server,
-  disabled = false,
-}: MessageComposerProps, ref) {
+>(function MessageComposer(
+  {
+    placeholder,
+    onSend,
+    uploadTarget,
+    serverBoost,
+    server,
+    disabled = false,
+  }: MessageComposerProps,
+  ref,
+) {
   const { sources } = useMessageMentions();
   const editorRef = useRef<MessageEditorHandle>(null);
   const suggestionsId = useId();

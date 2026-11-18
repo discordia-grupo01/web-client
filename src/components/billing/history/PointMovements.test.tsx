@@ -1,4 +1,8 @@
-import { BILLING_COPY, type LedgerEntry, type ServerSummary } from "@discordia/client-shared";
+import {
+  BILLING_COPY,
+  type LedgerEntry,
+  type ServerSummary,
+} from "@discordia/client-shared";
 
 import { fireEvent, render, screen } from "@testing-library/react";
 import { describe, expect, it } from "vitest";
@@ -26,7 +30,9 @@ describe("PointMovements", () => {
   it("muestra estado vacio cuando no hay movimientos", () => {
     render(<PointMovements ledger={[]} serverDirectory={null} />);
     expect(screen.getByText(BILLING_COPY.movementsEmpty)).toBeInTheDocument();
-    expect(screen.queryByPlaceholderText("Buscar por servidor...")).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText("Buscar por servidor..."),
+    ).not.toBeInTheDocument();
   });
 
   it("no muestra buscador si ningun movimiento tiene server_id", () => {
@@ -38,7 +44,9 @@ describe("PointMovements", () => {
       },
     ];
     render(<PointMovements ledger={ledger} serverDirectory={null} />);
-    expect(screen.queryByPlaceholderText("Buscar por servidor...")).not.toBeInTheDocument();
+    expect(
+      screen.queryByPlaceholderText("Buscar por servidor..."),
+    ).not.toBeInTheDocument();
   });
 
   it("muestra buscador y al enfocarlo o buscar muestra los servidores para filtrar", () => {
@@ -75,7 +83,9 @@ describe("PointMovements", () => {
       },
     ];
 
-    render(<PointMovements ledger={ledger} serverDirectory={serverDirectory} />);
+    render(
+      <PointMovements ledger={ledger} serverDirectory={serverDirectory} />,
+    );
 
     // Search input is present
     const searchInput = screen.getByPlaceholderText("Buscar por servidor...");
@@ -100,7 +110,9 @@ describe("PointMovements", () => {
     expect(screen.queryByText("Comunidad Beta")).not.toBeInTheDocument();
 
     // Clear filter
-    const clearBtn = screen.getByRole("button", { name: "Limpiar filtro de servidor" });
+    const clearBtn = screen.getByRole("button", {
+      name: "Limpiar filtro de servidor",
+    });
     fireEvent.click(clearBtn);
     expect(searchInput).toHaveValue("");
     expect(screen.getByText("Comunidad Beta")).toBeInTheDocument();
@@ -111,5 +123,3 @@ describe("PointMovements", () => {
     expect(screen.queryByText("Comunidad Alpha")).not.toBeInTheDocument();
   });
 });
-
-

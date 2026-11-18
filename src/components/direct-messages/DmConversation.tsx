@@ -16,7 +16,10 @@ import { DmCallButton } from "@/components/private-call/DmCallButton";
 import { ThemeToggle } from "@/components/ui/ThemeToggle";
 import { ConnectionLostNotice } from "@/components/messages/ConnectionLostNotice";
 import { MessageList } from "@/components/messages/MessageList";
-import { MessageComposer, type MessageComposerHandle } from "@/components/messages/MessageComposer";
+import {
+  MessageComposer,
+  type MessageComposerHandle,
+} from "@/components/messages/MessageComposer";
 import { useChatDragDrop } from "@/components/messages/hooks/useChatDragDrop";
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { Avatar } from "@/components/ui/Avatar";

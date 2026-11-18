@@ -109,7 +109,10 @@ export function PointMovements({
         </div>
 
         {serversInLedger.length > 0 ? (
-          <div ref={dropdownRef} className="relative w-full sm:w-64 sm:shrink-0">
+          <div
+            ref={dropdownRef}
+            className="relative w-full sm:w-64 sm:shrink-0"
+          >
             <div className="bg-surface-input border-line focus-within:border-accent flex items-center gap-2.5 rounded-xl border px-3 py-1.5 transition-colors">
               <Search
                 size={14}
@@ -163,7 +166,9 @@ export function PointMovements({
                       <button
                         key={server.id}
                         type="button"
-                        onClick={() => handleSelectServer(server.id, server.name)}
+                        onClick={() =>
+                          handleSelectServer(server.id, server.name)
+                        }
                         className={cn(
                           "hover:bg-surface-hover flex w-full cursor-pointer items-center justify-between px-3.5 py-2 text-left text-xs transition-colors",
                           isSelected
@@ -193,8 +198,8 @@ export function PointMovements({
         <ul className="border-line divide-line divide-y overflow-hidden rounded-2xl border">
           {paged.pageItems.map((entry, index) => {
             const serverName = entry.server_id
-              ? serverDirectory?.get(entry.server_id)?.name ??
-                "Servidor desconocido"
+              ? (serverDirectory?.get(entry.server_id)?.name ??
+                "Servidor desconocido")
               : null;
 
             return (
