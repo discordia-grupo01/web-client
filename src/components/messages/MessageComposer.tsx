@@ -346,12 +346,14 @@ export function MessageComposer({
       {offer === "custom_emoji" ? (
         <CustomEmojiPremiumOffer
           onOpenPremium={() => openSettingsSection("subscriptions")}
+          onClose={() => setOffer("none")}
         />
       ) : null}
       {offer === "none" && premiumOffer.offer === "custom_emoji_reaction" ? (
         <CustomEmojiPremiumOffer
           variant="reaction"
           onOpenPremium={() => openSettingsSection("subscriptions")}
+          onClose={premiumOffer.clear}
         />
       ) : null}
 
