@@ -54,6 +54,7 @@ export async function POST(
         );
 
       case "INVALID_INPUT":
+      case "INVALID_BODY":
         return NextResponse.json(
           { ok: false, message: INVALID_EMAIL_MESSAGE },
           { status: 400 },
