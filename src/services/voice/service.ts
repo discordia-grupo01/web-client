@@ -86,7 +86,7 @@ export function createVoiceSocketTicket(
 export function startPrivateCall(
   token: string,
   recipientId: string,
-  conversationId: string,
+  conversationId: string | null,
 ): Promise<VoiceServiceResult<unknown>> {
   return voiceRequest<unknown>("/api/voice/calls", {
     method: "POST",
