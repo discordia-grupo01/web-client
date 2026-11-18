@@ -15,7 +15,6 @@ import {
 } from "@discordia/client-shared";
 
 import { useEffect, useRef, useState } from "react";
-
 import { useMessageMentionsValue } from "@/hooks/useMessageMentionsValue";
 import { useServerMembers } from "@/hooks/useServerMembers";
 import { useChannelMessages } from "@/hooks/useChannelMessages";
@@ -28,9 +27,10 @@ import { ConnectionPill } from "./ConnectionPill";
 import { ConnectionLostNotice } from "./ConnectionLostNotice";
 import { ChatPremiumOfferProvider } from "@/contexts/ChatPremiumOfferContext";
 import { MessageMentionsProvider } from "@/contexts/MentionsContext";
-import { MessageComposer } from "./MessageComposer";
+import { MessageComposer, type MessageComposerHandle } from "./MessageComposer";
 import { MessageList } from "./MessageList";
 import { ViewingPastBar } from "./ViewingPastBar";
+import { useChatDragDrop } from "./hooks/useChatDragDrop";
 
 interface ChannelChatProps {
   serverId: string;
@@ -120,6 +120,10 @@ export function ChannelChat({
     serverRoles,
   );
   const [actionError, setActionError] = useState<string | null>(null);
+  const composerRef = useRef<MessageComposerHandle>(null);
+  const { isDragging, dragHandlers } = useChatDragDrop((files) =>
+    composerRef.current?.addFiles(files),
+  );
 
   // Se salta recien con el historial cargado: si no, la primera carga de lo
   // ultimo se mezclaria con el tramo del pasado.
@@ -171,7 +175,20 @@ export function ChannelChat({
   return (
     <ChatPremiumOfferProvider>
       <MessageMentionsProvider value={mentions}>
-        <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+        <div
+          className="relative flex min-h-0 flex-1 flex-col overflow-hidden"
+          {...dragHandlers}
+        >
+          {isDragging ? (
+            <div
+              aria-hidden
+              className="border-accent bg-accent/10 pointer-events-none absolute inset-0 z-10 flex items-center justify-center rounded-lg border-2 border-dashed"
+            >
+              <p className="text-accent text-sm font-medium select-none">
+                Suelta los archivos para adjuntarlos
+              </p>
+            </div>
+          ) : null}
           {messages !== null ? (
             <ConnectionPill status={status} onRetry={retry} />
           ) : null}
@@ -228,6 +245,7 @@ export function ChannelChat({
             </p>
           ) : null}
           <MessageComposer
+            ref={composerRef}
             placeholder={
               canSendMessages || isCheckingPermissions
                 ? messageInputPlaceholder(channel.name)
