@@ -14,10 +14,8 @@ import {
 import { useCallback, useEffect, useState } from "react";
 
 import { type BanTarget } from "@/components/bans/BanMemberModal";
-import { BansModal } from "@/components/bans/BansModal";
 import { InviteModal } from "@/components/invites/InviteModal";
 import { NotificationSettingsModal } from "@/components/notifications/NotificationSettingsModal";
-import { RolesModal } from "@/components/roles/RolesModal";
 import { LeaveServerModal } from "@/components/servers/LeaveServerModal";
 import { ServerSettingsModal } from "@/components/servers/settings/ServerSettingsModal";
 import {
@@ -34,14 +32,12 @@ import { getPendingTransferRequest } from "@/services/ownership-transfers/client
 import { ServerHeaderTrigger } from "./ServerHeaderTrigger";
 import { ServerMenu } from "./ServerMenu";
 
-/** Que modal esta abierto. Nunca hay dos a la vez. */
+/** Qué modal está abierto. Nunca hay dos a la vez. */
 type OpenModal =
   | null
   | "invite"
   | "settings"
   | "boosts"
-  | "roles"
-  | "bans"
   | "leave"
   | "transfer"
   | "notifications";
@@ -64,18 +60,18 @@ interface ServerSidebarHeaderProps {
   onOpenMemberProfile: (userId: string) => void;
   /** Abre la confirmación de baneo de un miembro. */
   onBanMember: (target: BanTarget) => void;
-  /** Cambia al banear a alguien: el modal de baneos se recarga para reflejarlo. */
+  /** Cambia al banear a alguien: el panel de baneos se recarga para reflejarlo. */
   bansVersion: number;
   /** Se dispara cuando YO acepto una transferencia: paso a ser el nuevo owner. */
   onOwnershipAccepted: () => void;
-  /** Se dispara al cerrar el modal de roles: los permisos propios pudieron cambiar. */
+  /** Se dispara al cerrar el panel de roles: los permisos propios pudieron cambiar. */
   onPermissionsChanged: () => void;
   /** Reportes pendientes de este servidor (0 si no es moderador). */
   pendingReports: number;
   onPendingReportsChanged: () => void;
   /** "Ir al mensaje" desde un reporte: abre el canal y salta al mensaje. */
   onGoToMessage: (channelId: string, messageId: string) => void;
-  /** Se expulso, baneo o silencio a alguien desde un reporte. */
+  /** Se expulsó, baneó o silenció a alguien desde un reporte. */
   onMembersChanged: () => void;
 }
 
@@ -188,6 +184,9 @@ export function ServerSidebarHeader({
     setOpenModal("boosts");
   }
 
+  const canOpenSettings =
+    canManageServer || canManageMessages || canManageRoles || canBanMembers;
+
   return (
     <div className="border-line relative shrink-0 border-b">
       <ServerHeaderTrigger
@@ -223,8 +222,6 @@ export function ServerSidebarHeader({
           onOpenSettings={() => setOpenModal("settings")}
           onCreateChannel={onCreateChannel}
           onCreateCategory={onCreateCategory}
-          onManageRoles={() => setOpenModal("roles")}
-          onManageBans={() => setOpenModal("bans")}
           onTransfer={() => setOpenModal("transfer")}
           onLeave={() => setOpenModal("leave")}
         />
@@ -256,7 +253,7 @@ export function ServerSidebarHeader({
         />
       ) : null}
 
-      {(openModal === "settings" && (canManageServer || canManageMessages)) ||
+      {(openModal === "settings" && canOpenSettings) ||
       openModal === "boosts" ? (
         <ServerSettingsModal
           server={server}
@@ -265,10 +262,15 @@ export function ServerSidebarHeader({
           isOwner={isOwner}
           canManageServer={canManageServer}
           canManageMessages={canManageMessages}
+          canManageRoles={canManageRoles}
+          canBanMembers={canBanMembers}
           canReviewReports={canReviewReports}
           pendingReports={visiblePendingReports}
           currentUserId={user ? String(user.id) : null}
+          myRoles={myRoles}
+          bansVersion={bansVersion}
           onClose={closeModal}
+          onPermissionsChanged={onPermissionsChanged}
           onBuyPoints={() => {
             closeModal();
             openSettingsSection("points");
@@ -281,6 +283,7 @@ export function ServerSidebarHeader({
             closeModal();
             onOpenMemberProfile(userId);
           }}
+          onBanMember={onBanMember}
           onPendingReportsChanged={onPendingReportsChanged}
           onMembersChanged={onMembersChanged}
           onUpdated={(updated) => {
@@ -291,31 +294,6 @@ export function ServerSidebarHeader({
             closeModal();
             onLeft();
           }}
-        />
-      ) : null}
-
-      {openModal === "roles" && canManageRoles ? (
-        <RolesModal
-          serverId={server.id}
-          serverName={server.name}
-          isOwner={isOwner}
-          myRoles={myRoles}
-          onClose={() => {
-            closeModal();
-            onPermissionsChanged();
-          }}
-        />
-      ) : null}
-
-      {openModal === "bans" && canBanMembers ? (
-        <BansModal
-          key={bansVersion}
-          serverId={server.id}
-          ownerId={server.owner_id}
-          currentUserId={user ? String(user.id) : null}
-          onOpenProfile={onOpenMemberProfile}
-          onBanMember={onBanMember}
-          onClose={closeModal}
         />
       ) : null}
 
