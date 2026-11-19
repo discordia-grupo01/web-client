@@ -39,6 +39,7 @@ import {
 } from "react";
 
 import { VoiceMediaErrorDialog } from "@/components/voice/VoiceMediaErrorDialog";
+import { playSound, SOUNDS } from "@/lib/sounds";
 import {
   leaveVoiceSessionRequest,
   requestVoiceTokenRequest,
@@ -235,6 +236,7 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
     (room: Room) => {
       room.on(RoomEvent.Disconnected, (reason?: DisconnectReason) => {
         if (roomRef.current !== room) return;
+        playSound(SOUNDS.DISCONNECT);
         teardown(room);
         dispatch({
           type: "ended",
@@ -320,6 +322,9 @@ export function VoiceSessionProvider({ children }: { children: ReactNode }) {
 
   const leave = useCallback(async () => {
     attemptRef.current += 1;
+    if (stateRef.current.target !== null) {
+      playSound(SOUNDS.DISCONNECT);
+    }
     const channelId = channelIdOf(stateRef.current.target);
     const room = roomRef.current;
     if (room) {
