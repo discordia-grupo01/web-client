@@ -21,6 +21,7 @@ function user(premium: boolean): User {
     status_text: "",
     status_emoji: "",
     premium,
+    has_password: true,
     created_at: "2026-01-01T00:00:00Z",
   };
 }

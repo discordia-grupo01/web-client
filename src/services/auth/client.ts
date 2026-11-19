@@ -10,14 +10,11 @@ import {
   type EmailConfirmationResult,
   type SetPasswordResult,
   type SetPasswordValues,
+  type ChangePasswordResult,
+  type ChangePasswordValues,
 } from "@discordia/client-shared";
 
 import { api } from "@/lib/browserApiClient";
-
-/**
- * Llamadas del navegador hacia el BFF (`/api/auth/*`, mismo origen).
- * Nunca pega directo a identify-service.
- */
 
 export async function loginRequest(
   credentials: LoginValues,
@@ -57,6 +54,23 @@ export async function setPasswordRequest(
       password: values.password,
       confirmPassword: values.confirmPassword,
     });
+    return data;
+  } catch {
+    return {
+      ok: false,
+      message: REQUEST_FAILED_MESSAGE,
+    };
+  }
+}
+
+export async function changePasswordRequest(
+  values: ChangePasswordValues,
+): Promise<ChangePasswordResult> {
+  try {
+    const { data } = await api.put<ChangePasswordResult>(
+      "/auth/password",
+      values,
+    );
     return data;
   } catch {
     return {

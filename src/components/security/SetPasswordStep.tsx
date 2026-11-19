@@ -14,14 +14,31 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { PasswordField } from "@/components/ui/PasswordField";
 import { setPasswordRequest } from "@/services/auth/client";
 
+export interface SetPasswordStepCopy {
+  title: string;
+  description: string;
+  submitLabel: string;
+  continueLabel: string;
+}
+
+const TWO_FACTOR_COPY: SetPasswordStepCopy = {
+  title: "Creá una contraseña primero",
+  description:
+    "Tu cuenta usa Google y todavía no tiene una contraseña propia. La vas a necesitar para recuperar códigos o desactivar el segundo factor más adelante.",
+  submitLabel: "Guardar y continuar",
+  continueLabel: "Continuar al QR",
+};
+
 interface SetPasswordStepProps {
   onCancel: () => void;
   onPasswordReady: () => void;
+  copy?: SetPasswordStepCopy;
 }
 
 export function SetPasswordStep({
   onCancel,
   onPasswordReady,
+  copy = TWO_FACTOR_COPY,
 }: SetPasswordStepProps) {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -45,7 +62,7 @@ export function SetPasswordStep({
     if (!result.ok) {
       // Carrera entre pestañas/dispositivos: la cuenta ya consiguió una
       // contraseña mientras se completaba este paso. No es un error que
-      // bloquee -- se puede seguir directo al QR.
+      // bloquee: se puede seguir al paso siguiente.
       if (result.alreadySet) {
         setAlreadySet(true);
         setFormError(result.message);
@@ -69,12 +86,10 @@ export function SetPasswordStep({
           <Lock size={26} className="text-info" />
         </div>
         <h3 className="text-content font-display text-xl font-bold">
-          Creá una contraseña primero
+          {copy.title}
         </h3>
         <p className="text-content-muted mt-2 text-sm leading-relaxed">
-          Tu cuenta usa Google y todavía no tiene una contraseña propia. La vas
-          a necesitar para recuperar códigos o desactivar el segundo factor más
-          adelante.
+          {copy.description}
         </p>
       </div>
 
@@ -115,12 +130,12 @@ export function SetPasswordStep({
         </Button>
         {alreadySet ? (
           <Button type="button" onClick={onPasswordReady}>
-            <span>Continuar al QR</span>
+            <span>{copy.continueLabel}</span>
             <ArrowRight size={16} />
           </Button>
         ) : (
           <Button type="submit" isLoading={isSubmitting}>
-            <span>Guardar y continuar</span>
+            <span>{copy.submitLabel}</span>
           </Button>
         )}
       </div>
