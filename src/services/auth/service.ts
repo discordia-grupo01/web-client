@@ -1,5 +1,6 @@
 import {
   type AuthResponse,
+  type ChangePasswordValues,
   type TwoFactorChallengePayload,
   type User,
 } from "@discordia/client-shared";
@@ -143,6 +144,21 @@ export function setAccountPassword(
     method: "POST",
     token,
     data: { password },
+  });
+}
+
+export function changeAccountPassword(
+  token: string,
+  values: ChangePasswordValues,
+): Promise<ApiResult<void>> {
+  return apiRequest<void>("/v1/me/password", {
+    method: "PUT",
+    token,
+    data: {
+      current_password: values.currentPassword,
+      new_password: values.newPassword,
+      confirm_password: values.confirmPassword,
+    },
   });
 }
 

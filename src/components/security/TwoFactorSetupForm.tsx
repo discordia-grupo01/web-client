@@ -17,6 +17,7 @@ import { useCallback, useEffect, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { TextField } from "@/components/ui/TextField";
+import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
 import {
   twoFactorActivateRequest,
   twoFactorSetupRequest,
@@ -33,6 +34,7 @@ export function TwoFactorSetupForm({
   onCancel,
   onActivated,
 }: TwoFactorSetupFormProps) {
+  const ownProfile = useOptionalOwnProfile();
   const [setup, setSetup] = useState<TwoFactorSetup | null>(null);
   const [code, setCode] = useState("");
   const [errors, setErrors] = useState<TwoFactorCodeErrors>({});
@@ -105,7 +107,15 @@ export function TwoFactorSetupForm({
   }
 
   if (needsPassword) {
-    return <SetPasswordStep onCancel={onCancel} onPasswordReady={fetchSetup} />;
+    return (
+      <SetPasswordStep
+        onCancel={onCancel}
+        onPasswordReady={() => {
+          void ownProfile?.refresh();
+          void fetchSetup();
+        }}
+      />
+    );
   }
 
   if (!setup) {
