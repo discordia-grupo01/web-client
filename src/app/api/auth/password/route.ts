@@ -1,17 +1,23 @@
 import {
+  changePasswordFailure,
+  type ChangePasswordResult,
   hasErrors,
   PASSWORD_ALREADY_SET,
   PASSWORD_TOO_WEAK,
   SET_PASSWORD_UNAVAILABLE,
   type SetPasswordResult,
   UNEXPECTED_ERROR_MESSAGE,
+  validateChangePassword,
   validateSetPassword,
 } from "@discordia/client-shared";
 
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/apiRoute";
-import { setAccountPassword } from "@/services/auth/service";
+import {
+  changeAccountPassword,
+  setAccountPassword,
+} from "@/services/auth/service";
 import { getValidSession } from "@/services/auth/session";
 
 /**
@@ -77,4 +83,64 @@ export async function POST(
   }
 
   return NextResponse.json({ ok: true }, { status: 200 });
+}
+
+/**
+ * BFF de `PUT /v1/me/password`: cambia la contraseña de una cuenta que ya
+ * tiene una, pidiendo la actual.
+ */
+export async function PUT(
+  request: Request,
+): Promise<NextResponse<ChangePasswordResult>> {
+  const session = await getValidSession();
+  if (!session) {
+    return unauthorizedResponse();
+  }
+
+  let payload: unknown;
+  try {
+    payload = await request.json();
+  } catch {
+    return NextResponse.json(
+      { ok: false, message: UNEXPECTED_ERROR_MESSAGE },
+      { status: 400 },
+    );
+  }
+
+  const body = (payload ?? {}) as Record<string, unknown>;
+  const values = {
+    currentPassword: stringField(body.currentPassword),
+    newPassword: stringField(body.newPassword),
+    confirmPassword: stringField(body.confirmPassword),
+  };
+
+  const errors = validateChangePassword(values);
+  if (hasErrors(errors)) {
+    return NextResponse.json(
+      {
+        ok: false,
+        message:
+          errors.currentPassword ??
+          errors.newPassword ??
+          errors.confirmPassword ??
+          UNEXPECTED_ERROR_MESSAGE,
+      },
+      { status: 400 },
+    );
+  }
+
+  const result = await changeAccountPassword(session.token, values);
+  if (result.ok) {
+    return NextResponse.json({ ok: true }, { status: 200 });
+  }
+  if (result.status === 401) {
+    return unauthorizedResponse();
+  }
+  return NextResponse.json(changePasswordFailure(result), {
+    status: result.status || 502,
+  });
+}
+
+function stringField(value: unknown): string {
+  return typeof value === "string" ? value : "";
 }

@@ -62,6 +62,7 @@ describe("<LoginForm />", () => {
         status_text: "",
         status_emoji: "",
         premium: false,
+        has_password: true,
         created_at: "",
       },
     });
@@ -239,6 +240,7 @@ describe("<LoginForm />", () => {
         status_text: "",
         status_emoji: "",
         premium: false,
+        has_password: true,
         created_at: "",
       },
       recoveryCodeUsed: true,

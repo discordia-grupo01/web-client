@@ -36,6 +36,7 @@ import {
   startPrivateCallRequest,
 } from "@/services/voice/client";
 import { connectPrivateCalls } from "@/services/voice/socket";
+import { playSound, SOUNDS } from "@/lib/sounds";
 
 interface PrivateCallValue {
   state: PrivateCallState;
@@ -126,6 +127,9 @@ export function PrivateCallProvider({
       if (!call) return;
       if (stateRef.current.call?.call_id === call.call_id)
         setEndReason(call.reason);
+      if (call.reason === "declined") {
+        playSound(SOUNDS.CALL_REJECTED);
+      }
       dispatch({ type: "ended", call });
     };
 
