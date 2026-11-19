@@ -8,6 +8,5 @@ export function playSound(url: string): void {
   try {
     const audio = new Audio(url);
     void audio.play().catch(() => undefined);
-  } catch {
-  }
+  } catch {}
 }
