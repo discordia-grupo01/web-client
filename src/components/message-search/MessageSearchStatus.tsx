@@ -10,6 +10,8 @@ import {
 import { AlertTriangle, Search, SearchX } from "lucide-react";
 import type { ReactNode } from "react";
 
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+
 function StatusBlock({
   icon,
   title,
@@ -74,26 +76,6 @@ export function MessageSearchError({
   );
 }
 
-/** Esqueletos mientras llega una pagina. */
-export function MessageSearchSkeleton() {
-  return (
-    <ul aria-hidden="true" className="space-y-2">
-      {[0, 1, 2, 3].map((item) => (
-        <li
-          key={item}
-          className="border-line bg-surface animate-pulse rounded-lg border p-3"
-        >
-          <div className="bg-surface-raised mb-3 h-3 w-20 rounded" />
-          <div className="flex gap-3">
-            <div className="bg-surface-raised size-8 shrink-0 rounded-full" />
-            <div className="flex-1 space-y-2">
-              <div className="bg-surface-raised h-3 w-1/3 rounded" />
-              <div className="bg-surface-raised h-3 w-full rounded" />
-              <div className="bg-surface-raised h-3 w-2/3 rounded" />
-            </div>
-          </div>
-        </li>
-      ))}
-    </ul>
-  );
+export function MessageSearchLoading() {
+  return <LoadingSpinner label="Buscando mensajes" />;
 }

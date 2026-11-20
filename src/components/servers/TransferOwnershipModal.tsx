@@ -33,6 +33,7 @@ import {
   initiateTransferRequest,
   rejectTransferRequest,
 } from "@/services/ownership-transfers/client";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 interface TransferOwnershipModalProps {
   serverId: string;
@@ -268,9 +269,7 @@ export function TransferOwnershipModal({
   if (isLoadingPendingTransfer) {
     return (
       <ModalShell onClose={onClose}>
-        <div className="flex items-center justify-center py-8">
-          <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
-        </div>
+        <LoadingSpinner />
       </ModalShell>
     );
   }
@@ -378,9 +377,7 @@ export function TransferOwnershipModal({
       </p>
 
       {members === null ? (
-        <div className="flex items-center justify-center py-8">
-          <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
-        </div>
+        <LoadingSpinner />
       ) : !hasOtherMembers ? (
         <p className="text-content-muted py-4 text-center text-sm">
           {TRANSFER_NO_OTHER_MEMBERS}

@@ -36,6 +36,7 @@ import { useLoadPresence } from "@/hooks/useLoadPresence";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
 import { getPublicProfileRequest } from "@/services/profile/client";
 import { avatarSrcOf } from "@/utils/userProfile";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { ActivityStatusDot } from "./ActivityStatusDot";
 import { BlockUserModal } from "./BlockUserModal";
@@ -160,9 +161,7 @@ export function PublicProfileModal({
     return (
       <ProfileModalOverlay onClose={onClose}>
         <ProfileBanner onClose={onClose} />
-        <p className="text-content-subtle px-6 py-8 text-center text-sm">
-          Cargando perfil...
-        </p>
+        <LoadingSpinner label="Cargando perfil" />
       </ProfileModalOverlay>
     );
   }
