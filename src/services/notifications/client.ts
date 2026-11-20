@@ -1,5 +1,9 @@
 import {
   type ListNotificationHistoryResult,
+  type ListStaffNoticesResult,
+  type MarkStaffNoticeSeenResult,
+  STAFF_NOTICE_SEEN_FAILED,
+  STAFF_NOTICES_LOAD_FAILED,
   type MarkTransfersReadResult,
   NOTIFICATIONS_MARK_ALL_READ_FAILED,
   type ListNotificationSettingsResult,
@@ -46,6 +50,36 @@ export async function markTransfersReadRequest(
     return data;
   } catch {
     return { ok: false, message: NOTIFICATIONS_MARK_ALL_READ_FAILED };
+  }
+}
+
+export async function listStaffNoticesRequest(): Promise<ListStaffNoticesResult> {
+  try {
+    const { data } = await api.get<ListStaffNoticesResult>(
+      "/notifications/notices",
+    );
+    if (typeof data?.ok !== "boolean") {
+      return { ok: false, message: STAFF_NOTICES_LOAD_FAILED };
+    }
+    return data;
+  } catch {
+    return { ok: false, message: STAFF_NOTICES_LOAD_FAILED };
+  }
+}
+
+export async function markStaffNoticeSeenRequest(
+  noticeId: string,
+): Promise<MarkStaffNoticeSeenResult> {
+  try {
+    const { data } = await api.post<MarkStaffNoticeSeenResult>(
+      `/notifications/notices/${encodeURIComponent(noticeId)}/seen`,
+    );
+    if (typeof data?.ok !== "boolean") {
+      return { ok: false, message: STAFF_NOTICE_SEEN_FAILED };
+    }
+    return data;
+  } catch {
+    return { ok: false, message: STAFF_NOTICE_SEEN_FAILED };
   }
 }
 

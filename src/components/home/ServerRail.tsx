@@ -14,7 +14,7 @@ import {
   serverSuspendedLabel,
 } from "@discordia/client-shared";
 
-import { Home as HomeIcon, Plus } from "lucide-react";
+import { Home as HomeIcon, Plus, TriangleAlert } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { BoostLevelIcon } from "@/components/boosts/icons/BoostLevelIcon";
@@ -209,6 +209,14 @@ function ServerRailItem({
           label={reportsLabel}
           className="border-rail-surface pointer-events-none absolute -top-0.5 -right-0.5 border-2"
         />
+      ) : null}
+      {isSuspended ? (
+        <span
+          aria-hidden
+          className="bg-surface-servers text-warning pointer-events-none absolute -right-1 -bottom-1 flex rounded-[5px] p-[3px]"
+        >
+          <TriangleAlert size={14} strokeWidth={2.5} />
+        </span>
       ) : null}
       {boostLevel > 0 && visibleUnread.mentionCount === 0 ? (
         <span
