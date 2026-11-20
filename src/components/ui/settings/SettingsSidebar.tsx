@@ -88,7 +88,7 @@ function SidebarItem<Id extends string>({
       className={cn(
         "flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors",
         active && item.tone === "premium"
-          ? "text-boost-ink bg-[#F0B232]"
+          ? "text-boost-ink bg-amber"
           : active
             ? "bg-accent text-on-accent"
             : "text-content-muted hover:bg-surface-hover",

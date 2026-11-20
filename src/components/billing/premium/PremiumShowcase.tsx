@@ -41,7 +41,7 @@ export function PremiumShowcase({
           {PREMIUM_SHOWCASE_BENEFITS.map((benefit) => (
             <li
               key={benefit.id}
-              className="bg-surface-raised rounded-2xl border border-[#F0B232] p-3.5"
+              className="bg-surface-raised border-amber rounded-2xl border p-3.5"
             >
               <PremiumShowcaseArt benefit={benefit.id} profile={profile} />
               <h4 className="font-display text-content mt-3 text-sm font-bold">
@@ -69,7 +69,7 @@ function PlanCard({ premium, onManage }: PlanCardProps) {
   const actions = premiumActions(premium);
 
   return (
-    <section className="bg-surface-raised flex flex-col gap-5 rounded-2xl border border-[#F0B232] p-5 sm:flex-row sm:items-center [[data-theme=light]_&]:border-[1.5px]">
+    <section className="bg-surface-raised border-amber flex flex-col gap-5 rounded-2xl border p-5 sm:flex-row sm:items-center [[data-theme=light]_&]:border-[1.5px]">
       <DiscordiaPremiumMark size={64} className="shrink-0" />
 
       <div className="min-w-0 flex-1">
