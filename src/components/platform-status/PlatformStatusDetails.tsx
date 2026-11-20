@@ -8,6 +8,7 @@ import {
   type PlatformStatusResponse,
 } from "@discordia/client-shared";
 
+import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { cn } from "@/lib/cn";
 
 import { STATUS_TONES } from "./utils/statusTone";
@@ -48,18 +49,7 @@ export function PlatformStatusDetails({
       </div>
 
       {showIncidents ? (
-        <section aria-labelledby="active-incidents-heading">
-          <div className="mb-3 flex items-center gap-2">
-            <h3
-              id="active-incidents-heading"
-              className="text-content-subtle font-display text-xs font-semibold tracking-wide uppercase"
-            >
-              Incidentes activos
-            </h3>
-            <span className="bg-surface-input text-content-muted rounded-full px-2 py-0.5 text-[11px] font-semibold tabular-nums">
-              {incidents.length}
-            </span>
-          </div>
+        <SettingsGroup label="Incidentes activos" count={incidents.length}>
           {incidents.length === 0 ? (
             <p className="border-line text-content-subtle rounded-2xl border border-dashed px-4 py-8 text-center text-sm">
               No hay incidentes en este momento.
@@ -73,7 +63,7 @@ export function PlatformStatusDetails({
               ))}
             </ul>
           )}
-        </section>
+        </SettingsGroup>
       ) : null}
     </div>
   );

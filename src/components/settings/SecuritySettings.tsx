@@ -15,6 +15,7 @@ import {
   type SetPasswordStepCopy,
 } from "@/components/security/SetPasswordStep";
 import { TwoFactorSummaryRow } from "@/components/security/TwoFactorSummaryRow";
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
 
 const SET_PASSWORD_COPY: SetPasswordStepCopy = {
@@ -71,15 +72,7 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6">
-        <h3 className="text-content font-display text-xl font-bold">
-          Seguridad y acceso
-        </h3>
-        <p className="text-content-muted mt-1 text-sm">
-          Administrá las medidas que protegen tu cuenta.
-        </p>
-      </div>
+    <SettingsSection description="Administrá las medidas que protegen tu cuenta.">
       {notice ? (
         <div
           role="status"
@@ -98,6 +91,6 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
           />
         ) : null}
       </div>
-    </div>
+    </SettingsSection>
   );
 }

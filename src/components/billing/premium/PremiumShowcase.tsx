@@ -10,7 +10,7 @@ import {
 } from "@discordia/client-shared";
 
 import { Button } from "@/components/ui/Button";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { cn } from "@/lib/cn";
 
 import { DiscordiaPremiumMark } from "../icons/DiscordiaIcons";
@@ -34,19 +34,9 @@ export function PremiumShowcase({
 }: PremiumShowcaseProps) {
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h3 className="text-content font-display text-xl font-bold">
-          {BILLING_COPY.planTitle}
-        </h3>
-        <p className="text-content-muted mt-1 text-sm">
-          {BILLING_COPY.planSubtitle}
-        </p>
-      </div>
-
       <PlanCard premium={premium} onManage={onManage} />
 
-      <section className="flex flex-col gap-3">
-        <SectionLabel>{BILLING_COPY.benefitsTitle}</SectionLabel>
+      <SettingsGroup label={BILLING_COPY.benefitsTitle}>
         <ul className="grid gap-3 sm:grid-cols-2">
           {PREMIUM_SHOWCASE_BENEFITS.map((benefit) => (
             <li
@@ -63,7 +53,7 @@ export function PremiumShowcase({
             </li>
           ))}
         </ul>
-      </section>
+      </SettingsGroup>
 
       <PremiumFacts />
     </div>

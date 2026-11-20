@@ -2,10 +2,11 @@
 
 import type { TwoFactorStatus } from "@discordia/client-shared";
 
-import { ChevronRight, Loader2, Shield } from "lucide-react";
+import { ChevronRight, Shield } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
 import { FormAlert } from "@/components/ui/FormAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { cn } from "@/lib/cn";
 import { twoFactorStatusRequest } from "@/services/two-factor/client";
 
@@ -34,15 +35,7 @@ export function TwoFactorSummaryRow({ onOpen }: TwoFactorSummaryRowProps) {
   }, [loadStatus]);
 
   if (isLoading) {
-    return (
-      <div className="flex justify-center py-4">
-        <Loader2
-          size={18}
-          className="text-content-subtle animate-spin"
-          aria-label="Cargando"
-        />
-      </div>
-    );
+    return <LoadingSpinner />;
   }
 
   if (loadError || !status) {
