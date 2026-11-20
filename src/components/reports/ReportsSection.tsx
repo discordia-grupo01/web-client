@@ -18,7 +18,7 @@ import {
   REPORTS_TITLE,
   unknownAuthor,
 } from "@discordia/client-shared";
-import { Check } from "lucide-react";
+import { Check, Flag } from "lucide-react";
 import { useMemo } from "react";
 
 import { BanMemberModal } from "@/components/bans/BanMemberModal";
@@ -27,7 +27,9 @@ import { KickMemberModal } from "@/components/moderation/KickMemberModal";
 import { MuteMemberModal } from "@/components/moderation/MuteMemberModal";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
+import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useMessageAuthors } from "@/hooks/useMessageAuthors";
@@ -49,6 +51,12 @@ const CLOSED_FILTERS: { value: ClosedReportStatus; label: string }[] = [
   { value: "resolved", label: REPORTS_RESOLVED_FILTER },
   { value: "dismissed", label: REPORTS_DISMISSED_FILTER },
 ];
+
+const LIST_LABEL = {
+  pending: "Reportes pendientes",
+  resolved: "Reportes resueltos",
+  dismissed: "Reportes descartados",
+};
 
 const EMPTY_TEXT = {
   pending: REPORTS_PENDING_EMPTY,
@@ -168,19 +176,6 @@ export function ReportsSection({
     <>
       <SettingsSection
         description={REPORTS_DESCRIPTION}
-        footer={
-          list.pageCount > 1 ? (
-            <PaginationFooter
-              page={list.page}
-              pageCount={list.pageCount}
-              range={list.range}
-              total={list.total}
-              noun="reportes"
-              onPageChange={list.setPage}
-              className="border-line shrink-0 border-t px-4 py-3 sm:px-8"
-            />
-          ) : null
-        }
         toolbar={
           <div className="space-y-4">
             <SegmentedTabs
@@ -232,53 +227,64 @@ export function ReportsSection({
         {list.reports === null ? (
           <LoadingSpinner />
         ) : list.reports.length === 0 && !list.loadError ? (
-          <p className="text-content-subtle py-6 text-center text-sm">
-            {EMPTY_TEXT[list.status]}
-          </p>
+          <SettingsEmptyState icon={Flag} text={EMPTY_TEXT[list.status]} />
         ) : (
-          <ul className="space-y-3">
-            {list.reports.map((report) => {
-              const messageState = messageStateOf(report);
-              const { channel_id: channelId, message_id: messageId } = report;
-              const reportedUserId = report.reported_user_id;
-              const isPending = report.status === "pending";
-              return (
-                <li key={report.id}>
-                  <ReportRow
-                    report={report}
-                    reportedMessage={messageState}
-                    channelName={
-                      channelId ? (channelNames.get(channelId) ?? null) : null
-                    }
-                    sanctions={sanctionsFor(report, messageState)}
-                    isClosing={action.closingId === report.id}
-                    onGoToMessage={
-                      isPending &&
-                      messageState?.status === "ready" &&
-                      channelId &&
-                      messageId
-                        ? () => onGoToMessage(channelId, messageId)
-                        : undefined
-                    }
-                    onViewProfile={
-                      isPending && reportedUserId
-                        ? () => onOpenProfile(reportedUserId)
-                        : undefined
-                    }
-                    onSanction={(sanction) =>
-                      startSanction(report, messageState, sanction)
-                    }
-                    onResolve={() =>
-                      void action.closeManually(report, "resolved")
-                    }
-                    onDismiss={() =>
-                      void action.closeManually(report, "dismissed")
-                    }
-                  />
-                </li>
-              );
-            })}
-          </ul>
+          <SettingsGroup label={LIST_LABEL[list.status]} count={list.total}>
+            <ul className="space-y-3">
+              {list.reports.map((report) => {
+                const messageState = messageStateOf(report);
+                const { channel_id: channelId, message_id: messageId } = report;
+                const reportedUserId = report.reported_user_id;
+                const isPending = report.status === "pending";
+                return (
+                  <li key={report.id}>
+                    <ReportRow
+                      report={report}
+                      reportedMessage={messageState}
+                      channelName={
+                        channelId ? (channelNames.get(channelId) ?? null) : null
+                      }
+                      sanctions={sanctionsFor(report, messageState)}
+                      isClosing={action.closingId === report.id}
+                      onGoToMessage={
+                        isPending &&
+                        messageState?.status === "ready" &&
+                        channelId &&
+                        messageId
+                          ? () => onGoToMessage(channelId, messageId)
+                          : undefined
+                      }
+                      onViewProfile={
+                        isPending && reportedUserId
+                          ? () => onOpenProfile(reportedUserId)
+                          : undefined
+                      }
+                      onSanction={(sanction) =>
+                        startSanction(report, messageState, sanction)
+                      }
+                      onResolve={() =>
+                        void action.closeManually(report, "resolved")
+                      }
+                      onDismiss={() =>
+                        void action.closeManually(report, "dismissed")
+                      }
+                    />
+                  </li>
+                );
+              })}
+            </ul>
+            {list.pageCount > 1 ? (
+              <PaginationFooter
+                page={list.page}
+                pageCount={list.pageCount}
+                range={list.range}
+                total={list.total}
+                noun="reportes"
+                onPageChange={list.setPage}
+                className="mt-4"
+              />
+            ) : null}
+          </SettingsGroup>
         )}
       </SettingsSection>
 

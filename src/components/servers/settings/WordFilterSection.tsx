@@ -14,13 +14,14 @@ import {
   WORD_FILTER_SAVED,
   WORD_FILTER_TITLE,
 } from "@discordia/client-shared";
-import { X } from "lucide-react";
+import { Ban, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { SaveBar } from "@/components/ui/settings/SaveBar";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
@@ -177,9 +178,7 @@ export function WordFilterSection({ serverId }: WordFilterSectionProps) {
               count={`${words.length}/${BANNED_WORDS_MAX}`}
             >
               {words.length === 0 ? (
-                <p className="text-content-subtle text-sm">
-                  {WORD_FILTER_EMPTY}
-                </p>
+                <SettingsEmptyState icon={Ban} text={WORD_FILTER_EMPTY} />
               ) : (
                 <ul className="flex flex-wrap gap-2">
                   {words.map((word) => (

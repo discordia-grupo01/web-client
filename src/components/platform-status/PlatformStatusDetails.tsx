@@ -8,7 +8,10 @@ import {
   type PlatformStatusResponse,
 } from "@discordia/client-shared";
 
+import { Activity } from "lucide-react";
+
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 import { cn } from "@/lib/cn";
 
 import { STATUS_TONES } from "./utils/statusTone";
@@ -51,9 +54,10 @@ export function PlatformStatusDetails({
       {showIncidents ? (
         <SettingsGroup label="Incidentes activos" count={incidents.length}>
           {incidents.length === 0 ? (
-            <p className="border-line text-content-subtle rounded-2xl border border-dashed px-4 py-8 text-center text-sm">
-              No hay incidentes en este momento.
-            </p>
+            <SettingsEmptyState
+              icon={Activity}
+              text="No hay incidentes en este momento."
+            />
           ) : (
             <ul className="space-y-3">
               {incidents.map((incident) => (
