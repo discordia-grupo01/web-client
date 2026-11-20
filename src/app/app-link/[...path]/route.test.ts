@@ -63,6 +63,17 @@ describe("GET /app-link/[...path]", () => {
     );
   });
 
+  it("abre la app en el link de recuperar contraseña", async () => {
+    const html = await get("reset-password?token=abc", ANDROID_UA).text();
+
+    expect(html).toContain(
+      'window.location.replace("intent://reset-password?token=abc#Intent;scheme=discordia;',
+    );
+    expect(html).toContain(
+      'href="https://discordia.test/reset-password?token=abc"',
+    );
+  });
+
   it("en iPhone abre discordia:// directo", async () => {
     const html = await get("billing/return?kind=premium", IPHONE_UA).text();
 
