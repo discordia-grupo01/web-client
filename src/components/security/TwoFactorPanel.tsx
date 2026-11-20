@@ -72,8 +72,12 @@ export function TwoFactorPanel({ initialStatus, onBack }: TwoFactorPanelProps) {
   }
 
   return (
-    <div className="mx-auto max-w-2xl">
-      {loadError ? <FormAlert message={loadError} /> : null}
+    <div className="flex min-h-0 flex-1 flex-col">
+      {loadError ? (
+        <div className="shrink-0 px-4 pt-5 sm:px-8 sm:pt-6">
+          <FormAlert message={loadError} />
+        </div>
+      ) : null}
 
       {view === "overview" ? (
         <TwoFactorOverview
@@ -82,6 +86,7 @@ export function TwoFactorPanel({ initialStatus, onBack }: TwoFactorPanelProps) {
           onActivate={() => setView("setup")}
           onRegenerate={() => setView("regenerate")}
           onDisable={() => setView("disable")}
+          onBack={onBack}
         />
       ) : view === "setup" ? (
         <TwoFactorSetupForm

@@ -14,6 +14,8 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useAuth } from "@/contexts/AuthContext";
 import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
 
@@ -30,26 +32,12 @@ import { PremiumFacts } from "./premium/PremiumFacts";
 import { PremiumShowcase } from "./premium/PremiumShowcase";
 import { PurchaseHistory } from "./history/PurchaseHistory";
 
-const TAB_HEADER: Record<
-  Exclude<BillingSection, "premium">,
-  { title: string; subtitle: string }
-> = {
-  subscriptions: {
-    title: BILLING_COPY.subscriptionsTitle,
-    subtitle: BILLING_COPY.subscriptionsSubtitle,
-  },
-  points: {
-    title: BILLING_COPY.pointsTitle,
-    subtitle: BILLING_COPY.pointsSubtitle,
-  },
-  boosts: {
-    title: BILLING_BOOSTS_COPY.title,
-    subtitle: BILLING_BOOSTS_COPY.subtitle,
-  },
-  transactions: {
-    title: BILLING_COPY.transactionsTitle,
-    subtitle: BILLING_COPY.transactionsSubtitle,
-  },
+const TAB_SUBTITLE: Record<BillingSection, string> = {
+  premium: BILLING_COPY.planSubtitle,
+  subscriptions: BILLING_COPY.subscriptionsSubtitle,
+  points: BILLING_COPY.pointsSubtitle,
+  boosts: BILLING_BOOSTS_COPY.subtitle,
+  transactions: BILLING_COPY.transactionsSubtitle,
 };
 
 interface BillingSettingsProps {
@@ -86,107 +74,110 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
   }
 
   if (state.status === "loading") {
-    return <p className="text-content-muted text-sm">{BILLING_COPY.loading}</p>;
+    return (
+      <SettingsSection>
+        <LoadingSpinner label={BILLING_COPY.loading} />
+      </SettingsSection>
+    );
   }
 
   if (state.status === "error") {
     return (
-      <div className="flex max-w-md flex-col gap-4">
-        <FormAlert message={state.message} />
-        <Button type="button" variant="secondary" onClick={() => void reload()}>
-          {BILLING_COPY.retry}
-        </Button>
-      </div>
+      <SettingsSection>
+        <div className="flex max-w-md flex-col gap-4">
+          <FormAlert message={state.message} />
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => void reload()}
+          >
+            {BILLING_COPY.retry}
+          </Button>
+        </div>
+      </SettingsSection>
     );
   }
 
   return (
-    <div className="mx-auto flex max-w-2xl flex-col gap-7">
-      {tab !== "premium" ? (
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <h3 className="text-content font-display text-xl font-bold">
-              {TAB_HEADER[tab].title}
-            </h3>
-            <p className="text-content-muted mt-1 text-sm">
-              {TAB_HEADER[tab].subtitle}
-            </p>
-          </div>
-          {tab === "points" ? (
-            <div className="border-line bg-surface-raised rounded-xl border px-3 py-2 text-right">
-              <div className="text-content-subtle text-[10px] font-bold tracking-wider uppercase">
-                {BILLING_COPY.balanceLabel}
-              </div>
-              <div className="font-display text-content flex items-center justify-end gap-1 text-lg font-bold tabular-nums">
-                <DiscordiaPointIcon size={20} />
-                {formatPoints(Math.max(0, state.points.balance))}
-              </div>
+    <SettingsSection
+      description={TAB_SUBTITLE[tab]}
+      actions={
+        tab === "points" ? (
+          <div className="border-line bg-surface-raised rounded-xl border px-3 py-2 text-right">
+            <div className="text-content-subtle text-[10px] font-bold tracking-wider uppercase">
+              {BILLING_COPY.balanceLabel}
             </div>
-          ) : null}
-        </div>
-      ) : null}
-
-      {tab === "premium" ? (
-        <PremiumShowcase
-          premium={state.premium}
-          profile={ownProfile?.profile ?? user}
-          onManage={() => onNavigate("subscriptions")}
-        />
-      ) : null}
-
-      {tab === "subscriptions" ? (
-        <>
-          <PremiumCard
+            <div className="font-display text-content flex items-center justify-end gap-1 text-lg font-bold tabular-nums">
+              <DiscordiaPointIcon size={20} />
+              {formatPoints(Math.max(0, state.points.balance))}
+            </div>
+          </div>
+        ) : undefined
+      }
+    >
+      <div className="flex flex-col gap-7">
+        {tab === "premium" ? (
+          <PremiumShowcase
             premium={state.premium}
-            onSubscribe={() =>
-              setItem({ kind: "premium", priceCents: PREMIUM_PRICE_CENTS })
+            profile={ownProfile?.profile ?? user}
+            onManage={() => onNavigate("subscriptions")}
+          />
+        ) : null}
+
+        {tab === "subscriptions" ? (
+          <>
+            <PremiumCard
+              premium={state.premium}
+              onSubscribe={() =>
+                setItem({ kind: "premium", priceCents: PREMIUM_PRICE_CENTS })
+              }
+              onChanged={changePremium}
+              onShowPlan={() => onNavigate("premium")}
+            />
+            <PremiumFacts />
+          </>
+        ) : null}
+
+        {tab === "points" ? (
+          <PointsShop
+            packages={state.packages}
+            onShowBoosts={() => onNavigate("boosts")}
+            onBuy={(pack) =>
+              setItem({
+                kind: "points",
+                packageId: pack.id,
+                points: pack.points,
+                priceCents: pack.price_cents,
+              })
             }
-            onChanged={changePremium}
-            onShowPlan={() => onNavigate("premium")}
           />
-          <PremiumFacts />
-        </>
-      ) : null}
+        ) : null}
 
-      {tab === "points" ? (
-        <PointsShop
-          packages={state.packages}
-          onShowBoosts={() => onNavigate("boosts")}
-          onBuy={(pack) =>
-            setItem({
-              kind: "points",
-              packageId: pack.id,
-              points: pack.points,
-              priceCents: pack.price_cents,
-            })
-          }
-        />
-      ) : null}
+        {tab === "boosts" ? (
+          <BoostsTab onBuyPoints={() => onNavigate("points")} />
+        ) : null}
 
-      {tab === "boosts" ? (
-        <BoostsTab onBuyPoints={() => onNavigate("points")} />
-      ) : null}
+        {tab === "transactions" ? (
+          <>
+            <PurchaseHistory purchases={state.points.purchases} />
+            <PointMovements
+              ledger={state.points.ledger}
+              serverDirectory={serverDirectory}
+            />
+          </>
+        ) : null}
 
-      {tab === "transactions" ? (
-        <>
-          <PurchaseHistory purchases={state.points.purchases} />
-          <PointMovements
-            ledger={state.points.ledger}
-            serverDirectory={serverDirectory}
+        {item ? (
+          <CheckoutConfirmModal
+            item={item}
+            defaultEmail={user?.email ?? ""}
+            pending={checkout.pending}
+            error={checkout.error}
+            onConfirm={confirmCheckout}
+            onClose={closeCheckout}
           />
-        </>
-      ) : null}
-
-      {item ? (
-        <CheckoutConfirmModal
-          item={item}
-          defaultEmail={user?.email ?? ""}
-          pending={checkout.pending}
-          error={checkout.error}
-          onConfirm={confirmCheckout}
-          onClose={closeCheckout}
-        />
-      ) : null}
-    </div>
+        ) : null}
+      </div>
+    </SettingsSection>
   );
 }

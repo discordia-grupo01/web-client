@@ -1,4 +1,7 @@
+"use client";
+
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 interface ProfileModalOverlayProps {
   onClose: () => void;
@@ -8,14 +11,17 @@ interface ProfileModalOverlayProps {
 
 /**
  * Backdrop fijo + cierre al clickear afuera + card contenedora, compartido
- * por el modal de perfil propio y el de perfil público.
+ * por el modal de perfil propio y el de perfil público. Va a `body` por lo
+ * mismo que `ModalShell`: se abre encima de la configuración.
  */
 export function ProfileModalOverlay({
   onClose,
   children,
   maxWidth = 400,
 }: ProfileModalOverlayProps) {
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className="fixed inset-0 z-50 flex items-center justify-center bg-black/65 p-4 backdrop-blur-sm"
       onClick={(event) => {
@@ -32,6 +38,7 @@ export function ProfileModalOverlay({
       >
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

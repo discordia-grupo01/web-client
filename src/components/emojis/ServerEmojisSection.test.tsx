@@ -46,11 +46,7 @@ const emoji = (name: string, animated = false): ServerEmoji => ({
 
 function renderSection({ canManageServer = true } = {}) {
   render(
-    <ServerEmojisSection
-      server={server}
-      canManageServer={canManageServer}
-      titleId="title"
-    />,
+    <ServerEmojisSection server={server} canManageServer={canManageServer} />,
   );
 }
 

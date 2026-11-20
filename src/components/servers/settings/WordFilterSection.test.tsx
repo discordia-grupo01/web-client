@@ -20,11 +20,13 @@ beforeEach(() => {
 });
 
 function renderSection() {
-  render(<WordFilterSection serverId="s1" titleId="title" />);
+  render(<WordFilterSection serverId="s1" />);
 }
 
 const input = () => screen.getByRole("textbox");
 const save = () => screen.getByRole("button", { name: "Guardar cambios" });
+const saveBar = () =>
+  screen.queryByRole("region", { name: "Cambios sin guardar" });
 
 describe("WordFilterSection", () => {
   it("muestra la lista guardada y no deja guardar sin cambios", async () => {
@@ -32,7 +34,7 @@ describe("WordFilterSection", () => {
 
     expect(await screen.findByText("tonto")).toBeInTheDocument();
     expect(listBannedWordsRequest).toHaveBeenCalledWith("s1");
-    expect(save()).toBeDisabled();
+    expect(saveBar()).not.toBeInTheDocument();
   });
 
   it("CA2: agrega y quita palabras y guarda la lista entera", async () => {
@@ -51,7 +53,7 @@ describe("WordFilterSection", () => {
 
     expect(saveBannedWordsRequest).toHaveBeenCalledWith("s1", ["no sirve"]);
     expect(await screen.findByText("Lista guardada.")).toBeInTheDocument();
-    expect(save()).toBeDisabled();
+    expect(saveBar()).not.toBeInTheDocument();
   });
 
   it("no agrega una palabra repetida", async () => {
@@ -61,7 +63,7 @@ describe("WordFilterSection", () => {
     await userEvent.type(input(), "TONTO{enter}");
 
     expect(screen.getByText(/ya está en la lista/)).toBeInTheDocument();
-    expect(save()).toBeDisabled();
+    expect(saveBar()).not.toBeInTheDocument();
   });
 
   it("si el back rechaza el guardado, muestra el motivo", async () => {
@@ -91,5 +93,18 @@ describe("WordFilterSection", () => {
       await screen.findByText(/No pudimos cargar las palabras/),
     ).toBeInTheDocument();
     expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+  });
+
+  it("Descartar vuelve a la lista guardada", async () => {
+    renderSection();
+    await screen.findByText("tonto");
+
+    await userEvent.type(input(), "feo{enter}");
+    expect(screen.getByText("feo")).toBeInTheDocument();
+    await userEvent.click(screen.getByRole("button", { name: "Descartar" }));
+
+    expect(screen.queryByText("feo")).not.toBeInTheDocument();
+    expect(saveBar()).not.toBeInTheDocument();
+    expect(saveBannedWordsRequest).not.toHaveBeenCalled();
   });
 });

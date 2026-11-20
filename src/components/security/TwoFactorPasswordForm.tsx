@@ -12,6 +12,10 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { SettingsFormFooter } from "@/components/ui/settings/SettingsFormFooter";
+import { SettingsStep } from "@/components/ui/settings/SettingsStep";
+
+import { TWO_FACTOR_TITLE } from "./securityCopy";
 
 interface TwoFactorPasswordFormProps {
   title: string;
@@ -57,54 +61,52 @@ export function TwoFactorPasswordForm({
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="mx-auto max-w-md space-y-5"
+      className="flex min-h-0 flex-1 flex-col"
     >
-      <div>
-        <h3
-          className={
-            danger
-              ? "text-danger font-display text-xl font-bold"
-              : "text-content font-display text-xl font-bold"
-          }
-        >
-          {title}
-        </h3>
-        <p className="text-content-muted mt-1 text-sm leading-relaxed">
-          {description}
-        </p>
-      </div>
+      <SettingsStep
+        parent={TWO_FACTOR_TITLE}
+        title={title}
+        description={description}
+        onBack={onCancel}
+        footer={
+          <SettingsFormFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onCancel}
+              disabled={isSubmitting}
+              className="w-auto px-4 py-2"
+            >
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              variant={danger ? "danger" : "primary"}
+              isLoading={isSubmitting}
+              className="w-auto px-4 py-2"
+            >
+              {confirmLabel}
+            </Button>
+          </SettingsFormFooter>
+        }
+      >
+        <div className="space-y-5">
+          <PasswordField
+            label="Contraseña"
+            labelVariant="sentence"
+            name="password"
+            autoComplete="current-password"
+            placeholder="••••••••"
+            autoFocus
+            icon={<Lock size={16} />}
+            value={password}
+            onChange={(event) => setPassword(event.target.value)}
+            error={errors.password}
+          />
 
-      <PasswordField
-        label="Contraseña"
-        name="password"
-        autoComplete="current-password"
-        placeholder="••••••••"
-        autoFocus
-        icon={<Lock size={16} />}
-        value={password}
-        onChange={(event) => setPassword(event.target.value)}
-        error={errors.password}
-      />
-
-      <FormAlert message={formError ?? undefined} />
-
-      <div className="flex justify-end gap-2">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onCancel}
-          disabled={isSubmitting}
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          variant={danger ? "danger" : "primary"}
-          isLoading={isSubmitting}
-        >
-          {confirmLabel}
-        </Button>
-      </div>
+          <FormAlert message={formError ?? undefined} />
+        </div>
+      </SettingsStep>
     </form>
   );
 }

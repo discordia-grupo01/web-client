@@ -50,8 +50,6 @@ function Form({
     <ServerProfileForm
       form={form}
       serverName={summary.name}
-      titleId="title"
-      onCancel={vi.fn()}
       onBoost={onBoost}
       onShowBenefits={onShowBenefits}
     />
@@ -156,8 +154,8 @@ describe("ServerProfileForm según el nivel de boosts", () => {
 
     expect(screen.getByText(ANIMATED_SERVER_ICON_LOCKED)).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Guardar cambios" }),
-    ).toBeDisabled();
+      screen.queryByRole("button", { name: "Guardar cambios" }),
+    ).not.toBeInTheDocument();
   });
 
   it("nivel 1: acepta un ícono GIF; el banner sigue bloqueado", async () => {

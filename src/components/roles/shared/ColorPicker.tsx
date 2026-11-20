@@ -42,7 +42,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
 
   return (
     <div ref={containerRef} className="relative">
-      <div className="grid grid-cols-8 gap-2">
+      <div className="flex flex-wrap gap-2.5">
         {COLOR_PALETTE.map((swatch) => (
           <button
             key={swatch}
@@ -51,7 +51,9 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
               onChange(swatch);
               setShowCustom(false);
             }}
-            className="aspect-square w-full cursor-pointer rounded-lg transition-transform hover:scale-110"
+            aria-label={`Color ${swatch}`}
+            aria-pressed={value === swatch}
+            className="flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full transition-transform hover:scale-110"
             style={{
               background: swatch,
               boxShadow:
@@ -61,7 +63,7 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
             }}
           >
             {value === swatch ? (
-              <Check size={12} className="mx-auto text-white" />
+              <Check size={14} className="text-white" />
             ) : null}
           </button>
         ))}
@@ -69,9 +71,14 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
           type="button"
           onClick={() => setShowCustom((prev) => !prev)}
           title="Elegir color personalizado"
-          className="border-line-strong text-content-subtle relative flex aspect-square w-full cursor-pointer items-center justify-center rounded-lg border-2 border-dashed transition-transform hover:scale-110"
+          aria-label="Elegir color personalizado"
+          className="border-line-strong text-content-subtle flex size-7 shrink-0 cursor-pointer items-center justify-center rounded-full border-2 border-dashed transition-transform hover:scale-110"
           style={{
             background: isValidHex(custom) ? custom : "transparent",
+            boxShadow:
+              isValidHex(custom) && value === custom
+                ? `0 0 0 2px var(--bg-modal), 0 0 0 4px ${custom}`
+                : undefined,
           }}
         >
           {isValidHex(custom) ? <Pencil size={12} /> : <Plus size={14} />}
@@ -79,9 +86,9 @@ export function ColorPicker({ value, onChange }: ColorPickerProps) {
       </div>
 
       {showCustom ? (
-        <div className="bg-surface-raised border-line-strong absolute top-full left-0 z-[70] mt-2 w-full rounded-xl border p-4 shadow-2xl">
+        <div className="bg-surface-raised border-line-strong absolute top-full left-0 z-[70] mt-2 w-full max-w-sm rounded-xl border p-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
-            <span className="text-content-subtle text-xs font-bold tracking-wider uppercase">
+            <span className="text-content font-display text-sm font-semibold">
               Color personalizado
             </span>
             <button

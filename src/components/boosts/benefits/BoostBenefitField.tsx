@@ -21,7 +21,7 @@ export function BoostBenefitField({
   return (
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between gap-2.5">
-        <h3 className="text-content-muted text-xs font-bold tracking-wider uppercase">
+        <h3 className="text-content font-display text-sm font-semibold">
           {title}
         </h3>
         <BoostBenefitChip perk={perk} level={level} boostCount={boostCount} />

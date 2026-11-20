@@ -11,17 +11,20 @@ import {
   WORD_FILTER_DESCRIPTION,
   WORD_FILTER_EMPTY,
   WORD_FILTER_INPUT_PLACEHOLDER,
-  WORD_FILTER_SAVE_ACTION,
   WORD_FILTER_SAVED,
   WORD_FILTER_TITLE,
 } from "@discordia/client-shared";
-import { X } from "lucide-react";
+import { Ban, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { SaveBar } from "@/components/ui/settings/SaveBar";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
+import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { cn } from "@/lib/cn";
 import {
   listBannedWordsRequest,
@@ -32,7 +35,6 @@ const INPUT_ID = "word-filter-input";
 
 interface WordFilterSectionProps {
   serverId: string;
-  titleId: string;
 }
 
 /**
@@ -40,10 +42,7 @@ interface WordFilterSectionProps {
  * "Guardar cambios", que manda la lista entera: el back reemplaza la anterior
  * y se aplica a los mensajes que se envien desde ese momento.
  */
-export function WordFilterSection({
-  serverId,
-  titleId,
-}: WordFilterSectionProps) {
+export function WordFilterSection({ serverId }: WordFilterSectionProps) {
   const [saved, setSaved] = useState<string[] | null>(null);
   const [words, setWords] = useState<string[]>([]);
   const [draft, setDraft] = useState("");
@@ -91,6 +90,13 @@ export function WordFilterSection({
     setSavedNotice(false);
   }
 
+  function handleDiscard() {
+    if (saved === null) return;
+    setWords(saved);
+    setDraftError(undefined);
+    setSaveError(undefined);
+  }
+
   async function handleSave() {
     setIsSaving(true);
     setSaveError(undefined);
@@ -106,69 +112,73 @@ export function WordFilterSection({
   }
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto">
-      <div className="px-4 pt-6 pb-2 sm:px-7 sm:pt-8">
-        <h2
-          id={titleId}
-          className="font-display text-content mb-1 text-xl font-bold"
-        >
-          {WORD_FILTER_TITLE}
-        </h2>
-        <p className="text-content-muted text-sm leading-relaxed">
-          {WORD_FILTER_DESCRIPTION}
-        </p>
-      </div>
-
-      <div className="flex-1 space-y-5 px-4 py-6 sm:px-7">
+    <SettingsSection
+      description={WORD_FILTER_DESCRIPTION}
+      footer={
+        isDirty ? (
+          <SaveBar
+            isSaving={isSaving}
+            onDiscard={handleDiscard}
+            onSave={() => void handleSave()}
+          />
+        ) : null
+      }
+    >
+      <div className="space-y-6">
         <FormAlert message={loadError ?? saveError} />
 
-        {saved === null && !loadError ? (
-          <p className="text-content-subtle text-sm">Cargando…</p>
+        {savedNotice && !isDirty ? (
+          <p
+            role="status"
+            className="bg-success/10 text-success rounded-xl px-4 py-3 text-sm"
+          >
+            {WORD_FILTER_SAVED}
+          </p>
         ) : null}
+
+        {saved === null && !loadError ? <LoadingSpinner /> : null}
 
         {saved !== null ? (
           <>
             <form onSubmit={handleAdd}>
-              <SectionLabel>
-                <label htmlFor={INPUT_ID}>
-                  {WORD_FILTER_INPUT_PLACEHOLDER}
-                </label>
-              </SectionLabel>
-              <div className="mt-2 flex gap-2">
-                <input
-                  id={INPUT_ID}
-                  type="text"
-                  value={draft}
-                  onChange={(event) => {
-                    setDraft(event.target.value);
-                    setDraftError(undefined);
-                  }}
-                  placeholder={WORD_FILTER_INPUT_PLACEHOLDER}
-                  maxLength={BANNED_WORD_MAX_LENGTH + 10}
-                  aria-invalid={draftError ? true : undefined}
-                  className={cn(
-                    "bg-surface-input text-content focus:border-accent min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm transition-colors outline-none",
-                    draftError ? "border-danger" : "border-line",
-                  )}
-                />
-                <Button type="submit" variant="secondary" className="w-auto">
-                  {WORD_FILTER_ADD_ACTION}
-                </Button>
-              </div>
-              <FieldError message={draftError} />
+              <SettingsGroup
+                label={
+                  <label htmlFor={INPUT_ID}>
+                    {WORD_FILTER_INPUT_PLACEHOLDER}
+                  </label>
+                }
+              >
+                <div className="flex gap-2">
+                  <input
+                    id={INPUT_ID}
+                    type="text"
+                    value={draft}
+                    onChange={(event) => {
+                      setDraft(event.target.value);
+                      setDraftError(undefined);
+                    }}
+                    placeholder={WORD_FILTER_INPUT_PLACEHOLDER}
+                    maxLength={BANNED_WORD_MAX_LENGTH + 10}
+                    aria-invalid={draftError ? true : undefined}
+                    className={cn(
+                      "bg-surface-input text-content focus:border-accent min-w-0 flex-1 rounded-xl border px-4 py-3 text-sm transition-colors outline-none",
+                      draftError ? "border-danger" : "border-line",
+                    )}
+                  />
+                  <Button type="submit" variant="secondary" className="w-auto">
+                    {WORD_FILTER_ADD_ACTION}
+                  </Button>
+                </div>
+                <FieldError message={draftError} />
+              </SettingsGroup>
             </form>
 
-            <div>
-              <div className="mb-2 flex items-center justify-between">
-                <SectionLabel>{WORD_FILTER_TITLE}</SectionLabel>
-                <span className="text-content-subtle text-xs tabular-nums">
-                  {words.length}/{BANNED_WORDS_MAX}
-                </span>
-              </div>
+            <SettingsGroup
+              label={WORD_FILTER_TITLE}
+              count={`${words.length}/${BANNED_WORDS_MAX}`}
+            >
               {words.length === 0 ? (
-                <p className="text-content-subtle text-sm">
-                  {WORD_FILTER_EMPTY}
-                </p>
+                <SettingsEmptyState icon={Ban} text={WORD_FILTER_EMPTY} />
               ) : (
                 <ul className="flex flex-wrap gap-2">
                   {words.map((word) => (
@@ -189,27 +199,10 @@ export function WordFilterSection({
                   ))}
                 </ul>
               )}
-            </div>
+            </SettingsGroup>
           </>
         ) : null}
       </div>
-
-      <div className="border-line flex items-center justify-end gap-3 border-t px-4 py-5 sm:px-7">
-        {savedNotice && !isDirty ? (
-          <span role="status" className="text-content-muted mr-auto text-sm">
-            {WORD_FILTER_SAVED}
-          </span>
-        ) : null}
-        <Button
-          type="button"
-          onClick={() => void handleSave()}
-          disabled={!isDirty}
-          isLoading={isSaving}
-          className="w-auto"
-        >
-          {WORD_FILTER_SAVE_ACTION}
-        </Button>
-      </div>
-    </div>
+    </SettingsSection>
   );
 }

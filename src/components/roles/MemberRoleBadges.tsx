@@ -8,6 +8,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { SearchableSelect } from "@/components/ui/SearchableSelect";
 import { SectionLabel } from "@/components/ui/SectionLabel";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import {
   assignRoleRequest,
   listMemberRolesRequest,
@@ -116,7 +117,7 @@ export function MemberRoleBadges({
     return (
       <div>
         <SectionLabel>Roles</SectionLabel>
-        <p className="text-content-subtle mt-1.5 text-xs">Cargando roles...</p>
+        <LoadingSpinner label="Cargando roles" />
       </div>
     );
   }

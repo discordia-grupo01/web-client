@@ -12,7 +12,11 @@ import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { PasswordField } from "@/components/ui/PasswordField";
+import { SettingsFormFooter } from "@/components/ui/settings/SettingsFormFooter";
+import { SettingsStep } from "@/components/ui/settings/SettingsStep";
 import { setPasswordRequest } from "@/services/auth/client";
+
+import { SECURITY_TITLE } from "./securityCopy";
 
 export interface SetPasswordStepCopy {
   title: string;
@@ -79,66 +83,79 @@ export function SetPasswordStep({
     <form
       onSubmit={handleSubmit}
       noValidate
-      className="mx-auto max-w-md space-y-5"
+      className="flex min-h-0 flex-1 flex-col"
     >
-      <div className="text-center">
-        <div className="bg-info/15 border-info/35 mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl border">
-          <Lock size={26} className="text-info" />
+      <SettingsStep
+        parent={SECURITY_TITLE}
+        title={copy.title}
+        description={copy.description}
+        onBack={onCancel}
+        footer={
+          <SettingsFormFooter>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={onCancel}
+              className="w-auto px-4 py-2"
+            >
+              Cancelar
+            </Button>
+            {alreadySet ? (
+              <Button
+                type="button"
+                onClick={onPasswordReady}
+                className="w-auto px-4 py-2"
+              >
+                <span>{copy.continueLabel}</span>
+                <ArrowRight size={16} />
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                isLoading={isSubmitting}
+                className="w-auto px-4 py-2"
+              >
+                <span>{copy.submitLabel}</span>
+              </Button>
+            )}
+          </SettingsFormFooter>
+        }
+      >
+        <div className="space-y-5">
+          <PasswordField
+            label="Nueva contraseña"
+            labelVariant="sentence"
+            name="password"
+            autoComplete="new-password"
+            placeholder="Mínimo 8 caracteres"
+            icon={<Lock size={16} />}
+            value={password}
+            onChange={(event) => {
+              setPassword(event.target.value);
+              setFormError(null);
+            }}
+            error={errors.password}
+            autoFocus
+          />
+
+          <PasswordField
+            label="Confirmar contraseña"
+            labelVariant="sentence"
+            name="confirmPassword"
+            autoComplete="new-password"
+            placeholder="Repetí la contraseña"
+            icon={<Lock size={16} />}
+            value={confirmPassword}
+            onChange={(event) => {
+              setConfirmPassword(event.target.value);
+              setFormError(null);
+            }}
+            error={errors.confirmPassword}
+          />
+
+          <FormAlert message={formError ?? undefined} />
         </div>
-        <h3 className="text-content font-display text-xl font-bold">
-          {copy.title}
-        </h3>
-        <p className="text-content-muted mt-2 text-sm leading-relaxed">
-          {copy.description}
-        </p>
-      </div>
-
-      <PasswordField
-        label="Nueva contraseña"
-        name="password"
-        autoComplete="new-password"
-        placeholder="Mínimo 8 caracteres"
-        icon={<Lock size={16} />}
-        value={password}
-        onChange={(event) => {
-          setPassword(event.target.value);
-          setFormError(null);
-        }}
-        error={errors.password}
-        autoFocus
-      />
-
-      <PasswordField
-        label="Confirmar contraseña"
-        name="confirmPassword"
-        autoComplete="new-password"
-        placeholder="Repetí la contraseña"
-        icon={<Lock size={16} />}
-        value={confirmPassword}
-        onChange={(event) => {
-          setConfirmPassword(event.target.value);
-          setFormError(null);
-        }}
-        error={errors.confirmPassword}
-      />
-
-      <FormAlert message={formError ?? undefined} />
-
-      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
-        <Button type="button" variant="secondary" onClick={onCancel}>
-          Cancelar
-        </Button>
-        {alreadySet ? (
-          <Button type="button" onClick={onPasswordReady}>
-            <span>{copy.continueLabel}</span>
-            <ArrowRight size={16} />
-          </Button>
-        ) : (
-          <Button type="submit" isLoading={isSubmitting}>
-            <span>{copy.submitLabel}</span>
-          </Button>
-        )}
-      </div>
+      </SettingsStep>
     </form>
   );
 }

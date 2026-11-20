@@ -6,7 +6,7 @@ export function PremiumPill() {
   return (
     <span
       title={BILLING_COPY.premiumPillLabel}
-      className="inline-flex items-center gap-1 rounded-full border border-[#F0B232]/30 bg-[#F0B232]/10 px-2 py-1 text-[10px] font-bold tracking-wide text-[#F0B232] uppercase"
+      className="border-amber/30 bg-amber/10 text-amber inline-flex items-center gap-1 rounded-full border px-2 py-1 text-[10px] font-bold tracking-wide uppercase"
     >
       <DiscordiaPremiumBadge size={14} />
       {BILLING_COPY.premiumPill}

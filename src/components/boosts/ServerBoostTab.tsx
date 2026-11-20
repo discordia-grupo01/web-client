@@ -12,6 +12,7 @@ import { useEffect, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { BoostActionCard } from "./actions/BoostActionCard";
 import { BoostConfirmModal } from "./actions/BoostConfirmModal";
@@ -100,7 +101,7 @@ export function ServerBoostTab({
           </Button>
         </div>
       ) : points.state.status === "loading" ? (
-        <p className="text-content-subtle text-sm">Cargando…</p>
+        <LoadingSpinner />
       ) : (
         <BoostActionCard
           serverName={server.name}

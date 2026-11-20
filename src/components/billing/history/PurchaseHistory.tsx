@@ -1,6 +1,6 @@
 import {
   BILLING_COPY,
-  BILLING_HISTORY_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
   formatArsFromCents,
   formatBillingDate,
   formatPoints,
@@ -20,7 +20,7 @@ import { HistoryPagination } from "./HistoryPagination";
 import { usePagedItems } from "../hooks/usePagedItems";
 
 export function PurchaseHistory({ purchases }: { purchases: PointPurchase[] }) {
-  const paged = usePagedItems(purchases, BILLING_HISTORY_PAGE_SIZE);
+  const paged = usePagedItems(purchases, DEFAULT_PAGE_SIZE);
 
   return (
     <section>

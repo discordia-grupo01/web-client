@@ -21,6 +21,7 @@ import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { cn } from "@/lib/cn";
 import type { ChannelOverridesState } from "@/hooks/useChannelOverrides";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { RoleOverrideEditor } from "./RoleOverrideEditor";
 
@@ -76,13 +77,10 @@ export function ChannelPermissionsSection({
             </Button>
           </div>
         ) : overrides.status === "loading" || !draft || !selectedRole ? (
-          <div
-            role="status"
-            aria-label="Cargando permisos"
-            className="border-line flex min-h-[300px] items-center justify-center rounded-xl border"
-          >
-            <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
-          </div>
+          <LoadingSpinner
+            label="Cargando permisos"
+            className="border-line min-h-[300px] rounded-xl border"
+          />
         ) : (
           <div className="border-line flex min-h-[300px] flex-col overflow-hidden rounded-xl border sm:flex-row">
             <RoleOverrideList

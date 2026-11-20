@@ -5,7 +5,7 @@ import {
   pageCountOf,
   pageRange,
   type Report,
-  REPORTS_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
   type ReportResolutionAction,
   type ReportStatus,
 } from "@discordia/client-shared";
@@ -51,8 +51,8 @@ export function useReportsList(serverId: string, onPendingClosed: () => void) {
     setLoadError("");
     listReportsRequest(serverId, {
       status,
-      limit: REPORTS_PAGE_SIZE,
-      offset: (page - 1) * REPORTS_PAGE_SIZE,
+      limit: DEFAULT_PAGE_SIZE,
+      offset: (page - 1) * DEFAULT_PAGE_SIZE,
     }).then((result) => {
       if (cancelled) return;
       if (!result.ok) {
@@ -78,8 +78,8 @@ export function useReportsList(serverId: string, onPendingClosed: () => void) {
     const key = requestKey;
     const result = await listReportsRequest(serverId, {
       status,
-      limit: REPORTS_PAGE_SIZE,
-      offset: (page - 1) * REPORTS_PAGE_SIZE,
+      limit: DEFAULT_PAGE_SIZE,
+      offset: (page - 1) * DEFAULT_PAGE_SIZE,
     });
     if (!result.ok || key !== requestKeyRef.current) return;
     setReports(result.reports);
@@ -146,8 +146,8 @@ export function useReportsList(serverId: string, onPendingClosed: () => void) {
     setClosedFilter,
     status,
     page,
-    pageCount: pageCountOf(total, REPORTS_PAGE_SIZE),
-    range: pageRange(page, REPORTS_PAGE_SIZE, total),
+    pageCount: pageCountOf(total, DEFAULT_PAGE_SIZE),
+    range: pageRange(page, DEFAULT_PAGE_SIZE, total),
     setPage,
     reports,
     total,

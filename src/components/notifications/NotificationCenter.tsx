@@ -36,6 +36,7 @@ import {
   MessageMentionsProvider,
   type MessageMentionsValue,
 } from "@/contexts/MentionsContext";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 const ACTION_CLASS =
   "text-content hover:text-content-muted inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium underline underline-offset-2 disabled:cursor-wait disabled:opacity-70";
@@ -191,13 +192,7 @@ export function NotificationCenter({
 
       <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-3">
         {history.status === "loading" ? (
-          <p
-            role="status"
-            className="text-content-muted flex items-center justify-center gap-2 py-10 text-sm"
-          >
-            <Loader2 size={16} className="animate-spin" aria-hidden />
-            {NOTIFICATIONS_LOADING}
-          </p>
+          <LoadingSpinner label={NOTIFICATIONS_LOADING} />
         ) : null}
 
         {history.status === "error" ? (

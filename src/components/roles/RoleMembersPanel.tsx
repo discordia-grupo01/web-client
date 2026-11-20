@@ -13,7 +13,7 @@ import {
   roleMembersWithTab,
 } from "@discordia/client-shared";
 
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, SearchX, Users } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
@@ -21,6 +21,8 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 import { useMemberPages } from "@/hooks/useMemberPages";
 import { cn } from "@/lib/cn";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
@@ -153,7 +155,7 @@ export function RoleMembersPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-line shrink-0 space-y-3 border-b px-4 py-4 sm:px-7">
+      <div className="border-line shrink-0 space-y-3 border-b px-4 py-4 sm:px-8">
         {isEveryone ? (
           <p className="text-content-subtle text-sm">
             {ROLE_MEMBERS_EVERYONE_HINT}
@@ -182,17 +184,18 @@ export function RoleMembersPanel({
 
       <div
         role={isEveryone ? undefined : "tabpanel"}
-        className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 sm:px-7"
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 sm:px-8"
       >
         <FormAlert message={list.errorMessage} />
         {list.members === null ? (
           list.errorMessage ? null : (
-            <div className="flex items-center justify-center py-8">
-              <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
-            </div>
+            <LoadingSpinner />
           )
         ) : list.members.length === 0 ? (
-          <p className="text-content-subtle py-2 text-sm">{emptyMessage}</p>
+          <SettingsEmptyState
+            icon={list.isSearching ? SearchX : Users}
+            text={emptyMessage}
+          />
         ) : (
           <div
             className="space-y-1 transition-opacity"
@@ -209,19 +212,18 @@ export function RoleMembersPanel({
             ))}
           </div>
         )}
+        {list.pageCount > 1 ? (
+          <PaginationFooter
+            page={list.page}
+            pageCount={list.pageCount}
+            range={list.range}
+            total={list.total}
+            noun={list.isSearching ? "resultados" : "miembros"}
+            onPageChange={list.setPage}
+            className="pt-2"
+          />
+        ) : null}
       </div>
-
-      {list.pageCount > 1 ? (
-        <PaginationFooter
-          page={list.page}
-          pageCount={list.pageCount}
-          range={list.range}
-          total={list.total}
-          noun={list.isSearching ? "resultados" : "miembros"}
-          onPageChange={list.setPage}
-          className="border-line shrink-0 border-t px-4 py-3 sm:px-7"
-        />
-      ) : null}
     </div>
   );
 }

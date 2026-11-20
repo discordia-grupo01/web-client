@@ -42,7 +42,7 @@ describe("<TwoFactorSetupForm />", () => {
     render(<TwoFactorSetupForm onCancel={vi.fn()} onActivated={vi.fn()} />);
 
     expect(
-      await screen.findByText(/conectá tu app autenticadora/i),
+      await screen.findByTitle("Código QR para la app autenticadora"),
     ).toBeInTheDocument();
     expect(setPasswordRequestMock).not.toHaveBeenCalled();
   });
@@ -62,7 +62,7 @@ describe("<TwoFactorSetupForm />", () => {
     render(<TwoFactorSetupForm onCancel={vi.fn()} onActivated={vi.fn()} />);
 
     expect(
-      await screen.findByText(/creá una contraseña primero/i),
+      await screen.findByText(/todavía no tiene una contraseña propia/i),
     ).toBeInTheDocument();
 
     await user.type(screen.getByLabelText("Nueva contraseña"), "Secure123");
@@ -78,7 +78,7 @@ describe("<TwoFactorSetupForm />", () => {
       });
     });
     expect(
-      await screen.findByText(/conectá tu app autenticadora/i),
+      await screen.findByTitle("Código QR para la app autenticadora"),
     ).toBeInTheDocument();
     expect(twoFactorSetupRequestMock).toHaveBeenCalledTimes(2);
   });
@@ -114,7 +114,7 @@ describe("<TwoFactorSetupForm />", () => {
     await user.click(continueButton);
 
     expect(
-      await screen.findByText(/conectá tu app autenticadora/i),
+      await screen.findByTitle("Código QR para la app autenticadora"),
     ).toBeInTheDocument();
   });
 

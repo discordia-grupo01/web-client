@@ -12,16 +12,16 @@ import {
 import { NextResponse } from "next/server";
 
 import { unauthorizedResponse } from "@/lib/apiRoute";
+import { memberPageQueryFrom } from "@/utils/memberPageQuery";
 import { getValidSession } from "@/services/auth/session";
 import { banMember, listBans } from "@/services/bans/service";
 
 /**
- * BFF de `GET /v1/servers/:id/bans`. Devuelve la lista completa (el service
- * recorre las paginas del back): la busqueda por nombre y la paginacion en
- * pantalla las hace el front.
+ * BFF de `GET /v1/servers/:id/bans`: una pagina de los baneos, opcionalmente
+ * filtrada por nombre. Reenvia `q`, `limit` y `offset` como el de miembros.
  */
 export async function GET(
-  _request: Request,
+  request: Request,
   { params }: { params: { serverId: string } },
 ): Promise<NextResponse<ListBansResult>> {
   const session = await getValidSession();
@@ -29,7 +29,11 @@ export async function GET(
     return unauthorizedResponse();
   }
 
-  const result = await listBans(session.token, params.serverId);
+  const result = await listBans(
+    session.token,
+    params.serverId,
+    memberPageQueryFrom(request.url),
+  );
   if (!result.ok) {
     if (result.status === 401) {
       return unauthorizedResponse();

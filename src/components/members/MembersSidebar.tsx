@@ -25,6 +25,7 @@ import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 import { listMembersRequest } from "@/services/members/client";
 import { usePresenceOf } from "@/hooks/usePresence";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 /** A cuantos px del fondo se pide la pagina siguiente. */
 const LOAD_MORE_THRESHOLD_PX = 160;
@@ -342,7 +343,7 @@ export function MembersSidebar({
       </div>
 
       {members === null ? (
-        <p className="text-content-subtle px-1.5 text-xs">Cargando...</p>
+        <LoadingSpinner label="Cargando miembros" />
       ) : errorMessage && members.length === 0 ? (
         <p className="text-danger px-1.5 text-xs">{errorMessage}</p>
       ) : isSearching && members.length === 0 ? (

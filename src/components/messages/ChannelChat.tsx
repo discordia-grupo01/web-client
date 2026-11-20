@@ -30,7 +30,7 @@ import { MessageMentionsProvider } from "@/contexts/MentionsContext";
 import { MessageComposer, type MessageComposerHandle } from "./MessageComposer";
 import { MessageList } from "./MessageList";
 import { ViewingPastBar } from "./ViewingPastBar";
-import { useChatDragDrop } from "./hooks/useChatDragDrop";
+import { useChatDragDrop } from "@/hooks/useChatDragDrop";
 
 interface ChannelChatProps {
   serverId: string;

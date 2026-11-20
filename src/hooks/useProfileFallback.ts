@@ -10,7 +10,7 @@ import { getPublicProfileRequest } from "@/services/profile/client";
 /** Perfiles pedidos en paralelo: el back no tiene endpoint batch. */
 const CONCURRENCY = 6;
 
-interface ProfiledUser {
+export interface ProfiledUser {
   user_id: string;
   /** `null` mientras el back no replico el perfil de este usuario. */
   profile?: MemberProfile | null;
