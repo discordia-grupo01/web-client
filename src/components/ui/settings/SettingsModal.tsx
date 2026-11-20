@@ -9,6 +9,7 @@ import {
   SettingsModalContext,
   type SettingsSubPage,
 } from "./SettingsModalContext";
+import { SettingsMobileTitleBar } from "./SettingsHeading";
 import { SettingsMobileMenu } from "./SettingsMobileMenu";
 import { SettingsSidebar } from "./SettingsSidebar";
 import type { SettingsDangerAction, SettingsNavGroup } from "./settingsNav";
@@ -124,6 +125,7 @@ export function SettingsModal<Id extends string>({
                 isMobileMenuOpen ? "hidden" : "flex",
               )}
             >
+              <SettingsMobileTitleBar heading={contextValue.heading} />
               {children}
             </div>
           </main>
