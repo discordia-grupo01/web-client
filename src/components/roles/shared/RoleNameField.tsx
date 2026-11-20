@@ -7,10 +7,13 @@ import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { cn } from "@/lib/cn";
 
 import { FieldError } from "./ColorPicker";
+import { RolePreviewBadge } from "./RolePreviewBadge";
 
 interface RoleNameFieldProps {
   inputId: string;
   value: string;
+  /** Color del rol, para la vista previa debajo del nombre. */
+  color: string;
   error?: string;
   disabled?: boolean;
   hint?: string;
@@ -21,6 +24,7 @@ interface RoleNameFieldProps {
 export function RoleNameField({
   inputId,
   value,
+  color,
   error,
   disabled = false,
   hint,
@@ -54,6 +58,7 @@ export function RoleNameField({
         )}
       />
       <FieldError message={error} />
+      <RolePreviewBadge name={value} color={color} />
       {hint ? <p className="text-content-subtle text-xs">{hint}</p> : null}
     </SettingsGroup>
   );

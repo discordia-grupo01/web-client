@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { SaveBar } from "@/components/ui/settings/SaveBar";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
+import { SettingsCard } from "@/components/ui/settings/SettingsCard";
 import { SettingsRow } from "@/components/ui/settings/SettingsRow";
 import { SettingsHeading } from "@/components/ui/settings/SettingsHeading";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
@@ -17,6 +18,7 @@ import { cn } from "@/lib/cn";
 
 import { type RolesEditor } from "../hooks/useRolesEditor";
 import { RoleMembersPanel } from "../RoleMembersPanel";
+import { DefaultRoleCard } from "./DefaultRoleCard";
 import { ColorPicker, FieldError } from "../shared/ColorPicker";
 import { PermissionGroups } from "../shared/PermissionGroups";
 import { RoleNameField } from "../shared/RoleNameField";
@@ -156,6 +158,7 @@ export function RoleEditForm({
         <RoleNameField
           inputId={NAME_INPUT_ID}
           value={editName}
+          color={editColor}
           error={nameError}
           disabled={isEveryoneSelected}
           hint={
@@ -197,26 +200,11 @@ export function RoleEditForm({
         </SettingsGroup>
 
         {isEveryoneSelected ? null : (
-          <div>
-            <SettingsRow
-              label="Rol por defecto"
-              hint={
-                isDefault
-                  ? "Se asigna automáticamente a los nuevos miembros. Para cambiarlo, definí otro rol como predeterminado."
-                  : "Se asigna automáticamente a los nuevos miembros."
-              }
-              control={
-                <Switch
-                  checked={isDefault}
-                  label="Rol por defecto"
-                  disabled={isDefault || settingDefault || !canManageSelected}
-                  onChange={(on) => {
-                    if (on) void handleSetDefault();
-                  }}
-                />
-              }
-            />
-          </div>
+          <DefaultRoleCard
+            isDefault={isDefault}
+            disabled={settingDefault || !canManageSelected}
+            onSetDefault={() => void handleSetDefault()}
+          />
         )}
 
         <div className="space-y-2">
@@ -238,27 +226,28 @@ export function RoleEditForm({
             <p className="text-danger font-display text-sm font-semibold">
               Zona peligrosa
             </p>
-            {!canManageSelected ? (
-              <p className="text-content-subtle text-xs">
-                No tenés jerarquía suficiente para gestionar este rol.
-              </p>
-            ) : isDefault ? (
-              <p className="text-content-subtle text-xs">
-                Para eliminar este rol, primero definí otro rol como
-                predeterminado.
-              </p>
-            ) : null}
-
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => setIsDeleteConfirmOpen(true)}
-              disabled={!canManageSelected}
-              isLoading={deleting}
-              className="text-danger border-danger/25 bg-danger/10 w-auto px-3 py-2 text-xs"
-            >
-              <Trash2 size={13} /> Eliminar rol
-            </Button>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+              <div className="min-w-0">
+                <p className="text-content text-sm font-medium">Eliminar rol</p>
+                <p className="text-content-subtle mt-0.5 text-xs leading-relaxed">
+                  {!canManageSelected
+                    ? "No tenés jerarquía suficiente para gestionar este rol."
+                    : isDefault
+                      ? "Para eliminar este rol, primero definí otro rol como predeterminado."
+                      : "Se les quita a todos los miembros que lo tienen. No se puede deshacer."}
+                </p>
+              </div>
+              <Button
+                type="button"
+                variant="danger"
+                onClick={() => setIsDeleteConfirmOpen(true)}
+                disabled={!canManageSelected || isDefault}
+                isLoading={deleting}
+                className="w-auto shrink-0 self-start px-4 py-2 sm:self-auto"
+              >
+                <Trash2 size={14} /> Eliminar rol
+              </Button>
+            </div>
           </div>
         )}
       </div>
