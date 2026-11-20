@@ -39,7 +39,6 @@ export function RolesModal({
           serverName={serverName}
           isOwner={isOwner}
           myRoles={myRoles}
-          onClose={onClose}
         />
       </div>
     </div>

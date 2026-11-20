@@ -29,7 +29,7 @@ import {
 } from "@/services/roles/client";
 
 export type RightView = "edit" | "members" | "create";
-export type MobileView = "list" | "detail";
+export type RolesView = "list" | "detail";
 
 interface UseRolesEditorOptions {
   serverId: string;
@@ -46,7 +46,7 @@ export function useRolesEditor({
   const [loadError, setLoadError] = useState("");
   const [selectedId, setSelectedId] = useState("");
   const [rightView, setRightView] = useState<RightView>("edit");
-  const [mobileView, setMobileView] = useState<MobileView>("list");
+  const [view, setView] = useState<RolesView>("list");
   const [defaultRoleId, setDefaultRoleId] = useState<string | null>(null);
 
   // Edit form
@@ -106,7 +106,6 @@ export function useRolesEditor({
         return;
       }
       setRoles(result.roles);
-      setSelectedId(result.roles[0]?.id ?? "");
     });
     return () => {
       cancelled = true;
@@ -135,6 +134,29 @@ export function useRolesEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedId]);
 
+  const roleIdsKey = (roles ?? [])
+    .filter((role) => !role.is_everyone)
+    .map((role) => role.id)
+    .join(",");
+  useEffect(() => {
+    if (!roleIdsKey) return;
+    let cancelled = false;
+    for (const roleId of roleIdsKey.split(",")) {
+      listRoleMembersRequest(roleId, { limit: 1 }).then((result) => {
+        if (cancelled || !result.ok) return;
+        setRoleMemberCounts((prev) =>
+          prev[roleId] === undefined
+            ? { ...prev, [roleId]: result.total }
+            : prev,
+        );
+      });
+    }
+    return () => {
+      cancelled = true;
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roleIdsKey]);
+
   // Se pide al elegir un rol, así el contador del encabezado ya es el real.
   useEffect(() => {
     if (!selectedId || roleMemberCounts[selectedId] !== undefined) return;
@@ -151,7 +173,12 @@ export function useRolesEditor({
   function selectRole(id: string) {
     setSelectedId(id);
     setRightView("edit");
-    setMobileView("detail");
+    setView("detail");
+  }
+
+  function backToList() {
+    setView("list");
+    setRightView("edit");
   }
 
   const selectedMemberCount = roleMemberCounts[selectedId];
@@ -193,7 +220,7 @@ export function useRolesEditor({
   function openCreateForm() {
     setNewPerms(everyoneRole ? [...everyoneRole.permissions] : []);
     setRightView("create");
-    setMobileView("detail");
+    setView("detail");
   }
 
   function handleDiscard() {
@@ -310,9 +337,9 @@ export function useRolesEditor({
 
     const remaining = (roles ?? []).filter((r) => r.id !== selectedRole.id);
     setRoles(remaining);
-    setSelectedId(remaining[0]?.id ?? "");
+    setSelectedId("");
     setDeleteConfirm(false);
-    setMobileView("list");
+    setView("list");
     showToast(`Rol "${selectedRole.name}" eliminado`);
   }
 
@@ -421,8 +448,9 @@ export function useRolesEditor({
     canManageSelected,
     rightView,
     setRightView,
-    mobileView,
-    setMobileView,
+    view,
+    backToList,
+    roleMemberCounts,
     defaultRoleId,
     selectedMemberCount,
     // Edit state & handlers

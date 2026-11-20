@@ -21,6 +21,7 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useMemberPages } from "@/hooks/useMemberPages";
 import { cn } from "@/lib/cn";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
@@ -153,7 +154,7 @@ export function RoleMembersPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col">
-      <div className="border-line shrink-0 space-y-3 border-b px-4 py-4 sm:px-7">
+      <div className="border-line shrink-0 space-y-3 border-b px-4 py-4 sm:px-8">
         {isEveryone ? (
           <p className="text-content-subtle text-sm">
             {ROLE_MEMBERS_EVERYONE_HINT}
@@ -182,14 +183,12 @@ export function RoleMembersPanel({
 
       <div
         role={isEveryone ? undefined : "tabpanel"}
-        className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 sm:px-7"
+        className="min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-4 sm:px-8"
       >
         <FormAlert message={list.errorMessage} />
         {list.members === null ? (
           list.errorMessage ? null : (
-            <div className="flex items-center justify-center py-8">
-              <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
-            </div>
+            <LoadingSpinner />
           )
         ) : list.members.length === 0 ? (
           <p className="text-content-subtle py-2 text-sm">{emptyMessage}</p>
@@ -219,7 +218,7 @@ export function RoleMembersPanel({
           total={list.total}
           noun={list.isSearching ? "resultados" : "miembros"}
           onPageChange={list.setPage}
-          className="border-line shrink-0 border-t px-4 py-3 sm:px-7"
+          className="border-line shrink-0 border-t px-4 py-3 sm:px-8"
         />
       ) : null}
     </div>
