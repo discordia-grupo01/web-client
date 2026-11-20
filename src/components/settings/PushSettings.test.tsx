@@ -62,10 +62,21 @@ describe("PushSettings", () => {
     expect(setAccountEnabled).toHaveBeenCalledWith(true);
   });
 
-  it("no deja tocar el interruptor mientras carga", () => {
+  it("muestra el spinner hasta saber si están activadas", () => {
     setup({ accountEnabled: null });
 
-    expect(screen.getByRole("switch")).toBeDisabled();
+    expect(
+      screen.getByRole("status", { name: "Cargando" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("switch")).not.toBeInTheDocument();
+  });
+
+  it("muestra el spinner mientras lee el estado del navegador", () => {
+    setup({ browserStatus: "loading" });
+
+    expect(
+      screen.getByRole("status", { name: "Cargando" }),
+    ).toBeInTheDocument();
   });
 
   it("ofrece activar este navegador cuando esta apagado", () => {

@@ -13,11 +13,13 @@ import {
   PUSH_UNSUPPORTED,
 } from "@discordia/client-shared";
 
-import { AlertCircle, Bell, BellOff } from "lucide-react";
+import { Bell, BellOff } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { Button } from "@/components/ui/Button";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SettingsCard } from "@/components/ui/settings/SettingsCard";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsRow } from "@/components/ui/settings/SettingsRow";
@@ -28,19 +30,22 @@ export function PushSettings() {
   const { user } = useAuth();
   const push = usePushNotifications(user ? String(user.id) : null);
   const isAccountOff = push.accountEnabled === false;
+  const isLoading =
+    (push.accountEnabled === null && !push.error) ||
+    push.browserStatus === "loading";
+
+  if (isLoading) {
+    return (
+      <SettingsSection>
+        <LoadingSpinner />
+      </SettingsSection>
+    );
+  }
 
   return (
     <SettingsSection>
       <div className="flex flex-col gap-6">
-        {push.error ? (
-          <div
-            role="alert"
-            className="border-danger/30 bg-danger/10 text-danger flex items-start gap-3 rounded-xl border px-4 py-3 text-sm"
-          >
-            <AlertCircle size={15} className="mt-0.5 shrink-0" />
-            <span>{push.error}</span>
-          </div>
-        ) : null}
+        <FormAlert message={push.error ?? undefined} />
 
         <SettingsCard>
           <SettingsRow

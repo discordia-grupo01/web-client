@@ -3,45 +3,18 @@
 import type { TwoFactorStatus } from "@discordia/client-shared";
 
 import { ChevronRight, Shield } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
 
-import { FormAlert } from "@/components/ui/FormAlert";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { cn } from "@/lib/cn";
-import { twoFactorStatusRequest } from "@/services/two-factor/client";
 
 interface TwoFactorSummaryRowProps {
+  status: TwoFactorStatus;
   onOpen: (status: TwoFactorStatus) => void;
 }
 
-export function TwoFactorSummaryRow({ onOpen }: TwoFactorSummaryRowProps) {
-  const [status, setStatus] = useState<TwoFactorStatus | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [loadError, setLoadError] = useState<string | null>(null);
-
-  const loadStatus = useCallback(async () => {
-    const result = await twoFactorStatusRequest();
-    setIsLoading(false);
-    if (result.ok) {
-      setStatus(result.status);
-      setLoadError(null);
-    } else {
-      setLoadError(result.message);
-    }
-  }, []);
-
-  useEffect(() => {
-    void loadStatus();
-  }, [loadStatus]);
-
-  if (isLoading) {
-    return <LoadingSpinner />;
-  }
-
-  if (loadError || !status) {
-    return <FormAlert message={loadError ?? undefined} />;
-  }
-
+export function TwoFactorSummaryRow({
+  status,
+  onOpen,
+}: TwoFactorSummaryRowProps) {
   const enabled = status.enabled;
 
   return (

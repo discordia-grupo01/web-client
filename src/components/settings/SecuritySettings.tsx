@@ -15,8 +15,12 @@ import {
   type SetPasswordStepCopy,
 } from "@/components/security/SetPasswordStep";
 import { TwoFactorSummaryRow } from "@/components/security/TwoFactorSummaryRow";
+import { FormAlert } from "@/components/ui/FormAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
+
+import { useTwoFactorStatus } from "./hooks/useTwoFactorStatus";
 
 const SET_PASSWORD_COPY: SetPasswordStepCopy = {
   title: ACCOUNT_PASSWORD_COPY.setFormTitle,
@@ -36,6 +40,7 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
   const profile = ownProfile?.profile ?? null;
   const [passwordView, setPasswordView] = useState<PasswordView>(null);
   const [notice, setNotice] = useState<string | null>(null);
+  const twoFactor = useTwoFactorStatus();
 
   function openPassword() {
     setNotice(null);
@@ -71,6 +76,8 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
     );
   }
 
+  const isLoading = twoFactor.isLoading || (ownProfile !== null && !profile);
+
   return (
     <SettingsSection description="Administrá las medidas que protegen tu cuenta.">
       {notice ? (
@@ -82,15 +89,26 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
           <span>{notice}</span>
         </div>
       ) : null}
-      <div className="space-y-3">
-        <TwoFactorSummaryRow onOpen={onOpenTwoFactor} />
-        {profile ? (
-          <PasswordSummaryRow
-            hasPassword={profile.has_password}
-            onOpen={openPassword}
-          />
-        ) : null}
-      </div>
+      {isLoading ? (
+        <LoadingSpinner />
+      ) : (
+        <div className="space-y-3">
+          {twoFactor.status ? (
+            <TwoFactorSummaryRow
+              status={twoFactor.status}
+              onOpen={onOpenTwoFactor}
+            />
+          ) : (
+            <FormAlert message={twoFactor.loadError ?? undefined} />
+          )}
+          {profile ? (
+            <PasswordSummaryRow
+              hasPassword={profile.has_password}
+              onOpen={openPassword}
+            />
+          ) : null}
+        </div>
+      )}
     </SettingsSection>
   );
 }

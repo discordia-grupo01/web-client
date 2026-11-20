@@ -55,17 +55,21 @@ export function SettingsSidebar<Id extends string>({
             </div>
           </div>
         ))}
+        {dangerAction ? (
+          <div className="border-line border-t pt-4">
+            <button
+              type="button"
+              onClick={dangerAction.onClick}
+              className="text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"
+            >
+              <dangerAction.icon size={ICON_SIZE} className="shrink-0" />
+              <strong className="font-display text-sm">
+                {dangerAction.label}
+              </strong>
+            </button>
+          </div>
+        ) : null}
       </nav>
-      {dangerAction ? (
-        <button
-          type="button"
-          onClick={dangerAction.onClick}
-          className="text-danger hover:bg-danger/10 mt-3 flex w-full shrink-0 cursor-pointer items-center gap-3 rounded-xl px-3 py-2.5 text-left transition-colors"
-        >
-          <dangerAction.icon size={ICON_SIZE} className="shrink-0" />
-          <strong className="font-display text-sm">{dangerAction.label}</strong>
-        </button>
-      ) : null}
     </aside>
   );
 }
