@@ -68,6 +68,7 @@ export function RoleCreateForm({ editor, backButton }: RoleCreateFormProps) {
         <RoleNameField
           inputId={NAME_INPUT_ID}
           value={newName}
+          color={newColor}
           error={newNameError}
           autoFocus
           onChange={(value) => {

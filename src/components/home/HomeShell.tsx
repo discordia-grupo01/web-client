@@ -23,6 +23,7 @@ import { PrivateCallProvider } from "@/contexts/PrivateCallContext";
 import { HomeView } from "@/components/home/HomeView";
 import { LoadingScreen } from "@/components/home/LoadingScreen";
 import { ServerRail } from "@/components/home/ServerRail";
+import { ServerDeletedModal } from "@/components/home/ServerDeletedModal";
 import { JoinServerModal } from "@/components/invites/JoinServerModal";
 import { DrawerBackdrop } from "@/components/layout/DrawerBackdrop";
 import { NotificationCenter } from "@/components/notifications/NotificationCenter";
@@ -735,6 +736,7 @@ function HomeShellContent({
                     ) : null}
                     <PrivateCallBanner />
                     <PrivateCallNotice />
+                    <ServerDeletedModal />
                   </div>
                 </div>
               </MobilePanelsProvider>

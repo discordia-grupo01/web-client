@@ -13,16 +13,15 @@ function makeServer(id: string, name: string): ServerSummary {
   return {
     id,
     name,
-    description: "",
-    icon: null,
+    icon_url: null,
+    banner_url: null,
     owner_id: "user-1",
+    created_at: "2026-01-01T00:00:00Z",
     channels: [],
-    member_count: 5,
+    categories: [],
+    suspended: false,
     boost_count: 1,
     boost_level: 0,
-    created_at: "2026-01-01T00:00:00Z",
-    suspended: false,
-    suspension_reason: null,
   };
 }
 

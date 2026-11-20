@@ -6,6 +6,7 @@ import type {
   NotificationSettingsPatch,
   NotificationSettingsResponse,
   NotificationSettingState,
+  StaffNoticesResponse,
 } from "@discordia/client-shared";
 
 import { apiRequest, type ApiResult } from "@/lib/apiClient";
@@ -34,6 +35,24 @@ export function markTransfersRead(
     token,
     data: { transfer_ids: transferIds },
   });
+}
+
+export function listStaffNotices(
+  token: string,
+): Promise<ApiResult<StaffNoticesResponse>> {
+  return apiRequest<StaffNoticesResponse>("/v1/notifications/notices", {
+    token,
+  });
+}
+
+export function markStaffNoticeSeen(
+  token: string,
+  noticeId: string,
+): Promise<ApiResult<unknown>> {
+  return apiRequest<unknown>(
+    `/v1/notifications/notices/${encodeURIComponent(noticeId)}/seen`,
+    { method: "POST", token },
+  );
 }
 
 export function getNotificationSettings(

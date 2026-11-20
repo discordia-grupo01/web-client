@@ -138,7 +138,7 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
                 <div>
                   <label
                     htmlFor="invite-code"
-                    className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
+                    className="text-content font-display mb-1.5 block text-sm font-semibold"
                   >
                     Enlace o código de invitación
                   </label>

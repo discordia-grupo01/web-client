@@ -61,13 +61,13 @@ export function ReportDetailsStep({
         <div className="mb-1.5 flex items-center justify-between gap-3">
           <label
             htmlFor={DETAIL_ID}
-            className="text-content-muted text-xs font-bold tracking-wider uppercase"
+            className="text-content font-display text-sm font-semibold"
           >
             {REPORT_DETAIL_LABEL}
             {isReportDetailRequired(category) ? null : (
               <>
                 {" "}
-                <span className="font-normal normal-case">
+                <span className="text-content-subtle font-normal">
                   {REPORT_DETAIL_OPTIONAL_HINT}
                 </span>
               </>
