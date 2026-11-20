@@ -1,5 +1,8 @@
+"use client";
+
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
 
@@ -11,6 +14,7 @@ interface ModalShellProps {
   labelledBy?: string;
   /** Por debajo de `sm` ocupa toda la pantalla, sin bordes ni margen. */
   isFullScreenOnMobile?: boolean;
+  hasCloseButton?: boolean;
 }
 
 /**
@@ -18,6 +22,11 @@ interface ModalShellProps {
  * la app. Estaba copiado literal en cada uno (`create-server-modal`,
  * `edit-channel-modal`, ...); los que todavia lo tienen inline pueden migrar
  * aca sin cambiar como se ven.
+ *
+ * Va a `body` para que el que se abre último quede arriba aunque lo monte un
+ * componente de más atrás (el de banear lo monta `ServerView`, debajo de la
+ * configuración). Además, adentro del lateral de canales lo recortaría el
+ * `transform` del cajón en celular.
  */
 export function ModalShell({
   onClose,
@@ -25,8 +34,11 @@ export function ModalShell({
   maxWidth = 460,
   labelledBy,
   isFullScreenOnMobile = false,
+  hasCloseButton = true,
 }: ModalShellProps) {
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className={cn(
         "fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm sm:p-6",
@@ -48,17 +60,20 @@ export function ModalShell({
         )}
         style={{ maxWidth, background: "var(--bg-modal)" }}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-        >
-          <X size={14} />
-        </button>
+        {hasCloseButton ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
+          >
+            <X size={14} />
+          </button>
+        ) : null}
 
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

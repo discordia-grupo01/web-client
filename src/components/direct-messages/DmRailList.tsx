@@ -9,7 +9,7 @@ import {
   type User,
 } from "@discordia/client-shared";
 
-import { Loader2, Plus } from "lucide-react";
+import { Plus } from "lucide-react";
 
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { UserPanel } from "@/components/profile/UserPanel";
@@ -17,6 +17,7 @@ import { Avatar } from "@/components/ui/Avatar";
 import type { ConversationSummary } from "@/hooks/useDirectMessages";
 import { cn } from "@/lib/cn";
 import { usePresenceOf } from "@/hooks/usePresence";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { DmListError } from "./DmListError";
 
@@ -101,13 +102,7 @@ export function DmRailList({
         </div>
 
         {isLoading ? (
-          <div className="flex justify-center py-6" role="status">
-            <Loader2
-              size={18}
-              className="text-content-subtle animate-spin"
-              aria-label="Cargando conversaciones"
-            />
-          </div>
+          <LoadingSpinner label="Cargando conversaciones" />
         ) : conversations.length === 0 && loadError ? (
           <DmListError
             message={loadError}

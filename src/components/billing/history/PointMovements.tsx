@@ -1,6 +1,6 @@
 import {
   BILLING_COPY,
-  BILLING_HISTORY_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
   formatBillingDate,
   formatPointsDelta,
   LEDGER_REASON_LABELS,
@@ -80,7 +80,7 @@ export function PointMovements({
     return ledger;
   }, [ledger, serverFilter, searchQuery, serverDirectory]);
 
-  const paged = usePagedItems(filteredLedger, BILLING_HISTORY_PAGE_SIZE);
+  const paged = usePagedItems(filteredLedger, DEFAULT_PAGE_SIZE);
 
   const handleSelectServer = (serverId: string, serverName: string) => {
     setServerFilter(serverId);

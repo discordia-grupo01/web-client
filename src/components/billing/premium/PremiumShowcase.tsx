@@ -10,7 +10,7 @@ import {
 } from "@discordia/client-shared";
 
 import { Button } from "@/components/ui/Button";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { cn } from "@/lib/cn";
 
 import { DiscordiaPremiumMark } from "../icons/DiscordiaIcons";
@@ -34,24 +34,14 @@ export function PremiumShowcase({
 }: PremiumShowcaseProps) {
   return (
     <div className="flex flex-col gap-6">
-      <div>
-        <h3 className="text-content font-display text-xl font-bold">
-          {BILLING_COPY.planTitle}
-        </h3>
-        <p className="text-content-muted mt-1 text-sm">
-          {BILLING_COPY.planSubtitle}
-        </p>
-      </div>
-
       <PlanCard premium={premium} onManage={onManage} />
 
-      <section className="flex flex-col gap-3">
-        <SectionLabel>{BILLING_COPY.benefitsTitle}</SectionLabel>
+      <SettingsGroup label={BILLING_COPY.benefitsTitle}>
         <ul className="grid gap-3 sm:grid-cols-2">
           {PREMIUM_SHOWCASE_BENEFITS.map((benefit) => (
             <li
               key={benefit.id}
-              className="bg-surface-raised rounded-2xl border border-[#F0B232] p-3.5"
+              className="bg-surface-raised border-amber rounded-2xl border p-3.5"
             >
               <PremiumShowcaseArt benefit={benefit.id} profile={profile} />
               <h4 className="font-display text-content mt-3 text-sm font-bold">
@@ -63,7 +53,7 @@ export function PremiumShowcase({
             </li>
           ))}
         </ul>
-      </section>
+      </SettingsGroup>
 
       <PremiumFacts />
     </div>
@@ -79,7 +69,7 @@ function PlanCard({ premium, onManage }: PlanCardProps) {
   const actions = premiumActions(premium);
 
   return (
-    <section className="bg-surface-raised flex flex-col gap-5 rounded-2xl border border-[#F0B232] p-5 sm:flex-row sm:items-center [[data-theme=light]_&]:border-[1.5px]">
+    <section className="bg-surface-raised border-amber flex flex-col gap-5 rounded-2xl border p-5 sm:flex-row sm:items-center [[data-theme=light]_&]:border-[1.5px]">
       <DiscordiaPremiumMark size={64} className="shrink-0" />
 
       <div className="min-w-0 flex-1">

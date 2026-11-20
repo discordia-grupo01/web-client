@@ -66,7 +66,7 @@ export function CustomEmojiPremiumOffer({
     <div
       ref={containerRef}
       className={cn(
-        "bg-surface-modal relative mt-2 flex flex-col gap-2 rounded-xl border border-[#F0B232]/30 px-3.5 py-3",
+        "bg-surface-modal border-amber/30 relative mt-2 flex flex-col gap-2 rounded-xl border px-3.5 py-3",
         className,
       )}
     >
@@ -89,7 +89,7 @@ export function CustomEmojiPremiumOffer({
       <button
         type="button"
         onClick={onOpenPremium}
-        className="inline-flex cursor-pointer items-center gap-1 self-start text-xs font-bold text-[#F0B232] hover:underline"
+        className="text-amber inline-flex cursor-pointer items-center gap-1 self-start text-xs font-bold hover:underline"
       >
         <DiscordiaPremiumIcon size={14} />
         {copy.cta}

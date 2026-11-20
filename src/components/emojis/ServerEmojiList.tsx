@@ -7,8 +7,9 @@ import {
   formatDayAndMonth,
   type ServerEmoji,
 } from "@discordia/client-shared";
-import { Trash2 } from "lucide-react";
+import { Smile, Trash2 } from "lucide-react";
 
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 import { Tooltip } from "@/components/ui/Tooltip";
 import { emojiImageSrc } from "@/utils/image-urls";
 
@@ -48,7 +49,7 @@ export function ServerEmojiList({
   onDelete,
 }: ServerEmojiListProps) {
   if (emojis.length === 0) {
-    return <p className="text-content-subtle text-sm">{EMOJIS_EMPTY_NOTICE}</p>;
+    return <SettingsEmptyState icon={Smile} text={EMOJIS_EMPTY_NOTICE} />;
   }
 
   return (

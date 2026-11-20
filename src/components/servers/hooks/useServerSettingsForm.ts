@@ -145,6 +145,16 @@ export function useServerSettingsForm({
     setBanner({ kind: "removed" });
   }
 
+  function reset() {
+    setName(server.name);
+    setIcon(null);
+    setBanner({ kind: "current" });
+    setNameError("");
+    setIconError("");
+    setBannerError("");
+    setGlobalError("");
+  }
+
   /**
    * Solo viaja lo que cambio: el backend pisa unicamente los campos presentes
    * en el multipart, asi que mandar el nombre no toca el icono ni el banner.
@@ -207,6 +217,7 @@ export function useServerSettingsForm({
     bannerError,
     globalError,
     isSubmitting,
+    hasChanges,
     canSubmit,
     iconPreviewSrc,
     bannerPreviewSrc,
@@ -222,5 +233,6 @@ export function useServerSettingsForm({
     choosePreset,
     removeBanner,
     submit,
+    reset,
   };
 }

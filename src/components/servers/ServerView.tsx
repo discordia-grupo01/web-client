@@ -128,7 +128,7 @@ import {
 } from "@/services/roles/client";
 import { listServersRequest } from "@/services/servers/client";
 import { useVoicePresence } from "@/components/servers/hooks/useVoicePresence";
-import { useVoiceProfiles } from "@/components/voice/hooks/useVoiceProfiles";
+import { useVoiceProfiles } from "@/components/servers/hooks/useVoiceProfiles";
 import { useVoiceSession } from "@/contexts/VoiceSessionContext";
 import { cn } from "@/lib/cn";
 
@@ -161,18 +161,12 @@ interface ServerViewProps {
   server: ServerSummary;
   onLeft: () => void;
   onServerUpdate: (server: ServerSummary) => void;
-  /** Levantado a `HomeShell`: se comparte con el estado "sin servidor". */
   ownProfile: User | null;
-  /** Con `serverId` el perfil muestra los roles de ese servidor. */
   onOpenOwnProfile: (serverId?: string) => void;
-  /** Abre un mensaje directo con alguien (desde su perfil). */
   onMessageUser: (profile: PublicUser) => void;
   unreadByChannel: Record<string, UnreadFlags>;
-  /** Canal a abrir al montar (el ultimo visitado); si ya no existe, el primero. */
   initialChannelId?: string | null;
-  /** Avisa el canal abierto, para recordarlo entre recargas. */
   onChannelChange?: (channelId: string) => void;
-  /** Reportes pendientes de este servidor (0 si no es moderador). */
   pendingReports: number;
   onPendingReportsChanged: () => void;
 }

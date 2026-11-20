@@ -3,6 +3,8 @@ import {
   BANS_LOAD_FAILED,
   type BanMemberResult,
   type ListBansResult,
+  type MemberPageQuery,
+  memberPageQueryString,
   UNBAN_FAILED,
   type UnbanMemberResult,
 } from "@discordia/client-shared";
@@ -11,9 +13,12 @@ import { api } from "@/lib/browserApiClient";
 
 export async function listBansRequest(
   serverId: string,
+  query: MemberPageQuery = {},
 ): Promise<ListBansResult> {
   try {
-    const { data } = await api.get<ListBansResult>(`/servers/${serverId}/bans`);
+    const { data } = await api.get<ListBansResult>(
+      `/servers/${serverId}/bans${memberPageQueryString(query)}`,
+    );
     return data;
   } catch {
     return { ok: false, message: BANS_LOAD_FAILED };

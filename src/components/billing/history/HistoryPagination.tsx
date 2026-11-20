@@ -27,7 +27,7 @@ export function HistoryPagination({
       total={total}
       noun={noun}
       onPageChange={onPageChange}
-      className="mt-3"
+      className="mt-4"
     />
   );
 }

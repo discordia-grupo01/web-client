@@ -5,11 +5,9 @@ import {
   EMOJI_SLOTS_FULL_COPY,
   EMOJI_UPLOAD_COPY,
   EMOJIS_READ_ONLY_NOTICE,
-  EMOJIS_SECTION_TITLE,
   EMOJIS_SECTION_DESCRIPTION,
   emojiDeleteTitle,
   emojiLabel,
-  emojisSectionTitleFor,
   hasEmojiSlots,
   MEMBER_PAGE_LIMIT,
   serverBoostCount,
@@ -25,7 +23,9 @@ import { useOwnPremium } from "@/contexts/OwnProfileContext";
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { FormAlert } from "@/components/ui/FormAlert";
-import { SectionLabel } from "@/components/ui/SectionLabel";
+import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { deleteServerEmojiRequest } from "@/services/emojis/client";
 import { listMembersRequest } from "@/services/members/client";
 import { emojiImageSrc } from "@/utils/image-urls";
@@ -38,13 +38,11 @@ import { useServerEmojis } from "./hooks/useServerEmojis";
 interface ServerEmojisSectionProps {
   server: ServerSummary;
   canManageServer: boolean;
-  titleId: string;
 }
 
 export function ServerEmojisSection({
   server,
   canManageServer,
-  titleId,
 }: ServerEmojisSectionProps) {
   const { page, error, reload, addEmoji, removeEmoji } = useServerEmojis(
     server.id,
@@ -92,93 +90,78 @@ export function ServerEmojisSection({
   const isFull = page !== null && !hasEmojiSlots(page);
 
   return (
-    <div className="flex flex-1 flex-col overflow-y-auto">
-      <div className="px-4 pt-6 pb-2 sm:px-7 sm:pt-8">
-        <h2
-          id={titleId}
-          className="font-display text-content mb-1 pr-12 text-xl font-bold"
-        >
-          {emojisSectionTitleFor(server.name)}
-        </h2>
-        <p className="text-content-muted text-sm leading-relaxed">
-          {EMOJIS_SECTION_DESCRIPTION}
-        </p>
-      </div>
+    <>
+      <SettingsSection description={EMOJIS_SECTION_DESCRIPTION}>
+        <div className="space-y-5">
+          <FormAlert message={error ?? deleteError} />
 
-      <div className="flex-1 space-y-5 px-4 py-6 sm:px-7">
-        <FormAlert message={error ?? deleteError} />
+          {page === null && !error ? <LoadingSpinner /> : null}
 
-        {page === null && !error ? (
-          <p className="text-content-subtle text-sm">Cargando…</p>
-        ) : null}
-
-        {page !== null ? (
-          <>
-            <EmojiCapacityCard
-              serverName={server.name}
-              used={page.emojis.length}
-              max={page.max_emojis}
-              level={serverBoostLevel(server)}
-              boostCount={serverBoostCount(server)}
-            />
-
-            {canManageServer && isFull ? (
-              <div className="border-boost-warn-line bg-boost-warn-soft flex items-start gap-3 rounded-xl border px-3.5 py-3">
-                <TriangleAlert
-                  size={16}
-                  className="text-warning mt-0.5 shrink-0"
-                />
-                <p className="text-content text-sm leading-relaxed">
-                  <span className="font-semibold">
-                    {EMOJI_SLOTS_FULL_COPY.title}
-                  </span>{" "}
-                  <span className="text-content-muted">
-                    {EMOJI_SLOTS_FULL_COPY.detail}
-                  </span>
-                </p>
-              </div>
-            ) : null}
-
-            {canManageServer ? null : (
-              <div className="bg-surface-input border-line flex items-start gap-3 rounded-xl border px-3.5 py-3">
-                <Info size={16} className="text-info mt-0.5 shrink-0" />
-                <p className="text-content-muted text-sm leading-relaxed">
-                  {EMOJIS_READ_ONLY_NOTICE}
-                </p>
-              </div>
-            )}
-
-            <div>
-              <div className="mb-2 flex items-center justify-between gap-3">
-                <div className="flex min-w-0 items-center gap-2">
-                  <SectionLabel>{EMOJIS_SECTION_TITLE}</SectionLabel>
-                  <span className="text-content-subtle text-xs tabular-nums">
-                    {page.emojis.length}
-                  </span>
-                </div>
-                {canManageServer ? (
-                  <Button
-                    type="button"
-                    className="w-auto shrink-0 px-3.5 py-2"
-                    disabled={isFull}
-                    onClick={() => setIsUploadOpen(true)}
-                  >
-                    <Plus size={16} />
-                    {EMOJI_UPLOAD_COPY.submit}
-                  </Button>
-                ) : null}
-              </div>
-              <ServerEmojiList
-                emojis={page.emojis}
-                authorNames={authorNames}
-                canManage={canManageServer}
-                isPremium={isPremium}
-                onDelete={setEmojiToDelete}
+          {page !== null ? (
+            <>
+              <EmojiCapacityCard
+                serverName={server.name}
+                used={page.emojis.length}
+                max={page.max_emojis}
+                level={serverBoostLevel(server)}
+                boostCount={serverBoostCount(server)}
               />
-            </div>
-          </>
-        ) : null}
-      </div>
+
+              {canManageServer && isFull ? (
+                <div className="border-boost-warn-line bg-boost-warn-soft flex items-start gap-3 rounded-xl border px-3.5 py-3">
+                  <TriangleAlert
+                    size={16}
+                    className="text-warning mt-0.5 shrink-0"
+                  />
+                  <p className="text-content text-sm leading-relaxed">
+                    <span className="font-semibold">
+                      {EMOJI_SLOTS_FULL_COPY.title}
+                    </span>{" "}
+                    <span className="text-content-muted">
+                      {EMOJI_SLOTS_FULL_COPY.detail}
+                    </span>
+                  </p>
+                </div>
+              ) : null}
+
+              {canManageServer ? null : (
+                <div className="bg-surface-input border-line flex items-start gap-3 rounded-xl border px-3.5 py-3">
+                  <Info size={16} className="text-info mt-0.5 shrink-0" />
+                  <p className="text-content-muted text-sm leading-relaxed">
+                    {EMOJIS_READ_ONLY_NOTICE}
+                  </p>
+                </div>
+              )}
+
+              <SettingsGroup
+                label="Emojis del servidor"
+                count={page.emojis.length}
+                aside={
+                  canManageServer ? (
+                    <Button
+                      type="button"
+                      className="w-auto shrink-0 px-3.5 py-2"
+                      disabled={isFull}
+                      onClick={() => setIsUploadOpen(true)}
+                    >
+                      <Plus size={16} />
+                      {EMOJI_UPLOAD_COPY.submit}
+                    </Button>
+                  ) : null
+                }
+              >
+                <ServerEmojiList
+                  emojis={page.emojis}
+                  authorNames={authorNames}
+                  canManage={canManageServer}
+                  isPremium={isPremium}
+                  onDelete={setEmojiToDelete}
+                />
+              </SettingsGroup>
+            </>
+          ) : null}
+        </div>
+      </SettingsSection>
 
       {isUploadOpen ? (
         <UploadEmojiModal
@@ -209,6 +192,6 @@ export function ServerEmojisSection({
           onCancel={() => setEmojiToDelete(null)}
         />
       ) : null}
-    </div>
+    </>
   );
 }

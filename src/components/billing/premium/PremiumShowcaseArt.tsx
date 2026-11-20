@@ -44,7 +44,7 @@ function Art({ benefit, profile }: PremiumShowcaseArtProps) {
     case "attachments":
       return (
         <>
-          <span className="text-boost-ink flex h-12.5 w-10.5 shrink-0 items-center justify-center rounded-lg bg-[#F0B232] text-[10px] font-bold">
+          <span className="text-boost-ink bg-amber flex h-12.5 w-10.5 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold">
             {ART_COPY.attachmentKind}
           </span>
           <span className="flex flex-1 flex-col gap-1.5">
@@ -52,15 +52,13 @@ function Art({ benefit, profile }: PremiumShowcaseArtProps) {
               {ART_COPY.attachmentName}
             </span>
             <span className="bg-surface-input h-1.25 overflow-hidden rounded-sm">
-              <span className="block h-full w-full bg-[#F0B232]" />
+              <span className="bg-amber block h-full w-full" />
             </span>
             <span className="text-[10px] tabular-nums">
               <span className="text-content-subtle line-through">
                 {ART_COPY.attachmentBaseLimit}
               </span>{" "}
-              <strong className="text-[#F0B232]">
-                {ART_COPY.attachmentLimit}
-              </strong>
+              <strong className="text-amber">{ART_COPY.attachmentLimit}</strong>
             </span>
           </span>
         </>
@@ -76,7 +74,7 @@ function Art({ benefit, profile }: PremiumShowcaseArtProps) {
               <Smile size={16} />
             </span>
           ))}
-          <span className="text-boost-ink flex h-8.5 items-center rounded-[10px] bg-[#F0B232] px-2.5 text-xs font-bold">
+          <span className="text-boost-ink bg-amber flex h-8.5 items-center rounded-[10px] px-2.5 text-xs font-bold">
             {ART_COPY.animatedKind}
           </span>
         </>

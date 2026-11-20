@@ -25,7 +25,7 @@ export function EmojiPremiumBadge({
       title={EMOJI_PREMIUM_REQUIRED_LABEL}
       style={{ width: size, height: size }}
       className={cn(
-        "bg-surface-modal flex items-center justify-center rounded-md border border-[#F0B232]/50",
+        "bg-surface-modal border-amber/50 flex items-center justify-center rounded-md border",
         className,
       )}
     >

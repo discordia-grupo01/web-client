@@ -15,7 +15,7 @@ import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 import { DirectMessagesView } from "@/components/direct-messages/DirectMessagesView";
-import { useCallPartnerResolver } from "@/components/private-call/hooks/useCallPartnerResolver";
+import { useCallPartnerResolver } from "@/components/home/hooks/useCallPartnerResolver";
 import { PrivateCallBanner } from "@/components/private-call/PrivateCallBanner";
 import { PrivateCallDialog } from "@/components/private-call/PrivateCallDialog";
 import { PrivateCallNotice } from "@/components/private-call/PrivateCallNotice";

@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE as PAGE } from "@discordia/client-shared";
 import type { ModerationAuditEntry } from "@discordia/client-shared";
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
@@ -19,16 +20,19 @@ describe("useModerationAudit", () => {
   });
 
   it("pide la pagina con offset y calcula las paginas con el total", async () => {
-    request.mockResolvedValue({ ok: true, entries: [entry], total: 45 });
+    request.mockResolvedValue({ ok: true, entries: [entry], total: PAGE * 3 });
     const { result } = renderHook(() => useModerationAudit("s1"));
 
     await waitFor(() => expect(result.current.entries).toEqual([entry]));
-    expect(request).toHaveBeenLastCalledWith("s1", { limit: 15, offset: 0 });
+    expect(request).toHaveBeenLastCalledWith("s1", { limit: PAGE, offset: 0 });
     expect(result.current.pageCount).toBe(3);
 
     act(() => result.current.setPage(3));
     await waitFor(() =>
-      expect(request).toHaveBeenLastCalledWith("s1", { limit: 15, offset: 30 }),
+      expect(request).toHaveBeenLastCalledWith("s1", {
+        limit: PAGE,
+        offset: PAGE * 2,
+      }),
     );
   });
 

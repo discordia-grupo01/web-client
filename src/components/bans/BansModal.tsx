@@ -38,7 +38,6 @@ export function BansModal({
         serverId={serverId}
         ownerId={ownerId}
         currentUserId={currentUserId}
-        titleId={TITLE_ID}
         header={
           <BanModalHeader
             titleId={TITLE_ID}

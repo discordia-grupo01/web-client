@@ -22,6 +22,7 @@ import { ArrowUpRight, Flag, UserRound } from "lucide-react";
 
 import { cn } from "@/lib/cn";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { ReportSanctionMenu } from "./ReportSanctionMenu";
 import { ReportTargetPreview } from "./ReportTargetPreview";
@@ -191,12 +192,7 @@ export function ReportRow({
 
 function ReportedMessage({ state }: { state: ReportedMessageState | null }) {
   if (!state || state.status === "loading") {
-    return (
-      <div
-        aria-hidden="true"
-        className="bg-surface-input h-16 animate-pulse rounded-xl"
-      />
-    );
+    return <LoadingSpinner label="Cargando mensaje" />;
   }
   if (state.status === "error" || state.status === "gone") {
     return (

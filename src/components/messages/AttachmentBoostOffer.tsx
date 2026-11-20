@@ -49,7 +49,7 @@ export function AttachmentBoostOffer({
           <button
             type="button"
             onClick={onOpenPremium}
-            className="inline-flex cursor-pointer items-center gap-1 font-bold text-[#F0B232] hover:underline"
+            className="text-amber inline-flex cursor-pointer items-center gap-1 font-bold hover:underline"
           >
             <DiscordiaPremiumIcon size={14} />
             {ATTACHMENT_BOOST_OFFER_COPY.premium}

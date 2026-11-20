@@ -19,6 +19,7 @@ import { BoostLevelIcon } from "@/components/boosts/icons/BoostLevelIcon";
 import { Avatar } from "@/components/ui/Avatar";
 import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { cn } from "@/lib/cn";
 import { serverIconSrc } from "@/utils/image-urls";
 import { requestServerBoosts } from "@/utils/serverBoostsRequest";
@@ -156,7 +157,7 @@ export function BoostsTab({ onBuyPoints }: BoostsTabProps) {
             </Button>
           </div>
         ) : boosted.data === null || servers === null ? (
-          <p className="text-content-subtle text-sm">Cargando…</p>
+          <LoadingSpinner />
         ) : rows.length === 0 ? (
           <EmptyHistory text={BILLING_BOOSTS_COPY.empty} />
         ) : (

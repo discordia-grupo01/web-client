@@ -8,6 +8,7 @@ import {
 import { EmptyHistory } from "@/components/billing/history/EmptyHistory";
 import { HistoryPagination } from "@/components/billing/history/HistoryPagination";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { cn } from "@/lib/cn";
 
 import type { ServerBoostsPage } from "../hooks/useServerBoostsPage";
@@ -87,7 +88,7 @@ export function ServerBoostList({ list, onRemove }: ServerBoostListProps) {
       ) : null}
       {list.data === null ? (
         list.loadError ? null : (
-          <p className="text-content-subtle text-sm">Cargando…</p>
+          <LoadingSpinner />
         )
       ) : boosts.length === 0 ? (
         <EmptyHistory text={BOOST_LIST_COPY.empty} />

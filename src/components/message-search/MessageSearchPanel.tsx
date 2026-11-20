@@ -28,7 +28,7 @@ import {
   MessageSearchEmpty,
   MessageSearchError,
   MessageSearchHint,
-  MessageSearchSkeleton,
+  MessageSearchLoading,
 } from "./MessageSearchStatus";
 
 interface MessageSearchPanelProps {
@@ -89,7 +89,7 @@ export function MessageSearchPanel({
   if (state.status === "idle") {
     body = <MessageSearchHint />;
   } else if (state.status === "loading") {
-    body = <MessageSearchSkeleton />;
+    body = <MessageSearchLoading />;
   } else if (state.status === "error") {
     body = <MessageSearchError message={state.error ?? ""} onRetry={retry} />;
   } else if (isEmpty) {

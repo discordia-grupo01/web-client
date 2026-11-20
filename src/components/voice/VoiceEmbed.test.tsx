@@ -31,7 +31,7 @@ vi.mock("@/components/voice/utils/voiceEmbedSession", () => ({
   },
 }));
 
-vi.mock("@/components/voice/hooks/useElementSize", () => ({
+vi.mock("@/hooks/useElementSize", () => ({
   useElementSize: () => [{ current: null }, { width: 800, height: 600 }],
 }));
 

@@ -5,7 +5,7 @@ import {
   type ListReportsResult,
   listReportsFailureMessage,
   REPORT_REASONS,
-  REPORTS_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
   type ReportStatus,
 } from "@discordia/client-shared";
 import { NextResponse, type NextRequest } from "next/server";
@@ -85,7 +85,7 @@ export async function GET(
   const search = request.nextUrl.searchParams;
   const rawStatus = search.get("status");
   const status = STATUSES.find((value) => value === rawStatus) ?? "pending";
-  const limit = Number(search.get("limit")) || REPORTS_PAGE_SIZE;
+  const limit = Number(search.get("limit")) || DEFAULT_PAGE_SIZE;
   const offset = Math.max(Number(search.get("offset")) || 0, 0);
 
   const result = await listReports(session.token, params.serverId, {

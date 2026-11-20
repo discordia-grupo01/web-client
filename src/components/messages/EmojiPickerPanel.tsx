@@ -110,7 +110,7 @@ ${buttons.map((button) => `${button}::after`).join(",")} {
 }
 .category[data-id="${cssString(id)}"] .sticky::after {
   content: "${cssString(CUSTOM_EMOJI_PICKER_COPY.categoryTag)}";
-  color: #F0B232;
+  color: var(--amber);
   font-size: 11px;
   font-weight: 700;
   padding-left: 17px;

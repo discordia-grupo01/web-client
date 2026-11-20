@@ -21,7 +21,7 @@ export function EmojiPickerPremiumNote({
       <button
         type="button"
         onClick={onOpenPremium}
-        className="shrink-0 cursor-pointer text-xs font-bold text-[#F0B232] hover:underline"
+        className="text-amber shrink-0 cursor-pointer text-xs font-bold hover:underline"
       >
         {CUSTOM_EMOJI_PICKER_COPY.cta}
       </button>

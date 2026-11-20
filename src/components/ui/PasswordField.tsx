@@ -17,6 +17,7 @@ interface PasswordFieldProps extends Omit<
   label: string;
   icon?: ReactNode;
   error?: string;
+  labelVariant?: "caps" | "sentence";
 }
 
 export const PasswordField = forwardRef<HTMLInputElement, PasswordFieldProps>(

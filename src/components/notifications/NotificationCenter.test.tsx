@@ -324,7 +324,9 @@ describe("NotificationCenter", () => {
   it("mientras carga muestra el indicador", async () => {
     await renderCenter(historyState({ status: "loading" }));
 
-    expect(screen.getByRole("status")).toHaveTextContent("Cargando…");
+    expect(
+      screen.getByRole("status", { name: "Cargando…" }),
+    ).toBeInTheDocument();
   });
 
   it("si no se pudo cargar muestra el error y reintentar vuelve a pedir", async () => {

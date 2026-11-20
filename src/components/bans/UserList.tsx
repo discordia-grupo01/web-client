@@ -1,5 +1,6 @@
 import { ShieldBan } from "lucide-react";
 
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 import { type ProfileSummary } from "@/utils/userProfile";
 
 import { UserRow, type UserRowAction } from "./UserRow";
@@ -26,12 +27,7 @@ export function UserList({
   disableActions = false,
 }: UserListProps) {
   if (items.length === 0) {
-    return (
-      <div className="bg-surface-raised text-content-muted flex flex-col items-center gap-2 rounded-xl px-4 py-8 text-center">
-        <ShieldBan size={28} aria-hidden="true" />
-        <p className="text-sm">{emptyMessage}</p>
-      </div>
-    );
+    return <SettingsEmptyState icon={ShieldBan} text={emptyMessage} />;
   }
 
   return (

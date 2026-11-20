@@ -20,7 +20,7 @@ import {
   MessageComposer,
   type MessageComposerHandle,
 } from "@/components/messages/MessageComposer";
-import { useChatDragDrop } from "@/components/messages/hooks/useChatDragDrop";
+import { useChatDragDrop } from "@/hooks/useChatDragDrop";
 import { ActivityStatusDot } from "@/components/profile/ActivityStatusDot";
 import { Avatar } from "@/components/ui/Avatar";
 import type {

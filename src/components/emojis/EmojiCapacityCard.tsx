@@ -6,7 +6,6 @@ import {
 } from "@discordia/client-shared";
 
 import { BoostBenefitChip } from "@/components/boosts/benefits/BoostBenefitChip";
-import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
 interface EmojiCapacityCardProps {
@@ -32,7 +31,9 @@ export function EmojiCapacityCard({
     <section className="bg-surface-raised border-line rounded-2xl border px-5 py-5">
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
         <div className="min-w-0">
-          <SectionLabel>{title}</SectionLabel>
+          <h3 className="text-content font-display text-sm font-semibold">
+            {title}
+          </h3>
           <p className="mt-2 flex flex-wrap items-baseline gap-x-1.5">
             <span className="font-display text-content text-3xl leading-none font-bold tabular-nums">
               {used}

@@ -11,7 +11,7 @@ export function AttachmentPremiumOffer({
   onOpenPremium,
 }: AttachmentPremiumOfferProps) {
   return (
-    <div className="bg-surface-modal mt-2 flex flex-col gap-2 rounded-xl border border-[#F0B232]/30 px-3.5 py-3">
+    <div className="bg-surface-modal border-amber/30 mt-2 flex flex-col gap-2 rounded-xl border px-3.5 py-3">
       <div>
         <strong className="text-content block text-[13px]">
           {ATTACHMENT_PREMIUM_OFFER_COPY.title}
@@ -23,7 +23,7 @@ export function AttachmentPremiumOffer({
       <button
         type="button"
         onClick={onOpenPremium}
-        className="inline-flex cursor-pointer items-center gap-1 self-start text-xs font-bold text-[#F0B232] hover:underline"
+        className="text-amber inline-flex cursor-pointer items-center gap-1 self-start text-xs font-bold hover:underline"
       >
         <DiscordiaPremiumIcon size={14} />
         {ATTACHMENT_PREMIUM_OFFER_COPY.cta}

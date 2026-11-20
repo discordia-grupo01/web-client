@@ -2,6 +2,7 @@
 
 import { Check, Moon, Sun } from "lucide-react";
 
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { cn } from "@/lib/cn";
 import { useTheme } from "@/hooks/useTheme";
 
@@ -50,17 +51,8 @@ export function AppearanceSettings() {
   const { theme, setTheme } = useTheme();
 
   return (
-    <div className="mx-auto max-w-2xl">
-      <div className="mb-6">
-        <h3 className="text-content font-display text-xl font-bold">
-          Elegí cómo se ve Discordia
-        </h3>
-        <p className="text-content-muted mt-1 text-sm">
-          El tema se aplica inmediatamente en toda la aplicación.
-        </p>
-      </div>
-
-      <div className="grid gap-4 sm:grid-cols-2">
+    <SettingsSection description="Elegí cómo se ve Discordia. El tema se aplica inmediatamente en toda la aplicación.">
+      <div className="grid max-w-2xl gap-4 sm:grid-cols-2">
         <ThemeCard
           active={theme === "dark"}
           onClick={() => setTheme("dark")}
@@ -109,6 +101,6 @@ export function AppearanceSettings() {
           }
         />
       </div>
-    </div>
+    </SettingsSection>
   );
 }

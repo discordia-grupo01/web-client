@@ -38,6 +38,7 @@ import {
 } from "@/services/invites/client";
 import { cn } from "@/lib/cn";
 import { useRefreshOnChange } from "@/hooks/useRefreshOnChange";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { LockedVanityLink } from "./LockedVanityLink";
 import { ServerVanityLink } from "./ServerVanityLink";
@@ -377,9 +378,7 @@ export function InviteModal({
           </div>
 
           {invitations === null ? (
-            <div className="flex items-center justify-center py-8">
-              <span className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2" />
-            </div>
+            <LoadingSpinner label="Cargando invitaciones" />
           ) : invitations.length === 0 ? (
             <p className="text-content-muted py-4 text-center text-sm">
               Todavía no hay invitaciones. Generá una arriba.
