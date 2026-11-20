@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE as PAGE } from "@discordia/client-shared";
 import { type Member, type MemberPageQuery } from "@discordia/client-shared";
 
 import { act, renderHook, waitFor } from "@testing-library/react";
@@ -23,7 +24,7 @@ const member = (id: number): Member => ({
 });
 
 function backWith(total: number) {
-  return vi.fn(async ({ limit = 15, offset = 0 }: MemberPageQuery) => ({
+  return vi.fn(async ({ limit = PAGE, offset = 0 }: MemberPageQuery) => ({
     ok: true as const,
     members: Array.from(
       { length: Math.max(0, Math.min(limit, total - offset)) },
@@ -35,33 +36,33 @@ function backWith(total: number) {
 
 describe("useMemberPages", () => {
   it("pide una pagina por vez al back y navega con setPage", async () => {
-    const fetchPage = backWith(45);
+    const fetchPage = backWith(PAGE * 3);
     const { result } = renderHook(() =>
       useMemberPages({ fetchPage, search: "" }),
     );
 
-    await waitFor(() => expect(result.current.members).toHaveLength(15));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE));
     expect(result.current.pageCount).toBe(3);
 
     act(() => result.current.setPage(3));
 
-    await waitFor(() => expect(result.current.members).toHaveLength(15));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE));
     expect(fetchPage).toHaveBeenLastCalledWith({
       search: "",
-      limit: 15,
-      offset: 30,
+      limit: PAGE,
+      offset: PAGE * 2,
     });
-    expect(result.current.range).toEqual({ from: 31, to: 45 });
+    expect(result.current.range).toEqual({ from: PAGE * 2 + 1, to: PAGE * 3 });
   });
 
   it("una busqueda nueva vuelve a la primera pagina sin pedir la vieja", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
-    const fetchPage = backWith(45);
+    const fetchPage = backWith(PAGE * 3);
     const { result, rerender } = renderHook(
       ({ search }) => useMemberPages({ fetchPage, search }),
       { initialProps: { search: "" } },
     );
-    await waitFor(() => expect(result.current.members).toHaveLength(15));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE));
     act(() => result.current.setPage(2));
     await waitFor(() => expect(result.current.page).toBe(2));
     fetchPage.mockClear();
@@ -74,7 +75,7 @@ describe("useMemberPages", () => {
     expect(fetchPage).toHaveBeenCalledTimes(1);
     expect(fetchPage).toHaveBeenCalledWith({
       search: "ana",
-      limit: 15,
+      limit: PAGE,
       offset: 0,
     });
     vi.useRealTimers();

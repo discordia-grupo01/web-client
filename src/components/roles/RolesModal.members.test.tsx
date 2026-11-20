@@ -135,7 +135,7 @@ describe("RolesModal: miembros por rol", () => {
     expect(screen.getByText("Caro")).toBeInTheDocument();
     expect(listRoleMembersRequest).toHaveBeenCalledWith("r-mod", {
       search: "",
-      limit: 15,
+      limit: 10,
       offset: 0,
       hasRole: false,
     });
@@ -180,7 +180,7 @@ describe("RolesModal: miembros por rol", () => {
     expect(screen.getByText("Caro")).toBeInTheDocument();
     expect(listRoleMembersRequest).toHaveBeenCalledWith("r-mod", {
       search: "car",
-      limit: 15,
+      limit: 10,
       offset: 0,
       hasRole: false,
     });

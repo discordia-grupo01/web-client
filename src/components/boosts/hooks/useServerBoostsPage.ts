@@ -1,6 +1,6 @@
 "use client";
 
-import { BOOSTS_PAGE_SIZE, type BoostPage } from "@discordia/client-shared";
+import { DEFAULT_PAGE_SIZE, type BoostPage } from "@discordia/client-shared";
 
 import { useCallback } from "react";
 
@@ -17,7 +17,7 @@ export function useServerBoostsPage(serverId: string) {
   return useOffsetPages({
     fetchPage,
     countOf: countBoosts,
-    pageSize: BOOSTS_PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
     refreshOn: { resources: ["boosts"] },
   });
 }

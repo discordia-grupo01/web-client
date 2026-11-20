@@ -7,7 +7,7 @@ import {
   MEMBERS_SEARCH_LABEL,
   MEMBERS_SEARCH_PLACEHOLDER,
   type OwnershipTransfer,
-  TRANSFER_CANDIDATES_PAGE_SIZE,
+  DEFAULT_PAGE_SIZE,
   type PublicUser,
   TRANSFER_CHOOSE_NEW_OWNER,
   TRANSFER_NONE_PENDING,
@@ -185,7 +185,7 @@ export function TransferOwnershipModal({
     fetchPage,
     search,
     enabled: canInitiate,
-    pageSize: TRANSFER_CANDIDATES_PAGE_SIZE,
+    pageSize: DEFAULT_PAGE_SIZE,
   });
   const members: Member[] | null =
     memberPages.members?.filter((member) => !member.is_owner) ?? null;

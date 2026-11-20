@@ -1,3 +1,4 @@
+import { DEFAULT_PAGE_SIZE as PAGE } from "@discordia/client-shared";
 import { type Member, type MemberPageQuery } from "@discordia/client-shared";
 
 import { act, renderHook, waitFor } from "@testing-library/react";
@@ -23,7 +24,7 @@ const member = (id: number): Member => ({
 });
 
 function backWith(total: number) {
-  return vi.fn(async ({ limit = 15, offset = 0 }: MemberPageQuery) => ({
+  return vi.fn(async ({ limit = PAGE, offset = 0 }: MemberPageQuery) => ({
     ok: true as const,
     members: Array.from(
       { length: Math.max(0, Math.min(limit, total - offset)) },
@@ -35,18 +36,18 @@ function backWith(total: number) {
 
 describe("useMemberScroll", () => {
   it("suma la pagina siguiente al final hasta llegar al total", async () => {
-    const fetchPage = backWith(25);
+    const fetchPage = backWith(PAGE + 5);
     const { result } = renderHook(() => useMemberScroll({ fetchPage }));
-    await waitFor(() => expect(result.current.members).toHaveLength(15));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE));
     expect(result.current.hasMore).toBe(true);
 
     act(() => result.current.loadMore());
 
-    await waitFor(() => expect(result.current.members).toHaveLength(25));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE + 5));
     expect(fetchPage).toHaveBeenLastCalledWith({
       search: "",
-      limit: 15,
-      offset: 15,
+      limit: PAGE,
+      offset: PAGE,
     });
     expect(result.current.hasMore).toBe(false);
   });
@@ -54,7 +55,7 @@ describe("useMemberScroll", () => {
   it("no pide la misma pagina dos veces si se llama seguido", async () => {
     const fetchPage = backWith(60);
     const { result } = renderHook(() => useMemberScroll({ fetchPage }));
-    await waitFor(() => expect(result.current.members).toHaveLength(15));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE));
 
     act(() => {
       result.current.loadMore();
@@ -62,7 +63,7 @@ describe("useMemberScroll", () => {
       result.current.loadMore();
     });
 
-    await waitFor(() => expect(result.current.members).toHaveLength(30));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE * 2));
     expect(fetchPage).toHaveBeenCalledTimes(2);
   });
 
@@ -102,17 +103,17 @@ describe("useMemberScroll", () => {
       ({ search }) => useMemberScroll({ fetchPage, search }),
       { initialProps: { search: "" } },
     );
-    await waitFor(() => expect(result.current.members).toHaveLength(15));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE));
     act(() => result.current.loadMore());
-    await waitFor(() => expect(result.current.members).toHaveLength(30));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE * 2));
 
     rerender({ search: "ana" });
     await act(() => vi.advanceTimersByTimeAsync(300));
 
-    await waitFor(() => expect(result.current.members).toHaveLength(15));
+    await waitFor(() => expect(result.current.members).toHaveLength(PAGE));
     expect(fetchPage).toHaveBeenLastCalledWith({
       search: "ana",
-      limit: 15,
+      limit: PAGE,
       offset: 0,
     });
     expect(result.current.isSearching).toBe(true);
