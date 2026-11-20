@@ -28,8 +28,15 @@ export function playSound(url: string): void {
   const audio = playerFor(url);
   if (!audio) return;
 
-  audio.currentTime = 0;
-  void audio.play().catch((error: unknown) => {
+  try {
+    audio.currentTime = 0;
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch((error: unknown) => {
+        console.warn("no se pudo reproducir el sonido", url, error);
+      });
+    }
+  } catch (error: unknown) {
     console.warn("no se pudo reproducir el sonido", url, error);
-  });
+  }
 }

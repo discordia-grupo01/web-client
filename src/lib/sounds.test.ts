@@ -70,10 +70,7 @@ describe("playSound", () => {
     const { playSound, SOUNDS } = await load();
 
     playSound(SOUNDS.DISCONNECT);
-    await Promise.resolve();
-    await Promise.resolve();
-
-    expect(warn).toHaveBeenCalled();
+    await vi.waitFor(() => expect(warn).toHaveBeenCalled());
   });
 
   it("no falla si Audio es undefined", async () => {
