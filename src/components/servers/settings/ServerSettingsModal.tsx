@@ -8,7 +8,7 @@ import {
   serverBoostLevel,
   type ServerSummary,
 } from "@discordia/client-shared";
-import { ChevronLeft } from "lucide-react";
+import { Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { type BanTarget } from "@/components/bans/BanMemberModal";
@@ -16,27 +16,29 @@ import { BansPanel } from "@/components/bans/BansPanel";
 import { ServerBoostsSection } from "@/components/boosts/ServerBoostsSection";
 import { ServerEmojisSection } from "@/components/emojis/ServerEmojisSection";
 import { ModerationAuditSection } from "@/components/moderation-audit/ModerationAuditSection";
+import { ReportsBadge } from "@/components/reports/ReportsBadge";
 import { ReportsSection } from "@/components/reports/ReportsSection";
 import { RolesPanel } from "@/components/roles/RolesPanel";
-import { ModalShell } from "@/components/ui/ModalShell";
-import { cn } from "@/lib/cn";
+import { BoostsSectionIcon } from "@/components/boosts/icons/BoostsSectionIcon";
+import { Avatar } from "@/components/ui/Avatar";
+import { SettingsModal } from "@/components/ui/settings/SettingsModal";
+import type { SettingsNavGroup } from "@/components/ui/settings/settingsNav";
+import { serverIconSrc } from "@/utils/image-urls";
 
 import { useServerSettingsForm } from "@/components/servers/hooks/useServerSettingsForm";
 import {
   initialSection,
+  SECTION_DESCRIPTIONS,
+  SECTION_GROUPS,
   SECTION_TITLES,
   type SettingsSection,
   visibleSections,
 } from "@/components/servers/utils/settingsSections";
 import { DeleteServerModal } from "../DeleteServerModal";
+import { SECTION_ICONS } from "./sectionIcons";
 import { ServerProfileForm } from "./ServerProfileForm";
-import { SettingsMobileMenu } from "./SettingsMobileMenu";
-import { SettingsSidebar } from "./SettingsSidebar";
 import { VanityUrlField } from "./vanity/VanityUrlField";
 import { WordFilterSection } from "./WordFilterSection";
-
-const TITLE_ID = "server-settings-title";
-const SETTINGS_MODAL_WIDTH = 1000;
 
 type MobileView = "menu" | "section";
 
@@ -110,13 +112,35 @@ export function ServerSettingsModal({
     }),
   );
   const reportsLabel = pendingReportsLabel(pendingReports, server.name);
-  // Con una sola sección (un miembro sin permisos) no hay menú que mostrar.
-  const hasMenu = sections.length > 1;
-  const [mobileView, setMobileView] = useState<MobileView>(
-    hasMenu && !openAt ? "menu" : "section",
-  );
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [boostsTab, setBoostsTab] = useState<BoostSectionTab>(openBoostsTab);
+
+  const groups: SettingsNavGroup<SettingsSection>[] = SECTION_GROUPS.map(
+    (group) => ({
+      label: group.label,
+      items: group.sections
+        .filter((id) => sections.includes(id))
+        .map((id) => {
+          const Icon = SECTION_ICONS[id];
+          return {
+            id,
+            label: SECTION_TITLES[id],
+            description: SECTION_DESCRIPTIONS[id],
+            tone: id === "boosts" ? ("boost" as const) : undefined,
+            icon: ({ size, active }: { size: number; active: boolean }) =>
+              id === "boosts" ? (
+                <BoostsSectionIcon size={size} onAccent={active} />
+              ) : (
+                <Icon size={size} />
+              ),
+            badge:
+              id === "reports" && pendingReports > 0 ? (
+                <ReportsBadge count={pendingReports} label={reportsLabel} />
+              ) : undefined,
+          };
+        }),
+    }),
+  ).filter((group) => group.items.length > 0);
 
   function handleClose() {
     onClose();
@@ -128,152 +152,114 @@ export function ServerSettingsModal({
     setSection(target);
   }
 
-  function openSectionOnMobile(target: SettingsSection) {
-    selectSection(target);
-    setMobileView("section");
-  }
-
   function openBoostsAt(tab: BoostSectionTab) {
-    openSectionOnMobile("boosts");
+    selectSection("boosts");
     setBoostsTab(tab);
   }
 
   return (
-    <>
-      <ModalShell
-        onClose={handleClose}
-        labelledBy={TITLE_ID}
-        maxWidth={SETTINGS_MODAL_WIDTH}
-        isFullScreenOnMobile
-      >
-        <div className="flex min-h-0 flex-1 flex-col sm:h-[min(720px,85dvh)] sm:flex-none sm:flex-row">
-          <div className="border-line flex h-16 shrink-0 items-center gap-2 border-b px-4 pr-14 sm:hidden">
-            {mobileView === "section" && hasMenu ? (
-              <button
-                type="button"
-                onClick={() => setMobileView("menu")}
-                aria-label="Volver a configuración"
-                className="bg-surface-input text-content-muted flex size-10 shrink-0 cursor-pointer items-center justify-center rounded-xl"
-              >
-                <ChevronLeft size={18} />
-              </button>
-            ) : null}
-            <p className="text-content font-display truncate text-lg font-bold">
-              {mobileView === "menu"
-                ? "Configuración del servidor"
-                : SECTION_TITLES[section]}
-            </p>
-          </div>
-
-          {mobileView === "menu" ? (
-            <SettingsMobileMenu
-              server={server}
-              sections={sections}
-              canDelete={isOwner}
-              pendingReports={pendingReports}
-              pendingReportsLabel={reportsLabel}
-              onSelect={openSectionOnMobile}
-              onDelete={() => setIsDeleteModalOpen(true)}
-            />
-          ) : null}
-
-          {hasMenu ? (
-            <SettingsSidebar
-              serverName={server.name}
-              sections={sections}
-              activeSection={section}
-              canDelete={isOwner}
-              pendingReports={pendingReports}
-              pendingReportsLabel={reportsLabel}
-              onSelect={selectSection}
-              onDelete={() => setIsDeleteModalOpen(true)}
-            />
-          ) : null}
-
-          <div
-            className={cn(
-              "min-h-0 min-w-0 flex-1 flex-col sm:flex",
-              mobileView === "section" ? "flex" : "hidden",
-            )}
-          >
-            {section === "reports" ? (
-              <ReportsSection
-                serverId={server.id}
-                ownerId={server.owner_id}
-                currentUserId={currentUserId}
-                channels={server.channels}
-                titleId={TITLE_ID}
-                onGoToMessage={onGoToMessage}
-                onOpenProfile={onOpenProfile}
-                onPendingChanged={onPendingReportsChanged}
-                onMembersChanged={onMembersChanged}
-              />
-            ) : section === "boosts" ? (
-              <ServerBoostsSection
-                server={server}
-                titleId={TITLE_ID}
-                initialTab={boostsTab}
-                onBuyPoints={onBuyPoints}
-              />
-            ) : section === "audit" ? (
-              <ModerationAuditSection serverId={server.id} titleId={TITLE_ID} />
-            ) : section === "emojis" ? (
-              <ServerEmojisSection
-                server={server}
-                canManageServer={canManageServer}
-                titleId={TITLE_ID}
-              />
-            ) : section === "roles" ? (
-              <RolesPanel
-                serverId={server.id}
-                serverName={server.name}
-                isOwner={isOwner}
-                myRoles={myRoles}
-                titleId={TITLE_ID}
-              />
-            ) : section === "bans" ? (
-              <BansPanel
-                key={bansVersion}
-                serverId={server.id}
-                ownerId={server.owner_id}
-                currentUserId={currentUserId}
-                titleId={TITLE_ID}
-                onOpenProfile={onOpenProfile}
-                onBanMember={onBanMember ?? (() => {})}
-              />
-            ) : section === "words" ? (
-              <WordFilterSection serverId={server.id} titleId={TITLE_ID} />
-            ) : (
-              <ServerProfileForm
-                form={form}
-                serverName={server.name}
-                titleId={TITLE_ID}
-                onCancel={handleClose}
-                onBoost={() => openBoostsAt("boost")}
-                onShowBenefits={() => openBoostsAt("benefits")}
-                vanityField={
-                  <VanityUrlField
-                    serverId={server.id}
-                    serverName={server.name}
-                    level={serverBoostLevel(server)}
-                    boostCount={serverBoostCount(server)}
-                    vanityCode={server.vanity_code ?? null}
-                  />
-                }
-              />
-            )}
-          </div>
+    <SettingsModal
+      menuTitle="Configuración"
+      menuSubtitle={server.name}
+      mobileMenuTitle="Configuración del servidor"
+      mobileMenuHeader={
+        <div className="flex flex-col items-center pt-3 pb-1">
+          <Avatar
+            name={server.name}
+            src={serverIconSrc(server)}
+            size={80}
+            className="rounded-3xl"
+          />
+          <p className="text-content font-display mt-3 max-w-full truncate text-lg font-bold">
+            {server.name}
+          </p>
         </div>
-      </ModalShell>
-
-      {isDeleteModalOpen ? (
-        <DeleteServerModal
+      }
+      groups={groups}
+      activeId={section}
+      onSelect={selectSection}
+      startOnMenu={!openAt}
+      dangerAction={
+        isOwner
+          ? {
+              label: "Eliminar servidor",
+              description: "Esta acción no se puede deshacer",
+              icon: Trash2,
+              onClick: () => setIsDeleteModalOpen(true),
+            }
+          : undefined
+      }
+      onClose={handleClose}
+      dialogs={
+        isDeleteModalOpen ? (
+          <DeleteServerModal
+            serverId={server.id}
+            serverName={server.name}
+            onClose={() => setIsDeleteModalOpen(false)}
+            onDeleted={onDeleted}
+          />
+        ) : null
+      }
+    >
+      {section === "reports" ? (
+        <ReportsSection
+          serverId={server.id}
+          ownerId={server.owner_id}
+          currentUserId={currentUserId}
+          channels={server.channels}
+          onGoToMessage={onGoToMessage}
+          onOpenProfile={onOpenProfile}
+          onPendingChanged={onPendingReportsChanged}
+          onMembersChanged={onMembersChanged}
+        />
+      ) : section === "boosts" ? (
+        <ServerBoostsSection
+          server={server}
+          initialTab={boostsTab}
+          onBuyPoints={onBuyPoints}
+        />
+      ) : section === "audit" ? (
+        <ModerationAuditSection serverId={server.id} />
+      ) : section === "emojis" ? (
+        <ServerEmojisSection
+          server={server}
+          canManageServer={canManageServer}
+        />
+      ) : section === "roles" ? (
+        <RolesPanel
           serverId={server.id}
           serverName={server.name}
-          onClose={() => setIsDeleteModalOpen(false)}
-          onDeleted={onDeleted}
+          isOwner={isOwner}
+          myRoles={myRoles}
         />
-      ) : null}
-    </>
+      ) : section === "bans" ? (
+        <BansPanel
+          key={bansVersion}
+          serverId={server.id}
+          ownerId={server.owner_id}
+          currentUserId={currentUserId}
+          onOpenProfile={onOpenProfile}
+          onBanMember={onBanMember ?? (() => {})}
+        />
+      ) : section === "words" ? (
+        <WordFilterSection serverId={server.id} />
+      ) : (
+        <ServerProfileForm
+          form={form}
+          serverName={server.name}
+          onBoost={() => openBoostsAt("boost")}
+          onShowBenefits={() => openBoostsAt("benefits")}
+          vanityField={
+            <VanityUrlField
+              serverId={server.id}
+              serverName={server.name}
+              level={serverBoostLevel(server)}
+              boostCount={serverBoostCount(server)}
+              vanityCode={server.vanity_code ?? null}
+            />
+          }
+        />
+      )}
+    </SettingsModal>
   );
 }

@@ -28,7 +28,7 @@ export function ServerNameField({
       <div className="mb-1.5 flex items-center justify-between">
         <label
           htmlFor={inputId}
-          className="text-content-subtle text-xs font-bold tracking-wider uppercase"
+          className="text-content font-display text-sm font-semibold"
         >
           {SERVER_NAME_LABEL} <span className="text-danger">*</span>
         </label>

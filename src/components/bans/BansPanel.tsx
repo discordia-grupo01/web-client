@@ -14,7 +14,6 @@ import {
   BANS_SEARCH_LABEL,
   BANS_SEARCH_PLACEHOLDER,
   BANS_SECTION_SUBTITLE,
-  BANS_SECTION_TITLE,
   BANS_TAB_MEMBERS,
   BANS_TITLE,
   bansTabLabel,
@@ -33,6 +32,8 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 
 import { type BanTarget } from "./BanMemberModal";
@@ -45,7 +46,6 @@ export interface BansPanelProps {
   serverId: string;
   ownerId: string;
   currentUserId: string | null;
-  titleId?: string;
   header?: ReactNode;
   onOpenProfile: (userId: string) => void;
   onBanMember: (target: BanTarget) => void;
@@ -55,7 +55,6 @@ export function BansPanel({
   serverId,
   ownerId,
   currentUserId,
-  titleId,
   header,
   onOpenProfile,
   onBanMember,
@@ -184,90 +183,81 @@ export function BansPanel({
 
   return (
     <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
-      {header ?? (
-        <div className="px-4 pt-6 pb-2 sm:px-7 sm:pt-8">
-          <h2
-            id={titleId}
-            className="font-display text-content mb-1 text-xl font-bold"
-          >
-            {BANS_SECTION_TITLE}
-          </h2>
-          <p className="text-content-muted text-sm leading-relaxed">
-            {BANS_SECTION_SUBTITLE}
-          </p>
-        </div>
-      )}
-
-      <div className="border-line shrink-0 space-y-3 border-b px-5 py-4 sm:px-7">
-        <SegmentedTabs
-          label={BANS_TITLE}
-          value={tab}
-          onChange={handleTabChange}
-          tabs={[
-            { value: "bans", label: bansTabLabel(banList.bans?.length ?? 0) },
-            { value: "members", label: BANS_TAB_MEMBERS },
-          ]}
-        />
-        <SearchInput
-          value={search}
-          onChange={handleSearchChange}
-          label={isBans ? BANS_SEARCH_LABEL : BANS_MEMBERS_SEARCH_LABEL}
-          placeholder={BANS_SEARCH_PLACEHOLDER}
-        />
-        {isBans && isSearching ? (
-          <p role="status" className="text-content-muted text-xs">
-            {searchResultsSummary(banMatches.length, items?.length ?? 0, noun)}
-          </p>
-        ) : null}
-      </div>
-
-      <div
-        role="tabpanel"
-        className="min-h-0 flex-1 space-y-3 overflow-y-auto overscroll-contain px-5 py-4 sm:px-7"
-      >
-        <p className="text-content-muted text-sm">
-          {isBans ? BANS_REVOKE_HINT : BANS_MEMBERS_HINT}
-        </p>
-
-        {notice ? (
-          <p
-            role="status"
-            className="bg-success/10 text-success rounded-xl px-4 py-3 text-sm"
-          >
-            {notice}
-          </p>
-        ) : null}
-        <FormAlert message={errorMessage || revokeError} />
-
-        {items === null ? (
-          <div className="flex items-center justify-center py-10">
-            <span
-              role="status"
-              aria-label="Cargando"
-              className="border-line-strong border-t-accent size-6 animate-spin rounded-full border-2"
+      {header}
+      <SettingsSection
+        description={header ? undefined : BANS_SECTION_SUBTITLE}
+        toolbar={
+          <div className="space-y-3">
+            <SegmentedTabs
+              label={BANS_TITLE}
+              value={tab}
+              onChange={handleTabChange}
+              tabs={[
+                {
+                  value: "bans",
+                  label: bansTabLabel(banList.bans?.length ?? 0),
+                },
+                { value: "members", label: BANS_TAB_MEMBERS },
+              ]}
             />
+            <SearchInput
+              value={search}
+              onChange={handleSearchChange}
+              label={isBans ? BANS_SEARCH_LABEL : BANS_MEMBERS_SEARCH_LABEL}
+              placeholder={BANS_SEARCH_PLACEHOLDER}
+            />
+            {isBans && isSearching ? (
+              <p role="status" className="text-content-muted text-xs">
+                {searchResultsSummary(
+                  banMatches.length,
+                  items?.length ?? 0,
+                  noun,
+                )}
+              </p>
+            ) : null}
           </div>
-        ) : (
-          <UserList
-            items={pageItems}
-            emptyMessage={emptyMessage}
-            actionsFor={actionsFor}
-            disableActions={revokingUserId !== null}
-          />
-        )}
-      </div>
+        }
+        footer={
+          pagination.total > 0 ? (
+            <PaginationFooter
+              page={pagination.page}
+              pageCount={pagination.pageCount}
+              range={pagination.range}
+              total={pagination.total}
+              noun={isSearching ? "resultados" : noun}
+              onPageChange={pagination.setPage}
+              className="border-line shrink-0 gap-3 border-t px-4 py-4 sm:px-8"
+            />
+          ) : null
+        }
+      >
+        <div role="tabpanel" className="space-y-3">
+          <p className="text-content-muted text-sm">
+            {isBans ? BANS_REVOKE_HINT : BANS_MEMBERS_HINT}
+          </p>
 
-      {pagination.total > 0 ? (
-        <PaginationFooter
-          page={pagination.page}
-          pageCount={pagination.pageCount}
-          range={pagination.range}
-          total={pagination.total}
-          noun={isSearching ? "resultados" : noun}
-          onPageChange={pagination.setPage}
-          className="border-line shrink-0 gap-3 border-t px-5 py-4 sm:px-7"
-        />
-      ) : null}
+          {notice ? (
+            <p
+              role="status"
+              className="bg-success/10 text-success rounded-xl px-4 py-3 text-sm"
+            >
+              {notice}
+            </p>
+          ) : null}
+          <FormAlert message={errorMessage || revokeError} />
+
+          {items === null ? (
+            <LoadingSpinner />
+          ) : (
+            <UserList
+              items={pageItems}
+              emptyMessage={emptyMessage}
+              actionsFor={actionsFor}
+              disableActions={revokingUserId !== null}
+            />
+          )}
+        </div>
+      </SettingsSection>
     </div>
   );
 }

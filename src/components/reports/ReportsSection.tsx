@@ -28,6 +28,8 @@ import { MuteMemberModal } from "@/components/moderation/MuteMemberModal";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useMessageAuthors } from "@/hooks/useMessageAuthors";
 import { useServerMembers } from "@/hooks/useServerMembers";
 import { cn } from "@/lib/cn";
@@ -59,7 +61,6 @@ interface ReportsSectionProps {
   ownerId: string;
   currentUserId: string | null;
   channels: Channel[];
-  titleId: string;
   onGoToMessage: (channelId: string, messageId: string) => void;
   onOpenProfile: (userId: string) => void;
   /** Se cerro un pendiente: el total del indicador cambia. */
@@ -74,7 +75,6 @@ export function ReportsSection({
   ownerId,
   currentUserId,
   channels,
-  titleId,
   onGoToMessage,
   onOpenProfile,
   onPendingChanged,
@@ -165,64 +165,72 @@ export function ReportsSection({
   const active = action.active;
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col">
-      <div className="shrink-0 px-4 pt-6 pb-2 sm:px-7 sm:pt-8">
-        <h2
-          id={titleId}
-          className="font-display text-content mb-1 text-xl font-bold"
-        >
-          {REPORTS_TITLE}
-        </h2>
-        <p className="text-content-muted text-sm leading-relaxed">
-          {REPORTS_DESCRIPTION}
-        </p>
-      </div>
+    <>
+      <SettingsSection
+        description={REPORTS_DESCRIPTION}
+        footer={
+          list.pageCount > 1 ? (
+            <PaginationFooter
+              page={list.page}
+              pageCount={list.pageCount}
+              range={list.range}
+              total={list.total}
+              noun="reportes"
+              onPageChange={list.setPage}
+              className="border-line shrink-0 border-t px-4 py-3 sm:px-8"
+            />
+          ) : null
+        }
+        toolbar={
+          <div className="space-y-4">
+            <SegmentedTabs
+              tabs={TABS}
+              value={list.tab}
+              onChange={list.setTab}
+              label={REPORTS_TITLE}
+            />
+            {list.tab === "closed" ? (
+              <div className="flex gap-2">
+                {CLOSED_FILTERS.map((filter) => (
+                  <button
+                    key={filter.value}
+                    type="button"
+                    aria-pressed={list.closedFilter === filter.value}
+                    onClick={() => list.setClosedFilter(filter.value)}
+                    className={cn(
+                      "cursor-pointer rounded-full border px-3 py-1 text-[13px] font-semibold transition-colors",
+                      list.closedFilter === filter.value
+                        ? "border-accent bg-accent/15 text-content"
+                        : "border-line text-content-muted hover:text-content",
+                    )}
+                  >
+                    {filter.label}
+                  </button>
+                ))}
+              </div>
+            ) : null}
 
-      <div className="shrink-0 space-y-4 px-4 pt-5 pb-4 sm:px-7">
-        <SegmentedTabs
-          tabs={TABS}
-          value={list.tab}
-          onChange={list.setTab}
-          label={REPORTS_TITLE}
-        />
-        {list.tab === "closed" ? (
-          <div className="flex gap-2">
-            {CLOSED_FILTERS.map((filter) => (
-              <button
-                key={filter.value}
-                type="button"
-                aria-pressed={list.closedFilter === filter.value}
-                onClick={() => list.setClosedFilter(filter.value)}
-                className={cn(
-                  "cursor-pointer rounded-full border px-3 py-1 text-[13px] font-semibold transition-colors",
-                  list.closedFilter === filter.value
-                    ? "border-accent bg-accent/15 text-content"
-                    : "border-line text-content-muted hover:text-content",
-                )}
+            {action.notice?.tone === "success" ? (
+              <p
+                role="status"
+                className="bg-success/10 text-success flex items-start gap-3 rounded-xl px-4 py-3 text-sm"
               >
-                {filter.label}
-              </button>
-            ))}
+                <Check
+                  size={16}
+                  className="mt-0.5 shrink-0"
+                  aria-hidden="true"
+                />
+                <span>{action.notice.text}</span>
+              </p>
+            ) : (
+              <FormAlert message={action.notice?.text} />
+            )}
+            <FormAlert message={list.loadError} />
           </div>
-        ) : null}
-
-        {action.notice?.tone === "success" ? (
-          <p
-            role="status"
-            className="bg-success/10 text-success flex items-start gap-3 rounded-xl px-4 py-3 text-sm"
-          >
-            <Check size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-            <span>{action.notice.text}</span>
-          </p>
-        ) : (
-          <FormAlert message={action.notice?.text} />
-        )}
-        <FormAlert message={list.loadError} />
-      </div>
-
-      <div className="min-h-0 flex-1 space-y-4 overflow-y-auto px-4 pb-5 sm:mr-1.5 sm:mb-2 sm:pr-5.5 sm:pl-7">
+        }
+      >
         {list.reports === null ? (
-          <p className="text-content-subtle text-sm">Cargando…</p>
+          <LoadingSpinner />
         ) : list.reports.length === 0 && !list.loadError ? (
           <p className="text-content-subtle py-6 text-center text-sm">
             {EMPTY_TEXT[list.status]}
@@ -272,19 +280,7 @@ export function ReportsSection({
             })}
           </ul>
         )}
-      </div>
-
-      {list.pageCount > 1 ? (
-        <PaginationFooter
-          page={list.page}
-          pageCount={list.pageCount}
-          range={list.range}
-          total={list.total}
-          noun="reportes"
-          onPageChange={list.setPage}
-          className="border-line shrink-0 border-t px-4 py-3 sm:px-7"
-        />
-      ) : null}
+      </SettingsSection>
 
       {active?.sanction === "delete" ? (
         <DeleteMessageModal
@@ -329,6 +325,6 @@ export function ReportsSection({
           }}
         />
       ) : null}
-    </div>
+    </>
   );
 }

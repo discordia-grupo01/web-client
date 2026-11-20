@@ -9,9 +9,10 @@ import { type FormEvent, type ReactNode } from "react";
 
 import { BoostBenefitField } from "@/components/boosts/benefits/BoostBenefitField";
 import { BoostProgressStrip } from "@/components/boosts/status/BoostProgressStrip";
-import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { SaveBar } from "@/components/ui/settings/SaveBar";
+import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 
 import { type ServerSettingsForm } from "@/components/servers/hooks/useServerSettingsForm";
 import { ServerNameField } from "../ServerNameField";
@@ -24,8 +25,6 @@ const NAME_INPUT_ID = "server-settings-name";
 interface ServerProfileFormProps {
   form: ServerSettingsForm;
   serverName: string;
-  titleId: string;
-  onCancel: () => void;
   onBoost?: () => void;
   /** "Ver qué suma cada nivel": Boosts del servidor en la pestaña Beneficios. */
   onShowBenefits?: () => void;
@@ -36,8 +35,6 @@ interface ServerProfileFormProps {
 export function ServerProfileForm({
   form,
   serverName,
-  titleId,
-  onCancel,
   onBoost,
   onShowBenefits,
   vanityField,
@@ -50,96 +47,78 @@ export function ServerProfileForm({
   const displayName = form.name || serverName;
 
   return (
-    <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
-      <div className="px-4 pt-6 pb-2 sm:px-7 sm:pt-8">
-        <h2
-          id={titleId}
-          className="font-display text-content mb-1 text-xl font-bold"
-        >
-          Perfil del servidor
-        </h2>
-        <p className="text-content-muted text-sm leading-relaxed">
-          Actualizá la identidad visual de tu comunidad.
-        </p>
-      </div>
+    <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+      <SettingsSection
+        description="Actualizá la identidad visual de tu comunidad."
+        footer={
+          form.hasChanges ? (
+            <SaveBar
+              isSaving={form.isSubmitting}
+              canSave={form.canSubmit}
+              onDiscard={form.reset}
+            />
+          ) : null
+        }
+      >
+        <div className="space-y-6">
+          <FormAlert message={form.globalError} />
 
-      <div className="space-y-6 px-4 py-5 sm:px-7">
-        <FormAlert message={form.globalError} />
-
-        <BoostProgressStrip
-          level={form.boostLevel}
-          boostCount={form.boostCount}
-          onBoost={onBoost}
-          onShowBenefits={onShowBenefits}
-        />
-
-        <ServerNameField
-          inputId={NAME_INPUT_ID}
-          value={form.name}
-          error={form.nameError}
-          onChange={form.changeName}
-        />
-
-        <BoostBenefitField
-          perk="custom_banner"
-          level={form.boostLevel}
-          boostCount={form.boostCount}
-          title={SERVER_BANNER_BENEFIT_COPY.title}
-        >
-          <ServerIdentityEditor
-            serverName={displayName}
-            iconSrc={form.iconPreviewSrc}
-            bannerSrc={form.bannerPreviewSrc}
-            bannerGradient={form.bannerPreviewGradient}
-            hasBanner={form.hasBanner}
-            isBannerLocked={form.isBannerLocked}
-            canUseGif={canUseAnimatedServerIcon(form.boostLevel)}
-            iconTypes={form.iconTypes}
-            onPickIcon={form.pickIcon}
-            onPickBanner={form.pickBanner}
-            onRemoveBanner={form.removeBanner}
+          <BoostProgressStrip
+            level={form.boostLevel}
+            boostCount={form.boostCount}
+            onBoost={onBoost}
+            onShowBenefits={onShowBenefits}
           />
-          <FieldError message={form.iconError} />
-          <FieldError message={form.bannerError} />
-          <p className="text-content-subtle text-[11px]">
-            {serverIconFormatsHint(form.boostLevel)}
-          </p>
-        </BoostBenefitField>
 
-        <AnimatedIconField
-          level={form.boostLevel}
-          boostCount={form.boostCount}
-          onPickIcon={form.pickIcon}
-        />
+          <ServerNameField
+            inputId={NAME_INPUT_ID}
+            value={form.name}
+            error={form.nameError}
+            onChange={form.changeName}
+          />
 
-        <BannerPresetPicker
-          selectedId={form.selectedPresetId}
-          level={form.boostLevel}
-          boostCount={form.boostCount}
-          onSelect={form.choosePreset}
-        />
+          <BoostBenefitField
+            perk="custom_banner"
+            level={form.boostLevel}
+            boostCount={form.boostCount}
+            title={SERVER_BANNER_BENEFIT_COPY.title}
+          >
+            <ServerIdentityEditor
+              serverName={displayName}
+              iconSrc={form.iconPreviewSrc}
+              bannerSrc={form.bannerPreviewSrc}
+              bannerGradient={form.bannerPreviewGradient}
+              hasBanner={form.hasBanner}
+              isBannerLocked={form.isBannerLocked}
+              canUseGif={canUseAnimatedServerIcon(form.boostLevel)}
+              iconTypes={form.iconTypes}
+              onPickIcon={form.pickIcon}
+              onPickBanner={form.pickBanner}
+              onRemoveBanner={form.removeBanner}
+            />
+            <FieldError message={form.iconError} />
+            <FieldError message={form.bannerError} />
+            <p className="text-content-subtle text-[11px]">
+              {serverIconFormatsHint(form.boostLevel)}
+            </p>
+          </BoostBenefitField>
 
-        {vanityField}
-      </div>
+          <AnimatedIconField
+            level={form.boostLevel}
+            boostCount={form.boostCount}
+            onPickIcon={form.pickIcon}
+          />
 
-      <div className="border-line flex items-center justify-end gap-3 border-t px-4 py-5 sm:px-7">
-        <Button
-          type="button"
-          variant="secondary"
-          onClick={onCancel}
-          className="w-auto"
-        >
-          Cancelar
-        </Button>
-        <Button
-          type="submit"
-          disabled={!form.canSubmit}
-          isLoading={form.isSubmitting}
-          className="w-auto"
-        >
-          Guardar cambios
-        </Button>
-      </div>
+          <BannerPresetPicker
+            selectedId={form.selectedPresetId}
+            level={form.boostLevel}
+            boostCount={form.boostCount}
+            onSelect={form.choosePreset}
+          />
+
+          {vanityField}
+        </div>
+      </SettingsSection>
     </form>
   );
 }

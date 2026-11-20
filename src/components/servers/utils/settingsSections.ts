@@ -46,6 +46,13 @@ export const SECTION_DESCRIPTIONS: Record<SettingsSection, string> = {
   audit: MODERATION_AUDIT_DESCRIPTION,
 };
 
+export const SECTION_GROUPS: { label: string; sections: SettingsSection[] }[] =
+  [
+    { label: "Servidor", sections: ["profile", "boosts", "emojis"] },
+    { label: "Miembros", sections: ["roles", "bans"] },
+    { label: "Moderación", sections: ["words", "reports", "audit"] },
+  ];
+
 /**
  * Las secciones que cualquier miembro ve, sin permisos: Boosts (el nivel del
  * servidor) y Emojis (la lista y los lugares; subir y borrar se chequea
