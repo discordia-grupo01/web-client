@@ -106,7 +106,9 @@ function renderModal() {
 }
 
 async function openMembersTab() {
-  await screen.findAllByText("Moderador");
+  await userEvent.click(
+    await screen.findByRole("button", { name: /Moderador/ }),
+  );
   await userEvent.click(screen.getByRole("button", { name: "Miembros" }));
 }
 
