@@ -112,7 +112,7 @@ export function CreateCategoryModal({
             <div>
               <label
                 htmlFor="category-name"
-                className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
+                className="text-content font-display mb-1.5 block text-sm font-semibold"
               >
                 Nombre de la categoría
               </label>
@@ -131,7 +131,7 @@ export function CreateCategoryModal({
                     setNameError("");
                     setGlobalError("");
                   }}
-                  placeholder="NUEVA CATEGORÍA"
+                  placeholder="Nueva categoría"
                   maxLength={MAX_NAME + 10}
                   autoFocus
                   className="text-content min-w-0 flex-1 border-none bg-transparent text-sm outline-none"

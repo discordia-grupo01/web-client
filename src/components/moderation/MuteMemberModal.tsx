@@ -118,7 +118,7 @@ export function MuteMemberModal({
           </div>
 
           <fieldset>
-            <legend className="text-content-subtle mb-1.5 text-xs font-semibold tracking-wider uppercase">
+            <legend className="text-content font-display mb-1.5 text-sm font-semibold">
               {MUTE_DURATION_LABEL}
             </legend>
             <div className="grid grid-cols-3 gap-2">
@@ -153,10 +153,12 @@ export function MuteMemberModal({
             <div className="mb-1.5 flex items-center justify-between gap-2">
               <label
                 htmlFor="mute-reason"
-                className="text-content-subtle text-xs font-semibold tracking-wider uppercase"
+                className="text-content font-display text-sm font-semibold"
               >
                 {MUTE_REASON_LABEL}{" "}
-                <span className="font-normal normal-case">(opcional)</span>
+                <span className="text-content-subtle font-normal">
+                  (opcional)
+                </span>
               </label>
               <CharacterCounter
                 length={[...reason].length}

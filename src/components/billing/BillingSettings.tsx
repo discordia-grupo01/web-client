@@ -104,7 +104,7 @@ export function BillingSettings({ tab, onNavigate }: BillingSettingsProps) {
       actions={
         tab === "points" ? (
           <div className="border-line bg-surface-raised rounded-xl border px-3 py-2 text-right">
-            <div className="text-content-subtle text-[10px] font-bold tracking-wider uppercase">
+            <div className="text-content font-display text-sm font-semibold">
               {BILLING_COPY.balanceLabel}
             </div>
             <div className="font-display text-content flex items-center justify-end gap-1 text-lg font-bold tabular-nums">

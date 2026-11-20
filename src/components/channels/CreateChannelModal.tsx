@@ -124,7 +124,7 @@ export function CreateChannelModal({
             ) : null}
 
             <div>
-              <label className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase">
+              <label className="text-content font-display mb-1.5 block text-sm font-semibold">
                 Tipo de canal
               </label>
               <div className="grid grid-cols-2 gap-2">
@@ -174,7 +174,7 @@ export function CreateChannelModal({
             <div>
               <label
                 htmlFor="channel-name"
-                className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
+                className="text-content font-display mb-1.5 block text-sm font-semibold"
               >
                 Nombre del canal
               </label>

@@ -315,7 +315,7 @@ export function InviteModal({
         <div className="border-line border-t px-7 py-5">
           <label
             htmlFor="invite-max-uses"
-            className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
+            className="text-content font-display mb-1.5 block text-sm font-semibold"
           >
             Generar invitación (vence en 7 días)
           </label>
@@ -346,7 +346,7 @@ export function InviteModal({
         </div>
 
         <div className="flex-1 overflow-y-auto px-7 pb-7">
-          <p className="text-content-subtle mb-2 text-xs font-bold tracking-wider uppercase">
+          <p className="text-content font-display mb-2 text-sm font-semibold">
             Invitaciones
           </p>
 

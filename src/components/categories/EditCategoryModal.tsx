@@ -110,7 +110,7 @@ export function EditCategoryModal({
             <div>
               <label
                 htmlFor="edit-category-name"
-                className="text-content-subtle mb-1.5 block text-xs font-bold tracking-wider uppercase"
+                className="text-content font-display mb-1.5 block text-sm font-semibold"
               >
                 Nombre de la categoría
               </label>

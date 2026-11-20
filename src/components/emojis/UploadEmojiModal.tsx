@@ -18,7 +18,6 @@ import { Button } from "@/components/ui/Button";
 import { FieldError } from "@/components/ui/FieldError";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { ModalShell } from "@/components/ui/ModalShell";
-import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
 import { EmojiPreviewImage } from "./EmojiPreviewImage";
@@ -85,7 +84,9 @@ export function UploadEmojiModal({
         <FormAlert message={errors.form} />
 
         <div>
-          <SectionLabel>{EMOJI_UPLOAD_COPY.imageLabel}</SectionLabel>
+          <h3 className="text-content font-display text-sm font-semibold">
+            {EMOJI_UPLOAD_COPY.imageLabel}
+          </h3>
           <input
             ref={fileInputRef}
             type="file"
@@ -143,9 +144,9 @@ export function UploadEmojiModal({
         </div>
 
         <div>
-          <SectionLabel>
+          <h3 className="text-content font-display text-sm font-semibold">
             <label htmlFor={nameId}>{EMOJI_UPLOAD_COPY.nameLabel}</label>
-          </SectionLabel>
+          </h3>
           <div
             className={cn(
               "bg-surface-input focus-within:border-accent mt-2 flex items-center gap-0.5 rounded-xl border px-4 py-3 transition-colors",
@@ -173,7 +174,9 @@ export function UploadEmojiModal({
 
         {previewUrl && name ? (
           <div>
-            <SectionLabel>{EMOJI_UPLOAD_COPY.previewLabel}</SectionLabel>
+            <h3 className="text-content font-display text-sm font-semibold">
+              {EMOJI_UPLOAD_COPY.previewLabel}
+            </h3>
             <p className="bg-surface-input border-line text-content-subtle mt-2 flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs">
               <EmojiPreviewImage
                 objectUrl={previewUrl}
