@@ -1,4 +1,8 @@
-import { type Ban } from "@discordia/client-shared";
+import {
+  type Ban,
+  matchesSearch,
+  type MemberPageQuery,
+} from "@discordia/client-shared";
 
 import { render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -69,29 +73,58 @@ function renderBansModal(overrides: { onOpenProfile?: () => void } = {}) {
   return { onClose, onOpenProfile, onBanMember };
 }
 
+/** Hace de back: filtra por nombre y pagina con `q`, `limit` y `offset`. */
+function serveBans(bans: Ban[]) {
+  listBansRequest.mockImplementation(
+    async (_serverId: string, query: MemberPageQuery = {}) => {
+      const matches = bans.filter((ban) =>
+        matchesSearch(ban.profile?.name ?? "", query.search ?? ""),
+      );
+      const offset = query.offset ?? 0;
+      return {
+        ok: true,
+        bans: matches.slice(offset, offset + (query.limit ?? 20)),
+        total: matches.length,
+      };
+    },
+  );
+  unbanMemberRequest.mockImplementation(
+    async (_serverId: string, userId: string) => {
+      bans.splice(
+        bans.findIndex((ban) => ban.user_id === userId),
+        1,
+      );
+      return { ok: true };
+    },
+  );
+}
+
 async function renderModal(count: number) {
-  const bans = makeBans(count);
-  listBansRequest.mockResolvedValue({ ok: true, bans, total: bans.length });
+  serveBans(makeBans(count));
   const handlers = renderBansModal();
   await screen.findByText("Usuario 1");
   return handlers;
 }
 
 describe("BansModal", () => {
-  it("pagina la lista de a 15 y navega con Siguiente", async () => {
+  it("pagina la lista de a 10 y navega con Siguiente", async () => {
     await renderModal(45);
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(15);
+    expect(screen.getAllByRole("listitem")).toHaveLength(10);
     expect(
-      screen.getByText("Mostrando 1–15 de 45 baneados"),
+      screen.getByText("Mostrando 1–10 de 45 baneados"),
     ).toBeInTheDocument();
 
     await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
 
+    expect(await screen.findByText("Usuario 11")).toBeInTheDocument();
     expect(
-      screen.getByText("Mostrando 16–30 de 45 baneados"),
+      screen.getByText("Mostrando 11–20 de 45 baneados"),
     ).toBeInTheDocument();
-    expect(screen.getByText("Usuario 16")).toBeInTheDocument();
+    expect(listBansRequest).toHaveBeenLastCalledWith(
+      "s1",
+      expect.objectContaining({ limit: 10, offset: 10 }),
+    );
     expect(screen.queryByText("Usuario 1")).toBeNull();
   });
 
@@ -113,8 +146,14 @@ describe("BansModal", () => {
       "andres",
     );
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(1);
-    expect(screen.getByText("Andrés")).toBeInTheDocument();
+    expect(await screen.findByText("Andrés")).toBeInTheDocument();
+    await waitFor(() =>
+      expect(screen.getAllByRole("listitem")).toHaveLength(1),
+    );
+    expect(listBansRequest).toHaveBeenLastCalledWith(
+      "s1",
+      expect.objectContaining({ search: "andres", offset: 0 }),
+    );
     expect(screen.getByText("1 resultado de 45 baneados")).toBeInTheDocument();
   });
 
@@ -124,13 +163,12 @@ describe("BansModal", () => {
     await userEvent.type(screen.getByRole("searchbox"), "zzz");
 
     expect(
-      screen.getByText("No hay baneados que coincidan con la búsqueda."),
+      await screen.findByText("No hay baneados que coincidan con la búsqueda."),
     ).toBeInTheDocument();
   });
 
   it("revoca un baneo: lo saca de la lista y lo confirma", async () => {
     await renderModal(3);
-    unbanMemberRequest.mockResolvedValue({ ok: true });
 
     const row = screen.getByText("Usuario 2").closest("li") as HTMLElement;
     await userEvent.click(within(row).getByRole("button", { name: "Revocar" }));
@@ -140,6 +178,20 @@ describe("BansModal", () => {
     expect(
       screen.getByText(/Se revocó el baneo de Usuario 2/),
     ).toBeInTheDocument();
+  });
+
+  it("al revocar al ultimo de una pagina vuelve a la anterior", async () => {
+    await renderModal(11);
+    await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
+    const row = (await screen.findByText("Usuario 11")).closest(
+      "li",
+    ) as HTMLElement;
+
+    await userEvent.click(within(row).getByRole("button", { name: "Revocar" }));
+
+    expect(await screen.findByText("Usuario 1")).toBeInTheDocument();
+    expect(screen.getAllByRole("listitem")).toHaveLength(10);
+    expect(screen.queryByText("Usuario 11")).toBeNull();
   });
 
   it("si el back rechaza la revocacion, muestra el error y deja el baneo", async () => {
@@ -274,7 +326,7 @@ describe("BansModal", () => {
       expect(screen.getByText("Usuario 6")).toBeInTheDocument();
       expect(listMembersRequest).toHaveBeenLastCalledWith("s1", {
         search: "usuario 6",
-        limit: 15,
+        limit: 10,
         offset: 0,
       });
     });

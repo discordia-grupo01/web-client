@@ -17,7 +17,6 @@ import {
   BANS_TAB_MEMBERS,
   BANS_TITLE,
   bansTabLabel,
-  matchesSearch,
   searchResultsSummary,
   unbanSuccessNotice,
   VIEW_PROFILE_LABEL,
@@ -27,12 +26,13 @@ import { type ReactNode, useMemo, useState } from "react";
 
 import { useBanCandidates } from "@/components/bans/hooks/useBanCandidates";
 import { useBanList } from "@/components/bans/hooks/useBanList";
-import { usePagination } from "@/components/bans/hooks/usePagination";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { SettingsToast } from "@/components/ui/settings/SettingsToast";
+import { useToast } from "@/hooks/useToast";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 
@@ -62,11 +62,11 @@ export function BansPanel({
   const [tab, setTab] = useState<Tab>("bans");
   const [hasOpenedMembers, setHasOpenedMembers] = useState(false);
   const [search, setSearch] = useState("");
-  const [notice, setNotice] = useState("");
+  const { toast, showToast } = useToast();
   const [revokeError, setRevokeError] = useState("");
   const [revokingUserId, setRevokingUserId] = useState<string | null>(null);
 
-  const banList = useBanList(serverId);
+  const banList = useBanList(serverId, tab === "bans" ? search : "");
   const candidates = useBanCandidates({
     serverId,
     ownerId,
@@ -88,14 +88,6 @@ export function BansPanel({
       })) ?? null,
     [banList.bans],
   );
-  const banMatches = useMemo(
-    () =>
-      (banItems ?? []).filter((item) =>
-        matchesSearch(displayNameOf(item.profile), search),
-      ),
-    [banItems, search],
-  );
-  const banPagination = usePagination(banMatches);
 
   const memberItems = useMemo<UserListItem[] | null>(
     () =>
@@ -106,18 +98,8 @@ export function BansPanel({
     [candidates.candidates],
   );
 
-  // Lo que dibuja la pestaña activa, venga de memoria o del back.
   const items = isBans ? banItems : memberItems;
-  const pageItems = isBans ? banPagination.pageItems : (memberItems ?? []);
-  const pagination = isBans
-    ? banPagination
-    : {
-        page: candidates.page,
-        pageCount: candidates.pageCount,
-        total: candidates.total,
-        range: candidates.range,
-        setPage: candidates.setPage,
-      };
+  const pagination = isBans ? banList : candidates;
 
   const noun = isBans ? "baneados" : "miembros";
   const emptyMessage = isBans
@@ -132,9 +114,7 @@ export function BansPanel({
     setTab(next);
     if (next === "members") setHasOpenedMembers(true);
     setSearch("");
-    setNotice("");
     setRevokeError("");
-    banPagination.resetPage();
   }
 
   function actionsFor(item: UserListItem): UserRowAction[] {
@@ -163,13 +143,7 @@ export function BansPanel({
     ];
   }
 
-  function handleSearchChange(value: string) {
-    setSearch(value);
-    banPagination.resetPage();
-  }
-
   async function handleRevoke({ userId, profile }: UserListItem) {
-    setNotice("");
     setRevokeError("");
     setRevokingUserId(userId);
     const result = await banList.unban(userId);
@@ -178,11 +152,11 @@ export function BansPanel({
       setRevokeError(result.message);
       return;
     }
-    setNotice(unbanSuccessNotice(displayNameOf(profile)));
+    showToast(unbanSuccessNotice(displayNameOf(profile)));
   }
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col overflow-hidden">
+    <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       {header}
       <SettingsSection
         description={header ? undefined : BANS_SECTION_SUBTITLE}
@@ -195,40 +169,23 @@ export function BansPanel({
               tabs={[
                 {
                   value: "bans",
-                  label: bansTabLabel(banList.bans?.length ?? 0),
+                  label: bansTabLabel(banList.allTotal),
                 },
                 { value: "members", label: BANS_TAB_MEMBERS },
               ]}
             />
             <SearchInput
               value={search}
-              onChange={handleSearchChange}
+              onChange={setSearch}
               label={isBans ? BANS_SEARCH_LABEL : BANS_MEMBERS_SEARCH_LABEL}
               placeholder={BANS_SEARCH_PLACEHOLDER}
             />
             {isBans && isSearching ? (
               <p role="status" className="text-content-muted text-xs">
-                {searchResultsSummary(
-                  banMatches.length,
-                  items?.length ?? 0,
-                  noun,
-                )}
+                {searchResultsSummary(banList.total, banList.allTotal, noun)}
               </p>
             ) : null}
           </div>
-        }
-        footer={
-          pagination.total > 0 ? (
-            <PaginationFooter
-              page={pagination.page}
-              pageCount={pagination.pageCount}
-              range={pagination.range}
-              total={pagination.total}
-              noun={isSearching ? "resultados" : noun}
-              onPageChange={pagination.setPage}
-              className="border-line shrink-0 gap-3 border-t px-4 py-4 sm:px-8"
-            />
-          ) : null
         }
       >
         <div role="tabpanel" className="space-y-3">
@@ -236,28 +193,32 @@ export function BansPanel({
             {isBans ? BANS_REVOKE_HINT : BANS_MEMBERS_HINT}
           </p>
 
-          {notice ? (
-            <p
-              role="status"
-              className="bg-success/10 text-success rounded-xl px-4 py-3 text-sm"
-            >
-              {notice}
-            </p>
-          ) : null}
           <FormAlert message={errorMessage || revokeError} />
 
           {items === null ? (
             <LoadingSpinner />
           ) : (
             <UserList
-              items={pageItems}
+              items={items}
               emptyMessage={emptyMessage}
               actionsFor={actionsFor}
               disableActions={revokingUserId !== null}
             />
           )}
+          {pagination.pageCount > 1 ? (
+            <PaginationFooter
+              page={pagination.page}
+              pageCount={pagination.pageCount}
+              range={pagination.range}
+              total={pagination.total}
+              noun={isSearching ? "resultados" : noun}
+              onPageChange={pagination.setPage}
+              className="mt-4"
+            />
+          ) : null}
         </div>
       </SettingsSection>
+      <SettingsToast message={toast} />
     </div>
   );
 }
