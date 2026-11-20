@@ -21,7 +21,6 @@ import {
 
 import { Check, type LucideIcon, Slash, X } from "lucide-react";
 
-import { SectionLabel } from "@/components/ui/SectionLabel";
 import { cn } from "@/lib/cn";
 
 interface RoleOverrideEditorProps {
@@ -78,7 +77,9 @@ export function RoleOverrideEditor({
 
       {channelPermissionGroupsFor(channelKind).map((group) => (
         <div key={group.title} className="mb-5 last:mb-0">
-          <SectionLabel>{group.title}</SectionLabel>
+          <h3 className="text-content font-display text-sm font-semibold">
+            {group.title}
+          </h3>
           <div className="divide-line mt-1 divide-y">
             {group.permissions.map((permission) => (
               <PermissionOverrideRow

@@ -149,7 +149,7 @@ function RoleOverrideList({
   return (
     <aside className="border-line bg-surface-raised shrink-0 border-b p-3 sm:w-44 sm:border-r sm:border-b-0">
       <div className="mb-2 flex items-center justify-between">
-        <span className="text-content-subtle text-[11px] font-bold tracking-wide uppercase">
+        <span className="text-content font-display text-sm font-semibold">
           {CHANNEL_PERMISSIONS_ROLES_LABEL}
         </span>
         <div

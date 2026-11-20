@@ -1,6 +1,6 @@
 "use client";
 
-import { Check, Moon, Sun } from "lucide-react";
+import { CircleCheckBig, Moon, Sun } from "lucide-react";
 
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { cn } from "@/lib/cn";
@@ -10,6 +10,7 @@ interface ThemeCardProps {
   active: boolean;
   onClick: () => void;
   icon: typeof Moon;
+  iconClassName: string;
   title: string;
   description: string;
   preview: React.ReactNode;
@@ -19,6 +20,7 @@ function ThemeCard({
   active,
   onClick,
   icon: Icon,
+  iconClassName,
   title,
   description,
   preview,
@@ -34,14 +36,16 @@ function ThemeCard({
     >
       <div className="h-28">{preview}</div>
       <div className="flex items-center gap-3 p-4">
-        <Icon size={19} className="text-content-muted shrink-0" />
+        <Icon size={19} className={cn("shrink-0", iconClassName)} />
         <span className="min-w-0 flex-1">
           <strong className="text-content font-display block text-sm">
             {title}
           </strong>
           <small className="text-content-subtle">{description}</small>
         </span>
-        {active ? <Check size={19} className="text-success shrink-0" /> : null}
+        {active ? (
+          <CircleCheckBig size={19} className="text-success shrink-0" />
+        ) : null}
       </div>
     </button>
   );
@@ -57,6 +61,7 @@ export function AppearanceSettings() {
           active={theme === "dark"}
           onClick={() => setTheme("dark")}
           icon={Moon}
+          iconClassName="text-sky"
           title="Modo oscuro"
           description="Azul profundo, menos brillo"
           preview={
@@ -81,6 +86,7 @@ export function AppearanceSettings() {
           active={theme === "light"}
           onClick={() => setTheme("light")}
           icon={Sun}
+          iconClassName="text-highlight"
           title="Modo claro"
           description="Paper, cálido y luminoso"
           preview={

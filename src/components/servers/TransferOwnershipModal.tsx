@@ -372,7 +372,7 @@ export function TransferOwnershipModal({
           <FormAlert message={memberPages.errorMessage} />
         </div>
       ) : null}
-      <p className="text-content-subtle mb-3 text-xs font-bold tracking-wider uppercase">
+      <p className="text-content font-display mb-3 text-sm font-semibold">
         {TRANSFER_CHOOSE_NEW_OWNER}
       </p>
 

@@ -152,7 +152,7 @@ export function NotificationSettingsModal({
           aria-disabled={isLevelOverridden}
           aria-describedby={isLevelOverridden ? LEVEL_NOTE_ID : undefined}
         >
-          <p className="text-content-subtle mb-2 text-xs font-semibold tracking-wider uppercase">
+          <p className="text-content font-display mb-2 text-sm font-semibold">
             {NOTIFICATION_SETTINGS_LEVEL_TITLE}
           </p>
           {isLevelOverridden ? (

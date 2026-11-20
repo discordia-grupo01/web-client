@@ -121,10 +121,12 @@ export function BanMemberModal({
             <div className="mb-1.5 flex items-center justify-between gap-2">
               <label
                 htmlFor="ban-reason"
-                className="text-content-subtle text-xs font-semibold tracking-wider uppercase"
+                className="text-content font-display text-sm font-semibold"
               >
                 {BAN_REASON_LABEL}{" "}
-                <span className="font-normal normal-case">(opcional)</span>
+                <span className="text-content-subtle font-normal">
+                  (opcional)
+                </span>
               </label>
               <CharacterCounter
                 length={[...reason].length}
