@@ -12,6 +12,7 @@ import { ROUTES } from "@/lib/constants";
 const APP_LINK_TARGETS = {
   "billing/return": ROUTES.billingReturn,
   "confirm-email": ROUTES.confirmEmail,
+  "reset-password": ROUTES.resetPassword,
 } as const;
 
 export type AppLinkPath = keyof typeof APP_LINK_TARGETS;
