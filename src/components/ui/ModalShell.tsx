@@ -1,5 +1,8 @@
+"use client";
+
 import { X } from "lucide-react";
 import type { ReactNode } from "react";
+import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
 
@@ -19,6 +22,11 @@ interface ModalShellProps {
  * la app. Estaba copiado literal en cada uno (`create-server-modal`,
  * `edit-channel-modal`, ...); los que todavia lo tienen inline pueden migrar
  * aca sin cambiar como se ven.
+ *
+ * Va a `body` para que el que se abre último quede arriba aunque lo monte un
+ * componente de más atrás (el de banear lo monta `ServerView`, debajo de la
+ * configuración). Además, adentro del lateral de canales lo recortaría el
+ * `transform` del cajón en celular.
  */
 export function ModalShell({
   onClose,
@@ -28,7 +36,9 @@ export function ModalShell({
   isFullScreenOnMobile = false,
   hasCloseButton = true,
 }: ModalShellProps) {
-  return (
+  if (typeof document === "undefined") return null;
+
+  return createPortal(
     <div
       className={cn(
         "fixed inset-0 z-50 flex items-center justify-center bg-black/65 backdrop-blur-sm sm:p-6",
@@ -63,6 +73,7 @@ export function ModalShell({
 
         {children}
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }

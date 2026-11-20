@@ -1,7 +1,6 @@
 "use client";
 
 import { useId, useMemo, useState, type ReactNode } from "react";
-import { createPortal } from "react-dom";
 
 import { ModalShell } from "@/components/ui/ModalShell";
 import { cn } from "@/lib/cn";
@@ -28,11 +27,9 @@ interface SettingsModalProps<Id extends string> {
   dangerAction?: SettingsDangerAction;
   onClose: () => void;
   children: ReactNode;
-  /** Confirmaciones que se abren encima: tienen que quedar dentro del portal. */
   dialogs?: ReactNode;
 }
 
-/** Va a `body` para que no lo esconda el panel que lo abre (el lateral de canales está oculto en celular). */
 export function SettingsModal<Id extends string>({
   menuTitle,
   menuSubtitle,
@@ -88,9 +85,7 @@ export function SettingsModal<Id extends string>({
     setIsMobileMenuOpen(false);
   }
 
-  if (typeof document === "undefined") return null;
-
-  return createPortal(
+  return (
     <ModalShell
       onClose={onClose}
       labelledBy={titleId}
@@ -135,7 +130,6 @@ export function SettingsModal<Id extends string>({
         </div>
         {dialogs}
       </SettingsModalContext.Provider>
-    </ModalShell>,
-    document.body,
+    </ModalShell>
   );
 }
