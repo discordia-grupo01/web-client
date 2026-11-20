@@ -8,7 +8,7 @@ import {
 
 import { useCallback, useState } from "react";
 
-import { useElementSize } from "@/components/voice/hooks/useElementSize";
+import { useElementSize } from "@/hooks/useElementSize";
 import { cn } from "@/lib/cn";
 import type { TileVideo } from "@/utils/livekitParticipants";
 import {
@@ -24,7 +24,6 @@ import { VoiceParticipantTile } from "./VoiceParticipantTile";
 import { useVisibleParticipants } from "@/components/voice/hooks/useVisibleParticipants";
 
 interface VoiceParticipantGridProps {
-  /** Las personas de la llamada; la grilla le agrega un tile a cada pantalla. */
   participants: readonly VoiceParticipant[];
   isConnecting: boolean;
   ownAvatarSrc: string | null;

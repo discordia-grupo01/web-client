@@ -8,7 +8,7 @@ import {
 import { LayoutGrid } from "lucide-react";
 import type { ReactNode } from "react";
 
-import type { ElementSize } from "@/components/voice/hooks/useElementSize";
+import type { ElementSize } from "@/hooks/useElementSize";
 import { cn } from "@/lib/cn";
 import { voiceFocusLayout } from "@/components/voice/utils/voiceGrid";
 

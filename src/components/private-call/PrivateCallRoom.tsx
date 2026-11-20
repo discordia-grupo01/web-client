@@ -10,7 +10,7 @@ import {
 
 import { useMemo, useState } from "react";
 
-import { useElementSize } from "@/components/voice/hooks/useElementSize";
+import { useElementSize } from "@/hooks/useElementSize";
 import { VoiceParticipantGrid } from "@/components/voice/VoiceParticipantGrid";
 import { VoiceParticipantTile } from "@/components/voice/VoiceParticipantTile";
 import { useVoiceSession } from "@/contexts/VoiceSessionContext";
