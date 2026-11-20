@@ -11,6 +11,7 @@ interface ModalShellProps {
   labelledBy?: string;
   /** Por debajo de `sm` ocupa toda la pantalla, sin bordes ni margen. */
   isFullScreenOnMobile?: boolean;
+  hasCloseButton?: boolean;
 }
 
 /**
@@ -25,6 +26,7 @@ export function ModalShell({
   maxWidth = 460,
   labelledBy,
   isFullScreenOnMobile = false,
+  hasCloseButton = true,
 }: ModalShellProps) {
   return (
     <div
@@ -48,14 +50,16 @@ export function ModalShell({
         )}
         style={{ maxWidth, background: "var(--bg-modal)" }}
       >
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-        >
-          <X size={14} />
-        </button>
+        {hasCloseButton ? (
+          <button
+            type="button"
+            onClick={onClose}
+            aria-label="Cerrar"
+            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
+          >
+            <X size={14} />
+          </button>
+        ) : null}
 
         {children}
       </div>
