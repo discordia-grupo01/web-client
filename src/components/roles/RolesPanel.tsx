@@ -10,10 +10,12 @@ import {
 import { ChevronLeft, EyeOff, Plus } from "lucide-react";
 
 import { Button } from "@/components/ui/Button";
+import { FormAlert } from "@/components/ui/FormAlert";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
 import { useSettingsSubPage } from "@/components/ui/settings/SettingsModalContext";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { SettingsToast } from "@/components/ui/settings/SettingsToast";
 
 import { RoleCreateForm } from "./create/RoleCreateForm";
 import { RoleEditForm } from "./edit/RoleEditForm";
@@ -76,6 +78,7 @@ export function RolesPanel({ serverId, isOwner, myRoles }: RolesPanelProps) {
         />
       ) : (
         <SettingsSection
+          toolbar={<FormAlert message={editor.error} />}
           description={
             editor.showRoleGripColumn
               ? "Arrastrá un rol para cambiar su lugar en la jerarquía."
@@ -102,19 +105,7 @@ export function RolesPanel({ serverId, isOwner, myRoles }: RolesPanelProps) {
         </SettingsSection>
       )}
 
-      <div
-        className="bg-surface-raised border-line-strong pointer-events-none absolute left-1/2 flex min-w-[200px] -translate-x-1/2 items-center gap-2.5 rounded-xl border px-4 py-2.5 shadow-xl transition-all duration-300"
-        style={{
-          bottom: toast ? 20 : -60,
-          opacity: toast ? 1 : 0,
-          zIndex: 999,
-        }}
-      >
-        <span className="bg-accent size-2 shrink-0 rounded-full" />
-        <p className="text-content font-display text-sm font-semibold">
-          {toast}
-        </p>
-      </div>
+      <SettingsToast message={toast} />
 
       {isConfirmingEveryoneView ? (
         <ConfirmDialog

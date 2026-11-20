@@ -1,7 +1,7 @@
 "use client";
 
 import type { Role } from "@discordia/client-shared";
-import { type Dispatch, type SetStateAction, useEffect, useState } from "react";
+import { type Dispatch, type SetStateAction, useState } from "react";
 
 import { deleteRoleRequest } from "@/services/roles/client";
 
@@ -11,6 +11,7 @@ interface UseRoleDeleteOptions {
   canManageSelected: boolean;
   onDeleted: () => void;
   showToast: (message: string) => void;
+  showError: (message: string) => void;
 }
 
 export function useRoleDelete({
@@ -19,39 +20,32 @@ export function useRoleDelete({
   canManageSelected,
   onDeleted,
   showToast,
+  showError,
 }: UseRoleDeleteOptions) {
-  const [deleteConfirm, setDeleteConfirm] = useState(false);
-  const [deleteError, setDeleteError] = useState("");
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [deleting, setDeleting] = useState(false);
 
-  const selectedId = selectedRole?.id;
-  useEffect(() => {
-    setDeleteConfirm(false);
-    setDeleteError("");
-  }, [selectedId]);
-
   async function handleDelete() {
+    setIsDeleteConfirmOpen(false);
     if (!selectedRole || !canManageSelected) return;
+    showError("");
     setDeleting(true);
     const result = await deleteRoleRequest(selectedRole.id);
     setDeleting(false);
 
     if (!result.ok) {
-      setDeleteError(result.message);
+      showError(result.message);
       return;
     }
 
     setRoles((prev) => prev?.filter((r) => r.id !== selectedRole.id) ?? []);
-    setDeleteConfirm(false);
     onDeleted();
     showToast(`Rol "${selectedRole.name}" eliminado`);
   }
 
   return {
-    deleteConfirm,
-    setDeleteConfirm,
-    deleteError,
-    setDeleteError,
+    isDeleteConfirmOpen,
+    setIsDeleteConfirmOpen,
     deleting,
     handleDelete,
   };

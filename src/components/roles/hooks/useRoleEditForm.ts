@@ -18,6 +18,7 @@ interface UseRoleEditFormOptions {
   selectedRole: Role | undefined;
   canManageSelected: boolean;
   showToast: (message: string) => void;
+  showError: (message: string) => void;
 }
 
 export function useRoleEditForm({
@@ -26,6 +27,7 @@ export function useRoleEditForm({
   selectedRole,
   canManageSelected,
   showToast,
+  showError,
 }: UseRoleEditFormOptions) {
   const [editName, setEditName] = useState("");
   const [editColor, setEditColor] = useState("");
@@ -103,6 +105,7 @@ export function useRoleEditForm({
 
   async function handleSave() {
     setIsConfirmingEveryoneView(false);
+    showError("");
     setNameError("");
     setColorError("");
 
@@ -113,7 +116,7 @@ export function useRoleEditForm({
       });
       setSaving(false);
       if (!result.ok) {
-        showToast(result.message);
+        showError(result.message);
         return;
       }
       applySaved(result.role, `Permisos de "${result.role.name}" actualizados`);
@@ -143,9 +146,9 @@ export function useRoleEditForm({
       if (result.fieldErrors?.name) setNameError(result.fieldErrors.name);
       if (result.fieldErrors?.color) setColorError(result.fieldErrors.color);
       if (result.fieldErrors?.permissions) {
-        showToast(result.fieldErrors.permissions);
+        showError(result.fieldErrors.permissions);
       }
-      if (!result.fieldErrors) showToast(result.message);
+      if (!result.fieldErrors) showError(result.message);
       return;
     }
 

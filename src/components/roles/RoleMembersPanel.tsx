@@ -13,7 +13,7 @@ import {
   roleMembersWithTab,
 } from "@discordia/client-shared";
 
-import { Minus, Plus } from "lucide-react";
+import { Minus, Plus, SearchX, Users } from "lucide-react";
 import { useCallback, useState } from "react";
 
 import { Avatar } from "@/components/ui/Avatar";
@@ -22,6 +22,7 @@ import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 import { useMemberPages } from "@/hooks/useMemberPages";
 import { cn } from "@/lib/cn";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
@@ -191,7 +192,10 @@ export function RoleMembersPanel({
             <LoadingSpinner />
           )
         ) : list.members.length === 0 ? (
-          <p className="text-content-subtle py-2 text-sm">{emptyMessage}</p>
+          <SettingsEmptyState
+            icon={list.isSearching ? SearchX : Users}
+            text={emptyMessage}
+          />
         ) : (
           <div
             className="space-y-1 transition-opacity"
@@ -208,19 +212,18 @@ export function RoleMembersPanel({
             ))}
           </div>
         )}
+        {list.pageCount > 1 ? (
+          <PaginationFooter
+            page={list.page}
+            pageCount={list.pageCount}
+            range={list.range}
+            total={list.total}
+            noun={list.isSearching ? "resultados" : "miembros"}
+            onPageChange={list.setPage}
+            className="pt-2"
+          />
+        ) : null}
       </div>
-
-      {list.pageCount > 1 ? (
-        <PaginationFooter
-          page={list.page}
-          pageCount={list.pageCount}
-          range={list.range}
-          total={list.total}
-          noun={list.isSearching ? "resultados" : "miembros"}
-          onPageChange={list.setPage}
-          className="border-line shrink-0 border-t px-4 py-3 sm:px-8"
-        />
-      ) : null}
     </div>
   );
 }

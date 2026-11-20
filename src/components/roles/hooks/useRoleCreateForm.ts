@@ -16,6 +16,7 @@ interface UseRoleCreateFormOptions {
   setRoles: Dispatch<SetStateAction<Role[] | null>>;
   onCreated: (role: Role) => void;
   showToast: (message: string) => void;
+  showError: (message: string) => void;
 }
 
 export function useRoleCreateForm({
@@ -24,6 +25,7 @@ export function useRoleCreateForm({
   setRoles,
   onCreated,
   showToast,
+  showError,
 }: UseRoleCreateFormOptions) {
   const [newName, setNewName] = useState("");
   const [newColor, setNewColor] = useState(COLOR_PALETTE[0]);
@@ -41,6 +43,7 @@ export function useRoleCreateForm({
   async function handleCreate() {
     setNewNameError("");
     setNewColorError("");
+    showError("");
     const trimmed = newName.trim();
     const errors = validateRole(
       { name: trimmed, color: newColor },
@@ -62,13 +65,13 @@ export function useRoleCreateForm({
       setCreating(false);
       if (result.fieldErrors?.name) setNewNameError(result.fieldErrors.name);
       if (result.fieldErrors?.color) setNewColorError(result.fieldErrors.color);
-      if (!result.fieldErrors) showToast(result.message);
+      if (!result.fieldErrors) showError(result.message);
       return;
     }
 
     // `createRoleRequest` solo manda nombre y color: los permisos van aparte.
     let createdRole = result.role;
-    let toastMessage = `Rol "${trimmed}" creado`;
+    let permsError = "";
     if (newPerms.length > 0) {
       const permsResult = await updateRoleRequest(createdRole.id, {
         permissions: newPerms,
@@ -76,7 +79,7 @@ export function useRoleCreateForm({
       if (permsResult.ok) {
         createdRole = permsResult.role;
       } else {
-        toastMessage = `Rol "${trimmed}" creado, pero no se pudieron guardar los permisos: ${permsResult.message}`;
+        permsError = `Rol "${trimmed}" creado, pero no se pudieron guardar los permisos: ${permsResult.message}`;
       }
     }
 
@@ -85,7 +88,8 @@ export function useRoleCreateForm({
     setNewName("");
     setNewColor(COLOR_PALETTE[0]);
     onCreated(createdRole);
-    showToast(toastMessage);
+    if (permsError) showError(permsError);
+    else showToast(`Rol "${trimmed}" creado`);
   }
 
   return {

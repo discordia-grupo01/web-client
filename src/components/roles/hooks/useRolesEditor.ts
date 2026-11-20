@@ -1,12 +1,13 @@
 "use client";
 
 import { outranksRole, type Role } from "@discordia/client-shared";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 
 import {
   listRolesRequest,
   setDefaultRoleRequest,
 } from "@/services/roles/client";
+import { useToast } from "@/hooks/useToast";
 
 import { useRoleCreateForm } from "./useRoleCreateForm";
 import { useRoleDelete } from "./useRoleDelete";
@@ -16,8 +17,6 @@ import { useRoleReorder } from "./useRoleReorder";
 
 export type RightView = "edit" | "members" | "create";
 export type RolesView = "list" | "detail";
-
-const TOAST_MS = 2800;
 
 interface UseRolesEditorOptions {
   serverId: string;
@@ -37,14 +36,8 @@ export function useRolesEditor({
   const [view, setView] = useState<RolesView>("list");
   const [defaultRoleId, setDefaultRoleId] = useState<string | null>(null);
   const [settingDefault, setSettingDefault] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
-  const toastTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  function showToast(message: string) {
-    if (toastTimer.current) clearTimeout(toastTimer.current);
-    setToast(message);
-    toastTimer.current = setTimeout(() => setToast(null), TOAST_MS);
-  }
+  const [error, setError] = useState("");
+  const { toast, showToast } = useToast();
 
   useEffect(() => {
     let cancelled = false;
@@ -59,7 +52,6 @@ export function useRolesEditor({
     });
     return () => {
       cancelled = true;
-      if (toastTimer.current) clearTimeout(toastTimer.current);
     };
   }, [serverId]);
 
@@ -75,7 +67,7 @@ export function useRolesEditor({
     setRoles,
     isOwner,
     myRoles,
-    showToast,
+    showError: setError,
   });
   const editForm = useRoleEditForm({
     roles,
@@ -83,12 +75,14 @@ export function useRolesEditor({
     selectedRole,
     canManageSelected,
     showToast,
+    showError: setError,
   });
   const { setNewPerms, ...createForm } = useRoleCreateForm({
     serverId,
     roles,
     setRoles,
     showToast,
+    showError: setError,
     onCreated: (role) => {
       setSelectedId(role.id);
       setRightView("edit");
@@ -99,6 +93,7 @@ export function useRolesEditor({
     selectedRole,
     canManageSelected,
     showToast,
+    showError: setError,
     onDeleted: () => {
       setSelectedId("");
       setView("list");
@@ -106,12 +101,14 @@ export function useRolesEditor({
   });
 
   function selectRole(id: string) {
+    setError("");
     setSelectedId(id);
     setRightView("edit");
     setView("detail");
   }
 
   function backToList() {
+    setError("");
     setView("list");
     setRightView("edit");
   }
@@ -120,17 +117,19 @@ export function useRolesEditor({
     setNewPerms(
       reorder.everyoneRole ? [...reorder.everyoneRole.permissions] : [],
     );
+    setError("");
     setRightView("create");
     setView("detail");
   }
 
   async function handleSetDefault() {
     if (!selectedRole || !canManageSelected) return;
+    setError("");
     setSettingDefault(true);
     const result = await setDefaultRoleRequest(serverId, selectedRole.id);
     setSettingDefault(false);
     if (!result.ok) {
-      showToast(result.message);
+      setError(result.message);
       return;
     }
     setDefaultRoleId(selectedRole.id);
@@ -155,7 +154,8 @@ export function useRolesEditor({
     settingDefault,
     handleSetDefault,
     toast,
-    showToast,
+    error,
+    showError: setError,
     ...memberCounts,
     ...reorder,
     ...editForm,

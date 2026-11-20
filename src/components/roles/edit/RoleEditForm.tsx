@@ -1,10 +1,12 @@
 "use client";
 
 import { roleMembersCount } from "@discordia/client-shared";
-import { AlertCircle, Star, Trash2 } from "lucide-react";
+import { Star, Trash2 } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { FormAlert } from "@/components/ui/FormAlert";
 import { SaveBar } from "@/components/ui/settings/SaveBar";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsRow } from "@/components/ui/settings/SettingsRow";
@@ -54,14 +56,13 @@ export function RoleEditForm({
     requestSave,
     settingDefault,
     handleSetDefault,
-    deleteConfirm,
-    setDeleteConfirm,
-    deleteError,
-    setDeleteError,
+    isDeleteConfirmOpen,
+    setIsDeleteConfirmOpen,
     deleting,
     handleDelete,
     handleMembershipChange,
-    showToast,
+    error,
+    showError,
   } = editor;
 
   if (!selectedRole) return null;
@@ -123,6 +124,7 @@ export function RoleEditForm({
         <div className="shrink-0 space-y-5 px-4 pt-5 sm:px-8 sm:pt-6">
           <SettingsHeading />
           {header}
+          <FormAlert message={error} />
         </div>
         <RoleMembersPanel
           key={selectedRole.id}
@@ -130,7 +132,7 @@ export function RoleEditForm({
           roleId={selectedRole.id}
           isEveryone={isEveryoneSelected}
           onMembershipChange={handleMembershipChange}
-          onError={showToast}
+          onError={showError}
         />
       </div>
     );
@@ -150,6 +152,7 @@ export function RoleEditForm({
       }
     >
       <div className="space-y-8">
+        <FormAlert message={error} />
         <RoleNameField
           inputId={NAME_INPUT_ID}
           value={editName}
@@ -246,58 +249,30 @@ export function RoleEditForm({
               </p>
             ) : null}
 
-            {!deleteConfirm ? (
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setDeleteError("");
-                  setDeleteConfirm(true);
-                }}
-                disabled={!canManageSelected}
-                className="text-danger border-danger/25 bg-danger/10 w-auto px-3 py-2 text-xs"
-              >
-                <Trash2 size={13} /> Eliminar rol
-              </Button>
-            ) : (
-              <div className="space-y-2">
-                <p className="text-danger font-display text-sm font-semibold">
-                  ¿Confirmar eliminación de &quot;{selectedRole.name}&quot;?
-                </p>
-                {deleteError ? (
-                  <div className="text-danger border-danger/20 bg-danger/10 flex items-start gap-2 rounded-lg border px-3 py-2 text-xs">
-                    <AlertCircle size={13} />
-                    <span>{deleteError}</span>
-                  </div>
-                ) : null}
-                <div className="flex gap-2">
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => {
-                      setDeleteConfirm(false);
-                      setDeleteError("");
-                    }}
-                    className="flex-1 py-2 text-xs"
-                  >
-                    Cancelar
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="danger"
-                    onClick={handleDelete}
-                    disabled={!canManageSelected}
-                    isLoading={deleting}
-                    className="flex-1 py-2 text-xs"
-                  >
-                    Eliminar
-                  </Button>
-                </div>
-              </div>
-            )}
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setIsDeleteConfirmOpen(true)}
+              disabled={!canManageSelected}
+              isLoading={deleting}
+              className="text-danger border-danger/25 bg-danger/10 w-auto px-3 py-2 text-xs"
+            >
+              <Trash2 size={13} /> Eliminar rol
+            </Button>
           </div>
         )}
       </div>
+
+      {isDeleteConfirmOpen ? (
+        <ConfirmDialog
+          icon={Trash2}
+          title={`¿Eliminar el rol "${selectedRole.name}"?`}
+          body="Esta acción no se puede deshacer."
+          confirmLabel="Eliminar rol"
+          onConfirm={() => void handleDelete()}
+          onCancel={() => setIsDeleteConfirmOpen(false)}
+        />
+      ) : null}
     </SettingsSection>
   );
 }

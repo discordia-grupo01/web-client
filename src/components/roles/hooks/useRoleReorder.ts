@@ -22,7 +22,7 @@ interface UseRoleReorderOptions {
   setRoles: Dispatch<SetStateAction<Role[] | null>>;
   isOwner: boolean;
   myRoles: Role[];
-  showToast: (message: string) => void;
+  showError: (message: string) => void;
 }
 
 export function useRoleReorder({
@@ -31,7 +31,7 @@ export function useRoleReorder({
   setRoles,
   isOwner,
   myRoles,
-  showToast,
+  showError,
 }: UseRoleReorderOptions) {
   const dragSensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
@@ -55,6 +55,7 @@ export function useRoleReorder({
     const oldIndex = manageableRoles.findIndex((role) => role.id === active.id);
     const newIndex = manageableRoles.findIndex((role) => role.id === over.id);
     if (oldIndex === -1 || newIndex === -1) return;
+    showError("");
 
     const reorderedManageable = arrayMove(manageableRoles, oldIndex, newIndex);
     const reordered = [...protectedRoles, ...reorderedManageable];
@@ -75,7 +76,7 @@ export function useRoleReorder({
 
     const result = await reorderRolesRequest(serverId, roleIds);
     if (!result.ok) {
-      showToast(result.message);
+      showError(result.message);
       setRoles(previousRoles);
       return;
     }

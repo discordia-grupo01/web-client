@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
+import { FormAlert } from "@/components/ui/FormAlert";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsFormFooter } from "@/components/ui/settings/SettingsFormFooter";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
@@ -34,6 +35,7 @@ export function RoleCreateForm({ editor, backButton }: RoleCreateFormProps) {
     handleToggleNewPerm,
     handleCreate,
     backToList,
+    error,
   } = editor;
 
   return (
@@ -62,6 +64,7 @@ export function RoleCreateForm({ editor, backButton }: RoleCreateFormProps) {
       }
     >
       <div className="space-y-8">
+        <FormAlert message={error} />
         <RoleNameField
           inputId={NAME_INPUT_ID}
           value={newName}

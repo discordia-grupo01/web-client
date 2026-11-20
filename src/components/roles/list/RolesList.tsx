@@ -12,11 +12,13 @@ import {
   verticalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { ChevronRight, GripVertical, Star, Users } from "lucide-react";
+import { ChevronRight, GripVertical, Shield, Star, Users } from "lucide-react";
 
 import type { HTMLAttributes } from "react";
 
+import { FormAlert } from "@/components/ui/FormAlert";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
 
 import { type RolesEditor } from "../hooks/useRolesEditor";
 
@@ -195,9 +197,9 @@ export function RolesList({ editor }: RolesListProps) {
   } = editor;
 
   if (isLoading) return <LoadingSpinner />;
-  if (loadError) return <p className="text-danger text-sm">{loadError}</p>;
+  if (loadError) return <FormAlert message={loadError} />;
   if ((roles ?? []).length === 0) {
-    return <p className="text-content-muted text-sm">{NO_ROLES_YET}</p>;
+    return <SettingsEmptyState icon={Shield} text={NO_ROLES_YET} />;
   }
 
   function rowProps(role: Role): RoleRowProps {
