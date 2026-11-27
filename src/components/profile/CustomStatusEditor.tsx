@@ -11,6 +11,7 @@ import { useEffect, useRef, useState } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { SectionLabel } from "@/components/ui/SectionLabel";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
 
 interface CustomStatusEditorProps {
   statusText: string;
@@ -92,9 +93,7 @@ export function CustomStatusEditor({
             className="bg-surface-input border-line text-content placeholder:text-content-subtle focus:border-accent w-full rounded-lg border px-3 py-2 text-sm outline-none disabled:opacity-60"
           />
           <div className="flex items-center justify-between">
-            <span className="text-content-subtle font-mono text-[11px] tabular-nums">
-              {draft.length}/{MAX_CUSTOM_STATUS}
-            </span>
+            <CharacterCounter length={draft.length} max={MAX_CUSTOM_STATUS} />
             <div className="flex items-center gap-2">
               <Button
                 type="button"

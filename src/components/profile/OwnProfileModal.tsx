@@ -45,6 +45,7 @@ import { MemberSince } from "./MemberSince";
 import { ProfileAvatarFrame } from "./ProfileAvatarFrame";
 import { ProfileBanner } from "./ProfileBanner";
 import { ProfileModalOverlay } from "./ProfileModalOverlay";
+import { CharacterCounter } from "@/components/ui/CharacterCounter";
 
 interface OwnProfileModalProps {
   /** Sin servidor seleccionado (p.ej. abierto desde el home) no hay roles que mostrar. */
@@ -428,9 +429,10 @@ export function OwnProfileModal({
               {editingField === "description" ? (
                 <div className="space-y-2">
                   <div className="flex items-center justify-end">
-                    <span className="text-content-subtle font-mono text-[11px] tabular-nums">
-                      {descriptionDraft.length}/{MAX_DESCRIPTION}
-                    </span>
+                    <CharacterCounter
+                      length={descriptionDraft.length}
+                      max={MAX_DESCRIPTION}
+                    />
                   </div>
                   <textarea
                     value={descriptionDraft}
