@@ -1,4 +1,4 @@
-const { app, BrowserWindow, session, shell } = require("electron");
+const { app, BrowserWindow, net, session, shell } = require("electron");
 const path = require("node:path");
 
 const PRODUCTION_URL = "https://discordia-g1.vercel.app";
@@ -14,6 +14,8 @@ const GOOGLE_ORIGIN = "https://accounts.google.com";
 
 // Chromium lo dispara cuando una navegación pisa a otra, no por falta de red.
 const ERR_ABORTED = -3;
+
+const RETRY_MS = 5000;
 
 // El micrófono (media) lo pide LiveKit al entrar a un canal de voz.
 const ALLOWED_PERMISSIONS = new Set([
@@ -55,6 +57,30 @@ function setupPermissions() {
   );
 }
 
+async function isAppReachable() {
+  try {
+    await net.fetch(APP_URL, { method: "HEAD", cache: "no-store" });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function showOfflinePage(win) {
+  win.loadFile(path.join(__dirname, "offline.html"));
+
+  const retry = setInterval(async () => {
+    if (win.isDestroyed()) {
+      clearInterval(retry);
+      return;
+    }
+    if (await isAppReachable()) {
+      clearInterval(retry);
+      win.loadURL(APP_URL);
+    }
+  }, RETRY_MS);
+}
+
 function createWindow() {
   const win = new BrowserWindow({
     width: 1280,
@@ -85,9 +111,7 @@ function createWindow() {
     "did-fail-load",
     (_event, errorCode, _description, _url, isMainFrame) => {
       if (isMainFrame && errorCode !== ERR_ABORTED) {
-        win.loadFile(path.join(__dirname, "offline.html"), {
-          query: { url: APP_URL },
-        });
+        showOfflinePage(win);
       }
     },
   );
