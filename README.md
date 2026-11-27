@@ -140,7 +140,14 @@ Para armar los instaladores:
 | Linux   | `npm run dist:linux` | Un `.AppImage` y un `.deb`  |
 | Windows | `npm run dist:win`   | Un instalador `.exe` (NSIS) |
 
-Quedan en `desktop/dist/`, que no se sube al repositorio. La app instalada carga siempre la web de producción. El instalador de Windows se puede armar desde Linux, aunque puede pedir Wine. Si da problemas, armalo desde una máquina con Windows.
+Quedan en `desktop/dist/`, que no se sube al repositorio. La app instalada carga siempre la web de producción. El `.exe` no se puede armar desde Linux sin Wine. Para publicar una versión, es más simple dejar que GitHub arme los dos: el workflow [`desktop-release.yml`](.github/workflows/desktop-release.yml) arma el de Linux y el de Windows cada vez que se sube un tag `desktop-v*`, y los publica en un Release del repositorio:
+
+```bash
+git tag desktop-v0.1.0
+git push origin desktop-v0.1.0
+```
+
+El número del tag tiene que coincidir con `version` en `desktop/package.json`.
 
 Si la app arranca sin internet, muestra una pantalla propia con el logo y vuelve a intentar cada 5 segundos. Esa pantalla es [`desktop/offline.html`](desktop/offline.html), que tiene una copia del logo animado de la web, porque sin red no puede cargar nada de afuera. Si cambia el logo en `client-shared`, hay que actualizarla.
 
