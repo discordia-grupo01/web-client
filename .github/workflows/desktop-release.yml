@@ -51,12 +51,17 @@ jobs:
         with:
           path: installers
           merge-multiple: true
-      - uses: softprops/action-gh-release@v2
-        with:
-          name: Discordia para escritorio ${{ github.ref_name }}
-          files: installers/*
-          body: |
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ github.ref_name }}
+          NOTES: |
             Instaladores de la app de escritorio de Discordia.
 
             - **Linux:** `Discordia-*.AppImage` (darle permiso de ejecución y abrirlo) o el `.deb` (`sudo apt install ./discordia-desktop_*.deb`).
             - **Windows:** `Discordia Setup *.exe`. Como la app no está firmada, Windows puede mostrar un aviso de SmartScreen: "Más información" → "Ejecutar de todas formas".
+        run: |
+          gh release create "$TAG" installers/* \
+            --repo "${{ github.repository }}" \
+            --title "Discordia para escritorio $TAG" \
+            --notes "$NOTES"
