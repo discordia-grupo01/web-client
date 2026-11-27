@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { DEFAULT_THEME, themeToCss } from "@discordia/client-shared";
 
 import { AccountSuspendedModal } from "@/components/auth/AccountSuspendedModal";
+import { OfflineScreen } from "@/components/connection/OfflineScreen";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { getCurrentUser } from "@/services/auth/session";
 import { APP_NAME, THEME_STORAGE_KEY } from "@/lib/constants";
@@ -58,6 +59,7 @@ export default function RootLayout({ children }: { children: ReactNode }) {
           {children}
           <AccountSuspendedModal />
         </AuthProvider>
+        <OfflineScreen />
       </body>
     </html>
   );
