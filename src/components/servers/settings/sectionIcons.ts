@@ -2,10 +2,10 @@ import {
   Ban,
   FileText,
   Flag,
+  Gavel,
   type LucideIcon,
   Pen,
   Shield,
-  ShieldBan,
   Smile,
 } from "lucide-react";
 
@@ -20,7 +20,7 @@ export const SECTION_ICONS: Record<
   boosts: BoostsSectionIcon,
   emojis: Smile,
   roles: Shield,
-  bans: ShieldBan,
+  bans: Gavel,
   words: Ban,
   reports: Flag,
   audit: FileText,

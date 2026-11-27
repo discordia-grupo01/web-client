@@ -165,12 +165,6 @@ export function MemberRoleBadges({
           </span>
         ))}
 
-        {visibleAssignedRoles.length === 0 ? (
-          <span className="text-content-subtle text-xs">
-            Sin roles asignados
-          </span>
-        ) : null}
-
         {canManage ? (
           <SearchableSelect
             floating

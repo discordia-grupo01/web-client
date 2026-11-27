@@ -1,10 +1,10 @@
 "use client";
 
-import { X } from "lucide-react";
 import type { ReactNode } from "react";
 import { createPortal } from "react-dom";
 
 import { cn } from "@/lib/cn";
+import { ModalCloseButton } from "./ModalCloseButton";
 
 interface ModalShellProps {
   onClose: () => void;
@@ -61,14 +61,10 @@ export function ModalShell({
         style={{ maxWidth, background: "var(--bg-modal)" }}
       >
         {hasCloseButton ? (
-          <button
-            type="button"
+          <ModalCloseButton
             onClick={onClose}
-            aria-label="Cerrar"
-            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-          >
-            <X size={14} />
-          </button>
+            className="absolute top-4 right-4 z-10"
+          />
         ) : null}
 
         {children}

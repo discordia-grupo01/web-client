@@ -1,46 +1,36 @@
 "use client";
 
 import {
-  BAN_ACTION_LABEL,
-  BAN_NO_REASON,
-  BAN_REVOKE_LABEL,
+  BAN_MEMBER_TITLE,
+  type Ban,
   BANS_EMPTY,
   BANS_EMPTY_SEARCH,
-  BANS_MEMBERS_EMPTY,
-  BANS_MEMBERS_EMPTY_SEARCH,
-  BANS_MEMBERS_HINT,
-  BANS_MEMBERS_SEARCH_LABEL,
   BANS_REVOKE_HINT,
   BANS_SEARCH_LABEL,
   BANS_SEARCH_PLACEHOLDER,
   BANS_SECTION_SUBTITLE,
-  BANS_TAB_MEMBERS,
-  BANS_TITLE,
-  bansTabLabel,
+  displayNameOf,
   searchResultsSummary,
   unbanSuccessNotice,
-  VIEW_PROFILE_LABEL,
 } from "@discordia/client-shared";
+import { Info, Plus, ShieldBan } from "lucide-react";
+import { type ReactNode, useState } from "react";
 
-import { type ReactNode, useMemo, useState } from "react";
-
-import { useBanCandidates } from "@/components/bans/hooks/useBanCandidates";
 import { useBanList } from "@/components/bans/hooks/useBanList";
+import { Button } from "@/components/ui/Button";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { PaginationFooter } from "@/components/ui/PaginationFooter";
 import { SearchInput } from "@/components/ui/SearchInput";
-import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
+import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState";
+import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { SettingsToast } from "@/components/ui/settings/SettingsToast";
 import { useToast } from "@/hooks/useToast";
-import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
-import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
 
+import { BanMemberPickerStep } from "./BanMemberPickerStep";
 import { type BanTarget } from "./BanMemberModal";
-import { UserList, type UserListItem } from "./UserList";
-import { type UserRowAction } from "./UserRow";
-
-type Tab = "bans" | "members";
+import { BansTable } from "./BansTable";
 
 export interface BansPanelProps {
   serverId: string;
@@ -59,165 +49,116 @@ export function BansPanel({
   onOpenProfile,
   onBanMember,
 }: BansPanelProps) {
-  const [tab, setTab] = useState<Tab>("bans");
-  const [hasOpenedMembers, setHasOpenedMembers] = useState(false);
   const [search, setSearch] = useState("");
+  const [isPicking, setIsPicking] = useState(false);
   const { toast, showToast } = useToast();
   const [revokeError, setRevokeError] = useState("");
   const [revokingUserId, setRevokingUserId] = useState<string | null>(null);
 
-  const banList = useBanList(serverId, tab === "bans" ? search : "");
-  const candidates = useBanCandidates({
-    serverId,
-    ownerId,
-    currentUserId,
-    search,
-    enabled: hasOpenedMembers,
-  });
-
-  const isBans = tab === "bans";
-  const errorMessage = isBans ? banList.errorMessage : candidates.errorMessage;
+  const banList = useBanList(serverId, search);
   const isSearching = search.trim() !== "";
 
-  const banItems = useMemo<UserListItem[] | null>(
-    () =>
-      banList.bans?.map((ban) => ({
-        userId: ban.user_id,
-        profile: ban.profile,
-        subtitle: ban.reason || BAN_NO_REASON,
-      })) ?? null,
-    [banList.bans],
-  );
-
-  const memberItems = useMemo<UserListItem[] | null>(
-    () =>
-      candidates.candidates?.map((member) => ({
-        userId: member.user_id,
-        profile: member.profile,
-      })) ?? null,
-    [candidates.candidates],
-  );
-
-  const items = isBans ? banItems : memberItems;
-  const pagination = isBans ? banList : candidates;
-
-  const noun = isBans ? "baneados" : "miembros";
-  const emptyMessage = isBans
-    ? isSearching
-      ? BANS_EMPTY_SEARCH
-      : BANS_EMPTY
-    : isSearching
-      ? BANS_MEMBERS_EMPTY_SEARCH
-      : BANS_MEMBERS_EMPTY;
-
-  function handleTabChange(next: Tab) {
-    setTab(next);
-    if (next === "members") setHasOpenedMembers(true);
-    setSearch("");
+  async function handleRevoke(ban: Ban) {
     setRevokeError("");
-  }
-
-  function actionsFor(item: UserListItem): UserRowAction[] {
-    const { userId, profile } = item;
-    if (isBans) {
-      return [
-        {
-          label: BAN_REVOKE_LABEL,
-          isLoading: revokingUserId === userId,
-          onClick: () => handleRevoke(item),
-        },
-      ];
-    }
-    return [
-      { label: VIEW_PROFILE_LABEL, onClick: () => onOpenProfile(userId) },
-      {
-        label: BAN_ACTION_LABEL,
-        tone: "danger",
-        onClick: () =>
-          onBanMember({
-            userId,
-            name: displayNameOf(profile),
-            avatarSrc: avatarSrcOf(userId, profile),
-          }),
-      },
-    ];
-  }
-
-  async function handleRevoke({ userId, profile }: UserListItem) {
-    setRevokeError("");
-    setRevokingUserId(userId);
-    const result = await banList.unban(userId);
+    setRevokingUserId(ban.user_id);
+    const result = await banList.unban(ban.user_id);
     setRevokingUserId(null);
     if (!result.ok) {
       setRevokeError(result.message);
       return;
     }
-    showToast(unbanSuccessNotice(displayNameOf(profile)));
+    showToast(unbanSuccessNotice(displayNameOf(ban.profile)));
   }
 
   return (
     <div className="relative flex min-h-0 flex-1 flex-col overflow-hidden">
       {header}
-      <SettingsSection
-        description={header ? undefined : BANS_SECTION_SUBTITLE}
-        toolbar={
-          <div className="space-y-3">
-            <SegmentedTabs
-              label={BANS_TITLE}
-              value={tab}
-              onChange={handleTabChange}
-              tabs={[
-                {
-                  value: "bans",
-                  label: bansTabLabel(banList.allTotal),
-                },
-                { value: "members", label: BANS_TAB_MEMBERS },
-              ]}
-            />
-            <SearchInput
-              value={search}
-              onChange={setSearch}
-              label={isBans ? BANS_SEARCH_LABEL : BANS_MEMBERS_SEARCH_LABEL}
-              placeholder={BANS_SEARCH_PLACEHOLDER}
-            />
-            {isBans && isSearching ? (
-              <p role="status" className="text-content-muted text-xs">
-                {searchResultsSummary(banList.total, banList.allTotal, noun)}
-              </p>
+      {isPicking ? (
+        <BanMemberPickerStep
+          serverId={serverId}
+          ownerId={ownerId}
+          currentUserId={currentUserId}
+          onOpenProfile={onOpenProfile}
+          onPick={onBanMember}
+          onBack={() => setIsPicking(false)}
+        />
+      ) : (
+        <SettingsSection
+          description={
+            header
+              ? undefined
+              : "Las personas baneadas no pueden volver a entrar al servidor, ni con una invitación."
+          }
+          toolbar={
+            <div className="space-y-2">
+              <SearchInput
+                value={search}
+                onChange={setSearch}
+                label={BANS_SEARCH_LABEL}
+                placeholder={BANS_SEARCH_PLACEHOLDER}
+              />
+              {isSearching ? (
+                <p role="status" className="text-content-muted text-xs">
+                  {searchResultsSummary(
+                    banList.total,
+                    banList.allTotal,
+                    "baneados",
+                  )}
+                </p>
+              ) : null}
+            </div>
+          }
+        >
+          <SettingsGroup
+            label={BANS_SECTION_SUBTITLE}
+            count={banList.allTotal}
+            isAsideStackedOnMobile
+            aside={
+              <Button
+                type="button"
+                onClick={() => setIsPicking(true)}
+                className="w-auto shrink-0 px-3.5 py-2"
+              >
+                <Plus size={16} />
+                {BAN_MEMBER_TITLE}
+              </Button>
+            }
+          >
+            <FormAlert message={banList.errorMessage || revokeError} />
+
+            {banList.bans === null ? (
+              <LoadingSpinner />
+            ) : banList.bans.length === 0 ? (
+              <SettingsEmptyState
+                icon={ShieldBan}
+                text={isSearching ? BANS_EMPTY_SEARCH : BANS_EMPTY}
+              />
+            ) : (
+              <BansTable
+                bans={banList.bans}
+                revokingUserId={revokingUserId}
+                onRevoke={(ban) => void handleRevoke(ban)}
+              />
+            )}
+
+            {banList.pageCount > 1 ? (
+              <PaginationFooter
+                page={banList.page}
+                pageCount={banList.pageCount}
+                range={banList.range}
+                total={banList.total}
+                noun={isSearching ? "resultados" : "baneados"}
+                onPageChange={banList.setPage}
+              />
             ) : null}
-          </div>
-        }
-      >
-        <div role="tabpanel" className="space-y-3">
-          <p className="text-content-muted text-sm">
-            {isBans ? BANS_REVOKE_HINT : BANS_MEMBERS_HINT}
-          </p>
 
-          <FormAlert message={errorMessage || revokeError} />
-
-          {items === null ? (
-            <LoadingSpinner />
-          ) : (
-            <UserList
-              items={items}
-              emptyMessage={emptyMessage}
-              actionsFor={actionsFor}
-              disableActions={revokingUserId !== null}
-            />
-          )}
-          {pagination.pageCount > 1 ? (
-            <PaginationFooter
-              page={pagination.page}
-              pageCount={pagination.pageCount}
-              range={pagination.range}
-              total={pagination.total}
-              noun={isSearching ? "resultados" : noun}
-              onPageChange={pagination.setPage}
-              className="mt-4"
-            />
-          ) : null}
-        </div>
-      </SettingsSection>
+            <p className="text-content-subtle flex items-start gap-2 text-xs leading-relaxed">
+              <Info size={14} className="mt-0.5 shrink-0" aria-hidden="true" />
+              {BANS_REVOKE_HINT}
+            </p>
+          </SettingsGroup>
+        </SettingsSection>
+      )}
       <SettingsToast message={toast} />
     </div>
   );

@@ -6,6 +6,7 @@ import { useId, useRef, useState } from "react";
 
 import { useFloatingPanel } from "@/hooks/useFloatingPanel";
 import { cn } from "@/lib/cn";
+import { FieldLabel } from "./FieldLabel";
 
 export interface SelectOption {
   value: string;
@@ -18,20 +19,9 @@ interface SelectProps {
   onChange: (value: string) => void;
   options: SelectOption[];
   id?: string;
-  /**
-   * Por default el panel se posiciona inline (`absolute`, como cualquier
-   * select de la app). Activar solo cuando vive dentro de un contenedor con
-   * scroll que lo recorta.
-   */
   floating?: boolean;
 }
 
-/**
- * Select estilizado sin buscador (para listas cortas, ej. categorías de un
- * canal) -- reemplaza un `<select>` nativo, cuyo popup de opciones no se
- * puede estilizar en ningún browser. Para listas donde conviene filtrar por
- * texto usar `SearchableSelect` en su lugar.
- */
 export function Select({
   label,
   value,
@@ -87,12 +77,9 @@ export function Select({
 
   return (
     <div className="relative">
-      <label
-        htmlFor={selectId}
-        className="text-content font-display mb-1.5 block text-sm font-semibold"
-      >
+      <FieldLabel htmlFor={selectId} className="mb-1.5">
         {label}
-      </label>
+      </FieldLabel>
       <button
         id={selectId}
         ref={anchorRef}

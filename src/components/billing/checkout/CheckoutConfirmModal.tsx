@@ -98,6 +98,7 @@ export function CheckoutConfirmModal({
         {isPremium ? (
           <TextField
             label={BILLING_COPY.payerEmailLabel}
+            requiredMark
             type="email"
             autoComplete="email"
             value={email}

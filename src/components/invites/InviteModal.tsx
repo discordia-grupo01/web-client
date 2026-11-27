@@ -25,7 +25,6 @@ import {
   Plus,
   Trash2,
   Users,
-  X,
 } from "lucide-react";
 import { useCallback, useEffect, useState } from "react";
 
@@ -42,6 +41,8 @@ import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 
 import { LockedVanityLink } from "./LockedVanityLink";
 import { ServerVanityLink } from "./ServerVanityLink";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 interface InviteModalProps {
   serverId: string;
@@ -278,14 +279,10 @@ export function InviteModal({
           background: "var(--bg-modal)",
         }}
       >
-        <button
-          type="button"
+        <ModalCloseButton
           onClick={onClose}
-          aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-        >
-          <X size={13} />
-        </button>
+          className="absolute top-4 right-4 z-10"
+        />
 
         <div className="px-7 pt-8 pb-5">
           <div className="flex items-center gap-3">
@@ -313,12 +310,9 @@ export function InviteModal({
         ) : null}
 
         <div className="border-line border-t px-7 py-5">
-          <label
-            htmlFor="invite-max-uses"
-            className="text-content font-display mb-1.5 block text-sm font-semibold"
-          >
+          <FieldLabel htmlFor="invite-max-uses" className="mb-1.5">
             Generar invitación (vence en 7 días)
-          </label>
+          </FieldLabel>
           <div className="flex items-center gap-2">
             <NumberField
               id="invite-max-uses"

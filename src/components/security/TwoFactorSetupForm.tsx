@@ -209,7 +209,7 @@ export function TwoFactorSetupForm({
 
           <TextField
             label="Código de tu app"
-            labelVariant="sentence"
+            requiredMark
             name="code"
             autoComplete="one-time-code"
             inputMode="numeric"

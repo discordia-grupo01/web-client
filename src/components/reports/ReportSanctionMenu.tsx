@@ -99,7 +99,7 @@ export function ReportSanctionMenu({
         onClick={() => (position ? close() : open())}
         aria-haspopup="menu"
         aria-expanded={position !== null}
-        className="border-danger/40 text-danger hover:bg-danger/10 flex cursor-pointer items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[13px] font-semibold transition-colors"
+        className="border-danger/40 text-danger hover:bg-danger/10 flex w-full cursor-pointer items-center justify-center gap-1.5 rounded-lg border px-3 py-2 text-[13px] font-semibold transition-colors sm:w-auto sm:py-1.5"
       >
         <Gavel size={14} aria-hidden="true" />
         {REPORT_SANCTION_MENU_LABEL}

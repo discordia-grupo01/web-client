@@ -124,7 +124,7 @@ export function SetPasswordStep({
         <div className="space-y-5">
           <PasswordField
             label="Nueva contraseña"
-            labelVariant="sentence"
+            requiredMark
             name="password"
             autoComplete="new-password"
             placeholder="Mínimo 8 caracteres"
@@ -140,7 +140,7 @@ export function SetPasswordStep({
 
           <PasswordField
             label="Confirmar contraseña"
-            labelVariant="sentence"
+            requiredMark
             name="confirmPassword"
             autoComplete="new-password"
             placeholder="Repetí la contraseña"

@@ -15,7 +15,7 @@ import {
   TRANSFER_PENDING_OTHER_VIEWER,
 } from "@discordia/client-shared";
 
-import { AlertCircle, ArrowLeftRight, Check, Crown, X } from "lucide-react";
+import { AlertCircle, ArrowLeftRight, Check, Crown } from "lucide-react";
 import { useCallback, useEffect, useState, type ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -34,6 +34,7 @@ import {
   rejectTransferRequest,
 } from "@/services/ownership-transfers/client";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 interface TransferOwnershipModalProps {
   serverId: string;
@@ -70,14 +71,10 @@ function ModalShell({
           background: "var(--bg-modal)",
         }}
       >
-        <button
-          type="button"
+        <ModalCloseButton
           onClick={onClose}
-          aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-        >
-          <X size={13} />
-        </button>
+          className="absolute top-4 right-4 z-10"
+        />
 
         <div className="px-7 pt-8 pb-5">
           <div className="flex items-center gap-3">

@@ -8,11 +8,11 @@ import { cn } from "@/lib/cn";
 
 import { FieldError } from "./ColorPicker";
 import { RolePreviewBadge } from "./RolePreviewBadge";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 interface RoleNameFieldProps {
   inputId: string;
   value: string;
-  /** Color del rol, para la vista previa debajo del nombre. */
   color: string;
   error?: string;
   disabled?: boolean;
@@ -34,9 +34,9 @@ export function RoleNameField({
   return (
     <SettingsGroup
       label={
-        <label htmlFor={inputId}>
-          Nombre <span className="text-danger">*</span>
-        </label>
+        <FieldLabel htmlFor={inputId} required>
+          Nombre
+        </FieldLabel>
       }
       aside={<CharacterCounter length={value.length} max={MAX_NAME} />}
     >

@@ -2,10 +2,11 @@
 
 import { type Channel } from "@discordia/client-shared";
 
-import { AlertCircle, Trash2, X } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
 import { useState } from "react";
 
 import { deleteChannelRequest } from "@/services/channels/client";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 interface DeleteChannelModalProps {
   channel: Channel;
@@ -48,14 +49,10 @@ export function DeleteChannelModal({
         style={{ maxWidth: 420, background: "var(--bg-modal)" }}
       >
         {!isLoading ? (
-          <button
-            type="button"
+          <ModalCloseButton
             onClick={onClose}
-            aria-label="Cerrar"
-            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-          >
-            <X size={13} />
-          </button>
+            className="absolute top-4 right-4 z-10"
+          />
         ) : null}
 
         <div className="flex flex-col items-center gap-5 px-7 py-8 text-center">

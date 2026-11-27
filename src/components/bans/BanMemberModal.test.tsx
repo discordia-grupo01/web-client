@@ -1,4 +1,4 @@
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -14,24 +14,24 @@ beforeEach(() => {
   vi.resetAllMocks();
 });
 
-function renderModal(onBanned = vi.fn()) {
+function renderModal(onBanned = vi.fn(), onClose = vi.fn()) {
   render(
     <BanMemberModal
       serverId="s1"
       userId="u9"
       name="Nova"
       avatarSrc={null}
-      onClose={vi.fn()}
+      onClose={onClose}
       onBanned={onBanned}
     />,
   );
-  return { onBanned };
+  return { onBanned, onClose };
 }
 
 describe("BanMemberModal", () => {
-  it("banea con el motivo y confirma el resultado", async () => {
+  it("banea con el motivo y cierra el modal", async () => {
     banMemberRequest.mockResolvedValue({ ok: true, ban: {} });
-    const { onBanned } = renderModal();
+    const { onBanned, onClose } = renderModal();
 
     await userEvent.type(screen.getByLabelText(/Motivo del baneo/), "Spam");
     await userEvent.click(
@@ -42,7 +42,7 @@ describe("BanMemberModal", () => {
       userId: "u9",
       reason: "Spam",
     });
-    expect(await screen.findByText(/Nova fue baneado/)).toBeInTheDocument();
+    await waitFor(() => expect(onClose).toHaveBeenCalledOnce());
     expect(onBanned).toHaveBeenCalledOnce();
   });
 
