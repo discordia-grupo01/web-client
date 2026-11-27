@@ -65,8 +65,11 @@ describe("<TwoFactorSetupForm />", () => {
       await screen.findByText(/todavía no tiene una contraseña propia/i),
     ).toBeInTheDocument();
 
-    await user.type(screen.getByLabelText("Nueva contraseña"), "Secure123");
-    await user.type(screen.getByLabelText("Confirmar contraseña"), "Secure123");
+    await user.type(screen.getByLabelText(/^Nueva contraseña/), "Secure123");
+    await user.type(
+      screen.getByLabelText(/^Confirmar contraseña/),
+      "Secure123",
+    );
     await user.click(
       screen.getByRole("button", { name: /guardar y continuar/i }),
     );
@@ -100,10 +103,13 @@ describe("<TwoFactorSetupForm />", () => {
     render(<TwoFactorSetupForm onCancel={vi.fn()} onActivated={vi.fn()} />);
 
     await user.type(
-      await screen.findByLabelText("Nueva contraseña"),
+      await screen.findByLabelText(/^Nueva contraseña/),
       "Secure123",
     );
-    await user.type(screen.getByLabelText("Confirmar contraseña"), "Secure123");
+    await user.type(
+      screen.getByLabelText(/^Confirmar contraseña/),
+      "Secure123",
+    );
     await user.click(
       screen.getByRole("button", { name: /guardar y continuar/i }),
     );
@@ -129,7 +135,10 @@ describe("<TwoFactorSetupForm />", () => {
     const user = userEvent.setup();
     render(<TwoFactorSetupForm onCancel={vi.fn()} onActivated={onActivated} />);
 
-    await user.type(await screen.findByLabelText("Código de tu app"), "123456");
+    await user.type(
+      await screen.findByLabelText(/^Código de tu app/),
+      "123456",
+    );
     await user.click(
       screen.getByRole("button", { name: /confirmar y activar/i }),
     );

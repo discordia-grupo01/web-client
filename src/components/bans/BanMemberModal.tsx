@@ -24,10 +24,10 @@ import { Avatar } from "@/components/ui/Avatar";
 import { banMemberRequest } from "@/services/bans/client";
 
 import { BanModalHeader } from "./BanModalHeader";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 const TITLE_ID = "ban-member-modal-title";
 
-/** A quien se va a banear, con lo necesario para mostrarlo en la confirmacion. */
 export interface BanTarget {
   userId: string;
   name: string;
@@ -119,15 +119,12 @@ export function BanMemberModal({
 
           <div>
             <div className="mb-1.5 flex items-center justify-between gap-2">
-              <label
-                htmlFor="ban-reason"
-                className="text-content font-display text-sm font-semibold"
-              >
+              <FieldLabel htmlFor="ban-reason">
                 {BAN_REASON_LABEL}{" "}
                 <span className="text-content-subtle font-normal">
                   (opcional)
                 </span>
-              </label>
+              </FieldLabel>
               <CharacterCounter
                 length={[...reason].length}
                 max={BAN_REASON_MAX_LENGTH}

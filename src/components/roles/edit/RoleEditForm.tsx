@@ -6,14 +6,12 @@ import type { ReactNode } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { ConfirmDialog } from "@/components/ui/ConfirmDialog";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { SaveBar } from "@/components/ui/settings/SaveBar";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
-import { SettingsCard } from "@/components/ui/settings/SettingsCard";
-import { SettingsRow } from "@/components/ui/settings/SettingsRow";
 import { SettingsHeading } from "@/components/ui/settings/SettingsHeading";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
-import { Switch } from "@/components/ui/Switch";
 import { cn } from "@/lib/cn";
 
 import { type RolesEditor } from "../hooks/useRolesEditor";
@@ -169,13 +167,7 @@ export function RoleEditForm({
           onChange={handleEditName}
         />
 
-        <SettingsGroup
-          label={
-            <>
-              Color <span className="text-danger">*</span>
-            </>
-          }
-        >
+        <SettingsGroup label={<FieldLabel required>Color</FieldLabel>}>
           {isEveryoneSelected ? (
             <div className="bg-surface-input border-line flex items-center gap-3 rounded-xl border px-4 py-3">
               <span

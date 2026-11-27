@@ -7,13 +7,15 @@ import {
   validateChannelName,
 } from "@discordia/client-shared";
 
-import { AlertCircle, Hash, Volume2, X } from "lucide-react";
+import { AlertCircle, Hash, Volume2 } from "lucide-react";
 import { useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Select } from "@/components/ui/Select";
 import { createChannelRequest } from "@/services/channels/client";
 import { cn } from "@/lib/cn";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 interface CreateChannelModalProps {
   serverId: string;
@@ -96,14 +98,10 @@ export function CreateChannelModal({
           background: "var(--bg-modal)",
         }}
       >
-        <button
-          type="button"
+        <ModalCloseButton
           onClick={onClose}
-          aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-        >
-          <X size={14} />
-        </button>
+          className="absolute top-4 right-4 z-10"
+        />
 
         <form onSubmit={handleSubmit} className="flex-1 overflow-y-auto">
           <div className="px-7 pt-8 pb-2">
@@ -124,9 +122,9 @@ export function CreateChannelModal({
             ) : null}
 
             <div>
-              <label className="text-content font-display mb-1.5 block text-sm font-semibold">
+              <FieldLabel required className="mb-1.5">
                 Tipo de canal
-              </label>
+              </FieldLabel>
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -172,12 +170,9 @@ export function CreateChannelModal({
             </div>
 
             <div>
-              <label
-                htmlFor="channel-name"
-                className="text-content font-display mb-1.5 block text-sm font-semibold"
-              >
+              <FieldLabel htmlFor="channel-name" required className="mb-1.5">
                 Nombre del canal
-              </label>
+              </FieldLabel>
               <div
                 className={cn(
                   "bg-surface-input flex items-center gap-1.5 rounded-xl border px-4 py-3 transition-colors",

@@ -9,6 +9,7 @@ import {
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FieldError } from "@/components/ui/FieldError";
 import { cn } from "@/lib/cn";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 interface ServerNameFieldProps {
   inputId: string;
@@ -26,12 +27,9 @@ export function ServerNameField({
   return (
     <div>
       <div className="mb-1.5 flex items-center justify-between">
-        <label
-          htmlFor={inputId}
-          className="text-content font-display text-sm font-semibold"
-        >
-          {SERVER_NAME_LABEL} <span className="text-danger">*</span>
-        </label>
+        <FieldLabel htmlFor={inputId} required>
+          {SERVER_NAME_LABEL}
+        </FieldLabel>
         <CharacterCounter length={value.length} max={MAX_NAME} />
       </div>
 

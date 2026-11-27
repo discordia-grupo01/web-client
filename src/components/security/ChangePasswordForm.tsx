@@ -99,7 +99,7 @@ export function ChangePasswordForm({
         <div className="space-y-5">
           <PasswordField
             label={ACCOUNT_PASSWORD_COPY.currentPasswordLabel}
-            labelVariant="sentence"
+            requiredMark
             name="currentPassword"
             autoComplete="current-password"
             icon={<Lock size={16} />}
@@ -114,7 +114,7 @@ export function ChangePasswordForm({
 
           <PasswordField
             label={ACCOUNT_PASSWORD_COPY.newPasswordLabel}
-            labelVariant="sentence"
+            requiredMark
             name="newPassword"
             autoComplete="new-password"
             placeholder="Mínimo 8 caracteres"
@@ -129,7 +129,7 @@ export function ChangePasswordForm({
 
           <PasswordField
             label={ACCOUNT_PASSWORD_COPY.confirmPasswordLabel}
-            labelVariant="sentence"
+            requiredMark
             name="confirmPassword"
             autoComplete="new-password"
             placeholder="Repetí la contraseña"

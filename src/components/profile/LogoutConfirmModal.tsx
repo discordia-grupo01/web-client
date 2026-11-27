@@ -1,8 +1,9 @@
 "use client";
 
-import { LogOut, X } from "lucide-react";
+import { LogOut } from "lucide-react";
 
 import { useAuth } from "@/contexts/AuthContext";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 interface LogoutConfirmModalProps {
   onClose: () => void;
@@ -23,14 +24,10 @@ export function LogoutConfirmModal({ onClose }: LogoutConfirmModalProps) {
         style={{ maxWidth: 380, background: "var(--bg-modal)" }}
       >
         {!isLoggingOut ? (
-          <button
-            type="button"
+          <ModalCloseButton
             onClick={onClose}
-            aria-label="Cerrar"
-            className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-          >
-            <X size={13} />
-          </button>
+            className="absolute top-4 right-4 z-10"
+          />
         ) : null}
 
         <div className="flex flex-col items-center gap-5 px-7 py-8 text-center">

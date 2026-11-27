@@ -1,6 +1,6 @@
 "use client";
 
-import { ChevronLeft, X } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { cn } from "@/lib/cn";
@@ -9,6 +9,7 @@ import {
   type SettingsHeadingInfo,
   useSettingsHeading,
 } from "./SettingsModalContext";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 interface SettingsHeadingProps {
   description?: ReactNode;
@@ -100,14 +101,5 @@ function TitleRow({ heading, titleId, isDesktopOnly = false }: TitleRowProps) {
 }
 
 export function SettingsCloseButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      aria-label="Cerrar"
-      className="bg-surface-input text-content-subtle border-line hover:text-content flex size-8 shrink-0 cursor-pointer items-center justify-center rounded-full border transition-colors"
-    >
-      <X size={14} />
-    </button>
-  );
+  return <ModalCloseButton onClick={onClick} />;
 }

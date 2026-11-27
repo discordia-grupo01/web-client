@@ -93,7 +93,7 @@ export function TwoFactorPasswordForm({
         <div className="space-y-5">
           <PasswordField
             label="Contraseña"
-            labelVariant="sentence"
+            requiredMark
             name="password"
             autoComplete="current-password"
             placeholder="••••••••"

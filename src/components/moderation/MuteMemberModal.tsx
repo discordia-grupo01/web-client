@@ -27,6 +27,7 @@ import { FormAlert } from "@/components/ui/FormAlert";
 import { ModalShell } from "@/components/ui/ModalShell";
 import { cn } from "@/lib/cn";
 import { muteMemberRequest } from "@/services/moderation/client";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 const TITLE_ID = "mute-member-modal-title";
 const DEFAULT_DURATION_ID = "1h";
@@ -118,9 +119,9 @@ export function MuteMemberModal({
           </div>
 
           <fieldset>
-            <legend className="text-content font-display mb-1.5 text-sm font-semibold">
+            <FieldLabel as="legend" required className="mb-1.5">
               {MUTE_DURATION_LABEL}
-            </legend>
+            </FieldLabel>
             <div className="grid grid-cols-3 gap-2">
               {MUTE_DURATIONS.map((duration) => {
                 const isSelected = duration.id === durationId;
@@ -151,15 +152,12 @@ export function MuteMemberModal({
 
           <div>
             <div className="mb-1.5 flex items-center justify-between gap-2">
-              <label
-                htmlFor="mute-reason"
-                className="text-content font-display text-sm font-semibold"
-              >
+              <FieldLabel htmlFor="mute-reason">
                 {MUTE_REASON_LABEL}{" "}
                 <span className="text-content-subtle font-normal">
                   (opcional)
                 </span>
-              </label>
+              </FieldLabel>
               <CharacterCounter
                 length={[...reason].length}
                 max={BAN_REASON_MAX_LENGTH}

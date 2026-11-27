@@ -18,9 +18,9 @@ beforeEach(() => {
 
 async function fillAndSubmit(current: string, next: string) {
   const user = userEvent.setup();
-  await user.type(screen.getByLabelText("Contraseña actual"), current);
-  await user.type(screen.getByLabelText("Nueva contraseña"), next);
-  await user.type(screen.getByLabelText("Confirmar contraseña"), next);
+  await user.type(screen.getByLabelText(/^Contraseña actual/), current);
+  await user.type(screen.getByLabelText(/^Nueva contraseña/), next);
+  await user.type(screen.getByLabelText(/^Confirmar contraseña/), next);
   await user.click(screen.getByRole("button", { name: "Guardar" }));
 }
 

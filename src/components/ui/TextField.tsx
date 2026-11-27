@@ -7,6 +7,8 @@ import {
 
 import { cn } from "@/lib/cn";
 
+import { FieldLabel } from "./FieldLabel";
+
 interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   label: string;
   /** Icono a la izquierda del input. */
@@ -14,7 +16,8 @@ interface TextFieldProps extends InputHTMLAttributes<HTMLInputElement> {
   /** Contenido a la derecha (ej: boton mostrar/ocultar). */
   trailing?: ReactNode;
   error?: string;
-  labelVariant?: "caps" | "sentence";
+  /** Muestra el asterisco rojo de campo obligatorio. */
+  requiredMark?: boolean;
 }
 
 export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
@@ -24,7 +27,7 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
       icon,
       trailing,
       error,
-      labelVariant = "caps",
+      requiredMark = false,
       id,
       className,
       ...props
@@ -37,16 +40,13 @@ export const TextField = forwardRef<HTMLInputElement, TextFieldProps>(
 
     return (
       <div>
-        <label
+        <FieldLabel
           htmlFor={inputId}
-          className={
-            labelVariant === "sentence"
-              ? "text-content font-display mb-2 block text-sm font-semibold"
-              : "text-content-subtle mb-1.5 block text-xs font-semibold tracking-wider uppercase"
-          }
+          required={requiredMark}
+          className="mb-1.5"
         >
           {label}
-        </label>
+        </FieldLabel>
 
         <div
           className={cn(

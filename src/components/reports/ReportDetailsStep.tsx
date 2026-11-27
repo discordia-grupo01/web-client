@@ -17,6 +17,7 @@ import { AutoGrowTextarea } from "@/components/ui/AutoGrowTextarea";
 import { Button } from "@/components/ui/Button";
 import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FormAlert } from "@/components/ui/FormAlert";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 const DETAIL_ID = "report-detail";
 
@@ -59,9 +60,9 @@ export function ReportDetailsStep({
 
       <div>
         <div className="mb-1.5 flex items-center justify-between gap-3">
-          <label
+          <FieldLabel
             htmlFor={DETAIL_ID}
-            className="text-content font-display text-sm font-semibold"
+            required={isReportDetailRequired(category)}
           >
             {REPORT_DETAIL_LABEL}
             {isReportDetailRequired(category) ? null : (
@@ -72,7 +73,7 @@ export function ReportDetailsStep({
                 </span>
               </>
             )}
-          </label>
+          </FieldLabel>
           <CharacterCounter
             length={[...detail.trim()].length}
             max={reportDetailMaxLength(category)}

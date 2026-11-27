@@ -37,7 +37,7 @@ export function ProfileBanner({
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
-          className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-transform hover:scale-110"
+          className="flex size-8 cursor-pointer items-center justify-center rounded-full bg-black/30 transition-colors hover:bg-black/45"
         >
           <X size={14} className="text-white/80" />
         </button>

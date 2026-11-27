@@ -22,6 +22,7 @@ import { cn } from "@/lib/cn";
 
 import { EmojiPreviewImage } from "./EmojiPreviewImage";
 import { useUploadEmoji } from "./hooks/useUploadEmoji";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 interface UploadEmojiModalProps {
   serverId: string;
@@ -84,9 +85,7 @@ export function UploadEmojiModal({
         <FormAlert message={errors.form} />
 
         <div>
-          <h3 className="text-content font-display text-sm font-semibold">
-            {EMOJI_UPLOAD_COPY.imageLabel}
-          </h3>
+          <FieldLabel required>{EMOJI_UPLOAD_COPY.imageLabel}</FieldLabel>
           <input
             ref={fileInputRef}
             type="file"
@@ -144,9 +143,9 @@ export function UploadEmojiModal({
         </div>
 
         <div>
-          <h3 className="text-content font-display text-sm font-semibold">
-            <label htmlFor={nameId}>{EMOJI_UPLOAD_COPY.nameLabel}</label>
-          </h3>
+          <FieldLabel htmlFor={nameId} required>
+            {EMOJI_UPLOAD_COPY.nameLabel}
+          </FieldLabel>
           <div
             className={cn(
               "bg-surface-input focus-within:border-accent mt-2 flex items-center gap-0.5 rounded-xl border px-4 py-3 transition-colors",
@@ -174,9 +173,7 @@ export function UploadEmojiModal({
 
         {previewUrl && name ? (
           <div>
-            <h3 className="text-content font-display text-sm font-semibold">
-              {EMOJI_UPLOAD_COPY.previewLabel}
-            </h3>
+            <FieldLabel>{EMOJI_UPLOAD_COPY.previewLabel}</FieldLabel>
             <p className="bg-surface-input border-line text-content-subtle mt-2 flex items-center gap-2 rounded-xl border px-3.5 py-2.5 text-xs">
               <EmojiPreviewImage
                 objectUrl={previewUrl}
