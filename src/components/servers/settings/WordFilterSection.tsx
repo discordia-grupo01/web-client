@@ -14,7 +14,7 @@ import {
   WORD_FILTER_SAVED,
   WORD_FILTER_TITLE,
 } from "@discordia/client-shared";
-import { Ban, X } from "lucide-react";
+import { Ban, Plus, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -161,7 +161,8 @@ export function WordFilterSection({ serverId }: WordFilterSectionProps) {
                       draftError ? "border-danger" : "border-line",
                     )}
                   />
-                  <Button type="submit" variant="secondary" className="w-auto">
+                  <Button type="submit" className="w-auto shrink-0 px-3.5 py-2">
+                    <Plus size={16} />
                     {WORD_FILTER_ADD_ACTION}
                   </Button>
                 </div>
