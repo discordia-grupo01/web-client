@@ -1,0 +1,62 @@
+name: Desktop release
+
+on:
+  push:
+    tags: ["desktop-v*"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: --linux
+            files: |
+              desktop/dist/*.AppImage
+              desktop/dist/*.deb
+          - os: windows-latest
+            target: --win
+            files: desktop/dist/*.exe
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        working-directory: desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+          cache-dependency-path: desktop/package-lock.json
+      - run: npm ci
+      - run: npx electron-builder ${{ matrix.target }} --publish never
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: installers
+          merge-multiple: true
+      - uses: softprops/action-gh-release@v2
+        with:
+          name: Discordia para escritorio ${{ github.ref_name }}
+          files: installers/*
+          body: |
+            Instaladores de la app de escritorio de Discordia.
+
+            - **Linux:** `Discordia-*.AppImage` (darle permiso de ejecución y abrirlo) o el `.deb` (`sudo apt install ./discordia-desktop_*.deb`).
+            - **Windows:** `Discordia Setup *.exe`. Como la app no está firmada, Windows puede mostrar un aviso de SmartScreen: "Más información" → "Ejecutar de todas formas".

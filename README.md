@@ -10,6 +10,7 @@ Cliente web de Discordia.
 - [Variables de entorno](#variables-de-entorno)
 - [Comandos Docker](#comandos-docker)
 - [Tests](#tests)
+- [App de escritorio](#app-de-escritorio)
 - [Más documentación](#más-documentación)
 
 ## Introducción
@@ -113,6 +114,44 @@ El CI corre todo eso en cada pull request. El repositorio se formatea con Pretti
 ```bash
 git config core.hooksPath .githooks
 ```
+
+## App de escritorio
+
+La carpeta [`desktop`](desktop) tiene la versión de escritorio de Discordia, hecha con Electron. Es una ventana que carga la web: no trae una copia de la interfaz, así que cada deploy en Vercel se ve también en el escritorio, sin sacar una versión nueva. Por qué se hizo así está en la [ADR-046](https://github.com/discordia-grupo01/docs/blob/main/adr/046-cliente-de-escritorio-con-electron.md).
+
+Tiene su propio `package.json`, separado del de Next. Para correrla:
+
+```bash
+cd desktop
+npm install
+npm start
+```
+
+Con `npm start` la app carga la web local en `http://localhost:3000`, así que antes tiene que estar corriendo `npm run dev` y el backend. Para probarla contra otra web, como la de producción:
+
+```bash
+DISCORDIA_URL=https://discordia-g1.vercel.app npm start
+```
+
+Para armar los instaladores:
+
+| Sistema | Comando              | Qué genera                  |
+| ------- | -------------------- | --------------------------- |
+| Linux   | `npm run dist:linux` | Un `.AppImage` y un `.deb`  |
+| Windows | `npm run dist:win`   | Un instalador `.exe` (NSIS) |
+
+Quedan en `desktop/dist/`, que no se sube al repositorio. La app instalada carga siempre la web de producción. El `.exe` no se puede armar desde Linux sin Wine. Para publicar una versión, es más simple dejar que GitHub arme los dos: el workflow [`desktop-release.yml`](.github/workflows/desktop-release.yml) arma el de Linux y el de Windows cada vez que se sube un tag `desktop-v*`, y los publica en un Release del repositorio:
+
+```bash
+git tag desktop-v0.1.0
+git push origin desktop-v0.1.0
+```
+
+El número del tag tiene que coincidir con `version` en `desktop/package.json`.
+
+Si la app arranca sin internet, muestra una pantalla propia con el logo y vuelve a intentar cada 5 segundos. Esa pantalla es [`desktop/offline.html`](desktop/offline.html), que tiene una copia del logo animado de la web, porque sin red no puede cargar nada de afuera. Si cambia el logo en `client-shared`, hay que actualizarla.
+
+Si `npm start` no abre ninguna ventana y solo imprime una versión, la terminal tiene definida `ELECTRON_RUN_AS_NODE=1`. Pasa en la terminal integrada de VS Code. Corrélo desde otra terminal o con `env -u ELECTRON_RUN_AS_NODE npm start`.
 
 ## Más documentación
 
