@@ -3,14 +3,15 @@
 import {
   REPORT_BACK_LABEL,
   REPORT_MESSAGE_LABEL,
-  REPORT_SENT_NOTICE,
+  REPORT_SENT_BODY,
+  REPORT_SENT_TITLE,
   REPORT_USER_LABEL,
   reportCategoriesFor,
 } from "@discordia/client-shared";
-import { Check, ChevronLeft } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 
-import { Button } from "@/components/ui/Button";
 import { ModalShell } from "@/components/ui/ModalShell";
+import { SuccessDialog } from "@/components/ui/SuccessDialog";
 
 import { useReportForm } from "./hooks/useReportForm";
 import { ReportCategoryStep } from "./ReportCategoryStep";
@@ -57,6 +58,16 @@ export function ReportModal({
       />
     );
 
+  if (form.step === "sent") {
+    return (
+      <SuccessDialog
+        title={REPORT_SENT_TITLE}
+        body={REPORT_SENT_BODY}
+        onClose={onClose}
+      />
+    );
+  }
+
   return (
     <ModalShell onClose={onClose} maxWidth={480} labelledBy={TITLE_ID}>
       <div className="flex shrink-0 items-center gap-2 px-5 pt-6 pr-16 pb-3 sm:px-7">
@@ -78,20 +89,7 @@ export function ReportModal({
         </h2>
       </div>
 
-      {form.step === "sent" ? (
-        <div className="space-y-4 px-5 pb-6 sm:px-7">
-          <p
-            role="status"
-            className="bg-success/10 text-success flex items-start gap-3 rounded-xl px-4 py-3 text-sm"
-          >
-            <Check size={16} className="mt-0.5 shrink-0" aria-hidden="true" />
-            <span>{REPORT_SENT_NOTICE}</span>
-          </p>
-          <Button type="button" variant="secondary" onClick={onClose}>
-            Cerrar
-          </Button>
-        </div>
-      ) : category ? (
+      {category ? (
         <ReportDetailsStep
           preview={preview}
           category={category}
