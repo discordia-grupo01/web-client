@@ -5,7 +5,6 @@ interface CharacterCounterProps {
   max: number;
 }
 
-/** `12/100` al lado de la etiqueta de un campo, en ambar cerca del limite. */
 export function CharacterCounter({ length, max }: CharacterCounterProps) {
   const tooLong = length > max;
   const nearLimit = length >= max - 10;
@@ -13,7 +12,7 @@ export function CharacterCounter({ length, max }: CharacterCounterProps) {
   return (
     <span
       className={cn(
-        "font-mono text-xs tabular-nums",
+        "text-xs tabular-nums",
         tooLong
           ? "text-danger"
           : nearLimit

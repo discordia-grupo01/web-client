@@ -18,7 +18,7 @@ import {
   REPORTS_TITLE,
   unknownAuthor,
 } from "@discordia/client-shared";
-import { Check, Flag } from "lucide-react";
+import { Flag } from "lucide-react";
 import { useMemo } from "react";
 
 import { BanMemberModal } from "@/components/bans/BanMemberModal";
@@ -31,8 +31,10 @@ import { SettingsEmptyState } from "@/components/ui/settings/SettingsEmptyState"
 import { SegmentedTabs } from "@/components/ui/SegmentedTabs";
 import { SettingsGroup } from "@/components/ui/settings/SettingsGroup";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
+import { SettingsToast } from "@/components/ui/settings/SettingsToast";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
 import { useMessageAuthors } from "@/hooks/useMessageAuthors";
+import { useToast } from "@/hooks/useToast";
 import { useServerMembers } from "@/hooks/useServerMembers";
 import { cn } from "@/lib/cn";
 import { avatarSrcOf, displayNameOf } from "@/utils/userProfile";
@@ -89,7 +91,8 @@ export function ReportsSection({
   onMembersChanged,
 }: ReportsSectionProps) {
   const list = useReportsList(serverId, onPendingChanged);
-  const action = useReportAction(list.close);
+  const { toast, showToast } = useToast();
+  const action = useReportAction(list.close, showToast);
   const reported = useReportedMessages(list.reports);
   const members = useServerMembers(serverId);
   const loadedMessages = useMemo(
@@ -173,7 +176,7 @@ export function ReportsSection({
   const active = action.active;
 
   return (
-    <>
+    <div className="relative flex min-h-0 flex-1 flex-col">
       <SettingsSection
         description={REPORTS_DESCRIPTION}
         toolbar={
@@ -205,21 +208,7 @@ export function ReportsSection({
               </div>
             ) : null}
 
-            {action.notice?.tone === "success" ? (
-              <p
-                role="status"
-                className="bg-success/10 text-success flex items-start gap-3 rounded-xl px-4 py-3 text-sm"
-              >
-                <Check
-                  size={16}
-                  className="mt-0.5 shrink-0"
-                  aria-hidden="true"
-                />
-                <span>{action.notice.text}</span>
-              </p>
-            ) : (
-              <FormAlert message={action.notice?.text} />
-            )}
+            <FormAlert message={action.errorMessage} />
             <FormAlert message={list.loadError} />
           </div>
         }
@@ -254,7 +243,7 @@ export function ReportsSection({
                           ? () => onGoToMessage(channelId, messageId)
                           : undefined
                       }
-                      onViewProfile={
+                      onOpenProfile={
                         isPending && reportedUserId
                           ? () => onOpenProfile(reportedUserId)
                           : undefined
@@ -331,6 +320,7 @@ export function ReportsSection({
           }}
         />
       ) : null}
-    </>
+      <SettingsToast message={toast} />
+    </div>
   );
 }

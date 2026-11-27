@@ -14,7 +14,7 @@ import {
   WORD_FILTER_SAVED,
   WORD_FILTER_TITLE,
 } from "@discordia/client-shared";
-import { Ban, X } from "lucide-react";
+import { Ban, Plus, X } from "lucide-react";
 import { useEffect, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
@@ -30,6 +30,7 @@ import {
   listBannedWordsRequest,
   saveBannedWordsRequest,
 } from "@/services/word-filter/client";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 const INPUT_ID = "word-filter-input";
 
@@ -37,11 +38,6 @@ interface WordFilterSectionProps {
   serverId: string;
 }
 
-/**
- * Lista de palabras prohibidas (CA2). Los cambios quedan locales hasta
- * "Guardar cambios", que manda la lista entera: el back reemplaza la anterior
- * y se aplica a los mensajes que se envien desde ese momento.
- */
 export function WordFilterSection({ serverId }: WordFilterSectionProps) {
   const [saved, setSaved] = useState<string[] | null>(null);
   const [words, setWords] = useState<string[]>([]);
@@ -143,9 +139,9 @@ export function WordFilterSection({ serverId }: WordFilterSectionProps) {
             <form onSubmit={handleAdd}>
               <SettingsGroup
                 label={
-                  <label htmlFor={INPUT_ID}>
+                  <FieldLabel htmlFor={INPUT_ID}>
                     {WORD_FILTER_INPUT_PLACEHOLDER}
-                  </label>
+                  </FieldLabel>
                 }
               >
                 <div className="flex gap-2">
@@ -165,7 +161,8 @@ export function WordFilterSection({ serverId }: WordFilterSectionProps) {
                       draftError ? "border-danger" : "border-line",
                     )}
                   />
-                  <Button type="submit" variant="secondary" className="w-auto">
+                  <Button type="submit" className="w-auto shrink-0 px-3.5 py-2">
+                    <Plus size={16} />
                     {WORD_FILTER_ADD_ACTION}
                   </Button>
                 </div>

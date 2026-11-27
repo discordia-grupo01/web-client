@@ -5,7 +5,6 @@ import {
   type TwoFactorStatus,
 } from "@discordia/client-shared";
 
-import { CheckCircle2 } from "lucide-react";
 import { useState } from "react";
 
 import { ChangePasswordForm } from "@/components/security/ChangePasswordForm";
@@ -17,6 +16,7 @@ import {
 import { TwoFactorSummaryRow } from "@/components/security/TwoFactorSummaryRow";
 import { FormAlert } from "@/components/ui/FormAlert";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { SuccessDialog } from "@/components/ui/SuccessDialog";
 import { SettingsSection } from "@/components/ui/settings/SettingsSection";
 import { useOptionalOwnProfile } from "@/contexts/OwnProfileContext";
 
@@ -31,6 +31,21 @@ const SET_PASSWORD_COPY: SetPasswordStepCopy = {
 
 type PasswordView = "change" | "set" | null;
 
+interface PasswordSuccess {
+  title: string;
+  body: string;
+}
+
+const PASSWORD_CHANGED: PasswordSuccess = {
+  title: ACCOUNT_PASSWORD_COPY.changedTitle,
+  body: ACCOUNT_PASSWORD_COPY.changedBody,
+};
+
+const PASSWORD_SET: PasswordSuccess = {
+  title: ACCOUNT_PASSWORD_COPY.setTitle,
+  body: ACCOUNT_PASSWORD_COPY.setBody,
+};
+
 interface SecuritySettingsProps {
   onOpenTwoFactor: (status: TwoFactorStatus) => void;
 }
@@ -39,17 +54,16 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
   const ownProfile = useOptionalOwnProfile();
   const profile = ownProfile?.profile ?? null;
   const [passwordView, setPasswordView] = useState<PasswordView>(null);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [success, setSuccess] = useState<PasswordSuccess | null>(null);
   const twoFactor = useTwoFactorStatus();
 
   function openPassword() {
-    setNotice(null);
     setPasswordView(profile?.has_password ? "change" : "set");
   }
 
-  function finishPassword(message: string | null) {
+  function finishPassword(result: PasswordSuccess) {
     setPasswordView(null);
-    setNotice(message);
+    setSuccess(result);
     void ownProfile?.refresh();
   }
 
@@ -57,7 +71,7 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
     return (
       <ChangePasswordForm
         onCancel={() => setPasswordView(null)}
-        onChanged={() => finishPassword(ACCOUNT_PASSWORD_COPY.changed)}
+        onChanged={() => finishPassword(PASSWORD_CHANGED)}
         onPasswordNotSet={() => {
           setPasswordView("set");
           void ownProfile?.refresh();
@@ -71,7 +85,7 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
       <SetPasswordStep
         copy={SET_PASSWORD_COPY}
         onCancel={() => setPasswordView(null)}
-        onPasswordReady={() => finishPassword(ACCOUNT_PASSWORD_COPY.set)}
+        onPasswordReady={() => finishPassword(PASSWORD_SET)}
       />
     );
   }
@@ -80,14 +94,12 @@ export function SecuritySettings({ onOpenTwoFactor }: SecuritySettingsProps) {
 
   return (
     <SettingsSection description="Administrá las medidas que protegen tu cuenta.">
-      {notice ? (
-        <div
-          role="status"
-          className="border-success/30 bg-success/10 text-success mb-4 flex items-start gap-3 rounded-xl border px-4 py-3 text-sm"
-        >
-          <CheckCircle2 size={16} className="mt-0.5 shrink-0" />
-          <span>{notice}</span>
-        </div>
+      {success ? (
+        <SuccessDialog
+          title={success.title}
+          body={success.body}
+          onClose={() => setSuccess(null)}
+        />
       ) : null}
       {isLoading ? (
         <LoadingSpinner />

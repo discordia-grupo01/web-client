@@ -8,13 +8,15 @@ import {
   type ServerSummary,
 } from "@discordia/client-shared";
 
-import { AlertCircle, ArrowRight, Check, Link2, X } from "lucide-react";
+import { AlertCircle, ArrowRight, Check, Link2 } from "lucide-react";
 import { useRef, useState, type FormEvent } from "react";
 
 import { Button } from "@/components/ui/Button";
 import { Avatar } from "@/components/ui/Avatar";
 import { joinServerRequest } from "@/services/invites/client";
 import { serverIconSrc } from "@/utils/image-urls";
+import { FieldLabel } from "@/components/ui/FieldLabel";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 interface JoinServerModalProps {
   onClose: () => void;
@@ -71,14 +73,10 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
           background: "var(--bg-modal)",
         }}
       >
-        <button
-          type="button"
+        <ModalCloseButton
           onClick={onClose}
-          aria-label="Cerrar"
-          className="bg-surface-input text-content-subtle border-line absolute top-4 right-4 z-10 flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-        >
-          <X size={13} />
-        </button>
+          className="absolute top-4 right-4 z-10"
+        />
 
         <div className="flex-1 overflow-y-auto">
           {joined ? (
@@ -136,12 +134,9 @@ export function JoinServerModal({ onClose, onJoined }: JoinServerModalProps) {
                 ) : null}
 
                 <div>
-                  <label
-                    htmlFor="invite-code"
-                    className="text-content font-display mb-1.5 block text-sm font-semibold"
-                  >
+                  <FieldLabel htmlFor="invite-code" required className="mb-1.5">
                     Enlace o código de invitación
-                  </label>
+                  </FieldLabel>
                   <div
                     className={`bg-surface-input flex items-center gap-2 rounded-xl border px-4 py-3 transition-colors ${
                       fieldError ? "border-danger" : "border-line"

@@ -12,6 +12,7 @@ import { type RolesEditor } from "../hooks/useRolesEditor";
 import { ColorPicker, FieldError } from "../shared/ColorPicker";
 import { PermissionGroups } from "../shared/PermissionGroups";
 import { RoleNameField } from "../shared/RoleNameField";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 const NAME_INPUT_ID = "role-create-name";
 
@@ -77,13 +78,7 @@ export function RoleCreateForm({ editor, backButton }: RoleCreateFormProps) {
           }}
         />
 
-        <SettingsGroup
-          label={
-            <>
-              Color <span className="text-danger">*</span>
-            </>
-          }
-        >
+        <SettingsGroup label={<FieldLabel required>Color</FieldLabel>}>
           <ColorPicker
             value={newColor}
             onChange={(color) => {

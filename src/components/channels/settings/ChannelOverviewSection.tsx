@@ -19,6 +19,7 @@ import { CharacterCounter } from "@/components/ui/CharacterCounter";
 import { FieldError } from "@/components/ui/FieldError";
 import { cn } from "@/lib/cn";
 import { updateChannelRequest } from "@/services/channels/client";
+import { FieldLabel } from "@/components/ui/FieldLabel";
 
 interface ChannelOverviewSectionProps {
   kind: Channel["kind"];
@@ -37,12 +38,9 @@ export function ChannelOverviewSection({
     <section className="space-y-6">
       <div>
         <div className="mb-1.5 flex items-center justify-between">
-          <label
-            htmlFor={nameId}
-            className="text-content font-display text-sm font-semibold"
-          >
-            {CHANNEL_NAME_LABEL} <span className="text-danger">*</span>
-          </label>
+          <FieldLabel htmlFor={nameId} required>
+            {CHANNEL_NAME_LABEL}
+          </FieldLabel>
           <CharacterCounter length={form.name.trim().length} max={MAX_NAME} />
         </div>
         <div
@@ -68,12 +66,7 @@ export function ChannelOverviewSection({
       {kind === "text" ? (
         <div>
           <div className="mb-1.5 flex items-center justify-between">
-            <label
-              htmlFor={topicId}
-              className="text-content font-display text-sm font-semibold"
-            >
-              {CHANNEL_TOPIC_LABEL}
-            </label>
+            <FieldLabel htmlFor={topicId}>{CHANNEL_TOPIC_LABEL}</FieldLabel>
             <CharacterCounter
               length={form.topic.trim().length}
               max={MAX_CHANNEL_TOPIC}

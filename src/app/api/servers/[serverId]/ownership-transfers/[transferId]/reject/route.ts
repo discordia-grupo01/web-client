@@ -1,6 +1,5 @@
 import {
   messageFor,
-  reasonOf,
   type RespondTransferResult,
   TRANSFER_NOT_FOUND,
   TRANSFER_ONLY_TARGET_REJECTS,
@@ -13,11 +12,6 @@ import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
 import { rejectOwnershipTransfer } from "@/services/ownership-transfers/service";
 
-/**
- * BFF de `POST /v1/servers/:id/ownership-transfers/:transferId/reject`.
- * CA3: solo el destinatario (`to_user_id`) puede rechazar -- el owner
- * original conserva el servidor.
- */
 export async function POST(
   _request: Request,
   { params }: { params: { serverId: string; transferId: string } },
@@ -53,8 +47,6 @@ export async function POST(
       );
     }
 
-    const reason = reasonOf(result.details);
-    const friendly = reason ? TRANSFER_REASONS[reason] : undefined;
     return NextResponse.json(
       {
         ok: false,

@@ -17,7 +17,7 @@ import {
   type ServerSummary,
 } from "@discordia/client-shared";
 
-import { Bell, CheckCheck, CircleAlert, Loader2, X } from "lucide-react";
+import { Bell, CheckCheck, CircleAlert, Loader2 } from "lucide-react";
 import { type RefObject, useMemo, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -37,6 +37,7 @@ import {
   type MessageMentionsValue,
 } from "@/contexts/MentionsContext";
 import { LoadingSpinner } from "@/components/ui/LoadingSpinner";
+import { ModalCloseButton } from "@/components/ui/ModalCloseButton";
 
 const ACTION_CLASS =
   "text-content hover:text-content-muted inline-flex cursor-pointer items-center gap-1.5 text-sm font-medium underline underline-offset-2 disabled:cursor-wait disabled:opacity-70";
@@ -160,7 +161,7 @@ export function NotificationCenter({
           aria-busy={markAll.isMarkingAll}
           title={NOTIFICATIONS_MARK_ALL_READ_LABEL}
           aria-label={NOTIFICATIONS_MARK_ALL_READ_LABEL}
-          className="bg-surface-input text-content-subtle border-line flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110 disabled:cursor-not-allowed disabled:opacity-40 disabled:hover:scale-100"
+          className="bg-surface-input text-content-subtle border-line hover:text-content flex size-8 cursor-pointer items-center justify-center rounded-full border transition-colors disabled:cursor-not-allowed disabled:opacity-40"
         >
           {markAll.isMarkingAll ? (
             <Loader2 size={15} className="animate-spin" aria-hidden />
@@ -168,14 +169,7 @@ export function NotificationCenter({
             <CheckCheck size={15} />
           )}
         </button>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={NOTIFICATIONS_CLOSE_LABEL}
-          className="bg-surface-input text-content-subtle border-line flex size-8 cursor-pointer items-center justify-center rounded-full border transition-transform hover:scale-110"
-        >
-          <X size={14} />
-        </button>
+        <ModalCloseButton onClick={onClose} label={NOTIFICATIONS_CLOSE_LABEL} />
       </div>
 
       {markAll.error ? (
