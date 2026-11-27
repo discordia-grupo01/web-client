@@ -40,8 +40,6 @@ import { ServerProfileForm } from "./ServerProfileForm";
 import { VanityUrlField } from "./vanity/VanityUrlField";
 import { WordFilterSection } from "./WordFilterSection";
 
-type MobileView = "menu" | "section";
-
 interface ServerSettingsModalProps {
   server: ServerSummary;
   isOwner: boolean;

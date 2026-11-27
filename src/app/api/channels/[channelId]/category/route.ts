@@ -3,7 +3,6 @@ import {
   CHANNEL_REASONS,
   messageFor,
   type MoveChannelResult,
-  reasonOf,
 } from "@discordia/client-shared";
 import { NextResponse } from "next/server";
 
@@ -11,10 +10,6 @@ import { unauthorizedResponse } from "@/lib/apiRoute";
 import { getValidSession } from "@/services/auth/session";
 import { moveChannelToCategory } from "@/services/channels/service";
 
-/**
- * BFF de `PATCH /v1/channels/:id/category`. Body JSON: `{ categoryId: string | null }`.
- * `categoryId: null` mueve el canal a "sin categoria".
- */
 export async function PATCH(
   request: Request,
   { params }: { params: { channelId: string } },
@@ -38,8 +33,6 @@ export async function PATCH(
     if (result.status === 401) {
       return unauthorizedResponse();
     }
-    const reason = reasonOf(result.details);
-    const friendly = reason ? CHANNEL_REASONS[reason] : undefined;
     return NextResponse.json(
       {
         ok: false,

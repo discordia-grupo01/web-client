@@ -6,6 +6,7 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "strict": true,
+    "noUnusedLocals": true,
     "skipLibCheck": true,
     "paths": {
       "@/*": ["./src/*"]
