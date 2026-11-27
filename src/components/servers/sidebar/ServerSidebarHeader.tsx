@@ -279,10 +279,7 @@ export function ServerSidebarHeader({
             closeModal();
             onGoToMessage(channelId, messageId);
           }}
-          onOpenProfile={(userId) => {
-            closeModal();
-            onOpenMemberProfile(userId);
-          }}
+          onOpenProfile={onOpenMemberProfile}
           onBanMember={onBanMember}
           onPendingReportsChanged={onPendingReportsChanged}
           onMembersChanged={onMembersChanged}
