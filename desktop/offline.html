@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta
       http-equiv="Content-Security-Policy"
-      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src http: https:"
+      content="default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'"
     />
     <title>Discordia</title>
     <script>
@@ -372,21 +372,5 @@
       <p class="message title">Sin conexión</p>
       <p class="message subtitle">Reintentando…</p>
     </div>
-    <script>
-      const RETRY_MS = 5000;
-      const appUrl = new URLSearchParams(location.search).get("url");
-
-      async function retry() {
-        try {
-          await fetch(appUrl, { mode: "no-cors", cache: "no-store" });
-          location.replace(appUrl);
-        } catch {}
-      }
-
-      if (appUrl) {
-        setInterval(retry, RETRY_MS);
-        window.addEventListener("online", retry);
-      }
-    </script>
   </body>
 </html>
