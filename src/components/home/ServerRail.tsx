@@ -213,9 +213,9 @@ function ServerRailItem({
       {isSuspended ? (
         <span
           aria-hidden
-          className="bg-surface-servers text-warning pointer-events-none absolute -right-1 -bottom-1 flex rounded-[5px] p-[3px]"
+          className="bg-warning text-on-accent border-rail-surface pointer-events-none absolute -right-0.5 -bottom-0.5 flex size-[18px] items-center justify-center rounded-full border-2"
         >
-          <TriangleAlert size={14} strokeWidth={2.5} />
+          <TriangleAlert size={10} strokeWidth={2.75} />
         </span>
       ) : null}
       {boostLevel > 0 && visibleUnread.mentionCount === 0 ? (
