@@ -16,6 +16,7 @@ interface UserListProps {
   items: UserListItem[];
   emptyMessage: string;
   actionsFor: (item: UserListItem) => UserRowAction[];
+  onSelect?: (item: UserListItem) => void;
   disableActions?: boolean;
 }
 
@@ -24,6 +25,7 @@ export function UserList({
   items,
   emptyMessage,
   actionsFor,
+  onSelect,
   disableActions = false,
 }: UserListProps) {
   if (items.length === 0) {
@@ -39,6 +41,7 @@ export function UserList({
           profile={item.profile}
           subtitle={item.subtitle}
           actions={actionsFor(item)}
+          onSelect={onSelect ? () => onSelect(item) : undefined}
           isDisabled={disableActions}
         />
       ))}

@@ -19,7 +19,6 @@ import {
   bansTabLabel,
   searchResultsSummary,
   unbanSuccessNotice,
-  VIEW_PROFILE_LABEL,
 } from "@discordia/client-shared";
 
 import { type ReactNode, useMemo, useState } from "react";
@@ -129,7 +128,6 @@ export function BansPanel({
       ];
     }
     return [
-      { label: VIEW_PROFILE_LABEL, onClick: () => onOpenProfile(userId) },
       {
         label: BAN_ACTION_LABEL,
         tone: "danger",
@@ -202,6 +200,9 @@ export function BansPanel({
               items={items}
               emptyMessage={emptyMessage}
               actionsFor={actionsFor}
+              onSelect={
+                isBans ? undefined : ({ userId }) => onOpenProfile(userId)
+              }
               disableActions={revokingUserId !== null}
             />
           )}

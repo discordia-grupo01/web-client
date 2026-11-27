@@ -286,12 +286,11 @@ describe("BansModal", () => {
       expect(listMembersRequest).not.toHaveBeenCalled();
     });
 
-    it("Ver perfil abre el perfil de ese miembro sin cerrar el modal", async () => {
+    it("tocar el miembro abre su perfil sin cerrar el modal", async () => {
       const { onClose, onOpenProfile } = await openMembersTab();
 
-      const row = screen.getByText("Usuario 6").closest("li") as HTMLElement;
       await userEvent.click(
-        within(row).getByRole("button", { name: "Ver perfil" }),
+        screen.getByRole("button", { name: "Ver perfil de Usuario 6" }),
       );
 
       expect(onClose).not.toHaveBeenCalled();
