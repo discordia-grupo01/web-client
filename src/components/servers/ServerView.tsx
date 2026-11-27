@@ -17,6 +17,7 @@ import {
   type PublicUser,
   type Role,
   UNMUTE_ACTION_LABEL,
+  banSuccessNotice,
   type ServerSummary,
   sortByPosition,
   topLevelChannels,
@@ -71,6 +72,7 @@ import {
   useState,
   type ReactNode,
 } from "react";
+import { createPortal } from "react-dom";
 
 import {
   BanMemberModal,
@@ -130,6 +132,8 @@ import { useVoicePresence } from "@/components/servers/hooks/useVoicePresence";
 import { useVoiceProfiles } from "@/components/servers/hooks/useVoiceProfiles";
 import { useVoiceSession } from "@/contexts/VoiceSessionContext";
 import { cn } from "@/lib/cn";
+import { SettingsToast } from "@/components/ui/settings/SettingsToast";
+import { useToast } from "@/hooks/useToast";
 
 import { ServerSidebarHeader } from "./sidebar/ServerSidebarHeader";
 
@@ -508,6 +512,7 @@ function ServerViewContent({
 
   const [viewingUserId, setViewingUserId] = useState<string | null>(null);
   const [banTarget, setBanTarget] = useState<BanTarget | null>(null);
+  const { toast, showToast } = useToast();
   const [kickTarget, setKickTarget] = useState<BanTarget | null>(null);
   const [muteTarget, setMuteTarget] = useState<BanTarget | null>(null);
   const [unmuteTarget, setUnmuteTarget] = useState<BanTarget | null>(null);
@@ -1393,7 +1398,6 @@ function ServerViewContent({
             viewingUserId !== server.owner_id
           }
           onKick={(profile) => {
-            setViewingUserId(null);
             setKickTarget({
               userId: profile.id,
               name: profile.name,
@@ -1407,7 +1411,6 @@ function ServerViewContent({
             viewingUserId !== server.owner_id
           }
           onMute={(profile) => {
-            setViewingUserId(null);
             setMuteTarget({
               userId: profile.id,
               name: profile.name,
@@ -1415,7 +1418,6 @@ function ServerViewContent({
             });
           }}
           onUnmute={(profile) => {
-            setViewingUserId(null);
             setUnmuteError("");
             setUnmuteTarget({
               userId: profile.id,
@@ -1425,7 +1427,6 @@ function ServerViewContent({
           }}
           canBlock={viewingUserId !== String(user?.id)}
           onBan={(profile) => {
-            setViewingUserId(null);
             setBanTarget({
               userId: profile.id,
               name: profile.name,
@@ -1435,7 +1436,6 @@ function ServerViewContent({
           onReport={
             canReportUser(viewingUserId, user ? String(user.id) : null)
               ? (profile) => {
-                  setViewingUserId(null);
                   setReportTarget({
                     kind: "user",
                     userId: profile.id,
@@ -1464,9 +1464,22 @@ function ServerViewContent({
           name={banTarget.name}
           avatarSrc={banTarget.avatarSrc}
           onClose={() => setBanTarget(null)}
-          onBanned={() => setMembersVersion((version) => version + 1)}
+          onBanned={() => {
+            setViewingUserId(null);
+            setMembersVersion((version) => version + 1);
+            showToast(banSuccessNotice(banTarget.name));
+          }}
         />
       ) : null}
+
+      {typeof document !== "undefined"
+        ? createPortal(
+            <div className="pointer-events-none fixed inset-0 z-[60]">
+              <SettingsToast message={toast} />
+            </div>,
+            document.body,
+          )
+        : null}
 
       {muteTarget ? (
         <MuteMemberModal
@@ -1504,7 +1517,10 @@ function ServerViewContent({
           serverId={server.id}
           target={kickTarget}
           onClose={() => setKickTarget(null)}
-          onKicked={() => setMembersVersion((version) => version + 1)}
+          onKicked={() => {
+            setViewingUserId(null);
+            setMembersVersion((version) => version + 1);
+          }}
         />
       ) : null}
 

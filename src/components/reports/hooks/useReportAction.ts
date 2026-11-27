@@ -74,7 +74,6 @@ export function useReportAction(
     setActive(next);
   }
 
-  /** Lo llaman `onMuted` / `onKicked` / `onBanned`: el modal sigue abierto. */
   function sanctionApplied() {
     if (!active || active.sanction === "delete") return;
     void resolveAfter(active.sanction, active.report, active.target.name);
