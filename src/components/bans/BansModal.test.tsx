@@ -99,6 +99,14 @@ function serveBans(bans: Ban[]) {
   );
 }
 
+function tableRows() {
+  return screen.getAllByRole("row").slice(1);
+}
+
+function rowOf(name: string) {
+  return screen.getByText(name).closest("tr") as HTMLElement;
+}
+
 async function renderModal(count: number) {
   serveBans(makeBans(count));
   const handlers = renderBansModal();
@@ -110,7 +118,7 @@ describe("BansModal", () => {
   it("pagina la lista de a 10 y navega con Siguiente", async () => {
     await renderModal(45);
 
-    expect(screen.getAllByRole("listitem")).toHaveLength(10);
+    expect(tableRows()).toHaveLength(10);
     expect(
       screen.getByText("Mostrando 1–10 de 45 baneados"),
     ).toBeInTheDocument();
@@ -131,8 +139,9 @@ describe("BansModal", () => {
   it("muestra el motivo o 'Sin motivo indicado'", async () => {
     await renderModal(2);
 
-    expect(screen.getByText("Spam")).toBeInTheDocument();
-    expect(screen.getByText("Sin motivo indicado")).toBeInTheDocument();
+    // Cada motivo esta dos veces: debajo del nombre en celular y en su columna desde `sm`.
+    expect(screen.getAllByText("Spam")).toHaveLength(2);
+    expect(screen.getAllByText("Sin motivo indicado")).toHaveLength(2);
   });
 
   it("filtra por nombre de usuario ignorando tildes y vuelve a la primera pagina", async () => {
@@ -147,9 +156,7 @@ describe("BansModal", () => {
     );
 
     expect(await screen.findByText("Andrés")).toBeInTheDocument();
-    await waitFor(() =>
-      expect(screen.getAllByRole("listitem")).toHaveLength(1),
-    );
+    await waitFor(() => expect(tableRows()).toHaveLength(1));
     expect(listBansRequest).toHaveBeenLastCalledWith(
       "s1",
       expect.objectContaining({ search: "andres", offset: 0 }),
@@ -170,8 +177,9 @@ describe("BansModal", () => {
   it("revoca un baneo: lo saca de la lista y lo confirma", async () => {
     await renderModal(3);
 
-    const row = screen.getByText("Usuario 2").closest("li") as HTMLElement;
-    await userEvent.click(within(row).getByRole("button", { name: "Revocar" }));
+    await userEvent.click(
+      within(rowOf("Usuario 2")).getByRole("button", { name: "Revocar" }),
+    );
 
     expect(unbanMemberRequest).toHaveBeenCalledWith("s1", "u2");
     await waitFor(() => expect(screen.queryByText("Usuario 2")).toBeNull());
@@ -183,14 +191,14 @@ describe("BansModal", () => {
   it("al revocar al ultimo de una pagina vuelve a la anterior", async () => {
     await renderModal(11);
     await userEvent.click(screen.getByRole("button", { name: "Siguiente" }));
-    const row = (await screen.findByText("Usuario 11")).closest(
-      "li",
-    ) as HTMLElement;
+    await screen.findByText("Usuario 11");
 
-    await userEvent.click(within(row).getByRole("button", { name: "Revocar" }));
+    await userEvent.click(
+      within(rowOf("Usuario 11")).getByRole("button", { name: "Revocar" }),
+    );
 
     expect(await screen.findByText("Usuario 1")).toBeInTheDocument();
-    expect(screen.getAllByRole("listitem")).toHaveLength(10);
+    expect(tableRows()).toHaveLength(10);
     expect(screen.queryByText("Usuario 11")).toBeNull();
   });
 
@@ -201,8 +209,9 @@ describe("BansModal", () => {
       message: "No tenés permiso para revocar baneos.",
     });
 
-    const row = screen.getByText("Usuario 2").closest("li") as HTMLElement;
-    await userEvent.click(within(row).getByRole("button", { name: "Revocar" }));
+    await userEvent.click(
+      within(rowOf("Usuario 2")).getByRole("button", { name: "Revocar" }),
+    );
 
     expect(
       await screen.findByText("No tenés permiso para revocar baneos."),
@@ -232,7 +241,7 @@ describe("BansModal", () => {
     ).toBeInTheDocument();
   });
 
-  describe("pestaña Banear miembro", () => {
+  describe("elegir a quién banear", () => {
     const members = [
       { user_id: "owner", is_owner: true, joined_at: "" },
       { user_id: "me", is_owner: false, joined_at: "" },
@@ -250,7 +259,7 @@ describe("BansModal", () => {
       },
     ];
 
-    async function openMembersTab() {
+    async function openPicker() {
       listBansRequest.mockResolvedValue({ ok: true, bans: [], total: 0 });
       getPublicProfileRequest.mockResolvedValue({ ok: false, message: "" });
       // Como el back: filtra por nombre lo que llega en `search`.
@@ -265,20 +274,20 @@ describe("BansModal", () => {
       );
       const handlers = renderBansModal();
       await userEvent.click(
-        screen.getByRole("tab", { name: "Banear miembro" }),
+        screen.getByRole("button", { name: "Banear miembro" }),
       );
       await screen.findByText("Usuario 5");
       return handlers;
     }
 
     it("lista los miembros sin el propietario ni uno mismo", async () => {
-      await openMembersTab();
+      await openPicker();
 
-      expect(screen.getAllByRole("listitem")).toHaveLength(2);
+      expect(tableRows()).toHaveLength(2);
       expect(screen.getByText("Usuario 6")).toBeInTheDocument();
     });
 
-    it("no pide los miembros hasta abrir la pestaña", async () => {
+    it("no pide los miembros hasta abrir la elección", async () => {
       listBansRequest.mockResolvedValue({ ok: true, bans: [], total: 0 });
       renderBansModal();
       await screen.findByText("No hay usuarios baneados.");
@@ -286,8 +295,8 @@ describe("BansModal", () => {
       expect(listMembersRequest).not.toHaveBeenCalled();
     });
 
-    it("tocar el miembro abre su perfil sin cerrar el modal", async () => {
-      const { onClose, onOpenProfile } = await openMembersTab();
+    it("tocar el nombre abre el perfil sin elegirlo ni cerrar nada", async () => {
+      const { onClose, onOpenProfile } = await openPicker();
 
       await userEvent.click(
         screen.getByRole("button", { name: "Ver perfil de Usuario 6" }),
@@ -298,9 +307,9 @@ describe("BansModal", () => {
     });
 
     it("Banear abre la confirmacion de ese miembro sin pasar por su perfil", async () => {
-      const { onClose, onOpenProfile, onBanMember } = await openMembersTab();
+      const { onClose, onOpenProfile, onBanMember } = await openPicker();
 
-      const row = screen.getByText("Usuario 6").closest("li") as HTMLElement;
+      const row = screen.getByText("Usuario 6").closest("tr") as HTMLElement;
       await userEvent.click(
         within(row).getByRole("button", { name: "Banear" }),
       );
@@ -315,13 +324,16 @@ describe("BansModal", () => {
     });
 
     it("busca miembros por nombre en el back, desde la primera pagina", async () => {
-      await openMembersTab();
+      await openPicker();
 
-      await userEvent.type(screen.getByRole("searchbox"), "usuario 6");
-
-      await waitFor(() =>
-        expect(screen.getAllByRole("listitem")).toHaveLength(1),
+      await userEvent.type(
+        screen.getByRole("searchbox", {
+          name: "Buscar miembros por nombre de usuario",
+        }),
+        "usuario 6",
       );
+
+      await waitFor(() => expect(tableRows()).toHaveLength(1));
       expect(screen.getByText("Usuario 6")).toBeInTheDocument();
       expect(listMembersRequest).toHaveBeenLastCalledWith("s1", {
         search: "usuario 6",
